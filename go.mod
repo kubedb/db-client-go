@@ -3,21 +3,29 @@ module kubedb.dev/db-client-go
 go 1.17
 
 require (
+	github.com/Masterminds/semver/v3 v3.1.1
+	github.com/elastic/go-elasticsearch/v6 v6.8.10
+	github.com/elastic/go-elasticsearch/v7 v7.15.1
+	github.com/go-redis/redis/v8 v8.11.4
+	github.com/go-sql-driver/mysql v1.5.0
+	github.com/go-xorm/xorm v0.7.9
+	github.com/pkg/errors v0.9.1
 	go.mongodb.org/mongo-driver v1.1.2
 	k8s.io/api v0.21.1
 	k8s.io/apimachinery v0.21.1
 	k8s.io/client-go v0.21.1
 	k8s.io/klog/v2 v2.8.0
-	kmodules.xyz/client-go v0.0.0-20210816193105-1158390a19cd
-	kubedb.dev/apimachinery v0.20.0
+	kmodules.xyz/client-go v0.0.0-20210831030638-b1d662179991
+	kubedb.dev/apimachinery v0.22.0
 )
 
 require (
-	github.com/Masterminds/semver/v3 v3.1.1 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/aws/aws-sdk-go v1.38.31 // indirect
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/emicklei/go-restful v2.9.5+incompatible // indirect
 	github.com/evanphx/json-patch v4.11.0+incompatible // indirect
 	github.com/fatih/structs v1.1.0 // indirect
@@ -30,7 +38,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/google/go-cmp v0.5.5 // indirect
+	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
@@ -42,7 +50,6 @@ require (
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c // indirect
@@ -68,12 +75,14 @@ require (
 	k8s.io/apiextensions-apiserver v0.21.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20210305001622-591a79e4bda7 // indirect
 	k8s.io/utils v0.0.0-20210527160623-6fdb442a123b // indirect
-	kmodules.xyz/custom-resources v0.0.0-20210812193424-1631fae03a1a // indirect
-	kmodules.xyz/monitoring-agent-api v0.0.0-20210618110729-9cd872c66513 // indirect
+	kmodules.xyz/custom-resources v0.0.0-20210824055127-e5a3d2d6c161 // indirect
+	kmodules.xyz/monitoring-agent-api v0.0.0-20210902163558-0323c6034f70 // indirect
 	kmodules.xyz/offshoot-api v0.0.0-20210804100837-d0388be3e60d // indirect
 	sigs.k8s.io/controller-runtime v0.9.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.0 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
+	xorm.io/builder v0.3.6 // indirect
+	xorm.io/core v0.7.2-0.20190928055935-90aeac8d08eb // indirect
 )
 
 replace go.mongodb.org/mongo-driver => github.com/appscode/mongo-go-driver v1.4.0-beta2.0.20210223075318-951c8933c59c
