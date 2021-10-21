@@ -42,12 +42,12 @@ func (o *kubeDBClientBuilder) WithURL(url string) *kubeDBClientBuilder {
 }
 
 func (o *kubeDBClientBuilder) GetPostgresXormClient() (*XormClient, error) {
-	cnnstr, err := o.getConnectionString()
+	connector, err := o.getConnectionString()
 	if err != nil {
 		return nil, err
 	}
 
-	engine, err := xorm.NewEngine("postgres", cnnstr)
+	engine, err := xorm.NewEngine("postgres", connector)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate postgres client using connection string: %v", err)
 	}
@@ -74,12 +74,12 @@ func (o *kubeDBClientBuilder) getPostgresAuthCredentials() (string, string, erro
 }
 
 func (o *kubeDBClientBuilder) GetPostgresClient() (*Client, error) {
-	cnnstr, err := o.getConnectionString()
+	connector, err := o.getConnectionString()
 	if err != nil {
 		return nil, err
 	}
 	// connect to database
-	db, err := sql.Open("postgres", cnnstr)
+	db, err := sql.Open("postgres", connector)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (o *kubeDBClientBuilder) GetPostgresClient() (*Client, error) {
 	return &Client{db}, nil
 }
 
-func (o *kubeDBClientBuilder) getConnectionString() (string, error)  {
+func (o *kubeDBClientBuilder) getConnectionString() (string, error) {
 	if o.podName != "" {
 		o.url = o.getURL()
 	}

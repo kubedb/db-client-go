@@ -4,7 +4,10 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"database/sql"
 	"fmt"
+	"log"
+	"time"
 
 	sql_driver "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/xorm"
@@ -39,51 +42,29 @@ func (o *kubeDBClientBuilder) WithPod(podName string) *kubeDBClientBuilder {
 }
 
 func (o *kubeDBClientBuilder) GetMySQLClient() (*Client, error) {
-	user, pass, err := o.getMySQLRootCredentials()
+	connector, err := o.getConnectionString()
 	if err != nil {
 		return nil, err
 	}
 
-	if o.podName != "" {
-		o.url = o.getURL()
+	// connect to database
+	db, err := sql.Open("mysql", connector)
+	if err != nil {
+		return nil, err
 	}
 
-	tlsConfig := ""
-	if o.db.Spec.RequireSSL && o.db.Spec.TLS != nil {
-		// get client-secret
-		clientSecret, err := o.kubeClient.CoreV1().Secrets(o.db.GetNamespace()).Get(context.TODO(), o.db.MustCertSecretName(api.MySQLClientCert), metav1.GetOptions{})
-		if err != nil {
-			return nil, err
-		}
-		cacrt := clientSecret.Data["ca.crt"]
-		certPool := x509.NewCertPool()
-		certPool.AppendCertsFromPEM(cacrt)
-
-		crt := clientSecret.Data["tls.crt"]
-		key := clientSecret.Data["tls.key"]
-		cert, err := tls.X509KeyPair(crt, key)
-		if err != nil {
-			return nil, err
-		}
-		var clientCert []tls.Certificate
-		clientCert = append(clientCert, cert)
-
-		// tls custom setup
-		if o.db.Spec.RequireSSL {
-			err = sql_driver.RegisterTLSConfig(api.MySQLTLSConfigCustom, &tls.Config{
-				RootCAs:      certPool,
-				Certificates: clientCert,
-			})
-			if err != nil {
-				return nil, err
-			}
-			tlsConfig = fmt.Sprintf("tls=%s", api.MySQLTLSConfigCustom)
-		} else {
-			tlsConfig = fmt.Sprintf("tls=%s", api.MySQLTLSConfigSkipVerify)
-		}
+	// ping to database to check the connection
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	if err := db.PingContext(ctx); err != nil {
+		log.Fatal(err)
 	}
 
-	connector := fmt.Sprintf("%v:%v@tcp(%s:%d)/%s?%s", user, pass, o.url, 3306, "mysql", tlsConfig)
+	return &Client{db}, nil
+}
+
+func (o *kubeDBClientBuilder) GetMySQLXormClient() (*XormClient, error) {
+	connector, err := o.getConnectionString()
 	engine, err := xorm.NewEngine("mysql", connector)
 	if err != nil {
 		return nil, err
@@ -92,8 +73,8 @@ func (o *kubeDBClientBuilder) GetMySQLClient() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Client{
-		Engine: engine,
+	return &XormClient{
+		engine,
 	}, nil
 }
 
@@ -120,4 +101,53 @@ func (o *kubeDBClientBuilder) getMySQLRootCredentials() (string, string, error) 
 		return "", "", fmt.Errorf("DB root password is not set")
 	}
 	return string(user), string(pass), nil
+}
+
+func (o *kubeDBClientBuilder) getConnectionString() (string, error) {
+	user, pass, err := o.getMySQLRootCredentials()
+	if err != nil {
+		return "", err
+	}
+
+	if o.podName != "" {
+		o.url = o.getURL()
+	}
+
+	tlsConfig := ""
+	if o.db.Spec.RequireSSL && o.db.Spec.TLS != nil {
+		// get client-secret
+		clientSecret, err := o.kubeClient.CoreV1().Secrets(o.db.GetNamespace()).Get(context.TODO(), o.db.MustCertSecretName(api.MySQLClientCert), metav1.GetOptions{})
+		if err != nil {
+			return "", err
+		}
+		cacrt := clientSecret.Data["ca.crt"]
+		certPool := x509.NewCertPool()
+		certPool.AppendCertsFromPEM(cacrt)
+
+		crt := clientSecret.Data["tls.crt"]
+		key := clientSecret.Data["tls.key"]
+		cert, err := tls.X509KeyPair(crt, key)
+		if err != nil {
+			return "", err
+		}
+		var clientCert []tls.Certificate
+		clientCert = append(clientCert, cert)
+
+		// tls custom setup
+		if o.db.Spec.RequireSSL {
+			err = sql_driver.RegisterTLSConfig(api.MySQLTLSConfigCustom, &tls.Config{
+				RootCAs:      certPool,
+				Certificates: clientCert,
+			})
+			if err != nil {
+				return "", err
+			}
+			tlsConfig = fmt.Sprintf("tls=%s", api.MySQLTLSConfigCustom)
+		} else {
+			tlsConfig = fmt.Sprintf("tls=%s", api.MySQLTLSConfigSkipVerify)
+		}
+	}
+
+	connector := fmt.Sprintf("%v:%v@tcp(%s:%d)/%s?%s", user, pass, o.url, 3306, "mysql", tlsConfig)
+	return connector, nil
 }
