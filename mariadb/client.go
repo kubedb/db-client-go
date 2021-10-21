@@ -1,18 +1,9 @@
 package mariadb
 
 import (
-	"database/sql"
 	"github.com/go-xorm/xorm"
 )
 
-type Client interface{}
-
-type sqlClient struct {
-	*sql.DB
-	Client
-}
-
-type xormClient struct {
+type Client struct {
 	*xorm.Engine
-	Client
 }

@@ -5,14 +5,10 @@ import (
 	"github.com/go-xorm/xorm"
 )
 
-type Client interface{}
-
-type sqlClient struct {
+type Client struct {
 	*sql.DB
-	Client
 }
 
-type xormClient struct {
+type XormClient struct {
 	*xorm.Engine
-	Client
 }

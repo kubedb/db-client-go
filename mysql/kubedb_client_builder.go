@@ -41,7 +41,7 @@ func (o *kubeDBClientBuilder) WithPod(podName string) *kubeDBClientBuilder {
 	return o
 }
 
-func (o *kubeDBClientBuilder) GetMySQLClient() (Client, error) {
+func (o *kubeDBClientBuilder) GetMySQLClient() (*Client, error) {
 	connector, err := o.getConnectionString()
 	if err != nil {
 		return nil, err
@@ -60,12 +60,10 @@ func (o *kubeDBClientBuilder) GetMySQLClient() (Client, error) {
 		log.Fatal(err)
 	}
 
-	return &sqlClient{
-		DB: db,
-	}, nil
+	return &Client{db}, nil
 }
 
-func (o *kubeDBClientBuilder) GetMySQLXormClient() (Client, error) {
+func (o *kubeDBClientBuilder) GetMySQLXormClient() (*XormClient, error) {
 	connector, err := o.getConnectionString()
 	engine, err := xorm.NewEngine("mysql", connector)
 	if err != nil {
@@ -75,8 +73,8 @@ func (o *kubeDBClientBuilder) GetMySQLXormClient() (Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &xormClient{
-		Engine: engine,
+	return &XormClient{
+		engine,
 	}, nil
 }
 
