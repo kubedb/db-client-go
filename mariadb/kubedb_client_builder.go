@@ -4,7 +4,10 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"database/sql"
 	"fmt"
+	"log"
+	"time"
 
 	sql_driver "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/xorm"
@@ -42,62 +45,12 @@ func (o *kubeDBClientBuilder) WithPod(podName string) *kubeDBClientBuilder {
 	return o
 }
 
-func (o *kubeDBClientBuilder) GetMariaDBClient() (*Client, error) {
-	user, pass, err := o.getMariaDBBasicAuth()
+// GetMariaDBXormClient return xorm engine for MariaDB
+func (o *kubeDBClientBuilder) GetMariaDBXormClient() (Client, error) {
+	connector, err := o.getConnectionString()
 	if err != nil {
 		return nil, err
 	}
-
-	if o.podName != "" {
-		o.url = o.getURL()
-	}
-
-	tlsConfig := ""
-	if o.SSLEnabledMariaDB() {
-		// get client-secret
-		clientSecret, err := o.kubeClient.CoreV1().Secrets(o.db.GetNamespace()).Get(context.TODO(), o.db.GetCertSecretName(api.MariaDBClientCert), metav1.GetOptions{})
-		if err != nil {
-			return nil, err
-		}
-
-		value, exists := clientSecret.Data[rootCAKey]
-		if !exists {
-			return nil, fmt.Errorf("%v in not present in client secret", rootCAKey)
-		}
-		cacrt := value
-		certPool := x509.NewCertPool()
-		certPool.AppendCertsFromPEM(cacrt)
-
-		value, exists = clientSecret.Data[core.TLSCertKey]
-		if !exists {
-			return nil, fmt.Errorf("%v in not present in client secret", core.TLSCertKey)
-		}
-		crt := value
-
-		value, exists = clientSecret.Data[core.TLSPrivateKeyKey]
-		if !exists {
-			return nil, fmt.Errorf("%v in not present in client secret", core.TLSPrivateKeyKey)
-		}
-		key := value
-
-		cert, err := tls.X509KeyPair(crt, key)
-		if err != nil {
-			return nil, err
-		}
-		var clientCert []tls.Certificate
-		clientCert = append(clientCert, cert)
-		err = sql_driver.RegisterTLSConfig(api.MariaDBTLSConfigCustom, &tls.Config{
-			RootCAs:      certPool,
-			Certificates: clientCert,
-		})
-		if err != nil {
-			return nil, err
-		}
-		tlsConfig = fmt.Sprintf("tls=%s", api.MariaDBTLSConfigCustom)
-		// tls custom setup
-	}
-
-	connector := fmt.Sprintf("%v:%v@tcp(%s:%d)/%s?%s", user, pass, o.url, 3306, "mysql", tlsConfig)
 	engine, err := xorm.NewEngine("mysql", connector)
 	if err != nil {
 		return nil, err
@@ -106,8 +59,33 @@ func (o *kubeDBClientBuilder) GetMariaDBClient() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Client{
+	return &xormClient{
 		Engine: engine,
+	}, nil
+}
+
+// GetMariaDBClient return MariaDB go-client backed by database/sql package
+func (o *kubeDBClientBuilder) GetMariaDBClient() (Client, error) {
+	connector, err := o.getConnectionString()
+	if err != nil {
+		return nil, err
+	}
+
+	// connect to database
+	db, err := sql.Open("mysql", connector)
+	if err != nil {
+		return nil, err
+	}
+
+	// ping to database to check the connection
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	if err := db.PingContext(ctx); err != nil {
+		log.Fatal(err)
+	}
+
+	return &sqlClient{
+		DB: db,
 	}, nil
 }
 
@@ -137,4 +115,62 @@ func (o *kubeDBClientBuilder) SSLEnabledMariaDB() bool {
 
 func (o *kubeDBClientBuilder) getURL() string {
 	return fmt.Sprintf("%s.%s.%s.svc", o.podName, o.db.GoverningServiceName(), o.db.Namespace)
+}
+
+func (o *kubeDBClientBuilder) getConnectionString() (string, error) {
+	user, pass, err := o.getMariaDBBasicAuth()
+	if err != nil {
+		return "", err
+	}
+
+	if o.podName != "" {
+		o.url = o.getURL()
+	}
+
+	tlsConfig := ""
+	if o.SSLEnabledMariaDB() {
+		// get client-secret
+		clientSecret, err := o.kubeClient.CoreV1().Secrets(o.db.GetNamespace()).Get(context.TODO(), o.db.GetCertSecretName(api.MariaDBClientCert), metav1.GetOptions{})
+		if err != nil {
+			return "", err
+		}
+
+		value, exists := clientSecret.Data[rootCAKey]
+		if !exists {
+			return "", fmt.Errorf("%v in not present in client secret", rootCAKey)
+		}
+		cacrt := value
+		certPool := x509.NewCertPool()
+		certPool.AppendCertsFromPEM(cacrt)
+
+		value, exists = clientSecret.Data[core.TLSCertKey]
+		if !exists {
+			return "", fmt.Errorf("%v in not present in client secret", core.TLSCertKey)
+		}
+		crt := value
+
+		value, exists = clientSecret.Data[core.TLSPrivateKeyKey]
+		if !exists {
+			return "", fmt.Errorf("%v in not present in client secret", core.TLSPrivateKeyKey)
+		}
+		key := value
+
+		cert, err := tls.X509KeyPair(crt, key)
+		if err != nil {
+			return "", err
+		}
+		var clientCert []tls.Certificate
+		clientCert = append(clientCert, cert)
+		err = sql_driver.RegisterTLSConfig(api.MariaDBTLSConfigCustom, &tls.Config{
+			RootCAs:      certPool,
+			Certificates: clientCert,
+		})
+		if err != nil {
+			return "", err
+		}
+		tlsConfig = fmt.Sprintf("tls=%s", api.MariaDBTLSConfigCustom)
+	}
+
+	connector := fmt.Sprintf("%v:%v@tcp(%s:%d)/%s?%s", user, pass, o.url, 3306, "mysql", tlsConfig)
+	return connector, nil
 }

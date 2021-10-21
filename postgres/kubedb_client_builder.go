@@ -41,7 +41,7 @@ func (o *kubeDBClientBuilder) WithURL(url string) *kubeDBClientBuilder {
 	return o
 }
 
-func (o *kubeDBClientBuilder) GetPostgresXormClient() (*XormClient, error) {
+func (o *kubeDBClientBuilder) GetPostgresXormClient() (Client, error) {
 	connector, err := o.getConnectionString()
 	if err != nil {
 		return nil, err
@@ -55,7 +55,9 @@ func (o *kubeDBClientBuilder) GetPostgresXormClient() (*XormClient, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to run query: %v", err)
 	}
-	return &XormClient{engine}, nil
+	return &xormClient{
+		Engine: engine,
+	}, nil
 }
 
 func (o *kubeDBClientBuilder) getURL() string {
@@ -73,7 +75,7 @@ func (o *kubeDBClientBuilder) getPostgresAuthCredentials() (string, string, erro
 	return string(secret.Data[core.BasicAuthUsernameKey]), string(secret.Data[core.BasicAuthPasswordKey]), nil
 }
 
-func (o *kubeDBClientBuilder) GetPostgresClient() (*Client, error) {
+func (o *kubeDBClientBuilder) GetPostgresClient() (Client, error) {
 	connector, err := o.getConnectionString()
 	if err != nil {
 		return nil, err
@@ -91,7 +93,9 @@ func (o *kubeDBClientBuilder) GetPostgresClient() (*Client, error) {
 		log.Fatal(err)
 	}
 
-	return &Client{db}, nil
+	return &sqlClient{
+		DB: db,
+	}, nil
 }
 
 func (o *kubeDBClientBuilder) getConnectionString() (string, error) {
