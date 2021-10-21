@@ -2,8 +2,11 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/go-xorm/xorm"
 	core "k8s.io/api/core/v1"
@@ -38,7 +41,60 @@ func (o *kubeDBClientBuilder) WithURL(url string) *kubeDBClientBuilder {
 	return o
 }
 
+func (o *kubeDBClientBuilder) GetPostgresXormClient() (*XormClient, error) {
+	cnnstr, err := o.getConnectionString()
+	if err != nil {
+		return nil, err
+	}
+
+	engine, err := xorm.NewEngine("postgres", cnnstr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate postgres client using connection string: %v", err)
+	}
+	_, err = engine.Query("SELECT 1")
+	if err != nil {
+		return nil, fmt.Errorf("failed to run query: %v", err)
+	}
+	return &XormClient{engine}, nil
+}
+
+func (o *kubeDBClientBuilder) getURL() string {
+	return fmt.Sprintf("%s.%s.%s.svc", o.podName, o.db.GoverningServiceName(), o.db.Namespace)
+}
+
+func (o *kubeDBClientBuilder) getPostgresAuthCredentials() (string, string, error) {
+	if o.db.Spec.AuthSecret == nil {
+		return "", "", errors.New("no database secret")
+	}
+	secret, err := o.kubeClient.CoreV1().Secrets(o.db.Namespace).Get(context.TODO(), o.db.Spec.AuthSecret.Name, metav1.GetOptions{})
+	if err != nil {
+		return "", "", err
+	}
+	return string(secret.Data[core.BasicAuthUsernameKey]), string(secret.Data[core.BasicAuthPasswordKey]), nil
+}
+
 func (o *kubeDBClientBuilder) GetPostgresClient() (*Client, error) {
+	cnnstr, err := o.getConnectionString()
+	if err != nil {
+		return nil, err
+	}
+	// connect to database
+	db, err := sql.Open("postgres", cnnstr)
+	if err != nil {
+		return nil, err
+	}
+
+	// ping to database to check the connection
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	if err := db.PingContext(ctx); err != nil {
+		log.Fatal(err)
+	}
+
+	return &Client{db}, nil
+}
+
+func (o *kubeDBClientBuilder) getConnectionString() (string, error)  {
 	if o.podName != "" {
 		o.url = o.getURL()
 	}
@@ -47,7 +103,7 @@ func (o *kubeDBClientBuilder) GetPostgresClient() (*Client, error) {
 
 	user, pass, err := o.getPostgresAuthCredentials()
 	if err != nil {
-		return nil, fmt.Errorf("DB basic auth is not found for PostgreSQL %v/%v", o.db.Namespace, o.db.Name)
+		return "", fmt.Errorf("DB basic auth is not found for PostgreSQL %v/%v", o.db.Namespace, o.db.Name)
 	}
 	cnnstr := ""
 	sslMode := o.db.Spec.SSLMode
@@ -65,14 +121,14 @@ func (o *kubeDBClientBuilder) GetPostgresClient() (*Client, error) {
 
 		if err != nil {
 			klog.Error(err, "failed to get certificate secret.", secretName)
-			return nil, err
+			return "", err
 		}
 
 		certs, _ := certholder.DefaultHolder.ForResource(api.SchemeGroupVersion.WithResource(api.ResourcePluralPostgres), o.db.ObjectMeta)
 		paths, err := certs.Save(certSecret)
 		if err != nil {
 			klog.Error(err, "failed to save certificate")
-			return nil, err
+			return "", err
 		}
 		if o.db.Spec.ClientAuthMode == api.ClientAuthModeCert {
 			cnnstr = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=postgres sslmode=%s sslrootcert=%s sslcert=%s sslkey=%s", user, pass, dnsName, port, sslMode, paths.CACert, paths.Cert, paths.Key)
@@ -82,29 +138,5 @@ func (o *kubeDBClientBuilder) GetPostgresClient() (*Client, error) {
 	} else {
 		cnnstr = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=postgres sslmode=%s", user, pass, dnsName, port, sslMode)
 	}
-
-	engine, err := xorm.NewEngine("postgres", cnnstr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate postgres client using connection string: %v", err)
-	}
-	_, err = engine.Query("SELECT 1")
-	if err != nil {
-		return nil, fmt.Errorf("failed to run query: %v", err)
-	}
-	return &Client{engine}, nil
-}
-
-func (o *kubeDBClientBuilder) getURL() string {
-	return fmt.Sprintf("%s.%s.%s.svc", o.podName, o.db.GoverningServiceName(), o.db.Namespace)
-}
-
-func (o *kubeDBClientBuilder) getPostgresAuthCredentials() (string, string, error) {
-	if o.db.Spec.AuthSecret == nil {
-		return "", "", errors.New("no database secret")
-	}
-	secret, err := o.kubeClient.CoreV1().Secrets(o.db.Namespace).Get(context.TODO(), o.db.Spec.AuthSecret.Name, metav1.GetOptions{})
-	if err != nil {
-		return "", "", err
-	}
-	return string(secret.Data[core.BasicAuthUsernameKey]), string(secret.Data[core.BasicAuthPasswordKey]), nil
+	return cnnstr, nil
 }
