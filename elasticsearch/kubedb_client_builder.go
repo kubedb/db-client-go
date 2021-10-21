@@ -49,6 +49,9 @@ func (o *kubeDBClientBuilder) WithURL(url string) *kubeDBClientBuilder {
 }
 
 func (o *kubeDBClientBuilder) GetElasticClient() (*Client, error) {
+	if o.podName != "" {
+		o.url = o.getURL()
+	}
 	var username, password string
 	if !o.db.Spec.DisableSecurity && o.db.Spec.AuthSecret != nil {
 		secret, err := o.kubeClient.CoreV1().Secrets(o.db.Namespace).Get(context.TODO(), o.db.Spec.AuthSecret.Name, metav1.GetOptions{})
@@ -169,4 +172,8 @@ func (o *kubeDBClientBuilder) GetElasticClient() (*Client, error) {
 	}
 
 	return nil, fmt.Errorf("unknown database verseion: %s", o.db.Spec.Version)
+}
+
+func (o *kubeDBClientBuilder) getURL() string {
+	return fmt.Sprintf("%v://%s.%s.%s.svc:%d", o.db.GetConnectionScheme(), o.podName, o.db.ServiceName(), o.db.GetNamespace(), api.ElasticsearchRestPort)
 }

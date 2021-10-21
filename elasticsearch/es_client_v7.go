@@ -10,6 +10,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+var _ ESClient = &ESClientV7{}
+
 type ESClientV7 struct {
 	client *esv7.Client
 }
