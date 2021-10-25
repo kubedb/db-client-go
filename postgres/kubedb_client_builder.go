@@ -33,31 +33,31 @@ import (
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 )
 
-type kubeDBClientBuilder struct {
+type KubeDBClientBuilder struct {
 	kubeClient kubernetes.Interface
 	db         *api.Postgres
 	url        string
 	podName    string
 }
 
-func NewKubeDBClientBuilder(kubeClient kubernetes.Interface, dbObj *api.Postgres) *kubeDBClientBuilder {
-	return &kubeDBClientBuilder{
+func NewKubeDBClientBuilder(kubeClient kubernetes.Interface, dbObj *api.Postgres) *KubeDBClientBuilder {
+	return &KubeDBClientBuilder{
 		kubeClient: kubeClient,
 		db:         dbObj,
 	}
 }
 
-func (o *kubeDBClientBuilder) WithPod(podName string) *kubeDBClientBuilder {
+func (o *KubeDBClientBuilder) WithPod(podName string) *KubeDBClientBuilder {
 	o.podName = podName
 	return o
 }
 
-func (o *kubeDBClientBuilder) WithURL(url string) *kubeDBClientBuilder {
+func (o *KubeDBClientBuilder) WithURL(url string) *KubeDBClientBuilder {
 	o.url = url
 	return o
 }
 
-func (o *kubeDBClientBuilder) GetPostgresXormClient() (*XormClient, error) {
+func (o *KubeDBClientBuilder) GetPostgresXormClient() (*XormClient, error) {
 	connector, err := o.getConnectionString()
 	if err != nil {
 		return nil, err
@@ -74,11 +74,11 @@ func (o *kubeDBClientBuilder) GetPostgresXormClient() (*XormClient, error) {
 	return &XormClient{engine}, nil
 }
 
-func (o *kubeDBClientBuilder) getURL() string {
+func (o *KubeDBClientBuilder) getURL() string {
 	return fmt.Sprintf("%s.%s.%s.svc", o.podName, o.db.GoverningServiceName(), o.db.Namespace)
 }
 
-func (o *kubeDBClientBuilder) getPostgresAuthCredentials() (string, string, error) {
+func (o *KubeDBClientBuilder) getPostgresAuthCredentials() (string, string, error) {
 	if o.db.Spec.AuthSecret == nil {
 		return "", "", errors.New("no database secret")
 	}
@@ -89,7 +89,7 @@ func (o *kubeDBClientBuilder) getPostgresAuthCredentials() (string, string, erro
 	return string(secret.Data[core.BasicAuthUsernameKey]), string(secret.Data[core.BasicAuthPasswordKey]), nil
 }
 
-func (o *kubeDBClientBuilder) GetPostgresClient() (*Client, error) {
+func (o *KubeDBClientBuilder) GetPostgresClient() (*Client, error) {
 	connector, err := o.getConnectionString()
 	if err != nil {
 		return nil, err
@@ -110,7 +110,7 @@ func (o *kubeDBClientBuilder) GetPostgresClient() (*Client, error) {
 	return &Client{db}, nil
 }
 
-func (o *kubeDBClientBuilder) getConnectionString() (string, error) {
+func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	if o.podName != "" {
 		o.url = o.getURL()
 	}
