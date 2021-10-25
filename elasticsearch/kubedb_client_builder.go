@@ -25,6 +25,8 @@ import (
 	"strings"
 	"time"
 
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+
 	esv6 "github.com/elastic/go-elasticsearch/v6"
 	esv7 "github.com/elastic/go-elasticsearch/v7"
 	"github.com/pkg/errors"
@@ -35,7 +37,6 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 )
 
 type KubeDBClientBuilder struct {

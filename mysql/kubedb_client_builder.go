@@ -25,12 +25,13 @@ import (
 	"log"
 	"time"
 
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+
 	sql_driver "github.com/go-sql-driver/mysql"
-	"github.com/go-xorm/xorm"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	"xorm.io/xorm"
 )
 
 type KubeDBClientBuilder struct {

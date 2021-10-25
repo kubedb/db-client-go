@@ -24,6 +24,8 @@ import (
 	"fmt"
 	"time"
 
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+
 	"github.com/Masterminds/semver/v3"
 	rd "github.com/go-redis/redis/v8"
 	core "k8s.io/api/core/v1"
@@ -33,7 +35,6 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 )
 
 type KubeDBClientBuilder struct {

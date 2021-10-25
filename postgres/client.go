@@ -19,7 +19,7 @@ package postgres
 import (
 	"database/sql"
 
-	"github.com/go-xorm/xorm"
+	"xorm.io/xorm"
 )
 
 type Client struct {

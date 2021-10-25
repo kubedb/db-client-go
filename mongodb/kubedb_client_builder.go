@@ -23,6 +23,8 @@ import (
 	"strings"
 	"time"
 
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+
 	"go.mongodb.org/mongo-driver/mongo"
 	mgoptions "go.mongodb.org/mongo-driver/mongo/options"
 	core "k8s.io/api/core/v1"
@@ -30,7 +32,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 	"kmodules.xyz/client-go/tools/certholder"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 )
 
 type KubeDBClientBuilder struct {
