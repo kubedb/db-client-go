@@ -36,7 +36,7 @@ import (
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 )
 
-type kubeDBClientBuilder struct {
+type KubeDBClientBuilder struct {
 	kubeClient    kubernetes.Interface
 	dynamicClient dynamic.Interface
 	db            *api.Redis
@@ -44,25 +44,28 @@ type kubeDBClientBuilder struct {
 	url           string
 }
 
-func NewKubeDBClientBuilder(db *api.Redis, kubeClient kubernetes.Interface, dClient dynamic.Interface) *kubeDBClientBuilder {
-	return &kubeDBClientBuilder{
+func NewKubeDBClientBuilder(db *api.Redis, kubeClient kubernetes.Interface, dClient dynamic.Interface) *KubeDBClientBuilder {
+	return &KubeDBClientBuilder{
 		kubeClient:    kubeClient,
 		dynamicClient: dClient,
 		db:            db,
 	}
 }
 
-//func (o *kubeDBClientBuilder) WithPod(podName string) *kubeDBClientBuilder {
-//	o.podName = podName
-//	return o
-//}
-//
-//func (o *kubeDBClientBuilder) WithURL(url string) *kubeDBClientBuilder {
-//	o.url = url
-//	return o
-//}
+func (o *KubeDBClientBuilder) WithPod(podName string) *KubeDBClientBuilder {
+	o.podName = podName
+	return o
+}
 
-func (o *kubeDBClientBuilder) GetRedisClient() (*Client, error) {
+func (o *KubeDBClientBuilder) WithURL(url string) *KubeDBClientBuilder {
+	o.url = url
+	return o
+}
+
+func (o *KubeDBClientBuilder) GetRedisClient() (*Client, error) {
+	if o.podName != "" {
+		o.url = o.getURL()
+	}
 	if o.db.Spec.AuthSecret == nil {
 		return nil, errors.New("no database secret")
 	}
@@ -89,7 +92,7 @@ func (o *kubeDBClientBuilder) GetRedisClient() (*Client, error) {
 		DialTimeout: 15 * time.Second,
 		IdleTimeout: 3 * time.Second,
 		PoolSize:    1,
-		Addr:        o.db.Address(),
+		Addr:        o.url,
 	}
 
 	if curVersion.Major() > 4 {
@@ -129,4 +132,8 @@ func (o *kubeDBClientBuilder) GetRedisClient() (*Client, error) {
 	return &Client{
 		rdClient,
 	}, nil
+}
+
+func (o *KubeDBClientBuilder) getURL() string {
+	return fmt.Sprintf("%v.%v", o.podName, o.db.Address())
 }

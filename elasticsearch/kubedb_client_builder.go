@@ -38,7 +38,7 @@ import (
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 )
 
-type kubeDBClientBuilder struct {
+type KubeDBClientBuilder struct {
 	kubeClient    kubernetes.Interface
 	dynamicClient dynamic.Interface
 	db            *api.Elasticsearch
@@ -46,25 +46,25 @@ type kubeDBClientBuilder struct {
 	podName       string
 }
 
-func NewKubeDBClientBuilder(kubeClient kubernetes.Interface, dClient dynamic.Interface, db *api.Elasticsearch) *kubeDBClientBuilder {
-	return &kubeDBClientBuilder{
+func NewKubeDBClientBuilder(kubeClient kubernetes.Interface, dClient dynamic.Interface, db *api.Elasticsearch) *KubeDBClientBuilder {
+	return &KubeDBClientBuilder{
 		kubeClient:    kubeClient,
 		dynamicClient: dClient,
 		db:            db,
 	}
 }
 
-func (o *kubeDBClientBuilder) WithPod(podName string) *kubeDBClientBuilder {
+func (o *KubeDBClientBuilder) WithPod(podName string) *KubeDBClientBuilder {
 	o.podName = podName
 	return o
 }
 
-func (o *kubeDBClientBuilder) WithURL(url string) *kubeDBClientBuilder {
+func (o *KubeDBClientBuilder) WithURL(url string) *KubeDBClientBuilder {
 	o.url = url
 	return o
 }
 
-func (o *kubeDBClientBuilder) GetElasticClient() (*Client, error) {
+func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 	if o.podName != "" {
 		o.url = o.getURL()
 	}
@@ -190,6 +190,6 @@ func (o *kubeDBClientBuilder) GetElasticClient() (*Client, error) {
 	return nil, fmt.Errorf("unknown database verseion: %s", o.db.Spec.Version)
 }
 
-func (o *kubeDBClientBuilder) getURL() string {
+func (o *KubeDBClientBuilder) getURL() string {
 	return fmt.Sprintf("%v://%s.%s.%s.svc:%d", o.db.GetConnectionScheme(), o.podName, o.db.ServiceName(), o.db.GetNamespace(), api.ElasticsearchRestPort)
 }

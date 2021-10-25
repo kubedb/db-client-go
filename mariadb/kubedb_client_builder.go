@@ -37,31 +37,31 @@ const (
 	rootCAKey = "ca.crt"
 )
 
-type kubeDBClientBuilder struct {
+type KubeDBClientBuilder struct {
 	kubeClient kubernetes.Interface
 	db         *api.MariaDB
 	url        string
 	podName    string
 }
 
-func NewKubeDBClientBuilder(db *api.MariaDB, kubeClient kubernetes.Interface) *kubeDBClientBuilder {
-	return &kubeDBClientBuilder{
+func NewKubeDBClientBuilder(db *api.MariaDB, kubeClient kubernetes.Interface) *KubeDBClientBuilder {
+	return &KubeDBClientBuilder{
 		kubeClient: kubeClient,
 		db:         db,
 	}
 }
 
-func (o *kubeDBClientBuilder) WithURL(url string) *kubeDBClientBuilder {
+func (o *KubeDBClientBuilder) WithURL(url string) *KubeDBClientBuilder {
 	o.url = url
 	return o
 }
 
-func (o *kubeDBClientBuilder) WithPod(podName string) *kubeDBClientBuilder {
+func (o *KubeDBClientBuilder) WithPod(podName string) *KubeDBClientBuilder {
 	o.podName = podName
 	return o
 }
 
-func (o *kubeDBClientBuilder) GetMariaDBClient() (*Client, error) {
+func (o *KubeDBClientBuilder) GetMariaDBClient() (*Client, error) {
 	connector, err := o.getConnectionString()
 	if err != nil {
 		return nil, err
@@ -83,7 +83,7 @@ func (o *kubeDBClientBuilder) GetMariaDBClient() (*Client, error) {
 	return &Client{db}, nil
 }
 
-func (o *kubeDBClientBuilder) GetMariaDBXormClient() (*XormClient, error) {
+func (o *KubeDBClientBuilder) GetMariaDBXormClient() (*XormClient, error) {
 	connector, err := o.getConnectionString()
 	if err != nil {
 		return nil, err
@@ -101,7 +101,7 @@ func (o *kubeDBClientBuilder) GetMariaDBXormClient() (*XormClient, error) {
 	}, nil
 }
 
-func (o *kubeDBClientBuilder) getMariaDBBasicAuth() (string, string, error) {
+func (o *KubeDBClientBuilder) getMariaDBBasicAuth() (string, string, error) {
 	var secretName string
 	if o.db.Spec.AuthSecret != nil {
 		secretName = o.db.GetAuthSecretName()
@@ -121,15 +121,15 @@ func (o *kubeDBClientBuilder) getMariaDBBasicAuth() (string, string, error) {
 	return string(user), string(pass), nil
 }
 
-func (o *kubeDBClientBuilder) SSLEnabledMariaDB() bool {
+func (o *KubeDBClientBuilder) SSLEnabledMariaDB() bool {
 	return o.db.Spec.TLS != nil && o.db.Spec.RequireSSL
 }
 
-func (o *kubeDBClientBuilder) getURL() string {
+func (o *KubeDBClientBuilder) getURL() string {
 	return fmt.Sprintf("%s.%s.%s.svc", o.podName, o.db.GoverningServiceName(), o.db.Namespace)
 }
 
-func (o *kubeDBClientBuilder) getConnectionString() (string, error) {
+func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	user, pass, err := o.getMariaDBBasicAuth()
 	if err != nil {
 		return "", err
