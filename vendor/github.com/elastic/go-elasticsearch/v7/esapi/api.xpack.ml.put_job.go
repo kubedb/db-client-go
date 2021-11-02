@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 7.15.0: DO NOT EDIT
+// Code generated from specification version 7.13.1: DO NOT EDIT
 
 package esapi
 
@@ -23,7 +23,6 @@ import (
 	"context"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -51,11 +50,6 @@ type MLPutJobRequest struct {
 	Body io.Reader
 
 	JobID string
-
-	AllowNoIndices    *bool
-	ExpandWildcards   string
-	IgnoreThrottled   *bool
-	IgnoreUnavailable *bool
 
 	Pretty     bool
 	Human      bool
@@ -87,22 +81,6 @@ func (r MLPutJobRequest) Do(ctx context.Context, transport Transport) (*Response
 	path.WriteString(r.JobID)
 
 	params = make(map[string]string)
-
-	if r.AllowNoIndices != nil {
-		params["allow_no_indices"] = strconv.FormatBool(*r.AllowNoIndices)
-	}
-
-	if r.ExpandWildcards != "" {
-		params["expand_wildcards"] = r.ExpandWildcards
-	}
-
-	if r.IgnoreThrottled != nil {
-		params["ignore_throttled"] = strconv.FormatBool(*r.IgnoreThrottled)
-	}
-
-	if r.IgnoreUnavailable != nil {
-		params["ignore_unavailable"] = strconv.FormatBool(*r.IgnoreUnavailable)
-	}
 
 	if r.Pretty {
 		params["pretty"] = "true"
@@ -172,38 +150,6 @@ func (r MLPutJobRequest) Do(ctx context.Context, transport Transport) (*Response
 func (f MLPutJob) WithContext(v context.Context) func(*MLPutJobRequest) {
 	return func(r *MLPutJobRequest) {
 		r.ctx = v
-	}
-}
-
-// WithAllowNoIndices - ignore if the source indices expressions resolves to no concrete indices (default: true). only set if datafeed_config is provided..
-//
-func (f MLPutJob) WithAllowNoIndices(v bool) func(*MLPutJobRequest) {
-	return func(r *MLPutJobRequest) {
-		r.AllowNoIndices = &v
-	}
-}
-
-// WithExpandWildcards - whether source index expressions should get expanded to open or closed indices (default: open). only set if datafeed_config is provided..
-//
-func (f MLPutJob) WithExpandWildcards(v string) func(*MLPutJobRequest) {
-	return func(r *MLPutJobRequest) {
-		r.ExpandWildcards = v
-	}
-}
-
-// WithIgnoreThrottled - ignore indices that are marked as throttled (default: true). only set if datafeed_config is provided..
-//
-func (f MLPutJob) WithIgnoreThrottled(v bool) func(*MLPutJobRequest) {
-	return func(r *MLPutJobRequest) {
-		r.IgnoreThrottled = &v
-	}
-}
-
-// WithIgnoreUnavailable - ignore unavailable indexes (default: false). only set if datafeed_config is provided..
-//
-func (f MLPutJob) WithIgnoreUnavailable(v bool) func(*MLPutJobRequest) {
-	return func(r *MLPutJobRequest) {
-		r.IgnoreUnavailable = &v
 	}
 }
 
