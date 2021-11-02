@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 7.15.0: DO NOT EDIT
+// Code generated from specification version 7.13.1: DO NOT EDIT
 
 package esapi
 
@@ -178,7 +178,7 @@ func (f IndicesDelete) WithAllowNoIndices(v bool) func(*IndicesDeleteRequest) {
 	}
 }
 
-// WithExpandWildcards - whether wildcard expressions should get expanded to open, closed, or hidden indices.
+// WithExpandWildcards - whether wildcard expressions should get expanded to open or closed indices (default: open).
 //
 func (f IndicesDelete) WithExpandWildcards(v string) func(*IndicesDeleteRequest) {
 	return func(r *IndicesDeleteRequest) {

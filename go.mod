@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/elastic/go-elasticsearch/v6 v6.8.10
-	github.com/elastic/go-elasticsearch/v7 v7.15.1
+	github.com/elastic/go-elasticsearch/v7 v7.13.1
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/pkg/errors v0.9.1
