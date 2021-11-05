@@ -67,3 +67,26 @@ func (es *ESClientV7) NodesStats() (map[string]interface{}, error) {
 
 	return nodesStats, nil
 }
+
+// GetIndicesInfo will return the indices info of an Elasticsearch database
+func (es *ESClientV7) GetIndicesInfo() ([]interface{}, error) {
+	req := esapi.CatIndicesRequest{
+		Bytes:  "b", // will return resource size field into byte unit
+		Format: "json",
+		Pretty: true,
+		Human:  true,
+	}
+
+	resp, err := req.Do(context.Background(), es.client)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	indicesInfo := make([]interface{}, 0)
+	if err := json.NewDecoder(resp.Body).Decode(&indicesInfo); err != nil {
+		return nil, fmt.Errorf("failed to deserialize the response: %v", err)
+	}
+
+	return indicesInfo, nil
+}
