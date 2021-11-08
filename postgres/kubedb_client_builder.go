@@ -34,11 +34,16 @@ import (
 	"xorm.io/xorm"
 )
 
+const (
+	DefaultPostgresDB = "postgres"
+)
+
 type KubeDBClientBuilder struct {
 	kubeClient kubernetes.Interface
 	db         *api.Postgres
 	url        string
 	podName    string
+	postgresDB string
 }
 
 func NewKubeDBClientBuilder(kubeClient kubernetes.Interface, dbObj *api.Postgres) *KubeDBClientBuilder {
@@ -55,6 +60,11 @@ func (o *KubeDBClientBuilder) WithPod(podName string) *KubeDBClientBuilder {
 
 func (o *KubeDBClientBuilder) WithURL(url string) *KubeDBClientBuilder {
 	o.url = url
+	return o
+}
+
+func (o *KubeDBClientBuilder) WithPostgresDB(pgDB string) *KubeDBClientBuilder {
+	o.postgresDB = pgDB
 	return o
 }
 
@@ -118,6 +128,10 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	dnsName := o.url
 	port := 5432
 
+	if o.postgresDB == "" {
+		o.postgresDB = DefaultPostgresDB
+	}
+
 	user, pass, err := o.getPostgresAuthCredentials()
 	if err != nil {
 		return "", fmt.Errorf("DB basic auth is not found for PostgreSQL %v/%v", o.db.Namespace, o.db.Name)
@@ -148,12 +162,12 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 			return "", err
 		}
 		if o.db.Spec.ClientAuthMode == api.ClientAuthModeCert {
-			cnnstr = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=postgres sslmode=%s sslrootcert=%s sslcert=%s sslkey=%s", user, pass, dnsName, port, sslMode, paths.CACert, paths.Cert, paths.Key)
+			cnnstr = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s sslrootcert=%s sslcert=%s sslkey=%s", user, pass, dnsName, port, o.postgresDB, sslMode, paths.CACert, paths.Cert, paths.Key)
 		} else {
-			cnnstr = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=postgres sslmode=%s sslrootcert=%s", user, pass, dnsName, port, sslMode, paths.CACert)
+			cnnstr = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s sslrootcert=%s", user, pass, dnsName, port, o.postgresDB, sslMode, paths.CACert)
 		}
 	} else {
-		cnnstr = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=postgres sslmode=%s", user, pass, dnsName, port, sslMode)
+		cnnstr = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s", user, pass, dnsName, port, o.postgresDB, sslMode)
 	}
 	return cnnstr, nil
 }
