@@ -27,10 +27,9 @@ import (
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 	"kmodules.xyz/client-go/tools/certholder"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"xorm.io/xorm"
 )
 
@@ -39,17 +38,17 @@ const (
 )
 
 type KubeDBClientBuilder struct {
-	kubeClient kubernetes.Interface
+	kc         client.Client
 	db         *api.Postgres
 	url        string
 	podName    string
 	postgresDB string
 }
 
-func NewKubeDBClientBuilder(kubeClient kubernetes.Interface, dbObj *api.Postgres) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *api.Postgres) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
-		kubeClient: kubeClient,
-		db:         dbObj,
+		kc: kc,
+		db: db,
 	}
 }
 
@@ -93,7 +92,8 @@ func (o *KubeDBClientBuilder) getPostgresAuthCredentials() (string, string, erro
 	if o.db.Spec.AuthSecret == nil {
 		return "", "", errors.New("no database secret")
 	}
-	secret, err := o.kubeClient.CoreV1().Secrets(o.db.Namespace).Get(context.TODO(), o.db.Spec.AuthSecret.Name, metav1.GetOptions{})
+	var secret core.Secret
+	err := o.kc.Get(context.TODO(), client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.AuthSecret.Name}, &secret)
 	if err != nil {
 		return "", "", err
 	}
@@ -148,7 +148,8 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	if o.db.Spec.TLS != nil {
 		secretName := o.db.GetCertSecretName(api.PostgresClientCert)
 
-		certSecret, err := o.kubeClient.CoreV1().Secrets(o.db.Namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
+		var certSecret core.Secret
+		err := o.kc.Get(context.TODO(), client.ObjectKey{Namespace: o.db.Namespace, Name: secretName}, &certSecret)
 
 		if err != nil {
 			klog.Error(err, "failed to get certificate secret.", secretName)
@@ -156,7 +157,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		}
 
 		certs, _ := certholder.DefaultHolder.ForResource(api.SchemeGroupVersion.WithResource(api.ResourcePluralPostgres), o.db.ObjectMeta)
-		paths, err := certs.Save(certSecret)
+		paths, err := certs.Save(&certSecret)
 		if err != nil {
 			klog.Error(err, "failed to save certificate")
 			return "", err

@@ -29,8 +29,7 @@ import (
 
 	sql_driver "github.com/go-sql-driver/mysql"
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"xorm.io/xorm"
 )
 
@@ -39,16 +38,16 @@ const (
 )
 
 type KubeDBClientBuilder struct {
-	kubeClient kubernetes.Interface
-	db         *api.MariaDB
-	url        string
-	podName    string
+	kc      client.Client
+	db      *api.MariaDB
+	url     string
+	podName string
 }
 
-func NewKubeDBClientBuilder(db *api.MariaDB, kubeClient kubernetes.Interface) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *api.MariaDB) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
-		kubeClient: kubeClient,
-		db:         db,
+		kc: kc,
+		db: db,
 	}
 }
 
@@ -107,7 +106,8 @@ func (o *KubeDBClientBuilder) getMariaDBBasicAuth() (string, string, error) {
 	if o.db.Spec.AuthSecret != nil {
 		secretName = o.db.GetAuthSecretName()
 	}
-	secret, err := o.kubeClient.CoreV1().Secrets(o.db.Namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
+	var secret core.Secret
+	err := o.kc.Get(context.TODO(), client.ObjectKey{Namespace: o.db.Namespace, Name: secretName}, &secret)
 	if err != nil {
 		return "", "", err
 	}
@@ -143,7 +143,8 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	tlsConfig := ""
 	if o.SSLEnabledMariaDB() {
 		// get client-secret
-		clientSecret, err := o.kubeClient.CoreV1().Secrets(o.db.GetNamespace()).Get(context.TODO(), o.db.GetCertSecretName(api.MariaDBClientCert), metav1.GetOptions{})
+		var clientSecret core.Secret
+		err := o.kc.Get(context.TODO(), client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.GetCertSecretName(api.MariaDBClientCert)}, &clientSecret)
 		if err != nil {
 			return "", err
 		}

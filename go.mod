@@ -11,11 +11,10 @@ require (
 	github.com/pkg/errors v0.9.1
 	go.mongodb.org/mongo-driver v1.1.2
 	k8s.io/api v0.21.1
-	k8s.io/apimachinery v0.21.1
-	k8s.io/client-go v0.21.1
 	k8s.io/klog/v2 v2.8.0
 	kmodules.xyz/client-go v0.0.0-20210928133955-8df5bb467db6
 	kubedb.dev/apimachinery v0.22.1-0.20211012044625-d0176524a0cc
+	sigs.k8s.io/controller-runtime v0.9.0
 	xorm.io/xorm v1.2.5
 )
 
@@ -75,12 +74,13 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	k8s.io/apiextensions-apiserver v0.21.1 // indirect
+	k8s.io/apimachinery v0.21.1 // indirect
+	k8s.io/client-go v0.21.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20210305001622-591a79e4bda7 // indirect
 	k8s.io/utils v0.0.0-20210527160623-6fdb442a123b // indirect
 	kmodules.xyz/custom-resources v0.0.0-20211007080833-72bd9e8cae6e // indirect
 	kmodules.xyz/monitoring-agent-api v0.0.0-20210928135619-38ca075a2dbd // indirect
 	kmodules.xyz/offshoot-api v0.0.0-20210829122105-6f4d481b0c61 // indirect
-	sigs.k8s.io/controller-runtime v0.9.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.0 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 	xorm.io/builder v0.3.9 // indirect

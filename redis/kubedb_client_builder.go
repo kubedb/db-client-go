@@ -24,32 +24,27 @@ import (
 	"fmt"
 	"time"
 
+	"kubedb.dev/apimachinery/apis/catalog/v1alpha1"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	"github.com/Masterminds/semver/v3"
 	rd "github.com/go-redis/redis/v8"
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type KubeDBClientBuilder struct {
-	kubeClient    kubernetes.Interface
-	dynamicClient dynamic.Interface
-	db            *api.Redis
-	podName       string
-	url           string
+	kc      client.Client
+	db      *api.Redis
+	podName string
+	url     string
 }
 
-func NewKubeDBClientBuilder(db *api.Redis, kubeClient kubernetes.Interface, dClient dynamic.Interface) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *api.Redis) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
-		kubeClient:    kubeClient,
-		dynamicClient: dClient,
-		db:            db,
+		kc: kc,
+		db: db,
 	}
 }
 
@@ -70,21 +65,13 @@ func (o *KubeDBClientBuilder) GetRedisClient() (*Client, error) {
 	if o.db.Spec.AuthSecret == nil {
 		return nil, errors.New("no database secret")
 	}
-	gvr := schema.GroupVersionResource{
-		Group:    "catalog.kubedb.com",
-		Version:  "v1alpha1",
-		Resource: "redisversions",
-	}
-	redisVersionObj, err := o.dynamicClient.Resource(gvr).Get(context.Background(), o.db.Spec.Version, metav1.GetOptions{})
+	var rdVersion v1alpha1.RedisVersion
+	err := o.kc.Get(context.Background(), client.ObjectKey{Name: o.db.Spec.Version}, &rdVersion)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get RedisVersion object: %v", err)
 	}
-	redisVersion, found, err := unstructured.NestedFieldNoCopy(redisVersionObj.Object, "spec", "version")
-	if err != nil || !found {
-		return nil, fmt.Errorf("failed to get version field from RedisVersion object: %v", err)
-	}
 
-	curVersion, err := semver.NewVersion(redisVersion.(string))
+	curVersion, err := semver.NewVersion(rdVersion.Spec.Version)
 	if err != nil {
 		return nil, fmt.Errorf("can't get the version from RedisVersion spec")
 	}
@@ -97,7 +84,8 @@ func (o *KubeDBClientBuilder) GetRedisClient() (*Client, error) {
 	}
 
 	if curVersion.Major() > 4 {
-		authSecret, err := o.kubeClient.CoreV1().Secrets(o.db.Namespace).Get(context.TODO(), o.db.Spec.AuthSecret.Name, metav1.GetOptions{})
+		var authSecret core.Secret
+		err := o.kc.Get(context.TODO(), client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.AuthSecret.Name}, &authSecret)
 		if err != nil {
 			return nil, err
 		}
@@ -105,7 +93,8 @@ func (o *KubeDBClientBuilder) GetRedisClient() (*Client, error) {
 	}
 
 	if o.db.Spec.TLS != nil {
-		sec, err := o.kubeClient.CoreV1().Secrets(o.db.Namespace).Get(context.TODO(), o.db.CertificateName(api.RedisClientCert), metav1.GetOptions{})
+		var sec core.Secret
+		err := o.kc.Get(context.TODO(), client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.CertificateName(api.RedisClientCert)}, &sec)
 		if err != nil {
 			klog.Error(err, "error in getting the secret")
 			return nil, err
