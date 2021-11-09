@@ -17,9 +17,12 @@ limitations under the License.
 package elasticsearch
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 
 	esv6 "github.com/elastic/go-elasticsearch/v6"
+	"github.com/elastic/go-elasticsearch/v6/esapi"
 	"github.com/pkg/errors"
 )
 
@@ -48,4 +51,27 @@ func (es *ESClientV6) ClusterHealthInfo() (map[string]interface{}, error) {
 func (es *ESClientV6) NodesStats() (map[string]interface{}, error) {
 	// todo: need to implement for version 6
 	return nil, nil
+}
+
+// GetIndicesInfo will return the indices info of an Elasticsearch database
+func (es *ESClientV6) GetIndicesInfo() ([]interface{}, error) {
+	req := esapi.CatIndicesRequest{
+		Bytes:  "b", // will return resource size field into byte unit
+		Format: "json",
+		Pretty: true,
+		Human:  true,
+	}
+
+	resp, err := req.Do(context.Background(), es.client)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	indicesInfo := make([]interface{}, 0)
+	if err := json.NewDecoder(resp.Body).Decode(&indicesInfo); err != nil {
+		return nil, fmt.Errorf("failed to deserialize the response: %v", err)
+	}
+
+	return indicesInfo, nil
 }
