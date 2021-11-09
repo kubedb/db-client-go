@@ -22,36 +22,31 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"strings"
 	"time"
 
+	"kubedb.dev/apimachinery/apis/catalog/v1alpha1"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
+	"github.com/Masterminds/semver/v3"
 	esv6 "github.com/elastic/go-elasticsearch/v6"
 	esv7 "github.com/elastic/go-elasticsearch/v7"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type KubeDBClientBuilder struct {
-	kubeClient    kubernetes.Interface
-	dynamicClient dynamic.Interface
-	db            *api.Elasticsearch
-	url           string
-	podName       string
+	kc      client.Client
+	db      *api.Elasticsearch
+	url     string
+	podName string
 }
 
-func NewKubeDBClientBuilder(kubeClient kubernetes.Interface, dClient dynamic.Interface, db *api.Elasticsearch) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *api.Elasticsearch) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
-		kubeClient:    kubeClient,
-		dynamicClient: dClient,
-		db:            db,
+		kc: kc,
+		db: db,
 	}
 }
 
@@ -71,7 +66,8 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 	}
 	var username, password string
 	if !o.db.Spec.DisableSecurity && o.db.Spec.AuthSecret != nil {
-		secret, err := o.kubeClient.CoreV1().Secrets(o.db.Namespace).Get(context.TODO(), o.db.Spec.AuthSecret.Name, metav1.GetOptions{})
+		var secret core.Secret
+		err := o.kc.Get(context.TODO(), client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.AuthSecret.Name}, &secret)
 		if err != nil {
 			klog.Errorf("Failed to get secret: %s for Elasticsearch: %s/%s with: %s", o.db.Spec.AuthSecret.Name, o.db.Namespace, o.db.Name, err.Error())
 			return nil, errors.Wrap(err, "failed to get the secret")
@@ -93,24 +89,19 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 	}
 
 	// get Elasticsearch version from Elasticsearch version objects
-	gvr := schema.GroupVersionResource{
-		Group:    "catalog.kubedb.com",
-		Version:  "v1alpha1",
-		Resource: "elasticsearchversions",
-	}
-	versionObj, err := o.dynamicClient.Resource(gvr).Get(context.Background(), o.db.Spec.Version, metav1.GetOptions{})
+	var esVer v1alpha1.ElasticsearchVersion
+	err := o.kc.Get(context.Background(), client.ObjectKey{Name: o.db.Spec.Version}, &esVer)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get elasticsearch version: %v", err)
 	}
-	version, found, err := unstructured.NestedFieldNoCopy(versionObj.Object, "spec", "version")
-	if err != nil || !found {
-		return nil, fmt.Errorf("failed to get version field from ElasticsearchVersion object: %v", err)
+	esVersion, err := semver.NewVersion(esVer.Spec.Version)
+	if err != nil {
+		return nil, err
 	}
-	esVersion := version.(string)
 
 	switch {
 	// for Elasticsearch 6.x.x
-	case strings.HasPrefix(esVersion, "6."):
+	case esVersion.Major() == 6:
 		client, err := esv6.NewClient(esv6.Config{
 			Addresses:         []string{o.url},
 			Username:          username,
@@ -149,7 +140,7 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 		}, nil
 
 	// for Elasticsearch 7.x.x
-	case strings.HasPrefix(esVersion, "7."):
+	case esVersion.Major() == 7:
 		client, err := esv7.NewClient(esv7.Config{
 			Addresses:         []string{o.url},
 			Username:          username,

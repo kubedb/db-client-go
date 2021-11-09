@@ -28,14 +28,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	mgoptions "go.mongodb.org/mongo-driver/mongo/options"
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 	"kmodules.xyz/client-go/tools/certholder"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type KubeDBClientBuilder struct {
-	kubeClient kubernetes.Interface
+	kc         client.Client
 	db         *api.MongoDB
 	url        string
 	podName    string
@@ -45,11 +44,11 @@ type KubeDBClientBuilder struct {
 	ctx        context.Context
 }
 
-func NewKubeDBClientBuilder(db *api.MongoDB, kubeClient kubernetes.Interface) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *api.MongoDB) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
-		kubeClient: kubeClient,
-		db:         db,
-		direct:     false,
+		kc:     kc,
+		db:     db,
+		direct: false,
 	}
 }
 
@@ -142,7 +141,8 @@ func (o *KubeDBClientBuilder) getMongoDBClientOpts() (*mgoptions.ClientOptions, 
 		secretName := db.GetCertSecretName(api.MongoDBClientCert, "")
 		var paths *certholder.Paths
 		if o.certs == nil {
-			certSecret, err := o.kubeClient.CoreV1().Secrets(db.Namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
+			var certSecret core.Secret
+			err := o.kc.Get(context.TODO(), client.ObjectKey{Namespace: db.Namespace, Name: secretName}, &certSecret)
 			if err != nil {
 				klog.Error(err, "failed to get certificate secret. ", secretName)
 				return nil, err
@@ -150,7 +150,7 @@ func (o *KubeDBClientBuilder) getMongoDBClientOpts() (*mgoptions.ClientOptions, 
 
 			certs, _ := certholder.DefaultHolder.
 				ForResource(api.SchemeGroupVersion.WithResource(api.ResourcePluralMongoDB), db.ObjectMeta)
-			_, err = certs.Save(certSecret)
+			_, err = certs.Save(&certSecret)
 			if err != nil {
 				klog.Error(err, "failed to save certificate")
 				return nil, err
@@ -184,7 +184,8 @@ func (o *KubeDBClientBuilder) getMongoDBRootCredentials() (string, string, error
 	if db.Spec.AuthSecret == nil {
 		return "", "", errors.New("no database secret")
 	}
-	secret, err := o.kubeClient.CoreV1().Secrets(db.Namespace).Get(context.TODO(), db.Spec.AuthSecret.Name, metav1.GetOptions{})
+	var secret core.Secret
+	err := o.kc.Get(context.TODO(), client.ObjectKey{Namespace: db.Namespace, Name: db.Spec.AuthSecret.Name}, &secret)
 	if err != nil {
 		return "", "", err
 	}

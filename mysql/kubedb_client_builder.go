@@ -29,22 +29,21 @@ import (
 
 	sql_driver "github.com/go-sql-driver/mysql"
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"xorm.io/xorm"
 )
 
 type KubeDBClientBuilder struct {
-	kubeClient kubernetes.Interface
-	db         *api.MySQL
-	url        string
-	podName    string
+	kc      client.Client
+	db      *api.MySQL
+	url     string
+	podName string
 }
 
-func NewKubeDBClientBuilder(db *api.MySQL, kubeClient kubernetes.Interface) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *api.MySQL) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
-		kubeClient: kubeClient,
-		db:         db,
+		kc: kc,
+		db: db,
 	}
 }
 
@@ -108,7 +107,8 @@ func (o *KubeDBClientBuilder) getMySQLRootCredentials() (string, string, error) 
 	if db.Spec.AuthSecret != nil {
 		secretName = db.GetAuthSecretName()
 	}
-	secret, err := o.kubeClient.CoreV1().Secrets(db.Namespace).Get(context.Background(), secretName, metav1.GetOptions{})
+	var secret core.Secret
+	err := o.kc.Get(context.Background(), client.ObjectKey{Namespace: db.Namespace, Name: secretName}, &secret)
 	if err != nil {
 		return "", "", err
 	}
@@ -136,7 +136,8 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	tlsConfig := ""
 	if o.db.Spec.RequireSSL && o.db.Spec.TLS != nil {
 		// get client-secret
-		clientSecret, err := o.kubeClient.CoreV1().Secrets(o.db.GetNamespace()).Get(context.TODO(), o.db.MustCertSecretName(api.MySQLClientCert), metav1.GetOptions{})
+		var clientSecret core.Secret
+		err := o.kc.Get(context.TODO(), client.ObjectKey{Namespace: o.db.GetNamespace(), Name: o.db.MustCertSecretName(api.MySQLClientCert)}, &clientSecret)
 		if err != nil {
 			return "", err
 		}
