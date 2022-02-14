@@ -12,8 +12,8 @@ require (
 	go.mongodb.org/mongo-driver v1.1.2
 	k8s.io/api v0.21.1
 	k8s.io/klog/v2 v2.8.0
-	kmodules.xyz/client-go v0.0.0-20210928133955-8df5bb467db6
-	kubedb.dev/apimachinery v0.22.1-0.20211012044625-d0176524a0cc
+	kmodules.xyz/client-go v0.0.0-20220118144149-f5289f79ff44
+	kubedb.dev/apimachinery v0.24.1-0.20220213164510-c6db524e70fd
 	sigs.k8s.io/controller-runtime v0.9.0
 	xorm.io/xorm v1.2.5
 )
@@ -47,10 +47,12 @@ require (
 	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/klauspost/compress v1.9.5 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
-	github.com/mitchellh/mapstructure v1.1.2 // indirect
+	github.com/mattn/go-colorable v0.1.9 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
-	github.com/sergi/go-diff v1.1.0 // indirect
+	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c // indirect
@@ -62,10 +64,11 @@ require (
 	golang.org/x/net v0.0.0-20210428140749-89ef3d95e781 // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
+	golang.org/x/sys v0.0.0-20210817190340-bfb29a6856f2 // indirect
 	golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d // indirect
-	golang.org/x/text v0.3.6 // indirect
-	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
+	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
+	golang.org/x/tools v0.1.1-0.20210427153610-6397a11608ad // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	gomodules.xyz/mergo v0.3.13-0.20210702100041-9d62ff8ece4d // indirect
 	gomodules.xyz/pointer v0.1.0 // indirect
@@ -77,11 +80,11 @@ require (
 	k8s.io/apimachinery v0.21.1 // indirect
 	k8s.io/client-go v0.21.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20210305001622-591a79e4bda7 // indirect
-	k8s.io/utils v0.0.0-20210527160623-6fdb442a123b // indirect
-	kmodules.xyz/custom-resources v0.0.0-20211007080833-72bd9e8cae6e // indirect
+	k8s.io/utils v0.0.0-20210802155522-efc7438f0176 // indirect
+	kmodules.xyz/custom-resources v0.0.0-20220104123914-3c036dd7c1cd // indirect
 	kmodules.xyz/monitoring-agent-api v0.0.0-20210928135619-38ca075a2dbd // indirect
-	kmodules.xyz/offshoot-api v0.0.0-20210829122105-6f4d481b0c61 // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.1.0 // indirect
+	kmodules.xyz/offshoot-api v0.0.0-20211103060642-3e217667cf41 // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.1.2 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 	xorm.io/builder v0.3.9 // indirect
 )

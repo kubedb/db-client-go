@@ -155,8 +155,12 @@ github.com/klauspost/compress/zstd/internal/xxhash
 github.com/mailru/easyjson/buffer
 github.com/mailru/easyjson/jlexer
 github.com/mailru/easyjson/jwriter
-# github.com/mitchellh/mapstructure v1.1.2
-## explicit
+# github.com/mattn/go-colorable v0.1.9
+## explicit; go 1.13
+# github.com/mattn/go-isatty v0.0.14
+## explicit; go 1.12
+# github.com/mitchellh/mapstructure v1.4.1
+## explicit; go 1.14
 github.com/mitchellh/mapstructure
 # github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
 ## explicit
@@ -167,7 +171,7 @@ github.com/modern-go/reflect2
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
-# github.com/sergi/go-diff v1.1.0
+# github.com/sergi/go-diff v1.2.0
 ## explicit; go 1.12
 github.com/sergi/go-diff/diffmatchpatch
 # github.com/spf13/pflag v1.0.5
@@ -257,7 +261,7 @@ golang.org/x/oauth2/internal
 ## explicit
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
-# golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1
+# golang.org/x/sys v0.0.0-20210817190340-bfb29a6856f2
 ## explicit; go 1.17
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/plan9
@@ -266,16 +270,18 @@ golang.org/x/sys/windows
 # golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d
 ## explicit; go 1.11
 golang.org/x/term
-# golang.org/x/text v0.3.6
-## explicit; go 1.11
+# golang.org/x/text v0.3.7
+## explicit; go 1.17
 golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
+# golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac
 ## explicit
 golang.org/x/time/rate
+# golang.org/x/tools v0.1.1-0.20210427153610-6397a11608ad
+## explicit; go 1.12
 # gomodules.xyz/jsonpatch/v2 v2.2.0
 ## explicit; go 1.12
 gomodules.xyz/jsonpatch/v2
@@ -478,7 +484,6 @@ k8s.io/client-go/applyconfigurations/storage/v1
 k8s.io/client-go/applyconfigurations/storage/v1alpha1
 k8s.io/client-go/applyconfigurations/storage/v1beta1
 k8s.io/client-go/discovery
-k8s.io/client-go/discovery/cached/memory
 k8s.io/client-go/dynamic
 k8s.io/client-go/kubernetes
 k8s.io/client-go/kubernetes/scheme
@@ -553,25 +558,23 @@ k8s.io/klog/v2
 ## explicit; go 1.12
 k8s.io/kube-openapi/pkg/common
 k8s.io/kube-openapi/pkg/util/proto
-# k8s.io/utils v0.0.0-20210527160623-6fdb442a123b => k8s.io/utils v0.0.0-20201110183641-67b214c5f920
+# k8s.io/utils v0.0.0-20210802155522-efc7438f0176 => k8s.io/utils v0.0.0-20201110183641-67b214c5f920
 ## explicit; go 1.12
 k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# kmodules.xyz/client-go v0.0.0-20210928133955-8df5bb467db6
-## explicit; go 1.12
+# kmodules.xyz/client-go v0.0.0-20220118144149-f5289f79ff44
+## explicit; go 1.17
 kmodules.xyz/client-go
 kmodules.xyz/client-go/api/v1
 kmodules.xyz/client-go/apiextensions
 kmodules.xyz/client-go/apiextensions/v1
-kmodules.xyz/client-go/apiextensions/v1beta1
 kmodules.xyz/client-go/apps/v1
 kmodules.xyz/client-go/core/v1
-kmodules.xyz/client-go/discovery
 kmodules.xyz/client-go/meta
 kmodules.xyz/client-go/tools/certholder
-# kmodules.xyz/custom-resources v0.0.0-20211007080833-72bd9e8cae6e
+# kmodules.xyz/custom-resources v0.0.0-20220104123914-3c036dd7c1cd
 ## explicit; go 1.16
 kmodules.xyz/custom-resources/apis/appcatalog
 kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1
@@ -579,11 +582,11 @@ kmodules.xyz/custom-resources/crds
 # kmodules.xyz/monitoring-agent-api v0.0.0-20210928135619-38ca075a2dbd
 ## explicit; go 1.15
 kmodules.xyz/monitoring-agent-api/api/v1
-# kmodules.xyz/offshoot-api v0.0.0-20210829122105-6f4d481b0c61
+# kmodules.xyz/offshoot-api v0.0.0-20211103060642-3e217667cf41
 ## explicit; go 1.15
 kmodules.xyz/offshoot-api/api/v1
-# kubedb.dev/apimachinery v0.22.1-0.20211012044625-d0176524a0cc
-## explicit; go 1.16
+# kubedb.dev/apimachinery v0.24.1-0.20220213164510-c6db524e70fd
+## explicit; go 1.17
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog
 kubedb.dev/apimachinery/apis/catalog/v1alpha1
@@ -595,7 +598,7 @@ kubedb.dev/apimachinery/crds
 sigs.k8s.io/controller-runtime/pkg/client
 sigs.k8s.io/controller-runtime/pkg/client/apiutil
 sigs.k8s.io/controller-runtime/pkg/log
-# sigs.k8s.io/structured-merge-diff/v4 v4.1.0
+# sigs.k8s.io/structured-merge-diff/v4 v4.1.2
 ## explicit; go 1.13
 sigs.k8s.io/structured-merge-diff/v4/fieldpath
 sigs.k8s.io/structured-merge-diff/v4/schema

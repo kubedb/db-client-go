@@ -37,11 +37,12 @@ const (
 	DatabasePodPrimary                   = "primary"
 	DatabasePodStandby                   = "standby"
 
-	ComponentDatabase     = "database"
-	RoleStats             = "stats"
-	DefaultStatsPath      = "/metrics"
-	DefaultPasswordLength = 16
-	HealthCheckInterval   = 10 * time.Second
+	ComponentDatabase         = "database"
+	ComponentConnectionPooler = "connection-pooler"
+	RoleStats                 = "stats"
+	DefaultStatsPath          = "/metrics"
+	DefaultPasswordLength     = 16
+	HealthCheckInterval       = 10 * time.Second
 
 	ContainerExporterName = "exporter"
 	LocalHost             = "localhost"
@@ -74,13 +75,17 @@ const (
 	ElasticsearchPerformanceAnalyzerPortName     = "analyzer"
 	ElasticsearchNodeRoleSet                     = "set"
 	ElasticsearchConfigDir                       = "/usr/share/elasticsearch/config"
+	ElasticsearchOpenSearchConfigDir             = "/usr/share/opensearch/config"
 	ElasticsearchSecureSettingsDir               = "/elasticsearch/secure-settings"
 	ElasticsearchTempConfigDir                   = "/elasticsearch/temp-config"
 	ElasticsearchCustomConfigDir                 = "/elasticsearch/custom-config"
 	ElasticsearchDataDir                         = "/usr/share/elasticsearch/data"
+	ElasticsearchOpenSearchDataDir               = "/usr/share/opensearch/data"
 	ElasticsearchOpendistroSecurityConfigDir     = "/usr/share/elasticsearch/plugins/opendistro_security/securityconfig"
+	ElasticsearchOpenSearchSecurityConfigDir     = "/usr/share/opensearch/plugins/opensearch-security/securityconfig"
 	ElasticsearchSearchGuardSecurityConfigDir    = "/usr/share/elasticsearch/plugins/search-guard-%v/sgconfig"
 	ElasticsearchOpendistroReadallMonitorRole    = "readall_and_monitor"
+	ElasticsearchOpenSearchReadallMonitorRole    = "readall_and_monitor"
 	ElasticsearchSearchGuardReadallMonitorRoleV7 = "SGS_READALL_AND_MONITOR"
 	ElasticsearchSearchGuardReadallMonitorRoleV6 = "sg_readall_and_monitor"
 	ElasticsearchStatusGreen                     = "green"
@@ -94,6 +99,8 @@ const (
 	ElasticsearchSearchGuardInternalUserFileName = "sg_internal_users.yml"
 	ElasticsearchOpendistroRolesMappingFileName  = "roles_mapping.yml"
 	ElasticsearchOpendistroInternalUserFileName  = "internal_users.yml"
+	ElasticsearchJavaOptsEnv                     = "ES_JAVA_OPTS"
+	ElasticsearchOpenSearchJavaOptsEnv           = "OPENSEARCH_JAVA_OPTS"
 
 	// Ref:
 	//	- https://www.elastic.co/guide/en/elasticsearch/reference/7.6/heap-size.html#heap-size
@@ -118,6 +125,8 @@ const (
 	MongoDBKeyFileSecretSuffix    = "-key"
 	MongoDBRootUsername           = "root"
 	MongoDBCustomConfigFile       = "mongod.conf"
+	MongoDBReplicaSetConfig       = "replicaset.json"
+	MongoDBConfigurationJSFile    = "configuration.js"
 	NodeTypeMongos                = "mongos"
 	NodeTypeShard                 = "shard"
 	NodeTypeConfig                = "configsvr"
@@ -226,6 +235,7 @@ const (
 	MariaDBRunScriptVolumeMountPath     = "/run-script"
 	MariaDBInitScriptVolumeName         = "init-scripts"
 	MariaDBInitScriptVolumeMountPath    = "/scripts"
+	MariaDBContainerName                = ResourceSingularMariaDB
 
 	// =========================== PostgreSQL Constants ============================
 	PostgresDatabasePortName         = "db"
@@ -271,6 +281,9 @@ const (
 	ProxySQLDataMountPath          = "/var/lib/proxysql"
 	ProxySQLCustomConfigMountPath  = "/etc/custom-config"
 	// =========================== Redis Constants ============================
+	RedisConfigKey = "redis.conf" // RedisConfigKey is going to create for the customize redis configuration
+	//DefaultConfigKey is going to create for the default redis configuration
+	DefaultConfigKey            = "default.conf"
 	RedisShardKey               = RedisKey + "/shard"
 	RedisDatabasePortName       = "db"
 	RedisPrimaryServicePortName = "primary"
@@ -352,12 +365,11 @@ var (
 	}
 	// CoordinatorDefaultResources must be used for raft backed coordinators to avoid unintended leader switches
 	CoordinatorDefaultResources = core.ResourceRequirements{
-		Limits: core.ResourceList{
-			core.ResourceCPU:    resource.MustParse(".500"),
+		Requests: core.ResourceList{
+			core.ResourceCPU:    resource.MustParse(".200"),
 			core.ResourceMemory: resource.MustParse("256Mi"),
 		},
-		Requests: core.ResourceList{
-			core.ResourceCPU:    resource.MustParse(".500"),
+		Limits: core.ResourceList{
 			core.ResourceMemory: resource.MustParse("256Mi"),
 		},
 	}

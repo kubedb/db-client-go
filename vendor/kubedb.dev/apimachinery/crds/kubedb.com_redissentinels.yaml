@@ -48,6 +48,8 @@ spec:
                   name:
                     type: string
                 type: object
+              disableAuth:
+                type: boolean
               halted:
                 type: boolean
               monitor:
@@ -224,10 +226,18 @@ spec:
                         additionalProperties:
                           type: string
                         type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                     type: object
                   metadata:
                     properties:
                       annotations:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      labels:
                         additionalProperties:
                           type: string
                         type: object
@@ -1669,6 +1679,10 @@ spec:
                     metadata:
                       properties:
                         annotations:
+                          additionalProperties:
+                            type: string
+                          type: object
+                        labels:
                           additionalProperties:
                             type: string
                           type: object
