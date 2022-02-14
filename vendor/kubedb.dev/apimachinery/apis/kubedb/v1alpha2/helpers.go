@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	core "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	appslister "k8s.io/client-go/listers/apps/v1"
 	apps_util "kmodules.xyz/client-go/apps/v1"
@@ -63,62 +63,31 @@ func GetServiceTemplate(templates []NamedServiceTemplateSpec, alias ServiceAlias
 	return ofst.ServiceTemplateSpec{}
 }
 
-func SetDefaultResourceLimits(req *core.ResourceRequirements, defaultResources core.ResourceRequirements) {
-	// if request is set,
-	//		- limit set:
-	//			- return max(limit,request)
-	// else if limit set:
-	//		- return limit
-	// else
-	//		- return default
-	calLimit := func(name core.ResourceName, defaultValue resource.Quantity) resource.Quantity {
-		if r, ok := req.Requests[name]; ok {
-			// l is greater than r == 1.
-			if l, exist := req.Limits[name]; exist && l.Cmp(r) == 1 {
-				return l
+func GetDatabasePods(db metav1.Object, stsLister appslister.StatefulSetLister, pods []core.Pod) ([]core.Pod, error) {
+	var dbPods []core.Pod
+
+	for i := range pods {
+		owner := metav1.GetControllerOf(&pods[i])
+		if owner == nil {
+			continue
+		}
+
+		// If the Pod is not control by a StatefulSet, then it is not a KubeDB database Pod
+		if owner.Kind == ResourceKindStatefulSet {
+			// Find the controlling StatefulSet
+			sts, err := stsLister.StatefulSets(db.GetNamespace()).Get(owner.Name)
+			if err != nil {
+				return nil, err
 			}
-			return r
-		}
-		if l, ok := req.Limits[name]; ok {
-			return l
-		}
-		return defaultValue
-	}
-	// if request is not set,
-	//		- if limit exists:
-	//				- copy limit
-	//		- else
-	//				- set default
-	// else
-	// 		- return request
-	// endif
-	calRequest := func(name core.ResourceName, defaultValue resource.Quantity) resource.Quantity {
-		if r, ok := req.Requests[name]; !ok {
-			if l, exist := req.Limits[name]; exist {
-				return l
+
+			// Check if the StatefulSet is controlled by the database
+			if metav1.IsControlledBy(sts, db) {
+				dbPods = append(dbPods, pods[i])
 			}
-			return defaultValue
-		} else {
-			return r
 		}
 	}
 
-	if req.Limits == nil {
-		req.Limits = core.ResourceList{}
-	}
-	if req.Requests == nil {
-		req.Requests = core.ResourceList{}
-	}
-
-	// Calculate the limits first
-	for l := range defaultResources.Limits {
-		req.Limits[l] = calLimit(l, defaultResources.Limits[l])
-	}
-
-	// Once the limit is calculated, Calculate requests
-	for r := range defaultResources.Requests {
-		req.Requests[r] = calRequest(r, defaultResources.Requests[r])
-	}
+	return dbPods, nil
 }
 
 // Upsert elements to string slice

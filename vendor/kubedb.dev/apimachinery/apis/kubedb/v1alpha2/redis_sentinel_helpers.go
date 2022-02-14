@@ -1,9 +1,12 @@
 /*
 Copyright AppsCode Inc. and Contributors
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
+
     http://www.apache.org/licenses/LICENSE-2.0
+
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,9 +55,25 @@ func (rs RedisSentinel) OffshootSelectors() map[string]string {
 }
 
 func (rs RedisSentinel) OffshootLabels() map[string]string {
-	out := rs.OffshootSelectors()
-	out[meta_util.ComponentLabelKey] = ComponentDatabase
-	return meta_util.FilterKeys(kubedb.GroupName, out, rs.Labels)
+	return rs.offshootLabels(rs.OffshootSelectors(), nil)
+}
+
+func (rs RedisSentinel) PodLabels() map[string]string {
+	return rs.offshootLabels(rs.OffshootSelectors(), rs.Spec.PodTemplate.Labels)
+}
+
+func (rs RedisSentinel) PodControllerLabels() map[string]string {
+	return rs.offshootLabels(rs.OffshootSelectors(), rs.Spec.PodTemplate.Controller.Labels)
+}
+
+func (rs RedisSentinel) ServiceLabels(alias ServiceAlias, extraLabels ...map[string]string) map[string]string {
+	svcTemplate := GetServiceTemplate(rs.Spec.ServiceTemplates, alias)
+	return rs.offshootLabels(meta_util.OverwriteKeys(rs.OffshootSelectors(), extraLabels...), svcTemplate.Labels)
+}
+
+func (rs RedisSentinel) offshootLabels(selector, override map[string]string) map[string]string {
+	selector[meta_util.ComponentLabelKey] = ComponentDatabase
+	return meta_util.FilterKeys(kubedb.GroupName, selector, meta_util.OverwriteKeys(rs.Labels, override))
 }
 
 func (rs RedisSentinel) ResourceFQN() string {
@@ -134,9 +153,7 @@ func (rs RedisSentinel) StatsService() mona.StatsAccessor {
 }
 
 func (rs RedisSentinel) StatsServiceLabels() map[string]string {
-	lbl := meta_util.FilterKeys(kubedb.GroupName, rs.OffshootSelectors(), rs.Labels)
-	lbl[LabelRole] = RoleStats
-	return lbl
+	return rs.ServiceLabels(StatsServiceAlias, map[string]string{LabelRole: RoleStats})
 }
 
 func (rs *RedisSentinel) SetDefaults(topology *core_util.Topology) {
@@ -159,7 +176,7 @@ func (rs *RedisSentinel) SetDefaults(topology *core_util.Topology) {
 
 	rs.Spec.Monitor.SetDefaults()
 	rs.SetTLSDefaults()
-	SetDefaultResourceLimits(&rs.Spec.PodTemplate.Spec.Resources, DefaultResources)
+	apis.SetDefaultResourceLimits(&rs.Spec.PodTemplate.Spec.Resources, DefaultResources)
 }
 
 func (rs *RedisSentinel) SetTLSDefaults() {
