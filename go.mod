@@ -11,8 +11,8 @@ require (
 	github.com/pkg/errors v0.9.1
 	go.mongodb.org/mongo-driver v1.1.2
 	k8s.io/api v0.21.1
-	k8s.io/klog/v2 v2.8.0
-	kmodules.xyz/client-go v0.0.0-20220118144149-f5289f79ff44
+	k8s.io/klog/v2 v2.9.0
+	kmodules.xyz/client-go v0.0.0-20220203031013-1de48437aaf3
 	kubedb.dev/apimachinery v0.24.1-0.20220213164510-c6db524e70fd
 	sigs.k8s.io/controller-runtime v0.9.0
 	xorm.io/xorm v1.2.5
@@ -79,11 +79,11 @@ require (
 	k8s.io/apiextensions-apiserver v0.21.1 // indirect
 	k8s.io/apimachinery v0.21.1 // indirect
 	k8s.io/client-go v0.21.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20210305001622-591a79e4bda7 // indirect
+	k8s.io/kube-openapi v0.0.0-20210421082810-95288971da7e // indirect
 	k8s.io/utils v0.0.0-20210802155522-efc7438f0176 // indirect
-	kmodules.xyz/custom-resources v0.0.0-20220104123914-3c036dd7c1cd // indirect
-	kmodules.xyz/monitoring-agent-api v0.0.0-20210928135619-38ca075a2dbd // indirect
-	kmodules.xyz/offshoot-api v0.0.0-20211103060642-3e217667cf41 // indirect
+	kmodules.xyz/custom-resources v0.0.0-20220208103158-61b298634e43 // indirect
+	kmodules.xyz/monitoring-agent-api v0.0.0-20211207173549-028e6430395e // indirect
+	kmodules.xyz/offshoot-api v0.0.0-20211207130839-cc7187e020cf // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.2 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 	xorm.io/builder v0.3.9 // indirect
@@ -179,7 +179,7 @@ replace k8s.io/api => k8s.io/api v0.21.1
 
 replace k8s.io/apimachinery => github.com/kmodules/apimachinery v0.21.2-rc.0.0.20210617231004-332981b97d2d
 
-replace k8s.io/apiserver => github.com/kmodules/apiserver v0.21.2-0.20210716212718-83e5493ac170
+replace k8s.io/apiserver => github.com/kmodules/apiserver v0.21.2-0.20220112070009-e3f6e88991d9
 
 replace k8s.io/cli-runtime => k8s.io/cli-runtime v0.21.1
 
@@ -196,3 +196,9 @@ replace k8s.io/utils => k8s.io/utils v0.0.0-20201110183641-67b214c5f920
 replace sigs.k8s.io/application => github.com/kmodules/application v0.8.4-0.20210427030912-90eeee3bc4ad
 
 replace github.com/satori/go.uuid => github.com/gomodules/uuid v4.0.0+incompatible
+
+replace github.com/dgrijalva/jwt-go => github.com/gomodules/jwt v3.2.2+incompatible
+
+replace github.com/golang-jwt/jwt => github.com/golang-jwt/jwt v3.2.2+incompatible
+
+replace github.com/form3tech-oss/jwt-go => github.com/form3tech-oss/jwt-go v3.2.5+incompatible
