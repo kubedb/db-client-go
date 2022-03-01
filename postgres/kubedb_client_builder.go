@@ -150,7 +150,6 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 
 		var certSecret core.Secret
 		err := o.kc.Get(context.TODO(), client.ObjectKey{Namespace: o.db.Namespace, Name: secretName}, &certSecret)
-
 		if err != nil {
 			klog.Error(err, "failed to get certificate secret.", secretName)
 			return "", err
