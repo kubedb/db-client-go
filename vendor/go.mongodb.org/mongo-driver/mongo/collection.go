@@ -244,7 +244,7 @@ func (coll *Collection) insert(ctx context.Context, documents []interface{},
 
 	for i, doc := range documents {
 		var err error
-		docs[i], result[i], err = transformAndEnsureIDv2(coll.registry, doc)
+		docs[i], result[i], err = transformAndEnsureID(coll.registry, doc)
 		if err != nil {
 			return nil, err
 		}
@@ -348,7 +348,7 @@ func (coll *Collection) InsertOne(ctx context.Context, document interface{},
 // The documents parameter must be a slice of documents to insert. The slice cannot be nil or empty. The elements must
 // all be non-nil. For any document that does not have an _id field when transformed into BSON, one will be added
 // automatically to the marshalled document. The original document will not be modified. The _id values for the inserted
-// documents can be retrieved from the InsertedIDs field of the returnd InsertManyResult.
+// documents can be retrieved from the InsertedIDs field of the returned InsertManyResult.
 //
 // The opts parameter can be used to specify options for the operation (see the options.InsertManyOptions documentation.)
 //
@@ -376,12 +376,8 @@ func (coll *Collection) InsertMany(ctx context.Context, documents []interface{},
 	bwErrors := make([]BulkWriteError, 0, len(writeException.WriteErrors))
 	for _, we := range writeException.WriteErrors {
 		bwErrors = append(bwErrors, BulkWriteError{
-			WriteError{
-				Index:   we.Index,
-				Code:    we.Code,
-				Message: we.Message,
-			},
-			nil,
+			WriteError: we,
+			Request:    nil,
 		})
 	}
 
@@ -746,7 +742,7 @@ func aggregate(a aggregateParams) (*Cursor, error) {
 		a.ctx = context.Background()
 	}
 
-	pipelineArr, hasOutputStage, err := transformAggregatePipelinev2(a.registry, a.pipeline)
+	pipelineArr, hasOutputStage, err := transformAggregatePipeline(a.registry, a.pipeline)
 	if err != nil {
 		return nil, err
 	}
@@ -776,21 +772,19 @@ func aggregate(a aggregateParams) (*Cursor, error) {
 		sess = nil
 	}
 
-	selector := makePinnedSelector(sess, a.writeSelector)
-	if !hasOutputStage {
-		selector = makeReadPrefSelector(sess, a.readSelector, a.client.localThreshold)
+	selector := makeReadPrefSelector(sess, a.readSelector, a.client.localThreshold)
+	if hasOutputStage {
+		selector = makeOutputAggregateSelector(sess, a.readPreference, a.client.localThreshold)
 	}
 
 	ao := options.MergeAggregateOptions(a.opts...)
-	cursorOpts := driver.CursorOptions{
-		CommandMonitor: a.client.monitor,
-		Crypt:          a.client.cryptFLE,
-	}
+	cursorOpts := a.client.createBaseCursorOptions()
 
 	op := operation.NewAggregate(pipelineArr).
 		Session(sess).
 		WriteConcern(wc).
 		ReadConcern(rc).
+		ReadPreference(a.readPreference).
 		CommandMonitor(a.client.monitor).
 		ServerSelector(selector).
 		ClusterClock(a.client.clock).
@@ -798,13 +792,8 @@ func aggregate(a aggregateParams) (*Cursor, error) {
 		Collection(a.col).
 		Deployment(a.client.deployment).
 		Crypt(a.client.cryptFLE).
-		ServerAPI(a.client.serverAPI)
-	if !hasOutputStage {
-		// Only pass the user-specified read preference if the aggregation doesn't have a $out or $merge stage.
-		// Otherwise, the read preference could be forwarded to a mongos, which would error if the aggregation were
-		// executed against a non-primary node.
-		op.ReadPreference(a.readPreference)
-	}
+		ServerAPI(a.client.serverAPI).
+		HasOutputStage(hasOutputStage)
 
 	if ao.AllowDiskUse != nil {
 		op.AllowDiskUse(*ao.AllowDiskUse)
@@ -836,6 +825,14 @@ func aggregate(a aggregateParams) (*Cursor, error) {
 			return nil, err
 		}
 		op.Hint(hintVal)
+	}
+	if ao.Let != nil {
+		let, err := transformBsoncoreDocument(a.registry, ao.Let, true, "let")
+		if err != nil {
+			closeImplicitSession(sess)
+			return nil, err
+		}
+		op.Let(let)
 	}
 
 	retry := driver.RetryNone
@@ -1048,7 +1045,7 @@ func (coll *Collection) Distinct(ctx context.Context, fieldName string, filter i
 	selector := makeReadPrefSelector(sess, coll.readSelector, coll.client.localThreshold)
 	option := options.MergeDistinctOptions(opts...)
 
-	op := operation.NewDistinct(fieldName, bsoncore.Document(f)).
+	op := operation.NewDistinct(fieldName, f).
 		Session(sess).ClusterClock(coll.client.clock).
 		Database(coll.db.name).Collection(coll.name).CommandMonitor(coll.client.monitor).
 		Deployment(coll.client.deployment).ReadConcern(rc).ReadPreference(coll.readPreference).
@@ -1142,10 +1139,7 @@ func (coll *Collection) Find(ctx context.Context, filter interface{},
 		Deployment(coll.client.deployment).Crypt(coll.client.cryptFLE).ServerAPI(coll.client.serverAPI)
 
 	fo := options.MergeFindOptions(opts...)
-	cursorOpts := driver.CursorOptions{
-		CommandMonitor: coll.client.monitor,
-		Crypt:          coll.client.cryptFLE,
-	}
+	cursorOpts := coll.client.createBaseCursorOptions()
 
 	if fo.AllowDiskUse != nil {
 		op.AllowDiskUse(*fo.AllowDiskUse)
@@ -1280,9 +1274,9 @@ func (coll *Collection) FindOne(ctx context.Context, filter interface{},
 		ctx = context.Background()
 	}
 
-	findOpts := make([]*options.FindOptions, len(opts))
-	for i, opt := range opts {
-		findOpts[i] = &options.FindOptions{
+	findOpts := make([]*options.FindOptions, 0, len(opts))
+	for _, opt := range opts {
+		findOpts = append(findOpts, &options.FindOptions{
 			AllowPartialResults: opt.AllowPartialResults,
 			BatchSize:           opt.BatchSize,
 			Collation:           opt.Collation,
@@ -1301,7 +1295,7 @@ func (coll *Collection) FindOne(ctx context.Context, filter interface{},
 			Skip:                opt.Skip,
 			Snapshot:            opt.Snapshot,
 			Sort:                opt.Sort,
-		}
+		})
 	}
 	// Unconditionally send a limit to make sure only one document is returned and the cursor is not kept open
 	// by the server.
@@ -1680,5 +1674,18 @@ func makeReadPrefSelector(sess *session.Client, selector description.ServerSelec
 		})
 	}
 
+	return makePinnedSelector(sess, selector)
+}
+
+func makeOutputAggregateSelector(sess *session.Client, rp *readpref.ReadPref, localThreshold time.Duration) description.ServerSelectorFunc {
+	if sess != nil && sess.TransactionRunning() {
+		// Use current transaction's read preference if available
+		rp = sess.CurrentRp
+	}
+
+	selector := description.CompositeSelector([]description.ServerSelector{
+		description.OutputAggregateSelector(rp),
+		description.LatencySelector(localThreshold),
+	})
 	return makePinnedSelector(sess, selector)
 }

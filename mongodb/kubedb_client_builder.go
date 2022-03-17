@@ -102,17 +102,17 @@ func (o *KubeDBClientBuilder) GetMongoClient() (*Client, error) {
 
 	clientOpts, err := o.getMongoDBClientOpts()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to generate database client options, error: %v", err)
 	}
 
 	client, err := mongo.Connect(o.ctx, clientOpts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create database client, error: %v", err)
 	}
 
 	err = client.Ping(o.ctx, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to ping database, error: %v", err)
 	}
 
 	return &Client{

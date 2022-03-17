@@ -97,7 +97,7 @@ func (iv IndexView) List(ctx context.Context, opts ...*options.ListIndexesOption
 		Database(iv.coll.db.name).Collection(iv.coll.name).
 		Deployment(iv.coll.client.deployment).ServerAPI(iv.coll.client.serverAPI)
 
-	var cursorOpts driver.CursorOptions
+	cursorOpts := iv.coll.client.createBaseCursorOptions()
 	lio := options.MergeListIndexesOptions(opts...)
 	if lio.BatchSize != nil {
 		op = op.BatchSize(*lio.BatchSize)
@@ -272,7 +272,8 @@ func (iv IndexView) CreateMany(ctx context.Context, models []IndexModel, opts ..
 
 	err = op.Execute(ctx)
 	if err != nil {
-		return nil, replaceErrors(err)
+		_, err = processWriteError(err)
+		return nil, err
 	}
 
 	return names, nil
