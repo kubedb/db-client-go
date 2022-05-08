@@ -130,6 +130,9 @@ const (
 	NodeTypeMongos                = "mongos"
 	NodeTypeShard                 = "shard"
 	NodeTypeConfig                = "configsvr"
+	NodeTypeArbiter               = "arbiter"
+	NodeTypeReplica               = "replica"
+	NodeTypeStandalone            = "standalone"
 
 	MongoDBWorkDirectoryName = "workdir"
 	MongoDBWorkDirectoryPath = "/work-dir"
@@ -150,6 +153,9 @@ const (
 
 	MongoDBInitScriptDirectoryName = "init-scripts"
 	MongoDBInitScriptDirectoryPath = "/init-scripts"
+
+	MongoDBInitialDirectoryName = "initial-script"
+	MongoDBInitialDirectoryPath = "/docker-entrypoint-initdb.d"
 
 	MongoDBClientCertDirectoryName = "client-cert"
 	MongoDBClientCertDirectoryPath = "/client-cert"
@@ -282,7 +288,7 @@ const (
 	ProxySQLCustomConfigMountPath  = "/etc/custom-config"
 	// =========================== Redis Constants ============================
 	RedisConfigKey = "redis.conf" // RedisConfigKey is going to create for the customize redis configuration
-	//DefaultConfigKey is going to create for the default redis configuration
+	// DefaultConfigKey is going to create for the default redis configuration
 	DefaultConfigKey            = "default.conf"
 	RedisShardKey               = RedisKey + "/shard"
 	RedisDatabasePortName       = "db"
@@ -302,12 +308,19 @@ const (
 	EnvRedisPassword         = "REDISCLI_AUTH"
 
 	// =========================== PgBouncer Constants ============================
-	PgBouncerUpstreamServerCA       = "upstream-server-ca.crt"
-	PgBouncerDatabasePortName       = "db"
-	PgBouncerPrimaryServicePortName = "primary"
-	PgBouncerDatabasePort           = 5432
-	PgBouncerConfigFile             = "pgbouncer.ini"
-	PgBouncerAdminUsername          = "kubedb"
+	PgBouncerUpstreamServerCA         = "upstream-server-ca.crt"
+	PgBouncerUpstreamServerClientCert = "upstream-server-client.crt"
+	PgBouncerUpstreamServerClientKey  = "upstream-server-client.key"
+	PgBouncerClientCrt                = "client.crt"
+	PgBouncerClientKey                = "client.key"
+	PgBouncerCACrt                    = "ca.crt"
+	PgBouncerTLSCrt                   = "tls.crt"
+	PgBouncerTLSKey                   = "tls.key"
+	PgBouncerDatabasePortName         = "db"
+	PgBouncerPrimaryServicePortName   = "primary"
+	PgBouncerDatabasePort             = 5432
+	PgBouncerConfigFile               = "pgbouncer.ini"
+	PgBouncerAdminUsername            = "kubedb"
 )
 
 // List of possible condition types for a KubeDB object
