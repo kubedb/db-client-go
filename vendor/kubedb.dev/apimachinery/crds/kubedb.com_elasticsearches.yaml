@@ -64,6 +64,10 @@ spec:
                 type: boolean
               halted:
                 type: boolean
+              heapSizePercentage:
+                default: 50
+                format: int32
+                type: integer
               init:
                 properties:
                   initialized:
@@ -765,14 +769,26 @@ spec:
                       type: array
                     description:
                       type: string
+                    email:
+                      type: string
+                    full_name:
+                      type: string
                     hidden:
                       type: boolean
+                    metadata:
+                      additionalProperties:
+                        type: string
+                      type: object
                     opendistroSecurityRoles:
                       items:
                         type: string
                       type: array
                     reserved:
                       type: boolean
+                    roles:
+                      items:
+                        type: string
+                      type: array
                     searchGuardRoles:
                       items:
                         type: string
@@ -977,10 +993,18 @@ spec:
                         additionalProperties:
                           type: string
                         type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                     type: object
                   metadata:
                     properties:
                       annotations:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      labels:
                         additionalProperties:
                           type: string
                         type: object
@@ -2405,6 +2429,49 @@ spec:
                               type: string
                           type: object
                         type: array
+                      topologySpreadConstraints:
+                        items:
+                          properties:
+                            labelSelector:
+                              properties:
+                                matchExpressions:
+                                  items:
+                                    properties:
+                                      key:
+                                        type: string
+                                      operator:
+                                        type: string
+                                      values:
+                                        items:
+                                          type: string
+                                        type: array
+                                    required:
+                                    - key
+                                    - operator
+                                    type: object
+                                  type: array
+                                matchLabels:
+                                  additionalProperties:
+                                    type: string
+                                  type: object
+                              type: object
+                            maxSkew:
+                              format: int32
+                              type: integer
+                            topologyKey:
+                              type: string
+                            whenUnsatisfiable:
+                              type: string
+                          required:
+                          - maxSkew
+                          - topologyKey
+                          - whenUnsatisfiable
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - topologyKey
+                        - whenUnsatisfiable
+                        x-kubernetes-list-type: map
                     type: object
                 type: object
               replicas:
@@ -2452,6 +2519,10 @@ spec:
                     metadata:
                       properties:
                         annotations:
+                          additionalProperties:
+                            type: string
+                          type: object
+                        labels:
                           additionalProperties:
                             type: string
                           type: object
@@ -2688,6 +2759,9 @@ spec:
                 properties:
                   coordinating:
                     properties:
+                      heapSizePercentage:
+                        format: int32
+                        type: integer
                       maxUnavailable:
                         anyOf:
                         - type: integer
@@ -2787,6 +2861,9 @@ spec:
                     type: object
                   data:
                     properties:
+                      heapSizePercentage:
+                        format: int32
+                        type: integer
                       maxUnavailable:
                         anyOf:
                         - type: integer
@@ -2886,6 +2963,9 @@ spec:
                     type: object
                   dataCold:
                     properties:
+                      heapSizePercentage:
+                        format: int32
+                        type: integer
                       maxUnavailable:
                         anyOf:
                         - type: integer
@@ -2985,6 +3065,9 @@ spec:
                     type: object
                   dataContent:
                     properties:
+                      heapSizePercentage:
+                        format: int32
+                        type: integer
                       maxUnavailable:
                         anyOf:
                         - type: integer
@@ -3084,6 +3167,9 @@ spec:
                     type: object
                   dataFrozen:
                     properties:
+                      heapSizePercentage:
+                        format: int32
+                        type: integer
                       maxUnavailable:
                         anyOf:
                         - type: integer
@@ -3183,6 +3269,9 @@ spec:
                     type: object
                   dataHot:
                     properties:
+                      heapSizePercentage:
+                        format: int32
+                        type: integer
                       maxUnavailable:
                         anyOf:
                         - type: integer
@@ -3282,6 +3371,9 @@ spec:
                     type: object
                   dataWarm:
                     properties:
+                      heapSizePercentage:
+                        format: int32
+                        type: integer
                       maxUnavailable:
                         anyOf:
                         - type: integer
@@ -3381,6 +3473,9 @@ spec:
                     type: object
                   ingest:
                     properties:
+                      heapSizePercentage:
+                        format: int32
+                        type: integer
                       maxUnavailable:
                         anyOf:
                         - type: integer
@@ -3480,6 +3575,9 @@ spec:
                     type: object
                   master:
                     properties:
+                      heapSizePercentage:
+                        format: int32
+                        type: integer
                       maxUnavailable:
                         anyOf:
                         - type: integer
@@ -3579,6 +3677,9 @@ spec:
                     type: object
                   ml:
                     properties:
+                      heapSizePercentage:
+                        format: int32
+                        type: integer
                       maxUnavailable:
                         anyOf:
                         - type: integer
@@ -3678,6 +3779,9 @@ spec:
                     type: object
                   transform:
                     properties:
+                      heapSizePercentage:
+                        format: int32
+                        type: integer
                       maxUnavailable:
                         anyOf:
                         - type: integer

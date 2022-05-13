@@ -18,7 +18,6 @@ package v1alpha2
 
 import (
 	"fmt"
-	"math"
 	"strconv"
 	"time"
 
@@ -61,9 +60,25 @@ func (p Postgres) OffshootSelectors() map[string]string {
 }
 
 func (p Postgres) OffshootLabels() map[string]string {
-	out := p.OffshootSelectors()
-	out[meta_util.ComponentLabelKey] = ComponentDatabase
-	return meta_util.FilterKeys(kubedb.GroupName, out, p.Labels)
+	return p.offshootLabels(p.OffshootSelectors(), nil)
+}
+
+func (p Postgres) PodLabels() map[string]string {
+	return p.offshootLabels(p.OffshootSelectors(), p.Spec.PodTemplate.Labels)
+}
+
+func (p Postgres) PodControllerLabels() map[string]string {
+	return p.offshootLabels(p.OffshootSelectors(), p.Spec.PodTemplate.Controller.Labels)
+}
+
+func (p Postgres) ServiceLabels(alias ServiceAlias, extraLabels ...map[string]string) map[string]string {
+	svcTemplate := GetServiceTemplate(p.Spec.ServiceTemplates, alias)
+	return p.offshootLabels(meta_util.OverwriteKeys(p.OffshootSelectors(), extraLabels...), svcTemplate.Labels)
+}
+
+func (p Postgres) offshootLabels(selector, override map[string]string) map[string]string {
+	selector[meta_util.ComponentLabelKey] = ComponentDatabase
+	return meta_util.FilterKeys(kubedb.GroupName, selector, meta_util.OverwriteKeys(nil, p.Labels, override))
 }
 
 func (p Postgres) ResourceFQN() string {
@@ -147,9 +162,7 @@ func (p Postgres) StatsService() mona.StatsAccessor {
 }
 
 func (p Postgres) StatsServiceLabels() map[string]string {
-	lbl := meta_util.FilterKeys(kubedb.GroupName, p.OffshootSelectors(), p.Labels)
-	lbl[LabelRole] = RoleStats
-	return lbl
+	return p.ServiceLabels(StatsServiceAlias, map[string]string{LabelRole: RoleStats})
 }
 
 func (p *Postgres) SetDefaults(postgresVersion *catalog.PostgresVersion, topology *core_util.Topology) {
@@ -178,12 +191,12 @@ func (p *Postgres) SetDefaults(postgresVersion *catalog.PostgresVersion, topolog
 			ElectionTick: 10,
 			// this value should be one.
 			HeartbeatTick: 1,
-			//we have set this default to 33554432. if the difference between primary and replica is more then this,
-			//the replica node is going to manually sync itself.
-			MaximumLagBeforeFailover: 32 * 1024 * 1024,
+			// we have set this default to 67108864. if the difference between primary and replica is more then this,
+			// the replica node is going to manually sync itself.
+			MaximumLagBeforeFailover: 64 * 1024 * 1024,
 		}
 	}
-	SetDefaultResourceLimits(&p.Spec.Coordinator.Resources, CoordinatorDefaultResources)
+	apis.SetDefaultResourceLimits(&p.Spec.Coordinator.Resources, CoordinatorDefaultResources)
 
 	if p.Spec.PodTemplate.Spec.ServiceAccountName == "" {
 		p.Spec.PodTemplate.Spec.ServiceAccountName = p.OffshootName()
@@ -243,7 +256,7 @@ func (p *Postgres) SetDefaults(postgresVersion *catalog.PostgresVersion, topolog
 
 	p.Spec.Monitor.SetDefaults()
 	p.SetTLSDefaults()
-	SetDefaultResourceLimits(&p.Spec.PodTemplate.Spec.Resources, DefaultResources)
+	apis.SetDefaultResourceLimits(&p.Spec.PodTemplate.Spec.Resources, DefaultResources)
 	p.setDefaultAffinity(&p.Spec.PodTemplate, p.OffshootSelectors(), topology)
 }
 
@@ -332,60 +345,20 @@ func (p *Postgres) GetCertSecretName(alias PostgresCertificateAlias) string {
 }
 
 // GetSharedBufferSizeForPostgres this func takes a input type int64 which is in bytes
-// return the 25% of the input in Bytes, KiloBytes, MegaBytes, GigaBytes, or TeraBytes
+// return the 25% of the input in Bytes
 func GetSharedBufferSizeForPostgres(resource *resource.Quantity) string {
 	// no more than 25% of main memory (RAM)
-	minSharedBuffer := int64(128 * 1024 * 1024)
+	minSharedBuffer := int64(128 * 1024)
 	ret := minSharedBuffer
 	if resource != nil {
-		ret = (resource.Value() / 100) * 25
+		ret = resource.Value() / 4
 	}
 	// the shared buffer value can't be less then this
-	//128 MB  is the minimum
+	// 128 KB  is the minimum
 	if ret < minSharedBuffer {
 		ret = minSharedBuffer
 	}
 
-	sharedBuffer := ConvertBytesInMB(ret)
+	sharedBuffer := fmt.Sprintf("%sB", strconv.FormatInt(ret, 10))
 	return sharedBuffer
-}
-
-func Round(val float64, roundOn float64, places int) (newVal float64) {
-	var round float64
-	pow := math.Pow(10, float64(places))
-	digit := pow * val
-	// this func take a float and return the int and fractional part separately
-	// math.modf(100.4) will return int part = 100 and fractional part = 0.40000000000000000
-	_, div := math.Modf(digit)
-	if div >= roundOn {
-		round = math.Ceil(digit)
-	} else {
-		round = math.Floor(digit)
-	}
-	newVal = round / pow
-	return newVal
-}
-
-// ConvertBytesInMB this func takes a input type int64 which is in bytes
-// return the input in Bytes, KiloBytes, MegaBytes, GigaBytes, or TeraBytes
-func ConvertBytesInMB(value int64) string {
-	var suffixes [5]string
-	suffixes[0] = "B"
-	suffixes[1] = "KB"
-	suffixes[2] = "MB"
-	suffixes[3] = "GB"
-	suffixes[4] = "TB"
-
-	// here base is the type we are going to represent the value in string
-	// if base is 2 then we will represent the value in MB.
-	// if base is 0 then represent the value in B.
-	if value == 0 {
-		return "0B"
-	}
-	base := math.Log(float64(value)) / math.Log(1024)
-	getSize := Round(math.Pow(1024, base-math.Floor(base)), .5, 2)
-	getSuffix := suffixes[int(math.Floor(base))]
-
-	valueMB := strconv.FormatFloat(getSize, 'f', -1, 64) + string(getSuffix)
-	return valueMB
 }

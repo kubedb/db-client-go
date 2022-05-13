@@ -37,11 +37,12 @@ const (
 	DatabasePodPrimary                   = "primary"
 	DatabasePodStandby                   = "standby"
 
-	ComponentDatabase     = "database"
-	RoleStats             = "stats"
-	DefaultStatsPath      = "/metrics"
-	DefaultPasswordLength = 16
-	HealthCheckInterval   = 10 * time.Second
+	ComponentDatabase         = "database"
+	ComponentConnectionPooler = "connection-pooler"
+	RoleStats                 = "stats"
+	DefaultStatsPath          = "/metrics"
+	DefaultPasswordLength     = 16
+	HealthCheckInterval       = 10 * time.Second
 
 	ContainerExporterName = "exporter"
 	LocalHost             = "localhost"
@@ -74,13 +75,17 @@ const (
 	ElasticsearchPerformanceAnalyzerPortName     = "analyzer"
 	ElasticsearchNodeRoleSet                     = "set"
 	ElasticsearchConfigDir                       = "/usr/share/elasticsearch/config"
+	ElasticsearchOpenSearchConfigDir             = "/usr/share/opensearch/config"
 	ElasticsearchSecureSettingsDir               = "/elasticsearch/secure-settings"
 	ElasticsearchTempConfigDir                   = "/elasticsearch/temp-config"
 	ElasticsearchCustomConfigDir                 = "/elasticsearch/custom-config"
 	ElasticsearchDataDir                         = "/usr/share/elasticsearch/data"
+	ElasticsearchOpenSearchDataDir               = "/usr/share/opensearch/data"
 	ElasticsearchOpendistroSecurityConfigDir     = "/usr/share/elasticsearch/plugins/opendistro_security/securityconfig"
+	ElasticsearchOpenSearchSecurityConfigDir     = "/usr/share/opensearch/plugins/opensearch-security/securityconfig"
 	ElasticsearchSearchGuardSecurityConfigDir    = "/usr/share/elasticsearch/plugins/search-guard-%v/sgconfig"
 	ElasticsearchOpendistroReadallMonitorRole    = "readall_and_monitor"
+	ElasticsearchOpenSearchReadallMonitorRole    = "readall_and_monitor"
 	ElasticsearchSearchGuardReadallMonitorRoleV7 = "SGS_READALL_AND_MONITOR"
 	ElasticsearchSearchGuardReadallMonitorRoleV6 = "sg_readall_and_monitor"
 	ElasticsearchStatusGreen                     = "green"
@@ -94,6 +99,8 @@ const (
 	ElasticsearchSearchGuardInternalUserFileName = "sg_internal_users.yml"
 	ElasticsearchOpendistroRolesMappingFileName  = "roles_mapping.yml"
 	ElasticsearchOpendistroInternalUserFileName  = "internal_users.yml"
+	ElasticsearchJavaOptsEnv                     = "ES_JAVA_OPTS"
+	ElasticsearchOpenSearchJavaOptsEnv           = "OPENSEARCH_JAVA_OPTS"
 
 	// Ref:
 	//	- https://www.elastic.co/guide/en/elasticsearch/reference/7.6/heap-size.html#heap-size
@@ -118,9 +125,14 @@ const (
 	MongoDBKeyFileSecretSuffix    = "-key"
 	MongoDBRootUsername           = "root"
 	MongoDBCustomConfigFile       = "mongod.conf"
+	MongoDBReplicaSetConfig       = "replicaset.json"
+	MongoDBConfigurationJSFile    = "configuration.js"
 	NodeTypeMongos                = "mongos"
 	NodeTypeShard                 = "shard"
 	NodeTypeConfig                = "configsvr"
+	NodeTypeArbiter               = "arbiter"
+	NodeTypeReplica               = "replica"
+	NodeTypeStandalone            = "standalone"
 
 	MongoDBWorkDirectoryName = "workdir"
 	MongoDBWorkDirectoryPath = "/work-dir"
@@ -141,6 +153,9 @@ const (
 
 	MongoDBInitScriptDirectoryName = "init-scripts"
 	MongoDBInitScriptDirectoryPath = "/init-scripts"
+
+	MongoDBInitialDirectoryName = "initial-script"
+	MongoDBInitialDirectoryPath = "/docker-entrypoint-initdb.d"
 
 	MongoDBClientCertDirectoryName = "client-cert"
 	MongoDBClientCertDirectoryPath = "/client-cert"
@@ -226,6 +241,7 @@ const (
 	MariaDBRunScriptVolumeMountPath     = "/run-script"
 	MariaDBInitScriptVolumeName         = "init-scripts"
 	MariaDBInitScriptVolumeMountPath    = "/scripts"
+	MariaDBContainerName                = ResourceSingularMariaDB
 
 	// =========================== PostgreSQL Constants ============================
 	PostgresDatabasePortName         = "db"
@@ -270,7 +286,17 @@ const (
 	ProxySQLAdminPortName          = "admin"
 	ProxySQLDataMountPath          = "/var/lib/proxysql"
 	ProxySQLCustomConfigMountPath  = "/etc/custom-config"
+
+	ProxySQLBackendSSLMountPath  = "/var/lib/certs"
+	ProxySQLFrontendSSLMountPath = "/var/lib/frontend"
+	ProxySQLClusterAdmin         = "cluster"
+	ProxySQLClusterPasswordField = "cluster_password"
+	ProxySQLTLSConfigCustom      = "custom"
+	ProxySQLTLSConfigSkipVerify  = "skip-verify"
 	// =========================== Redis Constants ============================
+	RedisConfigKey = "redis.conf" // RedisConfigKey is going to create for the customize redis configuration
+	// DefaultConfigKey is going to create for the default redis configuration
+	DefaultConfigKey            = "default.conf"
 	RedisShardKey               = RedisKey + "/shard"
 	RedisDatabasePortName       = "db"
 	RedisPrimaryServicePortName = "primary"
@@ -289,12 +315,19 @@ const (
 	EnvRedisPassword         = "REDISCLI_AUTH"
 
 	// =========================== PgBouncer Constants ============================
-	PgBouncerUpstreamServerCA       = "upstream-server-ca.crt"
-	PgBouncerDatabasePortName       = "db"
-	PgBouncerPrimaryServicePortName = "primary"
-	PgBouncerDatabasePort           = 5432
-	PgBouncerConfigFile             = "pgbouncer.ini"
-	PgBouncerAdminUsername          = "kubedb"
+	PgBouncerUpstreamServerCA         = "upstream-server-ca.crt"
+	PgBouncerUpstreamServerClientCert = "upstream-server-client.crt"
+	PgBouncerUpstreamServerClientKey  = "upstream-server-client.key"
+	PgBouncerClientCrt                = "client.crt"
+	PgBouncerClientKey                = "client.key"
+	PgBouncerCACrt                    = "ca.crt"
+	PgBouncerTLSCrt                   = "tls.crt"
+	PgBouncerTLSKey                   = "tls.key"
+	PgBouncerDatabasePortName         = "db"
+	PgBouncerPrimaryServicePortName   = "primary"
+	PgBouncerDatabasePort             = 5432
+	PgBouncerConfigFile               = "pgbouncer.ini"
+	PgBouncerAdminUsername            = "kubedb"
 )
 
 // List of possible condition types for a KubeDB object
@@ -319,20 +352,24 @@ const (
 	DatabasePaused = "Paused"
 	// used for Databases that are halted
 	DatabaseHalted = "Halted"
+	// used for Databases whose internal user credentials are synced
+	InternalUsersSynced = "InternalUsersSynced"
 
 	// Condition reasons
-	DataRestoreStartedByExternalInitializer = "DataRestoreStartedByExternalInitializer"
-	DatabaseSuccessfullyRestored            = "SuccessfullyDataRestored"
-	FailedToRestoreData                     = "FailedToRestoreData"
-	AllReplicasAreReady                     = "AllReplicasReady"
-	SomeReplicasAreNotReady                 = "SomeReplicasNotReady"
-	DatabaseAcceptingConnectionRequest      = "DatabaseAcceptingConnectionRequest"
-	DatabaseNotAcceptingConnectionRequest   = "DatabaseNotAcceptingConnectionRequest"
-	ReadinessCheckSucceeded                 = "ReadinessCheckSucceeded"
-	ReadinessCheckFailed                    = "ReadinessCheckFailed"
-	DatabaseProvisioningStartedSuccessfully = "DatabaseProvisioningStartedSuccessfully"
-	DatabaseSuccessfullyProvisioned         = "DatabaseSuccessfullyProvisioned"
-	DatabaseHaltedSuccessfully              = "DatabaseHaltedSuccessfully"
+	DataRestoreStartedByExternalInitializer    = "DataRestoreStartedByExternalInitializer"
+	DatabaseSuccessfullyRestored               = "SuccessfullyDataRestored"
+	FailedToRestoreData                        = "FailedToRestoreData"
+	AllReplicasAreReady                        = "AllReplicasReady"
+	SomeReplicasAreNotReady                    = "SomeReplicasNotReady"
+	DatabaseAcceptingConnectionRequest         = "DatabaseAcceptingConnectionRequest"
+	DatabaseNotAcceptingConnectionRequest      = "DatabaseNotAcceptingConnectionRequest"
+	ReadinessCheckSucceeded                    = "ReadinessCheckSucceeded"
+	ReadinessCheckFailed                       = "ReadinessCheckFailed"
+	DatabaseProvisioningStartedSuccessfully    = "DatabaseProvisioningStartedSuccessfully"
+	DatabaseSuccessfullyProvisioned            = "DatabaseSuccessfullyProvisioned"
+	DatabaseHaltedSuccessfully                 = "DatabaseHaltedSuccessfully"
+	InternalUsersCredentialSyncFailed          = "InternalUsersCredentialsSyncFailed"
+	InternalUsersCredentialsSyncedSuccessfully = "InternalUsersCredentialsSyncedSuccessfully"
 )
 
 // Resource kind related constants
@@ -352,12 +389,11 @@ var (
 	}
 	// CoordinatorDefaultResources must be used for raft backed coordinators to avoid unintended leader switches
 	CoordinatorDefaultResources = core.ResourceRequirements{
-		Limits: core.ResourceList{
-			core.ResourceCPU:    resource.MustParse(".500"),
+		Requests: core.ResourceList{
+			core.ResourceCPU:    resource.MustParse(".200"),
 			core.ResourceMemory: resource.MustParse("256Mi"),
 		},
-		Requests: core.ResourceList{
-			core.ResourceCPU:    resource.MustParse(".500"),
+		Limits: core.ResourceList{
 			core.ResourceMemory: resource.MustParse("256Mi"),
 		},
 	}

@@ -27,6 +27,7 @@ import (
 	"kubedb.dev/apimachinery/apis/kubedb"
 	"kubedb.dev/apimachinery/crds"
 
+	"github.com/Masterminds/semver/v3"
 	"gomodules.xyz/pointer"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -55,12 +56,13 @@ func (e Elasticsearch) OffshootName() string {
 	return e.Name
 }
 
-func (e Elasticsearch) OffshootSelectors() map[string]string {
-	return map[string]string{
+func (e Elasticsearch) OffshootSelectors(extraSelectors ...map[string]string) map[string]string {
+	selector := map[string]string{
 		meta_util.NameLabelKey:      e.ResourceFQN(),
 		meta_util.InstanceLabelKey:  e.Name,
 		meta_util.ManagedByLabelKey: kubedb.GroupName,
 	}
+	return meta_util.OverwriteKeys(selector, extraSelectors...)
 }
 
 func (e Elasticsearch) NodeRoleSpecificLabelKey(roleType ElasticsearchNodeRoleType) string {
@@ -68,33 +70,41 @@ func (e Elasticsearch) NodeRoleSpecificLabelKey(roleType ElasticsearchNodeRoleTy
 }
 
 func (e Elasticsearch) MasterSelectors() map[string]string {
-	selectors := e.OffshootSelectors()
-	selectors[e.NodeRoleSpecificLabelKey(ElasticsearchNodeRoleTypeMaster)] = ElasticsearchNodeRoleSet
-	return selectors
+	return e.OffshootSelectors(map[string]string{e.NodeRoleSpecificLabelKey(ElasticsearchNodeRoleTypeMaster): ElasticsearchNodeRoleSet})
 }
 
 func (e Elasticsearch) DataSelectors() map[string]string {
-	selectors := e.OffshootSelectors()
-	selectors[e.NodeRoleSpecificLabelKey(ElasticsearchNodeRoleTypeData)] = ElasticsearchNodeRoleSet
-	return selectors
+	return e.OffshootSelectors(map[string]string{e.NodeRoleSpecificLabelKey(ElasticsearchNodeRoleTypeData): ElasticsearchNodeRoleSet})
 }
 
 func (e Elasticsearch) IngestSelectors() map[string]string {
-	selectors := e.OffshootSelectors()
-	selectors[e.NodeRoleSpecificLabelKey(ElasticsearchNodeRoleTypeIngest)] = ElasticsearchNodeRoleSet
-	return selectors
+	return e.OffshootSelectors(map[string]string{e.NodeRoleSpecificLabelKey(ElasticsearchNodeRoleTypeIngest): ElasticsearchNodeRoleSet})
 }
 
 func (e Elasticsearch) NodeRoleSpecificSelectors(roleType ElasticsearchNodeRoleType) map[string]string {
-	selectors := e.OffshootSelectors()
-	selectors[e.NodeRoleSpecificLabelKey(roleType)] = ElasticsearchNodeRoleSet
-	return selectors
+	return e.OffshootSelectors(map[string]string{e.NodeRoleSpecificLabelKey(roleType): ElasticsearchNodeRoleSet})
 }
 
 func (e Elasticsearch) OffshootLabels() map[string]string {
-	out := e.OffshootSelectors()
-	out[meta_util.ComponentLabelKey] = ComponentDatabase
-	return meta_util.FilterKeys(kubedb.GroupName, out, e.Labels)
+	return e.offshootLabels(e.OffshootSelectors(), nil)
+}
+
+func (e Elasticsearch) PodLabels(extraLabels ...map[string]string) map[string]string {
+	return e.offshootLabels(meta_util.OverwriteKeys(e.OffshootSelectors(), extraLabels...), e.Spec.PodTemplate.Labels)
+}
+
+func (e Elasticsearch) PodControllerLabels(extraLabels ...map[string]string) map[string]string {
+	return e.offshootLabels(meta_util.OverwriteKeys(e.OffshootSelectors(), extraLabels...), e.Spec.PodTemplate.Controller.Labels)
+}
+
+func (e Elasticsearch) ServiceLabels(alias ServiceAlias, extraLabels ...map[string]string) map[string]string {
+	svcTemplate := GetServiceTemplate(e.Spec.ServiceTemplates, alias)
+	return e.offshootLabels(meta_util.OverwriteKeys(e.OffshootSelectors(), extraLabels...), svcTemplate.Labels)
+}
+
+func (e Elasticsearch) offshootLabels(selector, override map[string]string) map[string]string {
+	selector[meta_util.ComponentLabelKey] = ComponentDatabase
+	return meta_util.FilterKeys(kubedb.GroupName, selector, meta_util.OverwriteKeys(nil, e.Labels, override))
 }
 
 func (e Elasticsearch) ResourceFQN() string {
@@ -355,9 +365,7 @@ func (e Elasticsearch) StatsService() mona.StatsAccessor {
 }
 
 func (e Elasticsearch) StatsServiceLabels() map[string]string {
-	lbl := meta_util.FilterKeys(kubedb.GroupName, e.OffshootSelectors(), e.Labels)
-	lbl[LabelRole] = RoleStats
-	return lbl
+	return e.ServiceLabels(StatsServiceAlias, map[string]string{LabelRole: RoleStats})
 }
 
 func (e *Elasticsearch) SetDefaults(esVersion *catalog.ElasticsearchVersion, topology *core_util.Topology) {
@@ -384,7 +392,7 @@ func (e *Elasticsearch) SetDefaults(esVersion *catalog.ElasticsearchVersion, top
 		if e.Spec.Topology.Ingest.Suffix == "" {
 			e.Spec.Topology.Ingest.Suffix = string(ElasticsearchNodeRoleTypeIngest)
 		}
-		SetDefaultResourceLimits(&e.Spec.Topology.Ingest.Resources, DefaultResources)
+		apis.SetDefaultResourceLimits(&e.Spec.Topology.Ingest.Resources, DefaultResources)
 		if e.Spec.Topology.Ingest.Replicas == nil {
 			e.Spec.Topology.Ingest.Replicas = pointer.Int32P(1)
 		}
@@ -394,7 +402,7 @@ func (e *Elasticsearch) SetDefaults(esVersion *catalog.ElasticsearchVersion, top
 		if e.Spec.Topology.Master.Suffix == "" {
 			e.Spec.Topology.Master.Suffix = string(ElasticsearchNodeRoleTypeMaster)
 		}
-		SetDefaultResourceLimits(&e.Spec.Topology.Master.Resources, DefaultResources)
+		apis.SetDefaultResourceLimits(&e.Spec.Topology.Master.Resources, DefaultResources)
 		if e.Spec.Topology.Master.Replicas == nil {
 			e.Spec.Topology.Master.Replicas = pointer.Int32P(1)
 		}
@@ -406,7 +414,7 @@ func (e *Elasticsearch) SetDefaults(esVersion *catalog.ElasticsearchVersion, top
 			if e.Spec.Topology.Data.Suffix == "" {
 				e.Spec.Topology.Data.Suffix = string(ElasticsearchNodeRoleTypeData)
 			}
-			SetDefaultResourceLimits(&e.Spec.Topology.Data.Resources, DefaultResources)
+			apis.SetDefaultResourceLimits(&e.Spec.Topology.Data.Resources, DefaultResources)
 			if e.Spec.Topology.Data.Replicas == nil {
 				e.Spec.Topology.Data.Replicas = pointer.Int32P(1)
 			}
@@ -418,7 +426,7 @@ func (e *Elasticsearch) SetDefaults(esVersion *catalog.ElasticsearchVersion, top
 			if e.Spec.Topology.DataHot.Suffix == "" {
 				e.Spec.Topology.DataHot.Suffix = string(ElasticsearchNodeRoleTypeDataHot)
 			}
-			SetDefaultResourceLimits(&e.Spec.Topology.DataHot.Resources, DefaultResources)
+			apis.SetDefaultResourceLimits(&e.Spec.Topology.DataHot.Resources, DefaultResources)
 			if e.Spec.Topology.DataHot.Replicas == nil {
 				e.Spec.Topology.DataHot.Replicas = pointer.Int32P(1)
 			}
@@ -430,7 +438,7 @@ func (e *Elasticsearch) SetDefaults(esVersion *catalog.ElasticsearchVersion, top
 			if e.Spec.Topology.DataWarm.Suffix == "" {
 				e.Spec.Topology.DataWarm.Suffix = string(ElasticsearchNodeRoleTypeDataWarm)
 			}
-			SetDefaultResourceLimits(&e.Spec.Topology.DataWarm.Resources, DefaultResources)
+			apis.SetDefaultResourceLimits(&e.Spec.Topology.DataWarm.Resources, DefaultResources)
 			if e.Spec.Topology.DataWarm.Replicas == nil {
 				e.Spec.Topology.DataWarm.Replicas = pointer.Int32P(1)
 			}
@@ -442,7 +450,7 @@ func (e *Elasticsearch) SetDefaults(esVersion *catalog.ElasticsearchVersion, top
 			if e.Spec.Topology.DataCold.Suffix == "" {
 				e.Spec.Topology.DataCold.Suffix = string(ElasticsearchNodeRoleTypeDataCold)
 			}
-			SetDefaultResourceLimits(&e.Spec.Topology.DataCold.Resources, DefaultResources)
+			apis.SetDefaultResourceLimits(&e.Spec.Topology.DataCold.Resources, DefaultResources)
 			if e.Spec.Topology.DataCold.Replicas == nil {
 				e.Spec.Topology.DataCold.Replicas = pointer.Int32P(1)
 			}
@@ -454,7 +462,7 @@ func (e *Elasticsearch) SetDefaults(esVersion *catalog.ElasticsearchVersion, top
 			if e.Spec.Topology.DataFrozen.Suffix == "" {
 				e.Spec.Topology.DataFrozen.Suffix = string(ElasticsearchNodeRoleTypeDataFrozen)
 			}
-			SetDefaultResourceLimits(&e.Spec.Topology.DataFrozen.Resources, DefaultResources)
+			apis.SetDefaultResourceLimits(&e.Spec.Topology.DataFrozen.Resources, DefaultResources)
 			if e.Spec.Topology.DataFrozen.Replicas == nil {
 				e.Spec.Topology.DataFrozen.Replicas = pointer.Int32P(1)
 			}
@@ -466,7 +474,7 @@ func (e *Elasticsearch) SetDefaults(esVersion *catalog.ElasticsearchVersion, top
 			if e.Spec.Topology.DataContent.Suffix == "" {
 				e.Spec.Topology.DataContent.Suffix = string(ElasticsearchNodeRoleTypeDataContent)
 			}
-			SetDefaultResourceLimits(&e.Spec.Topology.DataContent.Resources, DefaultResources)
+			apis.SetDefaultResourceLimits(&e.Spec.Topology.DataContent.Resources, DefaultResources)
 			if e.Spec.Topology.DataContent.Replicas == nil {
 				e.Spec.Topology.DataContent.Replicas = pointer.Int32P(1)
 			}
@@ -478,7 +486,7 @@ func (e *Elasticsearch) SetDefaults(esVersion *catalog.ElasticsearchVersion, top
 			if e.Spec.Topology.ML.Suffix == "" {
 				e.Spec.Topology.ML.Suffix = string(ElasticsearchNodeRoleTypeML)
 			}
-			SetDefaultResourceLimits(&e.Spec.Topology.ML.Resources, DefaultResources)
+			apis.SetDefaultResourceLimits(&e.Spec.Topology.ML.Resources, DefaultResources)
 			if e.Spec.Topology.ML.Replicas == nil {
 				e.Spec.Topology.ML.Replicas = pointer.Int32P(1)
 			}
@@ -490,14 +498,14 @@ func (e *Elasticsearch) SetDefaults(esVersion *catalog.ElasticsearchVersion, top
 			if e.Spec.Topology.Transform.Suffix == "" {
 				e.Spec.Topology.Transform.Suffix = string(ElasticsearchNodeRoleTypeTransform)
 			}
-			SetDefaultResourceLimits(&e.Spec.Topology.Transform.Resources, DefaultResources)
+			apis.SetDefaultResourceLimits(&e.Spec.Topology.Transform.Resources, DefaultResources)
 			if e.Spec.Topology.Transform.Replicas == nil {
 				e.Spec.Topology.Transform.Replicas = pointer.Int32P(1)
 			}
 		}
 
 	} else {
-		SetDefaultResourceLimits(&e.Spec.PodTemplate.Spec.Resources, DefaultResources)
+		apis.SetDefaultResourceLimits(&e.Spec.PodTemplate.Spec.Resources, DefaultResources)
 		if e.Spec.Replicas == nil {
 			e.Spec.Replicas = pointer.Int32P(1)
 		}
@@ -588,9 +596,56 @@ func (e *Elasticsearch) setDefaultInternalUsersAndRoleMappings(esVersion *catalo
 		return
 	}
 
-	// The internalUsers feature only works with searchGuard and openDistro
-	if esVersion.Spec.Distribution == catalog.ElasticsearchDistroOpenDistro ||
-		esVersion.Spec.Distribution == catalog.ElasticsearchDistroSearchGuard {
+	version, err := semver.NewVersion(esVersion.Spec.Version)
+	if err != nil {
+		return
+	}
+	// set missing internal users for Xpack,
+	// internal users are supported for version>=7.8.x
+	if esVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginXpack &&
+		(version.Major() >= 8 || (version.Major() == 7 && version.Minor() >= 8)) {
+		inUsers := e.Spec.InternalUsers
+		// If not set, create empty map
+		if inUsers == nil {
+			inUsers = make(map[string]ElasticsearchUserSpec)
+		}
+
+		// "elastic" user
+		if userSpec, exists := inUsers[string(ElasticsearchInternalUserElastic)]; !exists {
+			inUsers[string(ElasticsearchInternalUserElastic)] = ElasticsearchUserSpec{
+				BackendRoles: []string{"superuser"},
+			}
+		} else {
+			// upsert "superuser" role, if missing
+			// elastic user must have the superuser role
+			userSpec.BackendRoles = upsertStringSlice(userSpec.BackendRoles, "superuser")
+			inUsers[string(ElasticsearchInternalUserElastic)] = userSpec
+		}
+
+		// "Kibana_system", "logstash_system", "beats_system", "apm_system", "remote_monitoring_user" user
+		setMissingElasticsearchUser(inUsers, string(ElasticsearchInternalUserKibanaSystem), ElasticsearchUserSpec{
+			BackendRoles: []string{"kibana_system"},
+		})
+		setMissingElasticsearchUser(inUsers, string(ElasticsearchInternalUserBeatsSystem), ElasticsearchUserSpec{
+			BackendRoles: []string{"beats_system"},
+		})
+		setMissingElasticsearchUser(inUsers, string(ElasticsearchInternalUserApmSystem), ElasticsearchUserSpec{
+			BackendRoles: []string{"apm_system"},
+		})
+		setMissingElasticsearchUser(inUsers, string(ElasticsearchInternalUserRemoteMonitoringUser), ElasticsearchUserSpec{
+			BackendRoles: []string{"remote_monitoring_collector", "remote_monitoring_agent"},
+		})
+		setMissingElasticsearchUser(inUsers, string(ElasticsearchInternalUserLogstashSystem), ElasticsearchUserSpec{
+			BackendRoles: []string{"logstash_system"},
+		})
+
+		e.Spec.InternalUsers = inUsers
+	}
+
+	// set missing internal users and roles for OpenDistro, SearchGuard & OpenSearch
+	if esVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginOpenDistro ||
+		esVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginSearchGuard ||
+		esVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginOpenSearch {
 
 		inUsers := e.Spec.InternalUsers
 		// If not set, create empty map
@@ -622,26 +677,6 @@ func (e *Elasticsearch) setDefaultInternalUsersAndRoleMappings(esVersion *catalo
 			setMissingElasticsearchUser(inUsers, string(ElasticsearchInternalUserMetricsExporter), ElasticsearchUserSpec{})
 		}
 
-		// Set missing user secret names
-		for username, userSpec := range inUsers {
-			// For admin user, spec.authSecret.Name must have high precedence over default field
-			if username == string(ElasticsearchInternalUserAdmin) {
-				if e.Spec.AuthSecret != nil && e.Spec.AuthSecret.Name != "" {
-					userSpec.SecretName = e.Spec.AuthSecret.Name
-				} else {
-					if userSpec.SecretName == "" {
-						userSpec.SecretName = e.DefaultUserCredSecretName(username)
-					}
-					e.Spec.AuthSecret = &core.LocalObjectReference{
-						Name: userSpec.SecretName,
-					}
-				}
-			} else if userSpec.SecretName == "" {
-				userSpec.SecretName = e.DefaultUserCredSecretName(username)
-			}
-			inUsers[username] = userSpec
-		}
-
 		// If monitoring is enabled,
 		// The "metric_exporter" user needs to have "readall_monitor" role mapped to itself.
 		if e.Spec.Monitor != nil {
@@ -650,7 +685,7 @@ func (e *Elasticsearch) setDefaultInternalUsersAndRoleMappings(esVersion *catalo
 				rolesMapping = make(map[string]ElasticsearchRoleMapSpec)
 			}
 			var monitorRole string
-			if esVersion.Spec.Distribution == catalog.ElasticsearchDistroSearchGuard {
+			if esVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginSearchGuard {
 				// readall_and_monitor role name varies in ES version
 				// 	V7        = "SGS_READALL_AND_MONITOR"
 				//	V6        = "sg_readall_and_monitor"
@@ -664,8 +699,10 @@ func (e *Elasticsearch) setDefaultInternalUsersAndRoleMappings(esVersion *catalo
 					// Required during upgrade process, from v6 --> v7
 					delete(rolesMapping, string(ElasticsearchSearchGuardReadallMonitorRoleV6))
 				}
-			} else {
+			} else if esVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginOpenDistro {
 				monitorRole = ElasticsearchOpendistroReadallMonitorRole
+			} else {
+				monitorRole = ElasticsearchOpenSearchReadallMonitorRole
 			}
 
 			// Create rolesMapping if not exists.
@@ -681,6 +718,28 @@ func (e *Elasticsearch) setDefaultInternalUsersAndRoleMappings(esVersion *catalo
 		}
 		e.Spec.InternalUsers = inUsers
 	}
+
+	inUsers := e.Spec.InternalUsers
+	// Set missing user secret names
+	for username, userSpec := range inUsers {
+		// For admin user, spec.authSecret.Name must have high precedence over default field
+		if username == string(ElasticsearchInternalUserAdmin) || username == string(ElasticsearchInternalUserElastic) {
+			if e.Spec.AuthSecret != nil && e.Spec.AuthSecret.Name != "" {
+				userSpec.SecretName = e.Spec.AuthSecret.Name
+			} else {
+				if userSpec.SecretName == "" {
+					userSpec.SecretName = e.DefaultUserCredSecretName(username)
+				}
+				e.Spec.AuthSecret = &core.LocalObjectReference{
+					Name: userSpec.SecretName,
+				}
+			}
+		} else if userSpec.SecretName == "" {
+			userSpec.SecretName = e.DefaultUserCredSecretName(username)
+		}
+		inUsers[username] = userSpec
+	}
+	e.Spec.InternalUsers = inUsers
 }
 
 // set default tls configuration (ie. alias, secretName)
@@ -712,6 +771,17 @@ func (e *Elasticsearch) SetTLSDefaults(esVersion *catalog.ElasticsearchVersion) 
 		SecretName: e.CertificateName(ElasticsearchTransportCert),
 	})
 
+	// Set missing admin certificate spec, if authPlugin is "OpenDistro", "SearchGuard", or "OpenSearch"
+	// Create the admin certificate, even if the enable.SSL is false. This is necessary to securityadmin.sh command.
+	if esVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginSearchGuard ||
+		esVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginOpenDistro ||
+		esVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginOpenSearch {
+		tlsConfig.Certificates = kmapi.SetMissingSpecForCertificate(tlsConfig.Certificates, kmapi.CertificateSpec{
+			Alias:      string(ElasticsearchAdminCert),
+			SecretName: e.CertificateName(ElasticsearchAdminCert),
+		})
+	}
+
 	// If SSL is enabled, set missing certificate spec
 	if e.Spec.EnableSSL {
 		// http
@@ -719,15 +789,6 @@ func (e *Elasticsearch) SetTLSDefaults(esVersion *catalog.ElasticsearchVersion) 
 			Alias:      string(ElasticsearchHTTPCert),
 			SecretName: e.CertificateName(ElasticsearchHTTPCert),
 		})
-
-		// Set missing admin certificate spec, if authPlugin is either "OpenDistro" or "SearchGuard"
-		if esVersion.Spec.Distribution == catalog.ElasticsearchDistroSearchGuard ||
-			esVersion.Spec.Distribution == catalog.ElasticsearchDistroOpenDistro {
-			tlsConfig.Certificates = kmapi.SetMissingSpecForCertificate(tlsConfig.Certificates, kmapi.CertificateSpec{
-				Alias:      string(ElasticsearchAdminCert),
-				SecretName: e.CertificateName(ElasticsearchAdminCert),
-			})
-		}
 
 		// Set missing metrics-exporter certificate, if monitoring is enabled.
 		if e.Spec.Monitor != nil {
@@ -740,10 +801,13 @@ func (e *Elasticsearch) SetTLSDefaults(esVersion *catalog.ElasticsearchVersion) 
 
 		// archiver
 		tlsConfig.Certificates = kmapi.SetMissingSpecForCertificate(tlsConfig.Certificates, kmapi.CertificateSpec{
-			Alias:      string(ElasticsearchArchiverCert),
-			SecretName: e.CertificateName(ElasticsearchArchiverCert),
+			Alias:      string(ElasticsearchClientCert),
+			SecretName: e.CertificateName(ElasticsearchClientCert),
 		})
 	}
+
+	// remove archiverCert from old spec if exists
+	tlsConfig.Certificates = kmapi.RemoveCertificate(tlsConfig.Certificates, string(ElasticsearchArchiverCert))
 
 	for id := range tlsConfig.Certificates {
 		// Force overwrite the private key encoding type to PKCS#8
