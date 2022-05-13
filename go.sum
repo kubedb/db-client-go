@@ -1376,8 +1376,8 @@ kmodules.xyz/resource-metrics v0.0.8/go.mod h1:M7rWuo2qh3BpHhogiEVPnvGY9Xx4Pfygq
 kmodules.xyz/schema-checker v0.2.0/go.mod h1:J1QUIFsqW0h/WNrIGzzy3UopTzg+RmMJXxvAZfmYDb4=
 kmodules.xyz/schema-checker v0.2.1/go.mod h1:1R2s4FH23Rz73DnfT8paWGNeMQpT7ia3KoyF8X4HCGU=
 kmodules.xyz/webhook-runtime v0.0.0-20220317222714-0ddfc9e4c221/go.mod h1:Q+4LHbCHVlkKxpEgaDa/EyZb5p/Bpj767zInBwyyitc=
-kubedb.dev/apimachinery v0.26.1-0.20220508053725-74c4fc13ef02 h1:PnqoNtWm6bBb8AH8vvR3fMR1loR+NTLdFElPKLYqN9A=
-kubedb.dev/apimachinery v0.26.1-0.20220508053725-74c4fc13ef02/go.mod h1:atLQjkN5sVQc7WJJCyxTt0AD8ZODyZYUxudYAQIxL2Y=
+kubedb.dev/apimachinery v0.26.1-0.20220512111943-a8461374aec6 h1:0lq0j+rqgzQPxZ2/075mjT+NBTmSawd7lOYWaXDK7BQ=
+kubedb.dev/apimachinery v0.26.1-0.20220512111943-a8461374aec6/go.mod h1:atLQjkN5sVQc7WJJCyxTt0AD8ZODyZYUxudYAQIxL2Y=
 lukechampine.com/uint128 v1.1.1 h1:pnxCASz787iMf+02ssImqk6OLt+Z5QHMoZyUXR4z6JU=
 lukechampine.com/uint128 v1.1.1/go.mod h1:c4eWIwlEGaxC/+H1VguhU4PHXNWDCDMUlWdIWl2j1gk=
 modernc.org/cc v1.0.0 h1:nPibNuDEx6tvYrUAtvDTTw98rx5juGsa5zuDnKwEEQQ=
