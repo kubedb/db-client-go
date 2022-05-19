@@ -9,11 +9,11 @@ require (
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/pkg/errors v0.9.1
-	go.mongodb.org/mongo-driver v1.1.2
+	go.mongodb.org/mongo-driver v1.9.1
 	k8s.io/api v0.21.1
 	k8s.io/klog/v2 v2.9.0
-	kmodules.xyz/client-go v0.0.0-20220317213815-2a6d5a5784f2
-	kubedb.dev/apimachinery v0.26.1-0.20220508053725-74c4fc13ef02
+	kmodules.xyz/client-go v0.0.0-20220512223652-dc247aa7f6df
+	kubedb.dev/apimachinery v0.26.1-0.20220519193141-3634eb14c9ac
 	sigs.k8s.io/controller-runtime v0.9.0
 	xorm.io/xorm v1.2.5
 )
@@ -69,7 +69,7 @@ require (
 	golang.org/x/time v0.0.0-20211116232009-f0f3c7e86c11 // indirect
 	golang.org/x/tools v0.1.5 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
-	gomodules.xyz/mergo v0.3.13-0.20210702100041-9d62ff8ece4d // indirect
+	gomodules.xyz/mergo v0.3.13-0.20220214162359-48efe39fd402 // indirect
 	gomodules.xyz/pointer v0.1.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
@@ -80,9 +80,9 @@ require (
 	k8s.io/client-go v0.21.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65 // indirect
 	k8s.io/utils v0.0.0-20210930125809-cb0fa318a74b // indirect
-	kmodules.xyz/custom-resources v0.0.0-20220317220154-7beb809b1f5e // indirect
-	kmodules.xyz/monitoring-agent-api v0.0.0-20220319222118-0290ed5b75e1 // indirect
-	kmodules.xyz/offshoot-api v0.0.0-20220418173619-64f14f87ed5b // indirect
+	kmodules.xyz/custom-resources v0.0.0-20220422215041-237eae1d7ddd // indirect
+	kmodules.xyz/monitoring-agent-api v0.0.0-20220519191512-5a48a0a1d3f8 // indirect
+	kmodules.xyz/offshoot-api v0.0.0-20220420055916-fefb02c26514 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.0 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 	xorm.io/builder v0.3.9 // indirect
