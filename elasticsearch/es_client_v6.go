@@ -24,6 +24,7 @@ import (
 	esv6 "github.com/elastic/go-elasticsearch/v6"
 	"github.com/elastic/go-elasticsearch/v6/esapi"
 	"github.com/pkg/errors"
+	core "k8s.io/api/core/v1"
 )
 
 var _ ESClient = &ESClientV6{}
@@ -74,4 +75,34 @@ func (es *ESClientV6) GetIndicesInfo() ([]interface{}, error) {
 	}
 
 	return indicesInfo, nil
+}
+
+func (es *ESClientV6) ClusterStatus() (string, error) {
+	res, err := es.client.Cluster.Health(
+		es.client.Cluster.Health.WithPretty(),
+	)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+
+	response := make(map[string]interface{})
+	if err2 := json.NewDecoder(res.Body).Decode(&response); err2 != nil {
+		return "", errors.Wrap(err2, "failed to parse the response body")
+	}
+	if value, ok := response["status"]; ok {
+		if strValue, ok := value.(string); ok {
+			return strValue, nil
+		}
+		return "", errors.New("failed to convert response to string")
+	}
+	return "", errors.New("status is missing")
+}
+
+// kibana_system, logstash_system etc. internal users
+// are not supported for versions 6.x.x and,
+// kibana, logstash can be accessed using elastic superuser
+// so, sysncing is not required for other builtin users
+func (es *ESClientV6) SyncCredentialFromSecret(secret *core.Secret) error {
+	return nil
 }
