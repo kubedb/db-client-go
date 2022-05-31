@@ -16,8 +16,26 @@ limitations under the License.
 
 package elasticsearch
 
+import (
+	catalog "kubedb.dev/apimachinery/apis/catalog/v1alpha1"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+
+	core "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes"
+)
+
 type ESClient interface {
 	ClusterHealthInfo() (map[string]interface{}, error)
 	NodesStats() (map[string]interface{}, error)
 	GetIndicesInfo() ([]interface{}, error)
+	ClusterStatus() (string, error)
+	SyncCredentialFromSecret(secret *core.Secret) error
+}
+
+type ClientOptions struct {
+	KClient   kubernetes.Interface
+	DB        *api.Elasticsearch
+	ESVersion *catalog.ElasticsearchVersion
+	URL       string
+	Secret    *core.Secret
 }
