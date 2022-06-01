@@ -39,6 +39,7 @@ github.com/elastic/go-elasticsearch/v7/internal/version
 ## explicit; go 1.13
 github.com/elastic/go-elasticsearch/v8
 github.com/elastic/go-elasticsearch/v8/esapi
+github.com/elastic/go-elasticsearch/v8/esutil
 github.com/elastic/go-elasticsearch/v8/internal/version
 # github.com/emicklei/go-restful v2.15.0+incompatible
 ## explicit

@@ -21,6 +21,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"github.com/elastic/go-elasticsearch/v8/esapi"
+	"io"
 	"net"
 	"net/http"
 	"time"
@@ -36,8 +38,6 @@ import (
 	esv8 "github.com/elastic/go-elasticsearch/v8"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -47,6 +47,7 @@ type KubeDBClientBuilder struct {
 	db      *api.Elasticsearch
 	url     string
 	podName string
+	ctx     context.Context
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *api.Elasticsearch) *KubeDBClientBuilder {
@@ -66,11 +67,16 @@ func (o *KubeDBClientBuilder) WithURL(url string) *KubeDBClientBuilder {
 	return o
 }
 
+func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
+	o.ctx = ctx
+	return o
+}
+
 func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, error) {
 	if o.podName != "" {
-		o.url = o.ServiceURL(opt.DB)
+		o.url = o.ServiceURL()
 	}
-	if opt.DB == nil || opt.ESVersion == nil {
+	if o.db == nil || opt.ESVersion == nil {
 		return nil, errors.New("db or esVersion is empty")
 	}
 
@@ -117,7 +123,7 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 			},
 		})
 		if err != nil {
-			klog.Errorf("Failed to create HTTP client for Elasticsearch: %s/%s with: %s", opt.DB.Namespace, opt.DB.Name, err.Error())
+			klog.Errorf("Failed to create HTTP client for Elasticsearch: %s/%s with: %s", o.db.Namespace, o.db.Name, err.Error())
 			return nil, err
 		}
 		// do a manual health check to test client
@@ -127,7 +133,12 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 		if err != nil {
 			return nil, err
 		}
-		defer res.Body.Close()
+		defer func(Body io.ReadCloser) {
+			err := Body.Close()
+			if err != nil {
+				klog.Errorf("failed to close response body", err)
+			}
+		}(res.Body)
 
 		if res.IsError() {
 			return nil, fmt.Errorf("health check failed with status code: %d", res.StatusCode)
@@ -156,7 +167,7 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 			},
 		})
 		if err != nil {
-			klog.Errorf("Failed to create HTTP client for Elasticsearch: %s/%s with: %s", opt.DB.Namespace, opt.DB.Name, err.Error())
+			klog.Errorf("Failed to create HTTP client for Elasticsearch: %s/%s with: %s", o.db.Namespace, o.db.Name, err.Error())
 			return nil, err
 		}
 		// do a manual health check to test client
@@ -166,7 +177,12 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 		if err != nil {
 			return nil, err
 		}
-		defer res.Body.Close()
+		defer func(Body io.ReadCloser) {
+			err := Body.Close()
+			if err != nil {
+				klog.Errorf("failed to close response body", err)
+			}
+		}(res.Body)
 
 		if res.IsError() {
 			return nil, fmt.Errorf("health check failed with status code: %d", res.StatusCode)
@@ -178,7 +194,7 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 	// for Elasticsearch 7.x.x and OpenSearch 1.x.x
 	case version.Major() == 7 || (opt.ESVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginOpenSearch && version.Major() == 1):
 
-		defaultTLSConfig, err := getDefaultTLSConfig(opt.KClient, opt.DB)
+		defaultTLSConfig, err := o.getDefaultTLSConfig()
 		if err != nil {
 			klog.Errorf("Failed get default TLS configuration")
 			return nil, err
@@ -200,7 +216,7 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 			},
 		})
 		if err != nil {
-			klog.Errorf("Failed to create HTTP client for Elasticsearch: %s/%s with: %s", opt.DB.Namespace, opt.DB.Name, err.Error())
+			klog.Errorf("Failed to create HTTP client for Elasticsearch: %s/%s with: %s", o.db.Namespace, o.db.Name, err.Error())
 			return nil, err
 		}
 		// do a manual health check to test client
@@ -210,7 +226,12 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 		if err != nil {
 			return nil, err
 		}
-		defer res.Body.Close()
+		defer func(Body io.ReadCloser) {
+			err := Body.Close()
+			if err != nil {
+				klog.Errorf("failed to close response body", err)
+			}
+		}(res.Body)
 
 		if res.IsError() {
 			return nil, fmt.Errorf("health check failed with status code: %d", res.StatusCode)
@@ -221,7 +242,7 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 
 		// for Elasticsearch 8.x.x
 	case version.Major() == 8:
-		defaultTLSConfig, err := getDefaultTLSConfig(opt.KClient, opt.DB)
+		defaultTLSConfig, err := o.getDefaultTLSConfig()
 		if err != nil {
 			klog.Errorf("Failed get default TLS configuration")
 			return nil, err
@@ -243,17 +264,18 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 			},
 		})
 		if err != nil {
-			klog.Errorf("Failed to create HTTP client for Elasticsearch: %s/%s with: %s", opt.DB.Namespace, opt.DB.Name, err.Error())
+			klog.Errorf("Failed to create HTTP client for Elasticsearch: %s/%s with: %s", o.db.Namespace, o.db.Name, err.Error())
 			return nil, err
 		}
-		// do a manual health check to test client
-		res, err := esClient.Cluster.Health(
-			esClient.Cluster.Health.WithPretty(),
-		)
-		if err != nil {
-			return nil, err
-		}
-		defer res.Body.Close()
+
+		res, err := esapi.PingRequest{}.Do(o.ctx, esClient.Transport)
+
+		defer func(Body io.ReadCloser) {
+			err = Body.Close()
+			if err != nil {
+				klog.Errorf("failed to close response body", err)
+			}
+		}(res.Body)
 
 		if res.IsError() {
 			return nil, fmt.Errorf("health check failed with status code: %d", res.StatusCode)
@@ -264,19 +286,19 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 		}, nil
 	}
 
-	return nil, fmt.Errorf("unknown database version: %s", opt.DB.Spec.Version)
+	return nil, fmt.Errorf("unknown database version: %s", o.db.Spec.Version)
 }
 
-func (o *KubeDBClientBuilder) ServiceURL(db *api.Elasticsearch) string {
-	return fmt.Sprintf("%v://%s.%s.svc:%d", db.GetConnectionScheme(), db.ServiceName(), db.GetNamespace(), api.ElasticsearchRestPort)
-}
-
-func getDefaultTLSConfig(kc kubernetes.Interface, db *api.Elasticsearch) (*tls.Config, error) {
+func (o *KubeDBClientBuilder) getDefaultTLSConfig() (*tls.Config, error) {
 	var crt tls.Certificate
 	var clientCA, rootCA *x509.CertPool
 
-	if db.Spec.EnableSSL {
-		certSecret, err := kc.CoreV1().Secrets(db.Namespace).Get(context.TODO(), db.GetCertSecretName(api.ElasticsearchClientCert), v1.GetOptions{})
+	if o.db.Spec.EnableSSL {
+		var certSecret core.Secret
+		err := o.kc.Get(o.ctx, client.ObjectKey{
+			Name:      o.db.GetCertSecretName(api.ElasticsearchClientCert),
+			Namespace: o.db.Namespace},
+			&certSecret)
 		if err != nil {
 			klog.Errorf("Failed to get client-cert for tls configurations")
 			return nil, err
@@ -306,4 +328,8 @@ func getDefaultTLSConfig(kc kubernetes.Interface, db *api.Elasticsearch) (*tls.C
 	}
 
 	return defaultTLSConfig, nil
+}
+
+func (o *KubeDBClientBuilder) ServiceURL() string {
+	return fmt.Sprintf("%v://%s.%s.svc:%d", o.db.GetConnectionScheme(), o.db.ServiceName(), o.db.GetNamespace(), api.ElasticsearchRestPort)
 }
