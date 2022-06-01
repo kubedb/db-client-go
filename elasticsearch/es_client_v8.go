@@ -106,3 +106,30 @@ func (es *ESClientV8) SyncCredentialFromSecret(secret *core.Secret) error {
 	klog.Infoln("Failed to sync", username, "credentials")
 	return errors.New("CredSyncFailed")
 }
+
+//func (es *ESClientV8) GetClusterWriteStatus(ctx context.Context) error {
+//
+//	// Build the request body.
+//	reqBody := map[string]string{
+//		"managed_by": "kubedb",
+//	}
+//	body, err2 := json.Marshal(reqBody)
+//	if err2 != nil {
+//		return err2
+//	}
+//
+//	res, err := esapi.BulkRequest{
+//		Index:  "kubedb_system",
+//		Body:   strings.NewReader(string(body)),
+//		Pretty: true,
+//	}.Do(ctx, es.client.Transport)
+//
+//	defer func(Body io.ReadCloser) {
+//		err = Body.Close()
+//		if err != nil {
+//			klog.Errorf("failed to close auth response body", err)
+//		}
+//	}(res.Body)
+//
+//	return errors.New("CredSyncFailed")
+//}

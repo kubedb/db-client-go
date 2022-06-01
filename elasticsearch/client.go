@@ -16,6 +16,17 @@ limitations under the License.
 
 package elasticsearch
 
+import (
+	core "k8s.io/api/core/v1"
+	catalog "kubedb.dev/apimachinery/apis/catalog/v1alpha1"
+)
+
 type Client struct {
 	ESClient
+}
+
+type ClientOptions struct {
+	ESVersion *catalog.ElasticsearchVersion
+	URL       string
+	Secret    *core.Secret
 }
