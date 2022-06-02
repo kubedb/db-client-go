@@ -112,6 +112,10 @@ func (o *KubeDBClientBuilder) GetMongoClient() (*Client, error) {
 
 	err = client.Ping(o.ctx, nil)
 	if err != nil {
+		disconnectErr := client.Disconnect(o.ctx)
+		if disconnectErr != nil {
+			klog.Errorf("Failed to disconnect client. error: %v", disconnectErr)
+		}
 		return nil, err
 	}
 
@@ -147,7 +151,7 @@ func (o *KubeDBClientBuilder) getMongoDBClientOpts() (*mgoptions.ClientOptions, 
 		var paths *certholder.Paths
 		if o.certs == nil {
 			var certSecret core.Secret
-			err := o.kc.Get(context.TODO(), client.ObjectKey{Namespace: db.Namespace, Name: secretName}, &certSecret)
+			err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: db.Namespace, Name: secretName}, &certSecret)
 			if err != nil {
 				klog.Error(err, "failed to get certificate secret. ", secretName)
 				return nil, err
@@ -190,7 +194,7 @@ func (o *KubeDBClientBuilder) getMongoDBRootCredentials() (string, string, error
 		return "", "", errors.New("no database secret")
 	}
 	var secret core.Secret
-	err := o.kc.Get(context.TODO(), client.ObjectKey{Namespace: db.Namespace, Name: db.Spec.AuthSecret.Name}, &secret)
+	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: db.Namespace, Name: db.Spec.AuthSecret.Name}, &secret)
 	if err != nil {
 		return "", "", err
 	}
