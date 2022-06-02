@@ -23,6 +23,8 @@ import (
 	"fmt"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"io"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"net"
 	"net/http"
 	"time"
@@ -39,18 +41,17 @@ import (
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type KubeDBClientBuilder struct {
-	kc      client.Client
+	kc      kubernetes.Interface
 	db      *api.Elasticsearch
 	url     string
 	podName string
 	ctx     context.Context
 }
 
-func NewKubeDBClientBuilder(kc client.Client, db *api.Elasticsearch) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc kubernetes.Interface, db *api.Elasticsearch) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc: kc,
 		db: db,
@@ -294,11 +295,7 @@ func (o *KubeDBClientBuilder) getDefaultTLSConfig() (*tls.Config, error) {
 	var clientCA, rootCA *x509.CertPool
 
 	if o.db.Spec.EnableSSL {
-		var certSecret core.Secret
-		err := o.kc.Get(o.ctx, client.ObjectKey{
-			Name:      o.db.GetCertSecretName(api.ElasticsearchClientCert),
-			Namespace: o.db.Namespace},
-			&certSecret)
+		certSecret, err := o.kc.CoreV1().Secrets(o.db.Namespace).Get(o.ctx, o.db.GetCertSecretName(api.ElasticsearchClientCert), v1.GetOptions{})
 		if err != nil {
 			klog.Errorf("Failed to get client-cert for tls configurations")
 			return nil, err
