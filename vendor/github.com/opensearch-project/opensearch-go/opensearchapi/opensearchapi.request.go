@@ -1,3 +1,12 @@
+// SPDX-License-Identifier: Apache-2.0
+//
+// The OpenSearch Contributors require contributions made to
+// this file be licensed under the Apache-2.0 license or a
+// compatible open source license.
+//
+// Modifications Copyright OpenSearch Contributors. See
+// GitHub history for details.
+
 // Licensed to Elasticsearch B.V. under one or more contributor
 // license agreements. See the NOTICE file distributed with
 // this work for additional information regarding copyright
@@ -15,8 +24,30 @@
 // specific language governing permissions and limitations
 // under the License.
 
-/*
-Package esutil provides helper utilities to the Go client for Elasticsearch.
+package opensearchapi
 
-*/
-package esutil
+import (
+	"context"
+	"io"
+	"net/http"
+)
+
+const (
+	headerContentType = "Content-Type"
+)
+
+var (
+	headerContentTypeJSON = []string{"application/json"}
+)
+
+// Request defines the API request.
+//
+type Request interface {
+	Do(ctx context.Context, transport Transport) (*Response, error)
+}
+
+// newRequest creates an HTTP request.
+//
+func newRequest(method, path string, body io.Reader) (*http.Request, error) {
+	return http.NewRequest(method, path, body)
+}
