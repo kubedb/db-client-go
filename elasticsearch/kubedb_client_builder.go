@@ -271,6 +271,10 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 
 		res, err := esapi.PingRequest{}.Do(o.ctx, esClient.Transport)
 
+		if err != nil {
+			return nil, err
+		}
+
 		defer func(Body io.ReadCloser) {
 			err = Body.Close()
 			if err != nil {
