@@ -109,7 +109,7 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 	// For Elasticsearch 5.x.x
 	case version.Major() == 5:
 		esClient, err := esv5.NewClient(esv5.Config{
-			Addresses: []string{opt.URL},
+			Addresses: []string{o.url},
 			Username:  username,
 			Password:  password,
 			Transport: &http.Transport{
@@ -151,7 +151,7 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 	// for Elasticsearch 6.x.x
 	case version.Major() == 6:
 		esClient, err := esv6.NewClient(esv6.Config{
-			Addresses:         []string{opt.URL},
+			Addresses:         []string{o.url},
 			Username:          username,
 			Password:          password,
 			EnableDebugLogger: true,
@@ -203,7 +203,7 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 		}
 
 		esClient, err := esv7.NewClient(esv7.Config{
-			Addresses:         []string{opt.URL},
+			Addresses:         []string{o.url},
 			Username:          username,
 			Password:          password,
 			EnableDebugLogger: true,
@@ -251,7 +251,7 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 		}
 
 		esClient, err := esv8.NewClient(esv8.Config{
-			Addresses:         []string{opt.URL},
+			Addresses:         []string{o.url},
 			Username:          username,
 			Password:          password,
 			EnableDebugLogger: true,
