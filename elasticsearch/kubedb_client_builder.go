@@ -77,6 +77,9 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 	if o.podName != "" {
 		o.url = o.ServiceURL()
 	}
+	if o.url == "" {
+		o.url = o.ServiceURL()
+	}
 	if o.db == nil || opt.ESVersion == nil {
 		return nil, errors.New("db or esVersion is empty")
 	}
