@@ -17,7 +17,9 @@ limitations under the License.
 package elasticsearch
 
 import (
+	"context"
 	"encoding/json"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	esv5 "github.com/elastic/go-elasticsearch/v5"
 	"github.com/pkg/errors"
@@ -71,5 +73,9 @@ func (es *ESClientV5) ClusterStatus() (string, error) {
 // kibana, logstash can be accessed using elastic superuser
 // so, sysncing is not required for other builtin users
 func (es *ESClientV5) SyncCredentialFromSecret(secret *core.Secret) error {
+	return nil
+}
+
+func (es *ESClientV5) GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error {
 	return nil
 }

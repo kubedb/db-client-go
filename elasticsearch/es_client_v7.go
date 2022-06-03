@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"strings"
 
 	esv7 "github.com/elastic/go-elasticsearch/v7"
@@ -168,4 +169,8 @@ func (es *ESClientV7) SyncCredentialFromSecret(secret *core.Secret) error {
 
 	klog.Infoln("Failed to sync", username, "credentials")
 	return errors.New("CredSyncFailed")
+}
+
+func (es *ESClientV7) GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error {
+	return nil
 }

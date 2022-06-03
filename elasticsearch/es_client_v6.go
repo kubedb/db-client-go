@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	esv6 "github.com/elastic/go-elasticsearch/v6"
 	"github.com/elastic/go-elasticsearch/v6/esapi"
@@ -104,5 +105,9 @@ func (es *ESClientV6) ClusterStatus() (string, error) {
 // kibana, logstash can be accessed using elastic superuser
 // so, sysncing is not required for other builtin users
 func (es *ESClientV6) SyncCredentialFromSecret(secret *core.Secret) error {
+	return nil
+}
+
+func (es *ESClientV6) GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error {
 	return nil
 }

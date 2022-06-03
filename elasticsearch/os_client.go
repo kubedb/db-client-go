@@ -1,10 +1,12 @@
 package elasticsearch
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/opensearch-project/opensearch-go"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 )
 
 var _ ESClient = &OSClient{}
@@ -52,29 +54,6 @@ func (es *OSClient) SyncCredentialFromSecret(secret *core.Secret) error {
 	return nil
 }
 
-//func (es *ESClientV8) GetClusterWriteStatus(ctx context.Context) error {
-//
-//	// Build the request body.
-//	reqBody := map[string]string{
-//		"managed_by": "kubedb",
-//	}
-//	body, err2 := json.Marshal(reqBody)
-//	if err2 != nil {
-//		return err2
-//	}
-//
-//	res, err := esapi.BulkRequest{
-//		Index:  "kubedb_system",
-//		Body:   strings.NewReader(string(body)),
-//		Pretty: true,
-//	}.Do(ctx, es.client.Transport)
-//
-//	defer func(Body io.ReadCloser) {
-//		err = Body.Close()
-//		if err != nil {
-//			klog.Errorf("failed to close auth response body", err)
-//		}
-//	}(res.Body)
-//
-//	return errors.New("CredSyncFailed")
-//}
+func (es *OSClient) GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error {
+	return nil
+}

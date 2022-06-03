@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	"strconv"
 	"strings"
 
 	esv8 "github.com/elastic/go-elasticsearch/v8"
@@ -107,29 +109,51 @@ func (es *ESClientV8) SyncCredentialFromSecret(secret *core.Secret) error {
 	return errors.New("CredSyncFailed")
 }
 
-//func (es *ESClientV8) GetClusterWriteStatus(ctx context.Context) error {
-//
-//	// Build the request body.
-//	reqBody := map[string]string{
-//		"managed_by": "kubedb",
-//	}
-//	body, err2 := json.Marshal(reqBody)
-//	if err2 != nil {
-//		return err2
-//	}
-//
-//	res, err := esapi.BulkRequest{
-//		Index:  "kubedb_system",
-//		Body:   strings.NewReader(string(body)),
-//		Pretty: true,
-//	}.Do(ctx, es.client.Transport)
-//
-//	defer func(Body io.ReadCloser) {
-//		err = Body.Close()
-//		if err != nil {
-//			klog.Errorf("failed to close auth response body", err)
-//		}
-//	}(res.Body)
-//
-//	return errors.New("CredSyncFailed")
-//}
+func (es *ESClientV8) GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error {
+
+	// Build the request body.
+	indexReq := map[string]map[string]string{
+		"index": {
+			"_id": "health",
+		},
+	}
+	reqBody := map[string]map[string]string{
+		"Labels": db.OffshootLabels(),
+		"Metadata": {
+			"name":            db.GetName(),
+			"Namespace":       db.GetNamespace(),
+			"Generation":      strconv.FormatInt(db.GetGeneration(), 10),
+			"uid":             string(db.GetUID()),
+			"ResourceVersion": db.GetResourceVersion(),
+		},
+	}
+	index, err1 := json.Marshal(indexReq)
+	if err1 != nil {
+		return err1
+	}
+	body, err2 := json.Marshal(reqBody)
+	if err2 != nil {
+		return err2
+	}
+
+	res, err3 := esapi.BulkRequest{
+		Index:  "kubedb-system",
+		Body:   strings.NewReader(strings.Join([]string{string(index), string(body)}, "\n") + "\n"),
+		Pretty: true,
+	}.Do(ctx, es.client.Transport)
+
+	defer func(Body io.ReadCloser) {
+		err3 = Body.Close()
+		if err3 != nil {
+			klog.Errorf("failed to close write request response body", err3)
+		}
+	}(res.Body)
+
+	if !res.IsError() {
+		klog.Infoln(db.Name, "Write check successfully executed")
+		return nil
+	}
+
+	klog.Infoln("Failed to check", db.Name, "write Access")
+	return errors.New("DBWriteCheckFailed")
+}

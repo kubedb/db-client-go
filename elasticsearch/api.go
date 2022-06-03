@@ -17,7 +17,9 @@ limitations under the License.
 package elasticsearch
 
 import (
+	"context"
 	core "k8s.io/api/core/v1"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 )
 
 type ESClient interface {
@@ -26,4 +28,5 @@ type ESClient interface {
 	GetIndicesInfo() ([]interface{}, error)
 	ClusterStatus() (string, error)
 	SyncCredentialFromSecret(secret *core.Secret) error
+	GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error
 }
