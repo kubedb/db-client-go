@@ -174,3 +174,7 @@ func (es *ESClientV7) SyncCredentialFromSecret(secret *core.Secret) error {
 func (es *ESClientV7) GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error {
 	return nil
 }
+
+func (es *ESClientV7) GetClusterReadStatus(ctx context.Context, db *api.Elasticsearch) error {
+	return nil
+}
