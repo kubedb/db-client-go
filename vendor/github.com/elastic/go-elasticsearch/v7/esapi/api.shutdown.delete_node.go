@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 7.13.1: DO NOT EDIT
+// Code generated from specification version 7.17.1: DO NOT EDIT
 
 package esapi
 
@@ -37,9 +37,7 @@ func newShutdownDeleteNodeFunc(t Transport) ShutdownDeleteNode {
 
 // ----- API Definition -------------------------------------------------------
 
-// ShutdownDeleteNode removes a node from the shutdown list
-//
-// This API is experimental.
+// ShutdownDeleteNode removes a node from the shutdown list. Designed for indirect use by ECE/ESS and ECK. Direct use is not supported.
 //
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current.
 //

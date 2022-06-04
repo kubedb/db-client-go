@@ -6,7 +6,6 @@ package dialects
 
 import (
 	"context"
-	"crypto/tls"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -172,16 +171,7 @@ var (
 
 type mysql struct {
 	Base
-	net               string
-	addr              string
-	params            map[string]string
-	loc               *time.Location
-	timeout           time.Duration
-	tls               *tls.Config
-	allowAllFiles     bool
-	allowOldPasswords bool
-	clientFoundRows   bool
-	rowFormat         string
+	rowFormat string
 }
 
 func (db *mysql) Init(uri *URI) error {
@@ -189,11 +179,9 @@ func (db *mysql) Init(uri *URI) error {
 	return db.Base.Init(db, uri)
 }
 
-var (
-	mysqlColAliases = map[string]string{
-		"numeric": "decimal",
-	}
-)
+var mysqlColAliases = map[string]string{
+	"numeric": "decimal",
+}
 
 // Alias returns a alias of column
 func (db *mysql) Alias(col string) string {
@@ -244,10 +232,16 @@ func (db *mysql) Version(ctx context.Context, queryer core.Queryer) (*schemas.Ve
 	}, nil
 }
 
+func (db *mysql) Features() *DialectFeatures {
+	return &DialectFeatures{
+		AutoincrMode: IncrAutoincrMode,
+	}
+}
+
 func (db *mysql) SetParams(params map[string]string) {
 	rowFormat, ok := params["rowFormat"]
 	if ok {
-		var t = strings.ToUpper(rowFormat)
+		t := strings.ToUpper(rowFormat)
 		switch t {
 		case "COMPACT":
 			fallthrough
@@ -403,10 +397,10 @@ func (db *mysql) GetColumns(queryer core.Queryer, ctx context.Context, tableName
 		"(SUBSTRING_INDEX(SUBSTRING(VERSION(), 4), '.', 1) = 2 && " +
 		"SUBSTRING_INDEX(SUBSTRING(VERSION(), 6), '-', 1) >= 7)))))"
 	s := "SELECT `COLUMN_NAME`, `IS_NULLABLE`, `COLUMN_DEFAULT`, `COLUMN_TYPE`," +
-		" `COLUMN_KEY`, `EXTRA`, `COLUMN_COMMENT`, " +
+		" `COLUMN_KEY`, `EXTRA`, `COLUMN_COMMENT`, `CHARACTER_MAXIMUM_LENGTH`, " +
 		alreadyQuoted + " AS NEEDS_QUOTE " +
 		"FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` = ?" +
-		" ORDER BY `COLUMNS`.ORDINAL_POSITION"
+		" ORDER BY `COLUMNS`.ORDINAL_POSITION ASC"
 
 	rows, err := queryer.QueryContext(ctx, s, args...)
 	if err != nil {
@@ -422,8 +416,8 @@ func (db *mysql) GetColumns(queryer core.Queryer, ctx context.Context, tableName
 
 		var columnName, nullableStr, colType, colKey, extra, comment string
 		var alreadyQuoted, isUnsigned bool
-		var colDefault *string
-		err = rows.Scan(&columnName, &nullableStr, &colDefault, &colType, &colKey, &extra, &comment, &alreadyQuoted)
+		var colDefault, maxLength *string
+		err = rows.Scan(&columnName, &nullableStr, &colDefault, &colType, &colKey, &extra, &comment, &maxLength, &alreadyQuoted)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -482,6 +476,14 @@ func (db *mysql) GetColumns(queryer core.Queryer, ctx context.Context, tableName
 					}
 				}
 			}
+		} else {
+			switch colType {
+			case "MEDIUMTEXT", "LONGTEXT", "TEXT":
+				len1, err = strconv.Atoi(*maxLength)
+				if err != nil {
+					return nil, nil, err
+				}
+			}
 		}
 		if isUnsigned {
 			colType = "UNSIGNED " + colType
@@ -491,15 +493,15 @@ func (db *mysql) GetColumns(queryer core.Queryer, ctx context.Context, tableName
 		if _, ok := schemas.SqlTypes[colType]; ok {
 			col.SQLType = schemas.SQLType{Name: colType, DefaultLength: len1, DefaultLength2: len2}
 		} else {
-			return nil, nil, fmt.Errorf("Unknown colType %v", colType)
+			return nil, nil, fmt.Errorf("unknown colType %v", colType)
 		}
 
 		if colKey == "PRI" {
 			col.IsPrimaryKey = true
 		}
-		if colKey == "UNI" {
-			// col.is
-		}
+		// if colKey == "UNI" {
+		// col.is
+		// }
 
 		if extra == "auto_increment" {
 			col.IsAutoIncrement = true
@@ -558,11 +560,11 @@ func (db *mysql) GetTables(queryer core.Queryer, ctx context.Context) ([]*schema
 func (db *mysql) SetQuotePolicy(quotePolicy QuotePolicy) {
 	switch quotePolicy {
 	case QuotePolicyNone:
-		var q = mysqlQuoter
+		q := mysqlQuoter
 		q.IsReserved = schemas.AlwaysNoReserve
 		db.quoter = q
 	case QuotePolicyReserved:
-		var q = mysqlQuoter
+		q := mysqlQuoter
 		q.IsReserved = db.IsReserved
 		db.quoter = q
 	case QuotePolicyAlways:
@@ -574,7 +576,7 @@ func (db *mysql) SetQuotePolicy(quotePolicy QuotePolicy) {
 
 func (db *mysql) GetIndexes(queryer core.Queryer, ctx context.Context, tableName string) (map[string]*schemas.Index, error) {
 	args := []interface{}{db.uri.DBName, tableName}
-	s := "SELECT `INDEX_NAME`, `NON_UNIQUE`, `COLUMN_NAME` FROM `INFORMATION_SCHEMA`.`STATISTICS` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` = ?"
+	s := "SELECT `INDEX_NAME`, `NON_UNIQUE`, `COLUMN_NAME` FROM `INFORMATION_SCHEMA`.`STATISTICS` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` = ? ORDER BY `SEQ_IN_INDEX`"
 
 	rows, err := queryer.QueryContext(ctx, s, args...)
 	if err != nil {
@@ -625,7 +627,7 @@ func (db *mysql) GetIndexes(queryer core.Queryer, ctx context.Context, tableName
 	return indexes, nil
 }
 
-func (db *mysql) CreateTableSQL(table *schemas.Table, tableName string) ([]string, bool) {
+func (db *mysql) CreateTableSQL(ctx context.Context, queryer core.Queryer, table *schemas.Table, tableName string) (string, bool, error) {
 	if tableName == "" {
 		tableName = table.Name
 	}
@@ -665,7 +667,7 @@ func (db *mysql) CreateTableSQL(table *schemas.Table, tableName string) ([]strin
 		b.WriteString(table.StoreEngine)
 	}
 
-	var charset = table.Charset
+	charset := table.Charset
 	if len(charset) == 0 {
 		charset = db.URI().Charset
 	}
@@ -678,7 +680,14 @@ func (db *mysql) CreateTableSQL(table *schemas.Table, tableName string) ([]strin
 		b.WriteString(" ROW_FORMAT=")
 		b.WriteString(db.rowFormat)
 	}
-	return []string{b.String()}, true
+
+	if table.Comment != "" {
+		b.WriteString(" COMMENT='")
+		b.WriteString(table.Comment)
+		b.WriteString("'")
+	}
+
+	return b.String(), true, nil
 }
 
 func (db *mysql) Filters() []Filter {
@@ -772,7 +781,7 @@ func (p *mymysqlDriver) Parse(driverName, dataSourceName string) (*URI, error) {
 		// Parse protocol part of URI
 		p := strings.SplitN(pd[0], ":", 2)
 		if len(p) != 2 {
-			return nil, errors.New("Wrong protocol part of URI")
+			return nil, errors.New("wrong protocol part of URI")
 		}
 		uri.Proto = p[0]
 		options := strings.Split(p[1], ",")
@@ -795,7 +804,7 @@ func (p *mymysqlDriver) Parse(driverName, dataSourceName string) (*URI, error) {
 				}
 				uri.Timeout = to
 			default:
-				return nil, errors.New("Unknown option: " + k)
+				return nil, errors.New("unknown option: " + k)
 			}
 		}
 		// Remove protocol part

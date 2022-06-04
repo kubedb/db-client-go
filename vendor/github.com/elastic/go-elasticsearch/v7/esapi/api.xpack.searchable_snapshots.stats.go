@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 7.13.1: DO NOT EDIT
+// Code generated from specification version 7.17.1: DO NOT EDIT
 
 package esapi
 
@@ -38,8 +38,6 @@ func newSearchableSnapshotsStatsFunc(t Transport) SearchableSnapshotsStats {
 // ----- API Definition -------------------------------------------------------
 
 // SearchableSnapshotsStats - Retrieve shard-level statistics about searchable snapshots.
-//
-// This API is experimental.
 //
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/searchable-snapshots-apis.html.
 //

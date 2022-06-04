@@ -19,7 +19,11 @@ package estransport
 
 import (
 	"bytes"
+	"compress/gzip"
+	"crypto/sha256"
+	"crypto/tls"
 	"crypto/x509"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -44,13 +48,15 @@ const (
 
 	// esCompatHeader defines the env var for Compatibility header.
 	esCompatHeader = "ELASTIC_CLIENT_APIVERSIONING"
+
+	userAgentHeader = "User-Agent"
 )
 
 var (
-	userAgent   string
-	metaHeader  string
+	userAgent           string
+	metaHeader          string
 	compatibilityHeader bool
-	reGoVersion = regexp.MustCompile(`go(\d+\.\d+\..+)`)
+	reGoVersion         = regexp.MustCompile(`go(\d+\.\d+\..+)`)
 
 	defaultMaxRetries    = 3
 	defaultRetryOnStatus = [...]int{502, 503, 504}
@@ -88,6 +94,9 @@ type Config struct {
 	MaxRetries           int
 	RetryBackoff         func(attempt int) time.Duration
 
+	CompressRequestBody bool
+	CompatibilityHeader bool
+
 	EnableMetrics     bool
 	EnableDebugLogger bool
 
@@ -100,6 +109,8 @@ type Config struct {
 	Selector  Selector
 
 	ConnectionPoolFunc func([]*Connection, Selector) ConnectionPool
+
+	CertificateFingerprint string
 }
 
 // Client represents the HTTP client.
@@ -112,6 +123,7 @@ type Client struct {
 	password     string
 	apikey       string
 	servicetoken string
+	fingerprint  string
 	header       http.Header
 
 	retryOnStatus         []int
@@ -122,6 +134,9 @@ type Client struct {
 	retryBackoff          func(attempt int) time.Duration
 	discoverNodesInterval time.Duration
 	discoverNodesTimer    *time.Timer
+
+	compressRequestBody bool
+	compatibilityHeader bool
 
 	metrics *metrics
 
@@ -139,6 +154,32 @@ type Client struct {
 func New(cfg Config) (*Client, error) {
 	if cfg.Transport == nil {
 		cfg.Transport = http.DefaultTransport
+	}
+
+	if transport, ok := cfg.Transport.(*http.Transport); ok {
+		if cfg.CertificateFingerprint != "" {
+			transport.DialTLS = func(network, addr string) (net.Conn, error) {
+				fingerprint, _ := hex.DecodeString(cfg.CertificateFingerprint)
+
+				c, err := tls.Dial(network, addr, &tls.Config{InsecureSkipVerify: true})
+				if err != nil {
+					return nil, err
+				}
+
+				// Retrieve the connection state from the remote server.
+				cState := c.ConnectionState()
+				for _, cert := range cState.PeerCertificates {
+					// Compute digest for each certificate.
+					digest := sha256.Sum256(cert.Raw)
+
+					// Provided fingerprint should match at least one certificate from remote before we continue.
+					if bytes.Compare(digest[0:], fingerprint) == 0 {
+						return c, nil
+					}
+				}
+				return nil, fmt.Errorf("fingerprint mismatch, provided: %s", cfg.CertificateFingerprint)
+			}
+		}
 	}
 
 	if cfg.CACert != nil {
@@ -186,6 +227,9 @@ func New(cfg Config) (*Client, error) {
 		retryBackoff:          cfg.RetryBackoff,
 		discoverNodesInterval: cfg.DiscoverNodesInterval,
 
+		compressRequestBody: cfg.CompressRequestBody,
+		compatibilityHeader: cfg.CompatibilityHeader,
+
 		transport: cfg.Transport,
 		logger:    cfg.Logger,
 		selector:  cfg.Selector,
@@ -231,7 +275,7 @@ func (c *Client) Perform(req *http.Request) (*http.Response, error) {
 	)
 
 	// Compatibility Header
-	if compatibilityHeader {
+	if compatibilityHeader || c.compatibilityHeader {
 		if req.Body != nil {
 			req.Header.Set("Content-Type", "application/vnd.elasticsearch+json;compatible-with=7")
 		}
@@ -250,16 +294,36 @@ func (c *Client) Perform(req *http.Request) (*http.Response, error) {
 	c.setReqGlobalHeader(req)
 	c.setMetaHeader(req)
 
-	if req.Body != nil && req.Body != http.NoBody && req.GetBody == nil {
-		if !c.disableRetry || (c.logger != nil && c.logger.RequestBodyEnabled()) {
+	if req.Body != nil && req.Body != http.NoBody {
+		if c.compressRequestBody {
 			var buf bytes.Buffer
-			buf.ReadFrom(req.Body)
+			zw := gzip.NewWriter(&buf)
+			if _, err := io.Copy(zw, req.Body); err != nil {
+				return nil, fmt.Errorf("failed to compress request body: %s", err)
+			}
+			if err := zw.Close(); err != nil {
+				return nil, fmt.Errorf("failed to compress request body (during close): %s", err)
+			}
+
 			req.GetBody = func() (io.ReadCloser, error) {
 				r := buf
 				return ioutil.NopCloser(&r), nil
 			}
-			if req.Body, err = req.GetBody(); err != nil {
-				return nil, fmt.Errorf("cannot get request body: %s", err)
+			req.Body, _ = req.GetBody()
+
+			req.Header.Set("Content-Encoding", "gzip")
+			req.ContentLength = int64(buf.Len())
+
+		} else if req.GetBody == nil {
+			if !c.disableRetry || (c.logger != nil && c.logger.RequestBodyEnabled()) {
+				var buf bytes.Buffer
+				buf.ReadFrom(req.Body)
+
+				req.GetBody = func() (io.ReadCloser, error) {
+					r := buf
+					return ioutil.NopCloser(&r), nil
+				}
+				req.Body, _ = req.GetBody()
 			}
 		}
 	}
@@ -369,7 +433,19 @@ func (c *Client) Perform(req *http.Request) (*http.Response, error) {
 
 		// Delay the retry if a backoff function is configured
 		if c.retryBackoff != nil {
-			time.Sleep(c.retryBackoff(i + 1))
+			var cancelled bool
+			backoff := c.retryBackoff(i + 1)
+			timer := time.NewTimer(backoff)
+			select {
+			case <-req.Context().Done():
+				err = req.Context().Err()
+				cancelled = true
+				timer.Stop()
+			case <-timer.C:
+			}
+			if cancelled {
+				break
+			}
 		}
 	}
 
@@ -435,7 +511,14 @@ func (c *Client) setReqAuth(u *url.URL, req *http.Request) *http.Request {
 }
 
 func (c *Client) setReqUserAgent(req *http.Request) *http.Request {
-	req.Header.Set("User-Agent", userAgent)
+	if len(c.header) > 0 {
+		ua := c.header.Get(userAgentHeader)
+		if ua != "" {
+			req.Header.Set(userAgentHeader, ua)
+			return req
+		}
+	}
+	req.Header.Set(userAgentHeader, userAgent)
 	return req
 }
 

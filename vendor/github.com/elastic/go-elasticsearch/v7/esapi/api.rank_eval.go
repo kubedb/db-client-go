@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 7.13.1: DO NOT EDIT
+// Code generated from specification version 7.17.1: DO NOT EDIT
 
 package esapi
 
@@ -40,8 +40,6 @@ func newRankEvalFunc(t Transport) RankEval {
 // ----- API Definition -------------------------------------------------------
 
 // RankEval allows to evaluate the quality of ranked search results over a set of typical search queries
-//
-// This API is experimental.
 //
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/search-rank-eval.html.
 //

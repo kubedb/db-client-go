@@ -25,7 +25,6 @@ import (
 	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
 	"go.mongodb.org/mongo-driver/x/mongo/driver"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/auth"
-	"go.mongodb.org/mongo-driver/x/mongo/driver/connstring"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/ocsp"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/operation"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/session"
@@ -52,7 +51,6 @@ type Client struct {
 	id              uuid.UUID
 	topologyOptions []topology.Option
 	deployment      driver.Deployment
-	connString      connstring.ConnString
 	localThreshold  time.Duration
 	retryWrites     bool
 	retryReads      bool
@@ -61,7 +59,6 @@ type Client struct {
 	readConcern     *readconcern.ReadConcern
 	writeConcern    *writeconcern.WriteConcern
 	registry        *bsoncodec.Registry
-	marshaller      BSONAppender
 	monitor         *event.CommandMonitor
 	serverAPI       *driver.ServerAPIOptions
 	serverMonitor   *event.ServerMonitor
@@ -71,7 +68,7 @@ type Client struct {
 	keyVaultClientFLE *Client
 	keyVaultCollFLE   *Collection
 	mongocryptdFLE    *mcryptClient
-	cryptFLE          *driver.Crypt
+	cryptFLE          driver.Crypt
 	metadataClientFLE *Client
 	internalClientFLE *Client
 }
@@ -243,7 +240,7 @@ func (c *Client) Disconnect(ctx context.Context) error {
 
 // Ping sends a ping command to verify that the client can connect to the deployment.
 //
-// The rp paramter is used to determine which server is selected for the operation.
+// The rp parameter is used to determine which server is selected for the operation.
 // If it is nil, the client's read preference is used.
 //
 // If the server is down, Ping will try to select a server until the client's server selection timeout expires.
@@ -270,6 +267,9 @@ func (c *Client) Ping(ctx context.Context, rp *readpref.ReadPref) error {
 }
 
 // StartSession starts a new session configured with the given options.
+//
+// StartSession does not actually communicate with the server and will not error if the client is
+// disconnected.
 //
 // If the DefaultReadConcern, DefaultWriteConcern, or DefaultReadPreference options are not set, the client's read
 // concern, write concern, or read preference will be used, respectively.
@@ -298,6 +298,9 @@ func (c *Client) StartSession(opts ...*options.SessionOptions) (Session, error) 
 	}
 	if sopts.DefaultMaxCommitTime != nil {
 		coreOpts.DefaultMaxCommitTime = sopts.DefaultMaxCommitTime
+	}
+	if sopts.Snapshot != nil {
+		coreOpts.Snapshot = sopts.Snapshot
 	}
 
 	sess, err := session.NewClientSession(c.sessionPool, c.id, session.Explicit, coreOpts)
@@ -369,10 +372,22 @@ func (c *Client) configure(opts *options.ClientOptions) error {
 	// ClusterClock
 	c.clock = new(session.ClusterClock)
 
-	// Pass down URI so topology can determine whether or not SRV polling is required
-	topologyOpts = append(topologyOpts, topology.WithURI(func(uri string) string {
-		return opts.GetURI()
-	}))
+	// Pass down URI, SRV service name, and SRV max hosts so topology can poll SRV records correctly.
+	topologyOpts = append(topologyOpts,
+		topology.WithURI(func(uri string) string { return opts.GetURI() }),
+		topology.WithSRVServiceName(func(srvName string) string {
+			if opts.SRVServiceName != nil {
+				return *opts.SRVServiceName
+			}
+			return ""
+		}),
+		topology.WithSRVMaxHosts(func(srvMaxHosts int) int {
+			if opts.SRVMaxHosts != nil {
+				return *opts.SRVMaxHosts
+			}
+			return 0
+		}),
+	)
 
 	// AppName
 	var appName string
@@ -411,10 +426,16 @@ func (c *Client) configure(opts *options.ClientOptions) error {
 			func(opts ...string) []string { return append(opts, comps...) },
 		))
 	}
+
+	var loadBalanced bool
+	if opts.LoadBalanced != nil {
+		loadBalanced = *opts.LoadBalanced
+	}
+
 	// Handshaker
 	var handshaker = func(driver.Handshaker) driver.Handshaker {
-		return operation.NewIsMaster().AppName(appName).Compressors(comps).ClusterClock(c.clock).
-			ServerAPI(c.serverAPI)
+		return operation.NewHello().AppName(appName).Compressors(comps).ClusterClock(c.clock).
+			ServerAPI(c.serverAPI).LoadBalanced(loadBalanced)
 	}
 	// Auth & Database & Password & Username
 	if opts.Auth != nil {
@@ -447,6 +468,7 @@ func (c *Client) configure(opts *options.ClientOptions) error {
 			Compressors:   comps,
 			ClusterClock:  c.clock,
 			ServerAPI:     c.serverAPI,
+			LoadBalanced:  loadBalanced,
 		}
 		if mechanism == "" {
 			// Required for SASL mechanism negotiation during handshake
@@ -522,6 +544,13 @@ func (c *Client) configure(opts *options.ClientOptions) error {
 		serverOpts = append(
 			serverOpts,
 			topology.WithMinConnections(func(uint64) uint64 { return *opts.MinPoolSize }),
+		)
+	}
+	// MaxConnecting
+	if opts.MaxConnecting != nil {
+		serverOpts = append(
+			serverOpts,
+			topology.WithMaxConnecting(func(uint64) uint64 { return *opts.MaxConnecting }),
 		)
 	}
 	// PoolMonitor
@@ -612,6 +641,8 @@ func (c *Client) configure(opts *options.ClientOptions) error {
 		if err := c.configureAutoEncryption(opts); err != nil {
 			return err
 		}
+	} else {
+		c.cryptFLE = opts.Crypt
 	}
 
 	// OCSP cache
@@ -629,6 +660,22 @@ func (c *Client) configure(opts *options.ClientOptions) error {
 		)
 	}
 
+	// LoadBalanced
+	if opts.LoadBalanced != nil {
+		topologyOpts = append(
+			topologyOpts,
+			topology.WithLoadBalanced(func(bool) bool { return *opts.LoadBalanced }),
+		)
+		serverOpts = append(
+			serverOpts,
+			topology.WithServerLoadBalanced(func(bool) bool { return *opts.LoadBalanced }),
+		)
+		connOpts = append(
+			connOpts,
+			topology.WithConnectionLoadBalanced(func(bool) bool { return *opts.LoadBalanced }),
+		)
+	}
+
 	serverOpts = append(
 		serverOpts,
 		topology.WithClock(func(*session.ClusterClock) *session.ClusterClock { return c.clock }),
@@ -640,9 +687,9 @@ func (c *Client) configure(opts *options.ClientOptions) error {
 
 	// Deployment
 	if opts.Deployment != nil {
-		// topology options: WithSeedlist and WithURI
+		// topology options: WithSeedlist, WithURI, WithSRVServiceName and WithSRVMaxHosts
 		// server options: WithClock and WithConnectionOptions
-		if len(serverOpts) > 2 || len(topologyOpts) > 2 {
+		if len(serverOpts) > 2 || len(topologyOpts) > 4 {
 			return errors.New("cannot specify topology or server options with a deployment")
 		}
 		c.deployment = opts.Deployment
@@ -750,11 +797,13 @@ func (c *Client) configureCryptFLE(opts *options.AutoEncryptionOptions) error {
 	if !bypass {
 		cir = collInfoRetriever{client: c.metadataClientFLE}
 	}
+
 	cryptOpts := &driver.CryptOptions{
 		CollInfoFn:           cir.cryptCollInfo,
 		KeyFn:                kr.cryptKeys,
 		MarkFn:               c.mongocryptdFLE.markCommand,
 		KmsProviders:         kmsProviders,
+		TLSConfig:            opts.TLSConfig,
 		BypassAutoEncryption: bypass,
 		SchemaMap:            cryptSchemaMap,
 	}
@@ -794,7 +843,7 @@ func (c *Client) Database(name string, opts ...*options.DatabaseOptions) *Databa
 // databases are included in the result. It cannot be nil. An empty document (e.g. bson.D{}) should be used to include
 // all databases.
 //
-// The opts paramter can be used to specify options for this operation (see the options.ListDatabasesOptions documentation).
+// The opts parameter can be used to specify options for this operation (see the options.ListDatabasesOptions documentation).
 //
 // For more information about the command, see https://docs.mongodb.com/manual/reference/command/listDatabases/.
 func (c *Client) ListDatabases(ctx context.Context, filter interface{}, opts ...*options.ListDatabasesOptions) (ListDatabasesResult, error) {
@@ -805,6 +854,9 @@ func (c *Client) ListDatabases(ctx context.Context, filter interface{}, opts ...
 	sess := sessionFromContext(ctx)
 
 	err := c.validSession(sess)
+	if err != nil {
+		return ListDatabasesResult{}, err
+	}
 	if sess == nil && c.sessionPool != nil {
 		sess, err = session.NewClientSession(c.sessionPool, c.id, session.Implicit)
 		if err != nil {
@@ -952,4 +1004,12 @@ func (c *Client) Watch(ctx context.Context, pipeline interface{},
 // closed (i.e. EndSession has not been called).
 func (c *Client) NumberSessionsInProgress() int {
 	return c.sessionPool.CheckedOut()
+}
+
+func (c *Client) createBaseCursorOptions() driver.CursorOptions {
+	return driver.CursorOptions{
+		CommandMonitor: c.monitor,
+		Crypt:          c.cryptFLE,
+		ServerAPI:      c.serverAPI,
+	}
 }
