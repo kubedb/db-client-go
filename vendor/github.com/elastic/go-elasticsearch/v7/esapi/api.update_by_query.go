@@ -15,12 +15,13 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 7.13.1: DO NOT EDIT
+// Code generated from specification version 7.17.1: DO NOT EDIT
 
 package esapi
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -81,9 +82,6 @@ type UpdateByQueryRequest struct {
 	Size                *int
 	Slices              interface{}
 	Sort                []string
-	Source              []string
-	SourceExcludes      []string
-	SourceIncludes      []string
 	Stats               []string
 	TerminateAfter      *int
 	Timeout             time.Duration
@@ -112,6 +110,10 @@ func (r UpdateByQueryRequest) Do(ctx context.Context, transport Transport) (*Res
 	)
 
 	method = "POST"
+
+	if len(r.Index) == 0 {
+		return nil, errors.New("index is required and cannot be nil or empty")
+	}
 
 	path.Grow(1 + len(strings.Join(r.Index, ",")) + 1 + len(strings.Join(r.DocumentType, ",")) + 1 + len("_update_by_query"))
 	path.WriteString("/")
@@ -223,18 +225,6 @@ func (r UpdateByQueryRequest) Do(ctx context.Context, transport Transport) (*Res
 
 	if len(r.Sort) > 0 {
 		params["sort"] = strings.Join(r.Sort, ",")
-	}
-
-	if len(r.Source) > 0 {
-		params["_source"] = strings.Join(r.Source, ",")
-	}
-
-	if len(r.SourceExcludes) > 0 {
-		params["_source_excludes"] = strings.Join(r.SourceExcludes, ",")
-	}
-
-	if len(r.SourceIncludes) > 0 {
-		params["_source_includes"] = strings.Join(r.SourceIncludes, ",")
 	}
 
 	if len(r.Stats) > 0 {
@@ -549,30 +539,6 @@ func (f UpdateByQuery) WithSlices(v interface{}) func(*UpdateByQueryRequest) {
 func (f UpdateByQuery) WithSort(v ...string) func(*UpdateByQueryRequest) {
 	return func(r *UpdateByQueryRequest) {
 		r.Sort = v
-	}
-}
-
-// WithSource - true or false to return the _source field or not, or a list of fields to return.
-//
-func (f UpdateByQuery) WithSource(v ...string) func(*UpdateByQueryRequest) {
-	return func(r *UpdateByQueryRequest) {
-		r.Source = v
-	}
-}
-
-// WithSourceExcludes - a list of fields to exclude from the returned _source field.
-//
-func (f UpdateByQuery) WithSourceExcludes(v ...string) func(*UpdateByQueryRequest) {
-	return func(r *UpdateByQueryRequest) {
-		r.SourceExcludes = v
-	}
-}
-
-// WithSourceIncludes - a list of fields to extract and return from the _source field.
-//
-func (f UpdateByQuery) WithSourceIncludes(v ...string) func(*UpdateByQueryRequest) {
-	return func(r *UpdateByQueryRequest) {
-		r.SourceIncludes = v
 	}
 }
 

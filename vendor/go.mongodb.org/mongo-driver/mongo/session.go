@@ -100,13 +100,16 @@ func SessionFromContext(ctx context.Context) Session {
 // resources are properly cleaned up, context deadlines and cancellations will not be respected during this call. For a
 // usage example, see the Client.StartSession method documentation.
 //
-// ClusterTime, OperationTime, Client, and ID return the session's current operation time, the session's current cluster
+// ClusterTime, OperationTime, Client, and ID return the session's current cluster time, the session's current operation
 // time, the Client associated with the session, and the ID document associated with the session, respectively. The ID
 // document for a session is in the form {"id": <BSON binary value>}.
 //
 // EndSession method should abort any existing transactions and close the session.
 //
-// AdvanceClusterTime and AdvanceOperationTime are for internal use only and must not be called.
+// AdvanceClusterTime advances the cluster time for a session. This method will return an error if the session has ended.
+//
+// AdvanceOperationTime advances the operation time for a session. This method will return an error if the session has
+// ended.
 type Session interface {
 	// Functions to modify session state.
 	StartTransaction(...*options.TransactionOptions) error
@@ -193,10 +196,12 @@ func (s *sessionImpl) WithTransaction(ctx context.Context, fn func(sessCtx Sessi
 			default:
 			}
 
-			if cerr, ok := err.(CommandError); ok {
-				if cerr.HasErrorLabel(driver.TransientTransactionError) {
-					continue
-				}
+			// End if context has timed out or been canceled, as retrying has no chance of success.
+			if ctx.Err() != nil {
+				return res, err
+			}
+			if errorHasLabel(err, driver.TransientTransactionError) {
+				continue
 			}
 			return res, err
 		}
@@ -209,8 +214,10 @@ func (s *sessionImpl) WithTransaction(ctx context.Context, fn func(sessCtx Sessi
 	CommitLoop:
 		for {
 			err = s.CommitTransaction(ctx)
-			if err == nil {
-				return res, nil
+			// End when error is nil (transaction has been committed), or when context has timed out or been
+			// canceled, as retrying has no chance of success.
+			if err == nil || ctx.Err() != nil {
+				return res, err
 			}
 
 			select {
@@ -270,7 +277,7 @@ func (s *sessionImpl) AbortTransaction(ctx context.Context) error {
 	_ = operation.NewAbortTransaction().Session(s.clientSession).ClusterClock(s.client.clock).Database("admin").
 		Deployment(s.deployment).WriteConcern(s.clientSession.CurrentWc).ServerSelector(selector).
 		Retry(driver.RetryOncePerCommand).CommandMonitor(s.client.monitor).
-		RecoveryToken(bsoncore.Document(s.clientSession.RecoveryToken)).Execute(ctx)
+		RecoveryToken(bsoncore.Document(s.clientSession.RecoveryToken)).ServerAPI(s.client.serverAPI).Execute(ctx)
 
 	s.clientSession.Aborting = false
 	_ = s.clientSession.AbortTransaction()
@@ -301,12 +308,18 @@ func (s *sessionImpl) CommitTransaction(ctx context.Context) error {
 	op := operation.NewCommitTransaction().
 		Session(s.clientSession).ClusterClock(s.client.clock).Database("admin").Deployment(s.deployment).
 		WriteConcern(s.clientSession.CurrentWc).ServerSelector(selector).Retry(driver.RetryOncePerCommand).
-		CommandMonitor(s.client.monitor).RecoveryToken(bsoncore.Document(s.clientSession.RecoveryToken))
+		CommandMonitor(s.client.monitor).RecoveryToken(bsoncore.Document(s.clientSession.RecoveryToken)).
+		ServerAPI(s.client.serverAPI)
 	if s.clientSession.CurrentMct != nil {
 		op.MaxTimeMS(int64(*s.clientSession.CurrentMct / time.Millisecond))
 	}
 
 	err = op.Execute(ctx)
+	// Return error without updating transaction state if it is a timeout, as the transaction has not
+	// actually been committed.
+	if IsTimeout(err) {
+		return replaceErrors(err)
+	}
 	s.clientSession.Committing = false
 	commitErr := s.clientSession.CommitTransaction()
 
