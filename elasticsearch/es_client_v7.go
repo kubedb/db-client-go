@@ -21,7 +21,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	kutil "kmodules.xyz/client-go"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -215,31 +217,45 @@ func (es *ESClientV7) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 		}
 	}(res.Body)
 
+	if err3 != nil {
+		klog.Infoln("Failed to check", db.Name, "write Access", err3)
+		return err3
+	}
+
 	if !res.IsError() {
 		return nil
 	}
 
-	klog.Infoln("Failed to check", db.Name, "write Access")
+	klog.Infoln("DB Write Request Failed with status code ", res.StatusCode)
 	return errors.New("DBWriteCheckFailed")
 }
 
 func (es *ESClientV7) GetClusterReadStatus(ctx context.Context, db *api.Elasticsearch) error {
-	res, err1 := esapi.GetRequest{
+	res, err := esapi.GetRequest{
 		Index:      "kubedb-system",
 		DocumentID: "info",
 	}.Do(ctx, es.client.Transport)
 
 	defer func(Body io.ReadCloser) {
-		err1 = Body.Close()
-		if err1 != nil {
-			klog.Errorf("failed to close read request response body", err1)
+		err = Body.Close()
+		if err != nil {
+			klog.Errorf("failed to close read request response body", err)
 		}
 	}(res.Body)
+
+	if err != nil {
+		klog.Infoln("Failed to check", db.Name, "read Access", err)
+		return err
+	}
 
 	if !res.IsError() {
 		return nil
 	}
 
-	klog.Infoln("Failed to check", db.Name, "read Access")
+	if res.StatusCode == http.StatusNotFound {
+		return kutil.ErrNotFound
+	}
+
+	klog.Infoln("DB Read request failed with status code ", res.StatusCode)
 	return errors.New("DBReadCheckFailed")
 }
