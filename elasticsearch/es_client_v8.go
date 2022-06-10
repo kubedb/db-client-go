@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	"strconv"
 	"strings"
 
 	esv8 "github.com/elastic/go-elasticsearch/v8"
@@ -108,10 +109,6 @@ func (es *ESClientV8) SyncCredentialFromSecret(secret *core.Secret) error {
 	return errors.New("CredSyncFailed")
 }
 
-// GetClusterWriteStatus makes a bulk index request in the db
-// the index req contains the document ID of the index
-// the index body contains object metadata
-// the index version keeps updating at each write operations
 func (es *ESClientV8) GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error {
 
 	// Build the request body.
@@ -120,8 +117,18 @@ func (es *ESClientV8) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 			"_id": "info",
 		},
 	}
-	reqBody := db.GetObjectMeta()
-
+	reqBody := map[string]interface{}{
+		"Labels": db.OffshootLabels(),
+		"Metadata": map[string]interface{}{
+			"name":              db.GetName(),
+			"Namespace":         db.GetNamespace(),
+			"Generation":        strconv.FormatInt(db.GetGeneration(), 10),
+			"uid":               string(db.GetUID()),
+			"ResourceVersion":   db.GetResourceVersion(),
+			"creationTimestamp": db.GetCreationTimestamp().String(),
+			"annotations":       db.GetAnnotations(),
+		},
+	}
 	index, err1 := json.Marshal(indexReq)
 	if err1 != nil {
 		return err1
