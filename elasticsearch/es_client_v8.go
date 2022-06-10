@@ -155,20 +155,20 @@ func (es *ESClientV8) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 		return nil
 	}
 
-	klog.Infoln("Failed to check", db.Name, "write Access")
+	klog.Infoln("Failed to check", db.Name, "write Access", err3)
 	return errors.New("DBWriteCheckFailed")
 }
 
 func (es *ESClientV8) GetClusterReadStatus(ctx context.Context, db *api.Elasticsearch) error {
-	res, err1 := esapi.GetRequest{
+	res, err := esapi.GetRequest{
 		Index:      "kubedb-system",
 		DocumentID: "info",
 	}.Do(ctx, es.client.Transport)
 
 	defer func(Body io.ReadCloser) {
-		err1 = Body.Close()
-		if err1 != nil {
-			klog.Errorf("failed to close read request response body", err1)
+		err = Body.Close()
+		if err != nil {
+			klog.Errorf("failed to close read request response body", err)
 		}
 	}(res.Body)
 
@@ -176,6 +176,6 @@ func (es *ESClientV8) GetClusterReadStatus(ctx context.Context, db *api.Elastics
 		return nil
 	}
 
-	klog.Infoln("Failed to check", db.Name, "read Access")
+	klog.Infoln("Failed to check", db.Name, "read Access", err)
 	return errors.New("DBReadCheckFailed")
 }
