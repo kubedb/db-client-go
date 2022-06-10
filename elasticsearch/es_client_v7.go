@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	"strconv"
 	"strings"
 
 	esv7 "github.com/elastic/go-elasticsearch/v7"
@@ -172,9 +173,72 @@ func (es *ESClientV7) SyncCredentialFromSecret(secret *core.Secret) error {
 }
 
 func (es *ESClientV7) GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error {
-	return nil
+
+	// Build the request body.
+	indexReq := map[string]map[string]string{
+		"index": {
+			"_id": "info",
+		},
+	}
+	reqBody := map[string]interface{}{
+		"Labels": db.OffshootLabels(),
+		"Metadata": map[string]interface{}{
+			"name":              db.GetName(),
+			"Namespace":         db.GetNamespace(),
+			"Generation":        strconv.FormatInt(db.GetGeneration(), 10),
+			"uid":               string(db.GetUID()),
+			"ResourceVersion":   db.GetResourceVersion(),
+			"creationTimestamp": db.GetCreationTimestamp().String(),
+			"annotations":       db.GetAnnotations(),
+		},
+	}
+	index, err1 := json.Marshal(indexReq)
+	if err1 != nil {
+		return err1
+	}
+	body, err2 := json.Marshal(reqBody)
+	if err2 != nil {
+		return err2
+	}
+
+	res, err3 := esapi.BulkRequest{
+		Index:  "kubedb-system",
+		Body:   strings.NewReader(strings.Join([]string{string(index), string(body)}, "\n") + "\n"),
+		Pretty: true,
+	}.Do(ctx, es.client.Transport)
+
+	defer func(Body io.ReadCloser) {
+		err3 = Body.Close()
+		if err3 != nil {
+			klog.Errorf("failed to close write request response body", err3)
+		}
+	}(res.Body)
+
+	if !res.IsError() {
+		return nil
+	}
+
+	klog.Infoln("Failed to check", db.Name, "write Access")
+	return errors.New("DBWriteCheckFailed")
 }
 
 func (es *ESClientV7) GetClusterReadStatus(ctx context.Context, db *api.Elasticsearch) error {
-	return nil
+	res, err1 := esapi.GetRequest{
+		Index:      "kubedb-system",
+		DocumentID: "info",
+	}.Do(ctx, es.client.Transport)
+
+	defer func(Body io.ReadCloser) {
+		err1 = Body.Close()
+		if err1 != nil {
+			klog.Errorf("failed to close read request response body", err1)
+		}
+	}(res.Body)
+
+	if !res.IsError() {
+		return nil
+	}
+
+	klog.Infoln("Failed to check", db.Name, "read Access")
+	return errors.New("DBReadCheckFailed")
 }
