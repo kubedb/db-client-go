@@ -155,7 +155,7 @@ func (es *ESClientV8) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 func (es *ESClientV8) GetClusterReadStatus(ctx context.Context, db *api.Elasticsearch) error {
 	res, err1 := esapi.GetRequest{
 		Index:      "kubedb-system",
-		DocumentID: "health",
+		DocumentID: "info",
 	}.Do(ctx, es.client.Transport)
 
 	defer func(Body io.ReadCloser) {
