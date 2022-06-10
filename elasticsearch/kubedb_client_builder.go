@@ -156,6 +156,13 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 
 		// for Elasticsearch 6.x.x
 		case version.Major() == 6:
+			defaultTLSConfig, err := o.getDefaultTLSConfig()
+			if err != nil {
+				klog.Errorf("Failed get default TLS configuration")
+				return nil, err
+
+			}
+
 			esClient, err := esv6.NewClient(esv6.Config{
 				Addresses:         []string{o.url},
 				Username:          username,
@@ -167,32 +174,28 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 					DialContext: (&net.Dialer{
 						Timeout: 30 * time.Second,
 					}).DialContext,
-					TLSClientConfig: &tls.Config{
-						InsecureSkipVerify: true,
-						MaxVersion:         tls.VersionTLS12,
-					},
+					TLSClientConfig: defaultTLSConfig,
 				},
 			})
 			if err != nil {
 				klog.Errorf("Failed to create HTTP client for Elasticsearch: %s/%s with: %s", o.db.Namespace, o.db.Name, err.Error())
 				return nil, err
 			}
-			// do a manual health check to test client
-			res, err := esClient.Cluster.Health(
-				esClient.Cluster.Health.WithPretty(),
-			)
+			res, err := esapi.PingRequest{}.Do(o.ctx, esClient.Transport)
+
 			if err != nil {
 				return nil, err
 			}
+
 			defer func(Body io.ReadCloser) {
-				err := Body.Close()
+				err = Body.Close()
 				if err != nil {
 					klog.Errorf("failed to close response body", err)
 				}
 			}(res.Body)
 
 			if res.IsError() {
-				return nil, fmt.Errorf("health check failed with status code: %d", res.StatusCode)
+				return nil, fmt.Errorf("cluster ping request failed with status code: %d", res.StatusCode)
 			}
 			return &Client{
 				&ESClientV6{client: esClient},
@@ -226,22 +229,22 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 				klog.Errorf("Failed to create HTTP client for Elasticsearch: %s/%s with: %s", o.db.Namespace, o.db.Name, err.Error())
 				return nil, err
 			}
-			// do a manual health check to test client
-			res, err := esClient.Cluster.Health(
-				esClient.Cluster.Health.WithPretty(),
-			)
+
+			res, err := esapi.PingRequest{}.Do(o.ctx, esClient.Transport)
+
 			if err != nil {
 				return nil, err
 			}
+
 			defer func(Body io.ReadCloser) {
-				err := Body.Close()
+				err = Body.Close()
 				if err != nil {
 					klog.Errorf("failed to close response body", err)
 				}
 			}(res.Body)
 
 			if res.IsError() {
-				return nil, fmt.Errorf("health check failed with status code: %d", res.StatusCode)
+				return nil, fmt.Errorf("cluster ping request failed with status code: %d", res.StatusCode)
 			}
 			return &Client{
 				&ESClientV7{client: esClient},

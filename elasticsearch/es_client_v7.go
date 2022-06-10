@@ -177,7 +177,8 @@ func (es *ESClientV7) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 	// Build the request body.
 	indexReq := map[string]map[string]string{
 		"index": {
-			"_id": "info",
+			"_id":   "info",
+			"_type": "_doc",
 		},
 	}
 	reqBody := map[string]interface{}{
