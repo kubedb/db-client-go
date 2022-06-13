@@ -20,7 +20,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"k8s.io/klog/v2"
 	kutil "kmodules.xyz/client-go"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
@@ -150,12 +149,14 @@ func (es *ESClientV6) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 		Pretty: true,
 	}.Do(ctx, es.client.Transport)
 
-	defer func(Body io.ReadCloser) {
-		err3 = Body.Close()
-		if err3 != nil {
-			klog.Errorf("failed to close write request response body", err3)
+	defer func(res *esapi.Response) {
+		if res != nil {
+			err3 = res.Body.Close()
+			if err3 != nil {
+				klog.Errorf("failed to close write request response body", err3)
+			}
 		}
-	}(res.Body)
+	}(res)
 
 	if err3 != nil {
 		klog.Infoln("Failed to check", db.Name, "write Access", err3)
@@ -176,12 +177,14 @@ func (es *ESClientV6) GetClusterReadStatus(ctx context.Context, db *api.Elastics
 		DocumentID: "info",
 	}.Do(ctx, es.client.Transport)
 
-	defer func(Body io.ReadCloser) {
-		err = Body.Close()
-		if err != nil {
-			klog.Errorf("failed to close read request response body", err)
+	defer func(res *esapi.Response) {
+		if res != nil {
+			err = res.Body.Close()
+			if err != nil {
+				klog.Errorf("failed to close read request response body", err)
+			}
 		}
-	}(res.Body)
+	}(res)
 
 	if err != nil {
 		klog.Infoln("Failed to check", db.Name, "read Access", err)
