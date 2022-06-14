@@ -347,7 +347,7 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 				return nil, fmt.Errorf("cluster ping request failed with status code: %d", res.StatusCode)
 			}
 			return &Client{
-				&OSClient{client: osClient},
+				&OSClientV1{client: osClient},
 			}, nil
 		}
 	}
