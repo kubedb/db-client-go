@@ -20,17 +20,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"k8s.io/klog/v2"
-	kutil "kmodules.xyz/client-go"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"net/http"
 	"strconv"
 	"strings"
+
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	esv6 "github.com/elastic/go-elasticsearch/v6"
 	"github.com/elastic/go-elasticsearch/v6/esapi"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
+	"k8s.io/klog/v2"
+	kutil "kmodules.xyz/client-go"
 )
 
 var _ ESClient = &ESClientV6{}
@@ -114,7 +115,6 @@ func (es *ESClientV6) SyncCredentialFromSecret(secret *core.Secret) error {
 }
 
 func (es *ESClientV6) GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error {
-
 	// Build the request body.
 	indexReq := map[string]map[string]string{
 		"index": {

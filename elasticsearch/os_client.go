@@ -3,10 +3,12 @@ package elasticsearch
 import (
 	"context"
 	"encoding/json"
+
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+
 	"github.com/opensearch-project/opensearch-go"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 )
 
 var _ ESClient = &OSClient{}
