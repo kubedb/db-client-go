@@ -21,27 +21,28 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/elastic/go-elasticsearch/v8/esapi"
-	"github.com/opensearch-project/opensearch-go"
-	"github.com/opensearch-project/opensearch-go/opensearchapi"
 	"io"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"kubedb.dev/apimachinery/apis/dashboard/v1alpha1"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"net"
 	"net/http"
 	"time"
+
+	catalog "kubedb.dev/apimachinery/apis/catalog/v1alpha1"
+	"kubedb.dev/apimachinery/apis/dashboard/v1alpha1"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	"github.com/Masterminds/semver/v3"
 	esv5 "github.com/elastic/go-elasticsearch/v5"
 	esv6 "github.com/elastic/go-elasticsearch/v6"
 	esv7 "github.com/elastic/go-elasticsearch/v7"
 	esv8 "github.com/elastic/go-elasticsearch/v8"
+	"github.com/elastic/go-elasticsearch/v8/esapi"
+	"github.com/opensearch-project/opensearch-go"
+	"github.com/opensearch-project/opensearch-go/opensearchapi"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
-	catalog "kubedb.dev/apimachinery/apis/catalog/v1alpha1"
 )
 
 type KubeDBClientBuilder struct {
@@ -110,7 +111,9 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 	}
 
 	switch {
-	case opt.ESVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginXpack:
+	case opt.ESVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginXpack ||
+		opt.ESVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginSearchGuard ||
+		opt.ESVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginOpenDistro:
 		switch {
 		// For Elasticsearch 5.x.x
 		case version.Major() == 5:
@@ -182,7 +185,6 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 				return nil, err
 			}
 			res, err := esapi.PingRequest{}.Do(o.ctx, esClient.Transport)
-
 			if err != nil {
 				return nil, err
 			}
@@ -231,7 +233,6 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 			}
 
 			res, err := esapi.PingRequest{}.Do(o.ctx, esClient.Transport)
-
 			if err != nil {
 				return nil, err
 			}
@@ -281,7 +282,6 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 			}
 
 			res, err := esapi.PingRequest{}.Do(o.ctx, esClient.Transport)
-
 			if err != nil {
 				return nil, err
 			}
@@ -303,52 +303,53 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 		}
 
 	case opt.ESVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginOpenSearch:
-		defaultTLSConfig, err := o.getDefaultTLSConfig()
-		if err != nil {
-			klog.Errorf("Failed get default TLS configuration")
-			return nil, err
-
-		}
-
-		osClient, err := opensearch.NewClient(opensearch.Config{
-			Addresses:         []string{o.url},
-			Username:          username,
-			Password:          password,
-			EnableDebugLogger: true,
-			DisableRetry:      true,
-			Transport: &http.Transport{
-				IdleConnTimeout: 3 * time.Second,
-				DialContext: (&net.Dialer{
-					Timeout: 30 * time.Second,
-				}).DialContext,
-				TLSClientConfig: defaultTLSConfig,
-			},
-		})
-		if err != nil {
-			klog.Errorf("Failed to create HTTP client for Elasticsearch: %s/%s with: %s", o.db.Namespace, o.db.Name, err.Error())
-			return nil, err
-		}
-
-		res, err := opensearchapi.PingRequest{}.Do(o.ctx, osClient.Transport)
-
-		if err != nil {
-			return nil, err
-		}
-
-		defer func(Body io.ReadCloser) {
-			err = Body.Close()
+		switch {
+		case version.Major() == 1:
+			defaultTLSConfig, err := o.getDefaultTLSConfig()
 			if err != nil {
-				klog.Errorf("failed to close response body", err)
+				klog.Errorf("Failed get default TLS configuration")
+				return nil, err
+
 			}
-		}(res.Body)
 
-		if res.IsError() {
-			return nil, fmt.Errorf("cluster ping request failed with status code: %d", res.StatusCode)
+			osClient, err := opensearch.NewClient(opensearch.Config{
+				Addresses:         []string{o.url},
+				Username:          username,
+				Password:          password,
+				EnableDebugLogger: true,
+				DisableRetry:      true,
+				Transport: &http.Transport{
+					IdleConnTimeout: 3 * time.Second,
+					DialContext: (&net.Dialer{
+						Timeout: 30 * time.Second,
+					}).DialContext,
+					TLSClientConfig: defaultTLSConfig,
+				},
+			})
+			if err != nil {
+				klog.Errorf("Failed to create HTTP client for Elasticsearch: %s/%s with: %s", o.db.Namespace, o.db.Name, err.Error())
+				return nil, err
+			}
+
+			res, err := opensearchapi.PingRequest{}.Do(o.ctx, osClient.Transport)
+			if err != nil {
+				return nil, err
+			}
+
+			defer func(Body io.ReadCloser) {
+				err = Body.Close()
+				if err != nil {
+					klog.Errorf("failed to close response body", err)
+				}
+			}(res.Body)
+
+			if res.IsError() {
+				return nil, fmt.Errorf("cluster ping request failed with status code: %d", res.StatusCode)
+			}
+			return &Client{
+				&OSClient{client: osClient},
+			}, nil
 		}
-		return &Client{
-			&OSClient{client: osClient},
-		}, nil
-
 	}
 
 	return nil, fmt.Errorf("unknown database version: %s", o.db.Spec.Version)
