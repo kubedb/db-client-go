@@ -167,11 +167,11 @@ func (es *ESClientV7) SyncCredentialFromSecret(secret *core.Secret) error {
 	}(res.Body)
 
 	if !res.IsError() {
-		klog.Infoln(username, "user credentials successfully synced")
+		klog.V(5).Infoln(username, "user credentials successfully synced")
 		return nil
 	}
 
-	klog.Infoln("Failed to sync", username, "credentials")
+	klog.V(5).Infoln("Failed to sync", username, "credentials")
 	return errors.New("CredSyncFailed")
 }
 

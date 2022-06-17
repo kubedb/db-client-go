@@ -104,11 +104,11 @@ func (es *ESClientV8) SyncCredentialFromSecret(secret *core.Secret) error {
 	}(res.Body)
 
 	if !res.IsError() {
-		klog.Infoln(username, "user credentials successfully synced")
+		klog.V(5).Infoln(username, "user credentials successfully synced")
 		return nil
 	}
 
-	klog.Infoln("Failed to sync", username, "credentials")
+	klog.V(5).Infoln("Failed to sync", username, "credentials")
 	return errors.New("CredSyncFailed")
 }
 
@@ -156,7 +156,7 @@ func (es *ESClientV8) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 	}(res)
 
 	if err3 != nil {
-		klog.Infoln("Failed to check", db.Name, "write Access", err3)
+		klog.V(5).ErrorS(err3, "Failed to check", db.Name, "write Access")
 		return err3
 	}
 
@@ -184,7 +184,7 @@ func (es *ESClientV8) GetClusterReadStatus(ctx context.Context, db *api.Elastics
 	}(res)
 
 	if err != nil {
-		klog.Infoln("Failed to check", db.Name, "read Access", err)
+		klog.V(5).ErrorS(err, "Failed to check", db.Name, "read Access")
 		return err
 	}
 
