@@ -160,6 +160,20 @@ func (es *ESClientV8) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 		return err3
 	}
 
+	responseBody := make(map[string]interface{})
+	if err4 := json.NewDecoder(res.Body).Decode(&responseBody); err4 != nil {
+		return errors.Wrap(err4, "failed to parse the response body")
+	}
+	if value, ok := responseBody["errors"]; ok {
+		if strValue, ok := value.(string); ok {
+			if strValue == "false" {
+				return nil
+			}
+			return errors.New("DBWriteCheckFailed")
+		}
+		return errors.New("failed to convert response to string")
+	}
+
 	if !res.IsError() {
 		return nil
 	}
