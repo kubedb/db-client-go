@@ -3,7 +3,6 @@ package elasticsearch
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -166,13 +165,12 @@ func (es *ESClientV8) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 		return errors.Wrap(err4, "failed to parse the response body")
 	}
 	if value, ok := responseBody["errors"]; ok {
-		if strValue, ok := value.(string); ok {
-			if strValue == "false" {
+		if strValue, ok := value.(bool); ok {
+			if strValue == false {
 				return nil
 			}
 			return errors.New("DBWriteCheckFailed")
 		}
-		fmt.Println(responseBody)
 		return errors.New("failed to convert response to string")
 	}
 
