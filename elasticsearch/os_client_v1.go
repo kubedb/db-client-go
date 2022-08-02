@@ -117,7 +117,7 @@ func (os *OSClientV1) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 	}
 	if value, ok := responseBody["errors"]; ok {
 		if strValue, ok := value.(bool); ok {
-			if strValue == false {
+			if !strValue {
 				return nil
 			}
 			return errors.New("DBWriteCheckFailed")
