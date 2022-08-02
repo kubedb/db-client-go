@@ -74,45 +74,56 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 	return o
 }
 
-func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, error) {
+func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 	if o.podName != "" {
 		o.url = o.ServiceURL()
 	}
 	if o.url == "" {
 		o.url = o.ServiceURL()
 	}
-	if o.db == nil || opt.ESVersion == nil {
-		return nil, errors.New("db or esVersion is empty")
+	if o.db == nil {
+		return nil, errors.New("db is empty")
 	}
 
-	var username, password string
+	var esVersion catalog.ElasticsearchVersion
+	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.Version}, &esVersion)
+	if err != nil {
+		return nil, errors.Errorf("Failed to get elasticsearchVersion with %s", err.Error())
+	}
 
-	if opt.Secret != nil {
-		if value, ok := opt.Secret.Data[core.BasicAuthUsernameKey]; ok {
+	var authSecret core.Secret
+	var username, password string
+	if !o.db.Spec.DisableSecurity && o.db.Spec.AuthSecret != nil {
+		err = o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.AuthSecret.Name}, &authSecret)
+		if err != nil {
+			return nil, errors.Errorf("Failed to get auth secret with %s", err.Error())
+		}
+
+		if value, ok := authSecret.Data[core.BasicAuthUsernameKey]; ok {
 			username = string(value)
 		} else {
-			klog.Errorf("Failed for secret: %s/%s, username is missing", opt.Secret.Namespace, opt.Secret.Name)
+			klog.Errorf("Failed for secret: %s/%s, username is missing", authSecret.Namespace, authSecret.Name)
 			return nil, errors.New("username is missing")
 		}
 
-		if value, ok := opt.Secret.Data[core.BasicAuthPasswordKey]; ok {
+		if value, ok := authSecret.Data[core.BasicAuthPasswordKey]; ok {
 			password = string(value)
 		} else {
-			klog.Errorf("Failed for secret: %s/%s, password is missing", opt.Secret.Namespace, opt.Secret.Name)
+			klog.Errorf("Failed for secret: %s/%s, password is missing", authSecret.Namespace, authSecret.Name)
 			return nil, errors.New("password is missing")
 		}
 	}
 
 	// parse version
-	version, err := semver.NewVersion(opt.ESVersion.Spec.Version)
+	version, err := semver.NewVersion(esVersion.Spec.Version)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse version")
 	}
 
 	switch {
-	case opt.ESVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginXpack ||
-		opt.ESVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginSearchGuard ||
-		opt.ESVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginOpenDistro:
+	case esVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginXpack ||
+		esVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginSearchGuard ||
+		esVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginOpenDistro:
 		switch {
 		// For Elasticsearch 5.x.x
 		case version.Major() == 5:
@@ -301,7 +312,7 @@ func (o *KubeDBClientBuilder) GetElasticClient(opt ClientOptions) (*Client, erro
 			}, nil
 		}
 
-	case opt.ESVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginOpenSearch:
+	case esVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginOpenSearch:
 		switch {
 		case version.Major() == 1:
 			defaultTLSConfig, err := o.getDefaultTLSConfig()
