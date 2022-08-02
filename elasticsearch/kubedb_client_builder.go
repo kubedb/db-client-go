@@ -88,14 +88,14 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 	var esVersion *catalog.ElasticsearchVersion
 	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.Version}, esVersion)
 	if err != nil {
-		return nil, errors.New("Failed to get elasticsearchVersion")
+		return nil, errors.Errorf("Failed to get elasticsearchVersion with %s", err.Error())
 	}
 
 	var authSecret *core.Secret
 	if !o.db.Spec.DisableSecurity {
 		err = o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.Version}, authSecret)
 		if err != nil {
-			return nil, errors.New("Failed to get auth secret")
+			return nil, errors.Errorf("Failed to get auth secret with %s", err.Error())
 		}
 	}
 
