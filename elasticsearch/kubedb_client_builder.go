@@ -93,8 +93,8 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 
 	var authSecret core.Secret
 	var username, password string
-	if !o.db.Spec.DisableSecurity {
-		err = o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.Version}, &authSecret)
+	if !o.db.Spec.DisableSecurity && o.db.Spec.AuthSecret != nil {
+		err = o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.AuthSecret.Name}, &authSecret)
 		if err != nil {
 			return nil, errors.Errorf("Failed to get auth secret with %s", err.Error())
 		}
