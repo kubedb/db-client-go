@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 7.13.1: DO NOT EDIT
+// Code generated from specification version 7.17.1: DO NOT EDIT
 
 package esapi
 
@@ -57,6 +57,7 @@ type SnapshotRepositoryAnalyzeRequest struct {
 	MaxBlobSize           string
 	MaxTotalDataSize      string
 	RareActionProbability *int
+	RarelyAbortWrites     *bool
 	ReadNodeCount         *int
 	Seed                  *int
 	Timeout               time.Duration
@@ -118,6 +119,10 @@ func (r SnapshotRepositoryAnalyzeRequest) Do(ctx context.Context, transport Tran
 
 	if r.RareActionProbability != nil {
 		params["rare_action_probability"] = strconv.FormatInt(int64(*r.RareActionProbability), 10)
+	}
+
+	if r.RarelyAbortWrites != nil {
+		params["rarely_abort_writes"] = strconv.FormatBool(*r.RarelyAbortWrites)
 	}
 
 	if r.ReadNodeCount != nil {
@@ -252,6 +257,14 @@ func (f SnapshotRepositoryAnalyze) WithMaxTotalDataSize(v string) func(*Snapshot
 func (f SnapshotRepositoryAnalyze) WithRareActionProbability(v int) func(*SnapshotRepositoryAnalyzeRequest) {
 	return func(r *SnapshotRepositoryAnalyzeRequest) {
 		r.RareActionProbability = &v
+	}
+}
+
+// WithRarelyAbortWrites - whether to rarely abort writes before they complete. defaults to 'true'..
+//
+func (f SnapshotRepositoryAnalyze) WithRarelyAbortWrites(v bool) func(*SnapshotRepositoryAnalyzeRequest) {
+	return func(r *SnapshotRepositoryAnalyzeRequest) {
+		r.RarelyAbortWrites = &v
 	}
 }
 

@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 7.13.1: DO NOT EDIT
+// Code generated from specification version 7.17.1: DO NOT EDIT
 
 package esapi
 
@@ -41,7 +41,7 @@ func newFleetGlobalCheckpointsFunc(t Transport) FleetGlobalCheckpoints {
 
 // FleetGlobalCheckpoints returns the current global checkpoints for an index. This API is design for internal use by the fleet server project.
 //
-// This API is experimental.
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/get-global-checkpoints.html.
 //
 type FleetGlobalCheckpoints func(index string, o ...func(*FleetGlobalCheckpointsRequest)) (*Response, error)
 

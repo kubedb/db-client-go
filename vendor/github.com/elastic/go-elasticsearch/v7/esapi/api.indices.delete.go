@@ -15,12 +15,13 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 7.13.1: DO NOT EDIT
+// Code generated from specification version 7.17.1: DO NOT EDIT
 
 package esapi
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -76,6 +77,10 @@ func (r IndicesDeleteRequest) Do(ctx context.Context, transport Transport) (*Res
 	)
 
 	method = "DELETE"
+
+	if len(r.Index) == 0 {
+		return nil, errors.New("index is required and cannot be nil or empty")
+	}
 
 	path.Grow(1 + len(strings.Join(r.Index, ",")))
 	path.WriteString("/")
@@ -178,7 +183,7 @@ func (f IndicesDelete) WithAllowNoIndices(v bool) func(*IndicesDeleteRequest) {
 	}
 }
 
-// WithExpandWildcards - whether wildcard expressions should get expanded to open or closed indices (default: open).
+// WithExpandWildcards - whether wildcard expressions should get expanded to open, closed, or hidden indices.
 //
 func (f IndicesDelete) WithExpandWildcards(v string) func(*IndicesDeleteRequest) {
 	return func(r *IndicesDeleteRequest) {
