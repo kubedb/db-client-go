@@ -137,7 +137,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	if o.db.Spec.RequireSSL && o.db.Spec.TLS != nil {
 		// get client-secret
 		var clientSecret core.Secret
-		err := o.kc.Get(context.TODO(), client.ObjectKey{Namespace: o.db.GetNamespace(), Name: o.db.MustCertSecretName(api.MySQLClientCert)}, &clientSecret)
+		err := o.kc.Get(context.TODO(), client.ObjectKey{Namespace: o.db.GetNamespace(), Name: o.db.GetCertSecretName(api.MySQLClientCert)}, &clientSecret)
 		if err != nil {
 			return "", err
 		}
