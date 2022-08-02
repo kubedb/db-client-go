@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 7.13.1: DO NOT EDIT
+// Code generated from specification version 7.17.1: DO NOT EDIT
 
 package esapi
 
@@ -38,8 +38,6 @@ func newGetScriptContextFunc(t Transport) GetScriptContext {
 // ----- API Definition -------------------------------------------------------
 
 // GetScriptContext returns all script contexts.
-//
-// This API is experimental.
 //
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/painless/master/painless-contexts.html.
 //
