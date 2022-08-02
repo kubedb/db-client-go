@@ -85,8 +85,8 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 		return nil, errors.New("db is empty")
 	}
 
-	var esVersion *catalog.ElasticsearchVersion
-	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.Version}, esVersion)
+	var esVersion catalog.ElasticsearchVersion
+	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.Version}, &esVersion)
 	if err != nil {
 		return nil, errors.Errorf("Failed to get elasticsearchVersion with %s", err.Error())
 	}
