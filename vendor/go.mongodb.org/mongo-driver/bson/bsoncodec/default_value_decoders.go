@@ -53,9 +53,9 @@ type DefaultValueDecoders struct{}
 // RegisterDefaultDecoders will register the decoder methods attached to DefaultValueDecoders with
 // the provided RegistryBuilder.
 //
-// There is no support for decoding map[string]interface{} becuase there is no decoder for
+// There is no support for decoding map[string]interface{} because there is no decoder for
 // interface{}, so users must either register this decoder themselves or use the
-// EmptyInterfaceDecoder avaialble in the bson package.
+// EmptyInterfaceDecoder available in the bson package.
 func (dvd DefaultValueDecoders) RegisterDefaultDecoders(rb *RegistryBuilder) {
 	if rb == nil {
 		panic(errors.New("argument to RegisterDefaultDecoders must not be nil"))
@@ -718,6 +718,7 @@ func (dvd DefaultValueDecoders) UndefinedDecodeValue(dc DecodeContext, vr bsonrw
 	return nil
 }
 
+// Accept both 12-byte string and pretty-printed 24-byte hex string formats.
 func (dvd DefaultValueDecoders) objectIDDecodeType(dc DecodeContext, vr bsonrw.ValueReader, t reflect.Type) (reflect.Value, error) {
 	if t != tOID {
 		return emptyValue, ValueDecoderError{
@@ -739,6 +740,9 @@ func (dvd DefaultValueDecoders) objectIDDecodeType(dc DecodeContext, vr bsonrw.V
 		str, err := vr.ReadString()
 		if err != nil {
 			return emptyValue, err
+		}
+		if oid, err = primitive.ObjectIDFromHex(str); err == nil {
+			break
 		}
 		if len(str) != 12 {
 			return emptyValue, fmt.Errorf("an ObjectID string must be exactly 12 bytes long (got %v)", len(str))
@@ -1498,6 +1502,18 @@ func (dvd DefaultValueDecoders) UnmarshalerDecodeValue(dc DecodeContext, vr bson
 	_, src, err := bsonrw.Copier{}.CopyValueToBytes(vr)
 	if err != nil {
 		return err
+	}
+
+	// If the target Go value is a pointer and the BSON field value is empty, set the value to the
+	// zero value of the pointer (nil) and don't call UnmarshalBSON. UnmarshalBSON has no way to
+	// change the pointer value from within the function (only the value at the pointer address),
+	// so it can't set the pointer to "nil" itself. Since the most common Go value for an empty BSON
+	// field value is "nil", we set "nil" here and don't call UnmarshalBSON. This behavior matches
+	// the behavior of the Go "encoding/json" unmarshaler when the target Go value is a pointer and
+	// the JSON field value is "null".
+	if val.Kind() == reflect.Ptr && len(src) == 0 {
+		val.Set(reflect.Zero(val.Type()))
+		return nil
 	}
 
 	fn := val.Convert(tUnmarshaler).MethodByName("UnmarshalBSON")

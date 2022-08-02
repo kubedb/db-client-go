@@ -3,9 +3,6 @@ package elasticsearch
 import (
 	"context"
 	"encoding/json"
-	"github.com/opensearch-project/opensearch-go/opensearchapi"
-	"k8s.io/klog/v2"
-	kutil "kmodules.xyz/client-go"
 	"net/http"
 	"strconv"
 	"strings"
@@ -13,8 +10,11 @@ import (
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	"github.com/opensearch-project/opensearch-go"
+	"github.com/opensearch-project/opensearch-go/opensearchapi"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
+	"k8s.io/klog/v2"
+	kutil "kmodules.xyz/client-go"
 )
 
 var _ ESClient = &OSClientV1{}

@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 7.17.1: DO NOT EDIT
+// Code generated from specification version 7.13.1: DO NOT EDIT
 
 package esapi
 
@@ -53,7 +53,6 @@ type NodesHotThreadsRequest struct {
 	IgnoreIdleThreads *bool
 	Interval          time.Duration
 	Snapshots         *int
-	Sort              string
 	Threads           *int
 	Timeout           time.Duration
 	DocumentType      string
@@ -103,10 +102,6 @@ func (r NodesHotThreadsRequest) Do(ctx context.Context, transport Transport) (*R
 
 	if r.Snapshots != nil {
 		params["snapshots"] = strconv.FormatInt(int64(*r.Snapshots), 10)
-	}
-
-	if r.Sort != "" {
-		params["sort"] = r.Sort
 	}
 
 	if r.Threads != nil {
@@ -217,14 +212,6 @@ func (f NodesHotThreads) WithInterval(v time.Duration) func(*NodesHotThreadsRequ
 func (f NodesHotThreads) WithSnapshots(v int) func(*NodesHotThreadsRequest) {
 	return func(r *NodesHotThreadsRequest) {
 		r.Snapshots = &v
-	}
-}
-
-// WithSort - the sort order for 'cpu' type (default: total).
-//
-func (f NodesHotThreads) WithSort(v string) func(*NodesHotThreadsRequest) {
-	return func(r *NodesHotThreadsRequest) {
-		r.Sort = v
 	}
 }
 

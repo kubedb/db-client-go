@@ -92,11 +92,7 @@ func (c *Client) Metrics() (Metrics, error) {
 	m := Metrics{
 		Requests:  c.metrics.requests,
 		Failures:  c.metrics.failures,
-		Responses: make(map[int]int, len(c.metrics.responses)),
-	}
-
-	for code, num := range c.metrics.responses {
-		m.Responses[code] = num
+		Responses: c.metrics.responses,
 	}
 
 	if pool, ok := c.pool.(connectionable); ok {

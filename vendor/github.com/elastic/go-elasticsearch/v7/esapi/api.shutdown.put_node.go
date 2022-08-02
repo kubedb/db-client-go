@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 7.17.1: DO NOT EDIT
+// Code generated from specification version 7.13.1: DO NOT EDIT
 
 package esapi
 
@@ -38,7 +38,9 @@ func newShutdownPutNodeFunc(t Transport) ShutdownPutNode {
 
 // ----- API Definition -------------------------------------------------------
 
-// ShutdownPutNode adds a node to be shut down. Designed for indirect use by ECE/ESS and ECK. Direct use is not supported.
+// ShutdownPutNode adds a node to be shut down
+//
+// This API is experimental.
 //
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current.
 //
