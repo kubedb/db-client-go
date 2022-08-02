@@ -124,23 +124,9 @@ func (b *Builder) selectWriteTo(w Writer) error {
 		}
 	}
 
-	if b.orderBy != nil {
-		switch c := b.orderBy.(type) {
-		case string:
-			if len(c) > 0 {
-				if _, err := fmt.Fprint(w, " ORDER BY ", c); err != nil {
-					return err
-				}
-			}
-		case *Expression:
-			if _, err := fmt.Fprint(w, " ORDER BY "); err != nil {
-				return err
-			}
-			if err := c.WriteTo(w); err != nil {
-				return err
-			}
-		default:
-			return fmt.Errorf("unknow orderby parameter: %#v", b.orderBy)
+	if len(b.orderBy) > 0 {
+		if _, err := fmt.Fprint(w, " ORDER BY ", b.orderBy); err != nil {
+			return err
 		}
 	}
 
@@ -154,7 +140,7 @@ func (b *Builder) selectWriteTo(w Writer) error {
 }
 
 // OrderBy orderBy SQL
-func (b *Builder) OrderBy(orderBy interface{}) *Builder {
+func (b *Builder) OrderBy(orderBy string) *Builder {
 	b.orderBy = orderBy
 	return b
 }

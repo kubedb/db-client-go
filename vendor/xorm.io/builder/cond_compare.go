@@ -8,8 +8,8 @@ import "fmt"
 
 // WriteMap writes conditions' SQL to Writer, op could be =, <>, >, <, <=, >= and etc.
 func WriteMap(w Writer, data map[string]interface{}, op string) error {
-	args := make([]interface{}, 0, len(data))
-	i := 0
+	var args = make([]interface{}, 0, len(data))
+	var i = 0
 	keys := make([]string, 0, len(data))
 	for k := range data {
 		keys = append(keys, k)
@@ -18,12 +18,12 @@ func WriteMap(w Writer, data map[string]interface{}, op string) error {
 	for _, k := range keys {
 		v := data[k]
 		switch v.(type) {
-		case *Expression:
+		case expr:
 			if _, err := fmt.Fprintf(w, "%s%s(", k, op); err != nil {
 				return err
 			}
 
-			if err := v.(*Expression).WriteTo(w); err != nil {
+			if err := v.(expr).WriteTo(w); err != nil {
 				return err
 			}
 

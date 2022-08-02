@@ -133,7 +133,7 @@ func (db *Database) Aggregate(ctx context.Context, pipeline interface{},
 }
 
 func (db *Database) processRunCommand(ctx context.Context, cmd interface{},
-	cursorCommand bool, opts ...*options.RunCmdOptions) (*operation.Command, *session.Client, error) {
+	opts ...*options.RunCmdOptions) (*operation.Command, *session.Client, error) {
 	sess := sessionFromContext(ctx)
 	if sess == nil && db.client.sessionPool != nil {
 		var err error
@@ -165,15 +165,8 @@ func (db *Database) processRunCommand(ctx context.Context, cmd interface{},
 		readSelect = makePinnedSelector(sess, readSelect)
 	}
 
-	var op *operation.Command
-	switch cursorCommand {
-	case true:
-		cursorOpts := db.client.createBaseCursorOptions()
-		op = operation.NewCursorCommand(runCmdDoc, cursorOpts)
-	default:
-		op = operation.NewCommand(runCmdDoc)
-	}
-	return op.Session(sess).CommandMonitor(db.client.monitor).
+	return operation.NewCommand(runCmdDoc).
+		Session(sess).CommandMonitor(db.client.monitor).
 		ServerSelector(readSelect).ClusterClock(db.client.clock).
 		Database(db.name).Deployment(db.client.deployment).ReadConcern(db.readConcern).
 		Crypt(db.client.cryptFLE).ReadPreference(ro.ReadPreference).ServerAPI(db.client.serverAPI), sess, nil
@@ -194,7 +187,7 @@ func (db *Database) RunCommand(ctx context.Context, runCommand interface{}, opts
 		ctx = context.Background()
 	}
 
-	op, sess, err := db.processRunCommand(ctx, runCommand, false, opts...)
+	op, sess, err := db.processRunCommand(ctx, runCommand, opts...)
 	defer closeImplicitSession(sess)
 	if err != nil {
 		return &SingleResult{err: err}
@@ -225,7 +218,7 @@ func (db *Database) RunCommandCursor(ctx context.Context, runCommand interface{}
 		ctx = context.Background()
 	}
 
-	op, sess, err := db.processRunCommand(ctx, runCommand, true, opts...)
+	op, sess, err := db.processRunCommand(ctx, runCommand, opts...)
 	if err != nil {
 		closeImplicitSession(sess)
 		return nil, replaceErrors(err)
@@ -236,7 +229,7 @@ func (db *Database) RunCommandCursor(ctx context.Context, runCommand interface{}
 		return nil, replaceErrors(err)
 	}
 
-	bc, err := op.ResultCursor()
+	bc, err := op.ResultCursor(driver.CursorOptions{})
 	if err != nil {
 		closeImplicitSession(sess)
 		return nil, replaceErrors(err)
@@ -303,9 +296,6 @@ func (db *Database) Drop(ctx context.Context) error {
 // documentation).
 //
 // For more information about the command, see https://docs.mongodb.com/manual/reference/command/listCollections/.
-//
-// BUG(benjirewis): ListCollectionSpecifications prevents listing more than 100 collections per database when running
-// against MongoDB version 2.6.
 func (db *Database) ListCollectionSpecifications(ctx context.Context, filter interface{},
 	opts ...*options.ListCollectionsOptions) ([]*CollectionSpecification, error) {
 
@@ -340,9 +330,6 @@ func (db *Database) ListCollectionSpecifications(ctx context.Context, filter int
 // documentation).
 //
 // For more information about the command, see https://docs.mongodb.com/manual/reference/command/listCollections/.
-//
-// BUG(benjirewis): ListCollections prevents listing more than 100 collections per database when running against
-// MongoDB version 2.6.
 func (db *Database) ListCollections(ctx context.Context, filter interface{}, opts ...*options.ListCollectionsOptions) (*Cursor, error) {
 	if ctx == nil {
 		ctx = context.Background()
@@ -379,17 +366,11 @@ func (db *Database) ListCollections(ctx context.Context, filter interface{}, opt
 		ServerSelector(selector).ClusterClock(db.client.clock).
 		Database(db.name).Deployment(db.client.deployment).Crypt(db.client.cryptFLE).
 		ServerAPI(db.client.serverAPI)
-
-	cursorOpts := db.client.createBaseCursorOptions()
 	if lco.NameOnly != nil {
 		op = op.NameOnly(*lco.NameOnly)
 	}
 	if lco.BatchSize != nil {
-		cursorOpts.BatchSize = *lco.BatchSize
 		op = op.BatchSize(*lco.BatchSize)
-	}
-	if lco.AuthorizedCollections != nil {
-		op = op.AuthorizedCollections(*lco.AuthorizedCollections)
 	}
 
 	retry := driver.RetryNone
@@ -404,7 +385,7 @@ func (db *Database) ListCollections(ctx context.Context, filter interface{}, opt
 		return nil, replaceErrors(err)
 	}
 
-	bc, err := op.Result(cursorOpts)
+	bc, err := op.Result(driver.CursorOptions{Crypt: db.client.cryptFLE})
 	if err != nil {
 		closeImplicitSession(sess)
 		return nil, replaceErrors(err)
@@ -424,9 +405,6 @@ func (db *Database) ListCollections(ctx context.Context, filter interface{}, opt
 // documentation).
 //
 // For more information about the command, see https://docs.mongodb.com/manual/reference/command/listCollections/.
-//
-// BUG(benjirewis): ListCollectionNames prevents listing more than 100 collections per database when running against
-// MongoDB version 2.6.
 func (db *Database) ListCollectionNames(ctx context.Context, filter interface{}, opts ...*options.ListCollectionsOptions) ([]string, error) {
 	opts = append(opts, options.ListCollections().SetNameOnly(true))
 
@@ -511,8 +489,6 @@ func (db *Database) Watch(ctx context.Context, pipeline interface{},
 //
 // The opts parameter can be used to specify options for the operation (see the options.CreateCollectionOptions
 // documentation).
-//
-// For more information about the command, see https://docs.mongodb.com/manual/reference/command/create/.
 func (db *Database) CreateCollection(ctx context.Context, name string, opts ...*options.CreateCollectionOptions) error {
 	cco := options.MergeCreateCollectionOptions(opts...)
 	op := operation.NewCreate(name).ServerAPI(db.client.serverAPI)
@@ -566,27 +542,6 @@ func (db *Database) CreateCollection(ctx context.Context, name string, opts ...*
 		}
 		op.Validator(validator)
 	}
-	if cco.ExpireAfterSeconds != nil {
-		op.ExpireAfterSeconds(*cco.ExpireAfterSeconds)
-	}
-	if cco.TimeSeriesOptions != nil {
-		idx, doc := bsoncore.AppendDocumentStart(nil)
-		doc = bsoncore.AppendStringElement(doc, "timeField", cco.TimeSeriesOptions.TimeField)
-
-		if cco.TimeSeriesOptions.MetaField != nil {
-			doc = bsoncore.AppendStringElement(doc, "metaField", *cco.TimeSeriesOptions.MetaField)
-		}
-		if cco.TimeSeriesOptions.Granularity != nil {
-			doc = bsoncore.AppendStringElement(doc, "granularity", *cco.TimeSeriesOptions.Granularity)
-		}
-
-		doc, err := bsoncore.AppendDocumentEnd(doc, idx)
-		if err != nil {
-			return err
-		}
-
-		op.TimeSeries(doc)
-	}
 
 	return db.executeCreateOperation(ctx, op)
 }
@@ -607,7 +562,7 @@ func (db *Database) CreateCollection(ctx context.Context, name string, opts ...*
 func (db *Database) CreateView(ctx context.Context, viewName, viewOn string, pipeline interface{},
 	opts ...*options.CreateViewOptions) error {
 
-	pipelineArray, _, err := transformAggregatePipeline(db.registry, pipeline)
+	pipelineArray, _, err := transformAggregatePipelinev2(db.registry, pipeline)
 	if err != nil {
 		return err
 	}

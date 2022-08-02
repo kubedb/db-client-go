@@ -22,7 +22,6 @@ import (
 	"github.com/youmark/pkcs8"
 	"go.mongodb.org/mongo-driver/bson/bsoncodec"
 	"go.mongodb.org/mongo-driver/event"
-	"go.mongodb.org/mongo-driver/internal"
 	"go.mongodb.org/mongo-driver/mongo/readconcern"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"go.mongodb.org/mongo-driver/mongo/writeconcern"
@@ -104,12 +103,10 @@ type ClientOptions struct {
 	DisableOCSPEndpointCheck *bool
 	HeartbeatInterval        *time.Duration
 	Hosts                    []string
-	LoadBalanced             *bool
 	LocalThreshold           *time.Duration
 	MaxConnIdleTime          *time.Duration
 	MaxPoolSize              *uint64
 	MinPoolSize              *uint64
-	MaxConnecting            *uint64
 	PoolMonitor              *event.PoolMonitor
 	Monitor                  *event.CommandMonitor
 	ServerMonitor            *event.ServerMonitor
@@ -122,8 +119,6 @@ type ClientOptions struct {
 	ServerAPIOptions         *ServerAPIOptions
 	ServerSelectionTimeout   *time.Duration
 	SocketTimeout            *time.Duration
-	SRVMaxHosts              *int
-	SRVServiceName           *string
 	TLSConfig                *tls.Config
 	WriteConcern             *writeconcern.WriteConcern
 	ZlibLevel                *int
@@ -138,13 +133,6 @@ type ClientOptions struct {
 	// Deprecated: This option is for internal use only and should not be set. It may be changed or removed in any
 	// release.
 	AuthenticateToAnything *bool
-
-	// Crypt specifies a custom driver.Crypt to be used to encrypt and decrypt documents. The default is no
-	// encryption.
-	//
-	// Deprecated: This option is for internal use only and should not be set (see GODRIVER-2149). It may be
-	// changed or removed in any release.
-	Crypt driver.Crypt
 
 	// Deployment specifies a custom deployment to use for the new Client.
 	//
@@ -185,32 +173,6 @@ func (c *ClientOptions) validateAndSetError() {
 	if c.ServerAPIOptions != nil {
 		c.err = c.ServerAPIOptions.ServerAPIVersion.Validate()
 	}
-
-	// Validation for load-balanced mode.
-	if c.LoadBalanced != nil && *c.LoadBalanced {
-		if len(c.Hosts) > 1 {
-			c.err = internal.ErrLoadBalancedWithMultipleHosts
-			return
-		}
-		if c.ReplicaSet != nil {
-			c.err = internal.ErrLoadBalancedWithReplicaSet
-			return
-		}
-		if c.Direct != nil {
-			c.err = internal.ErrLoadBalancedWithDirectConnection
-			return
-		}
-	}
-
-	// Validation for srvMaxHosts.
-	if c.SRVMaxHosts != nil && *c.SRVMaxHosts > 0 {
-		if c.ReplicaSet != nil {
-			c.err = internal.ErrSRVMaxHostsWithReplicaSet
-		}
-		if c.LoadBalanced != nil && *c.LoadBalanced {
-			c.err = internal.ErrSRVMaxHostsWithLoadBalanced
-		}
-	}
 }
 
 // GetURI returns the original URI used to configure the ClientOptions instance. If ApplyURI was not called during
@@ -228,7 +190,7 @@ func (c *ClientOptions) GetURI() string {
 // parameters are specified. If an option is set on ClientOptions after this method is called, that option will override
 // any option applied via the connection string.
 //
-// If the URI format is incorrect or there are conflicting options specified in the URI an error will be recorded and
+// If the URI format is incorrect or there are conflicing options specified in the URI an error will be recorded and
 // can be retrieved by calling Validate.
 //
 // For more information about the URI format, see https://docs.mongodb.com/manual/reference/connection-string/. See
@@ -293,10 +255,6 @@ func (c *ClientOptions) ApplyURI(uri string) *ClientOptions {
 
 	c.Hosts = cs.Hosts
 
-	if cs.LoadBalancedSet {
-		c.LoadBalanced = &cs.LoadBalanced
-	}
-
 	if cs.LocalThresholdSet {
 		c.LocalThreshold = &cs.LocalThreshold
 	}
@@ -311,10 +269,6 @@ func (c *ClientOptions) ApplyURI(uri string) *ClientOptions {
 
 	if cs.MinPoolSizeSet {
 		c.MinPoolSize = &cs.MinPoolSize
-	}
-
-	if cs.MaxConnectingSet {
-		c.MaxConnecting = &cs.MaxConnecting
 	}
 
 	if cs.ReadConcernLevel != "" {
@@ -363,14 +317,6 @@ func (c *ClientOptions) ApplyURI(uri string) *ClientOptions {
 
 	if cs.SocketTimeoutSet {
 		c.SocketTimeout = &cs.SocketTimeout
-	}
-
-	if cs.SRVMaxHosts != 0 {
-		c.SRVMaxHosts = &cs.SRVMaxHosts
-	}
-
-	if cs.SRVServiceName != "" {
-		c.SRVServiceName = &cs.SRVServiceName
 	}
 
 	if cs.SSL {
@@ -540,21 +486,6 @@ func (c *ClientOptions) SetHosts(s []string) *ClientOptions {
 	return c
 }
 
-// SetLoadBalanced specifies whether or not the MongoDB deployment is hosted behind a load balancer. This can also be
-// set through the "loadBalanced" URI option. The driver will error during Client configuration if this option is set
-// to true and one of the following conditions are met:
-//
-// 1. Multiple hosts are specified, either via the ApplyURI or SetHosts methods. This includes the case where an SRV
-// URI is used and the SRV record resolves to multiple hostnames.
-// 2. A replica set name is specified, either via the URI or the SetReplicaSet method.
-// 3. The options specify whether or not a direct connection should be made, either via the URI or the SetDirect method.
-//
-// The default value is false.
-func (c *ClientOptions) SetLoadBalanced(lb bool) *ClientOptions {
-	c.LoadBalanced = &lb
-	return c
-}
-
 // SetLocalThreshold specifies the width of the 'latency window': when choosing between multiple suitable servers for an
 // operation, this is the acceptable non-negative delta between shortest and longest average round-trip times. A server
 // within the latency window is selected randomly. This can also be set through the "localThresholdMS" URI option (e.g.
@@ -574,7 +505,7 @@ func (c *ClientOptions) SetMaxConnIdleTime(d time.Duration) *ClientOptions {
 
 // SetMaxPoolSize specifies that maximum number of connections allowed in the driver's connection pool to each server.
 // Requests to a server will block if this maximum is reached. This can also be set through the "maxPoolSize" URI option
-// (e.g. "maxPoolSize=100"). If this is 0, maximum connection pool size is not limited. The default is 100.
+// (e.g. "maxPoolSize=100"). The default is 100. If this is 0, it will be set to math.MaxInt64.
 func (c *ClientOptions) SetMaxPoolSize(u uint64) *ClientOptions {
 	c.MaxPoolSize = &u
 	return c
@@ -585,14 +516,6 @@ func (c *ClientOptions) SetMaxPoolSize(u uint64) *ClientOptions {
 // the minimum. This can also be set through the "minPoolSize" URI option (e.g. "minPoolSize=100"). The default is 0.
 func (c *ClientOptions) SetMinPoolSize(u uint64) *ClientOptions {
 	c.MinPoolSize = &u
-	return c
-}
-
-// SetMaxConnecting specifies the maximum number of connections a connection pool may establish simultaneously. This can
-// also be set through the "maxConnecting" URI option (e.g. "maxConnecting=2"). If this is 0, the default is used. The
-// default is 2. Values greater than 100 are not recommended.
-func (c *ClientOptions) SetMaxConnecting(u uint64) *ClientOptions {
-	c.MaxConnecting = &u
 	return c
 }
 
@@ -628,7 +551,7 @@ func (c *ClientOptions) SetReadConcern(rc *readconcern.ReadConcern) *ClientOptio
 // SetReadPreference specifies the read preference to use for read operations. This can also be set through the
 // following URI options:
 //
-// 1. "readPreference" - Specify the read preference mode (e.g. "readPreference=primary").
+// 1. "readPreference" - Specifiy the read preference mode (e.g. "readPreference=primary").
 //
 // 2. "readPreferenceTags": Specify one or more read preference tags
 // (e.g. "readPreferenceTags=region:south,datacenter:A").
@@ -803,22 +726,6 @@ func (c *ClientOptions) SetServerAPIOptions(opts *ServerAPIOptions) *ClientOptio
 	return c
 }
 
-// SetSRVMaxHosts specifies the maximum number of SRV results to randomly select during polling. To limit the number
-// of hosts selected in SRV discovery, this function must be called before ApplyURI. This can also be set through
-// the "srvMaxHosts" URI option.
-func (c *ClientOptions) SetSRVMaxHosts(srvMaxHosts int) *ClientOptions {
-	c.SRVMaxHosts = &srvMaxHosts
-	return c
-}
-
-// SetSRVServiceName specifies a custom SRV service name to use in SRV polling. To use a custom SRV service name
-// in SRV discovery, this function must be called before ApplyURI. This can also be set through the "srvServiceName"
-// URI option.
-func (c *ClientOptions) SetSRVServiceName(srvName string) *ClientOptions {
-	c.SRVServiceName = &srvName
-	return c
-}
-
 // MergeClientOptions combines the given *ClientOptions into a single *ClientOptions in a last one wins fashion.
 // The specified options are merged with the existing options on the client, with the specified options taking
 // precedence.
@@ -848,17 +755,11 @@ func MergeClientOptions(opts ...*ClientOptions) *ClientOptions {
 		if opt.ConnectTimeout != nil {
 			c.ConnectTimeout = opt.ConnectTimeout
 		}
-		if opt.Crypt != nil {
-			c.Crypt = opt.Crypt
-		}
 		if opt.HeartbeatInterval != nil {
 			c.HeartbeatInterval = opt.HeartbeatInterval
 		}
 		if len(opt.Hosts) > 0 {
 			c.Hosts = opt.Hosts
-		}
-		if opt.LoadBalanced != nil {
-			c.LoadBalanced = opt.LoadBalanced
 		}
 		if opt.LocalThreshold != nil {
 			c.LocalThreshold = opt.LocalThreshold
@@ -871,9 +772,6 @@ func MergeClientOptions(opts ...*ClientOptions) *ClientOptions {
 		}
 		if opt.MinPoolSize != nil {
 			c.MinPoolSize = opt.MinPoolSize
-		}
-		if opt.MaxConnecting != nil {
-			c.MaxConnecting = opt.MaxConnecting
 		}
 		if opt.PoolMonitor != nil {
 			c.PoolMonitor = opt.PoolMonitor
@@ -914,12 +812,6 @@ func MergeClientOptions(opts ...*ClientOptions) *ClientOptions {
 		if opt.SocketTimeout != nil {
 			c.SocketTimeout = opt.SocketTimeout
 		}
-		if opt.SRVMaxHosts != nil {
-			c.SRVMaxHosts = opt.SRVMaxHosts
-		}
-		if opt.SRVServiceName != nil {
-			c.SRVServiceName = opt.SRVServiceName
-		}
 		if opt.TLSConfig != nil {
 			c.TLSConfig = opt.TLSConfig
 		}
@@ -944,12 +836,7 @@ func MergeClientOptions(opts ...*ClientOptions) *ClientOptions {
 		if opt.err != nil {
 			c.err = opt.err
 		}
-		if opt.uri != "" {
-			c.uri = opt.uri
-		}
-		if opt.cs != nil {
-			c.cs = opt.cs
-		}
+
 	}
 
 	return c
@@ -973,18 +860,18 @@ func addCACertFromFile(cfg *tls.Config, file string) error {
 	return nil
 }
 
-func addClientCertFromSeparateFiles(cfg *tls.Config, keyFile, certFile, keyPassword string) (string, error) {
-	keyData, err := ioutil.ReadFile(keyFile)
-	if err != nil {
-		return "", err
-	}
+func addClientCertFromSeparateFiles(cfg *tls.Config, certFile, keyFile, keyPassword string) (string, error) {
 	certData, err := ioutil.ReadFile(certFile)
 	if err != nil {
 		return "", err
 	}
+	keyData, err := ioutil.ReadFile(keyFile)
+	if err != nil {
+		return "", err
+	}
 
-	data := append(keyData, '\n')
-	data = append(data, certData...)
+	data := append(certData, '\n')
+	data = append(data, keyData...)
 	return addClientCertFromBytes(cfg, data, keyPassword)
 }
 
@@ -1001,8 +888,7 @@ func addClientCertFromConcatenatedFile(cfg *tls.Config, certKeyFile, keyPassword
 // containing file and returns the certificate's subject name.
 func addClientCertFromBytes(cfg *tls.Config, data []byte, keyPasswd string) (string, error) {
 	var currentBlock *pem.Block
-	var certDecodedBlock []byte
-	var certBlocks, keyBlocks [][]byte
+	var certBlock, keyBlock []byte
 
 	remaining := data
 	start := 0
@@ -1013,10 +899,7 @@ func addClientCertFromBytes(cfg *tls.Config, data []byte, keyPasswd string) (str
 		}
 
 		if currentBlock.Type == "CERTIFICATE" {
-			certBlock := data[start : len(data)-len(remaining)]
-			certBlocks = append(certBlocks, certBlock)
-			certDecodedBlock = currentBlock.Bytes
-			start += len(certBlock)
+			start += len(data) - len(remaining) - start
 		} else if strings.HasSuffix(currentBlock.Type, "PRIVATE KEY") {
 			isEncrypted := x509.IsEncryptedPEMBlock(currentBlock) || strings.Contains(currentBlock.Type, "ENCRYPTED PRIVATE KEY")
 			if isEncrypted {
@@ -1039,31 +922,29 @@ func addClientCertFromBytes(cfg *tls.Config, data []byte, keyPasswd string) (str
 					if err != nil {
 						return "", err
 					}
-					keyBytes, err = x509.MarshalPKCS8PrivateKey(decrypted)
+					keyBytes, err = x509MarshalPKCS8PrivateKey(decrypted)
 					if err != nil {
 						return "", err
 					}
 				}
 				var encoded bytes.Buffer
 				pem.Encode(&encoded, &pem.Block{Type: currentBlock.Type, Bytes: keyBytes})
-				keyBlock := encoded.Bytes()
-				keyBlocks = append(keyBlocks, keyBlock)
-				start = len(data) - len(remaining)
+				keyBlock = encoded.Bytes()
 			} else {
-				keyBlock := data[start : len(data)-len(remaining)]
-				keyBlocks = append(keyBlocks, keyBlock)
-				start += len(keyBlock)
+				keyBlock = data[start : len(data)-len(remaining)]
 			}
+			certBlock = data[0:start]
+			break
 		}
 	}
-	if len(certBlocks) == 0 {
+	if len(certBlock) == 0 {
 		return "", fmt.Errorf("failed to find CERTIFICATE")
 	}
-	if len(keyBlocks) == 0 {
+	if len(keyBlock) == 0 {
 		return "", fmt.Errorf("failed to find PRIVATE KEY")
 	}
 
-	cert, err := tls.X509KeyPair(bytes.Join(certBlocks, []byte("\n")), bytes.Join(keyBlocks, []byte("\n")))
+	cert, err := tls.X509KeyPair(certBlock, keyBlock)
 	if err != nil {
 		return "", err
 	}
@@ -1072,12 +953,21 @@ func addClientCertFromBytes(cfg *tls.Config, data []byte, keyPasswd string) (str
 
 	// The documentation for the tls.X509KeyPair indicates that the Leaf certificate is not
 	// retained.
-	crt, err := x509.ParseCertificate(certDecodedBlock)
+	crt, err := leaf(&cert)
 	if err != nil {
 		return "", err
 	}
 
-	return crt.Subject.String(), nil
+	return x509CertSubject(crt), nil
+}
+
+// leaf returns the parsed leaf certificate, either from c.Leaf or by parsing
+// the corresponding c.Certificate[0].
+func leaf(c *tls.Certificate) (*x509.Certificate, error) {
+	if c.Leaf != nil {
+		return c.Leaf, nil
+	}
+	return x509.ParseCertificate(c.Certificate[0])
 }
 
 func stringSliceContains(source []string, target string) bool {

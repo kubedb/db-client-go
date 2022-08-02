@@ -52,10 +52,6 @@ type Elasticsearch struct {
 }
 
 type ElasticsearchSpec struct {
-	// AutoOps contains configuration of automatic ops-request-recommendation generation
-	// +optional
-	AutoOps AutoOpsSpec `json:"autoOps,omitempty"`
-
 	// Version of Elasticsearch to be deployed.
 	Version string `json:"version"`
 
@@ -170,9 +166,6 @@ type ElasticsearchSpec struct {
 	// +optional
 	// +kubebuilder:default:=50
 	HeapSizePercentage *int32 `json:"heapSizePercentage,omitempty"`
-
-	// +optional
-	HealthCheck HealthCheckSpec `json:"healthCheck"`
 }
 
 type ElasticsearchClusterTopology struct {
@@ -376,7 +369,6 @@ type ElasticsearchList struct {
 type ElasticsearchNodeRoleType string
 
 const (
-	ElasticsearchNodeRoleTypeCombined            ElasticsearchNodeRoleType = "combined"
 	ElasticsearchNodeRoleTypeMaster              ElasticsearchNodeRoleType = "master"
 	ElasticsearchNodeRoleTypeData                ElasticsearchNodeRoleType = "data"
 	ElasticsearchNodeRoleTypeDataContent         ElasticsearchNodeRoleType = "data-content"

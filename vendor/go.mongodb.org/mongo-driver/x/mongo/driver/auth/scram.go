@@ -16,8 +16,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/xdg-go/scram"
-	"github.com/xdg-go/stringprep"
+	"github.com/xdg/scram"
+	"github.com/xdg/stringprep"
 	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
 )
 

@@ -8,7 +8,6 @@ package mongo
 
 import (
 	"context"
-	"time"
 
 	"go.mongodb.org/mongo-driver/mongo/description"
 	"go.mongodb.org/mongo-driver/x/mongo/driver"
@@ -34,10 +33,6 @@ func (c *changeStreamDeployment) Kind() description.TopologyKind {
 
 func (c *changeStreamDeployment) Connection(context.Context) (driver.Connection, error) {
 	return c.conn, nil
-}
-
-func (c *changeStreamDeployment) MinRTT() time.Duration {
-	return c.server.MinRTT()
 }
 
 func (c *changeStreamDeployment) ProcessError(err error, conn driver.Connection) driver.ProcessErrorResult {

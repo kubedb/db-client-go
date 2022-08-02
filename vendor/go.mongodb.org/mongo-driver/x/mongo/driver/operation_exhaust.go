@@ -9,6 +9,8 @@ package driver
 import (
 	"context"
 	"errors"
+
+	"go.mongodb.org/mongo-driver/mongo/description"
 )
 
 // ExecuteExhaust reads a response from the provided StreamerConnection. This will error if the connection's
@@ -24,12 +26,7 @@ func (op Operation) ExecuteExhaust(ctx context.Context, conn StreamerConnection,
 		return err
 	}
 	if op.ProcessResponseFn != nil {
-		// Server, ConnectionDescription, and CurrentIndex are unused in this mode.
-		info := ResponseInfo{
-			ServerResponse: res,
-			Connection:     conn,
-		}
-		if err = op.ProcessResponseFn(info); err != nil {
+		if err = op.ProcessResponseFn(res, nil, description.Server{}, 0); err != nil {
 			return err
 		}
 	}

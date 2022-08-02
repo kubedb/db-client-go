@@ -13,6 +13,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/mongo/address"
 	"go.mongodb.org/mongo-driver/mongo/description"
+	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
 	"go.mongodb.org/mongo-driver/x/mongo/driver"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/operation"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/session"
@@ -59,7 +60,6 @@ type HandshakeOptions struct {
 	PerformAuthentication func(description.Server) bool
 	ClusterClock          *session.ClusterClock
 	ServerAPI             *driver.ServerAPIOptions
-	LoadBalanced          bool
 }
 
 type authHandshaker struct {
@@ -79,13 +79,12 @@ func (ah *authHandshaker) GetHandshakeInformation(ctx context.Context, addr addr
 		return ah.wrapped.GetHandshakeInformation(ctx, addr, conn)
 	}
 
-	op := operation.NewHello().
+	op := operation.NewIsMaster().
 		AppName(ah.options.AppName).
 		Compressors(ah.options.Compressors).
 		SASLSupportedMechs(ah.options.DBUser).
 		ClusterClock(ah.options.ClusterClock).
-		ServerAPI(ah.options.ServerAPI).
-		LoadBalanced(ah.options.LoadBalanced)
+		ServerAPI(ah.options.ServerAPI)
 
 	if ah.options.Authenticator != nil {
 		if speculativeAuth, ok := ah.options.Authenticator.(SpeculativeAuthenticator); ok {
@@ -144,14 +143,14 @@ func (ah *authHandshaker) FinishHandshake(ctx context.Context, conn driver.Conne
 }
 
 func (ah *authHandshaker) authenticate(ctx context.Context, cfg *Config) error {
-	// If the initial hello reply included a response to the speculative authentication attempt, we only need to
+	// If the initial isMaster reply included a response to the speculative authentication attempt, we only need to
 	// conduct the remainder of the conversation.
 	if speculativeResponse := ah.handshakeInfo.SpeculativeAuthenticate; speculativeResponse != nil {
 		// Defensively ensure that the server did not include a response if speculative auth was not attempted.
 		if ah.conversation == nil {
 			return errors.New("speculative auth was not attempted but the server included a response")
 		}
-		return ah.conversation.Finish(ctx, cfg, speculativeResponse)
+		return ah.conversation.Finish(ctx, cfg, bsoncore.Document(speculativeResponse))
 	}
 
 	// If the server does not support speculative authentication or the first attempt was not successful, we need to

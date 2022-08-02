@@ -80,7 +80,7 @@ func (session *Session) insertMultipleStruct(rowsSlicePtr interface{}) (int64, e
 	}
 
 	tableName := session.statement.TableName()
-	if len(tableName) == 0 {
+	if len(tableName) <= 0 {
 		return 0, ErrTableNotFound
 	}
 
@@ -90,6 +90,7 @@ func (session *Session) insertMultipleStruct(rowsSlicePtr interface{}) (int64, e
 		colNames       []string
 		colMultiPlaces []string
 		args           []interface{}
+		cols           []*schemas.Column
 	)
 
 	for i := 0; i < size; i++ {
@@ -122,12 +123,6 @@ func (session *Session) insertMultipleStruct(rowsSlicePtr interface{}) (int64, e
 			}
 			fieldValue := *ptrFieldValue
 			if col.IsAutoIncrement && utils.IsZero(fieldValue.Interface()) {
-				if session.engine.dialect.Features().AutoincrMode == dialects.SequenceAutoincrMode {
-					if i == 0 {
-						colNames = append(colNames, col.Name)
-					}
-					colPlaces = append(colPlaces, utils.SeqName(tableName)+".nextval")
-				}
 				continue
 			}
 			if col.MapType == schemas.ONLYFROMDB {
@@ -141,13 +136,6 @@ func (session *Session) insertMultipleStruct(rowsSlicePtr interface{}) (int64, e
 			}
 			if len(session.statement.ColumnMap) > 0 && !session.statement.ColumnMap.Contain(col.Name) {
 				continue
-			}
-			// !satorunooshie! set fieldValue as nil when column is nullable and zero-value
-			if _, ok := getFlagForColumn(session.statement.NullableMap, col); ok {
-				if col.Nullable && utils.IsValueZero(fieldValue) {
-					var nilValue *int
-					fieldValue = reflect.ValueOf(nilValue)
-				}
 			}
 			if (col.IsCreated || col.IsUpdated) && session.statement.UseAutoTime {
 				val, t, err := session.engine.nowTime(col)
@@ -178,6 +166,7 @@ func (session *Session) insertMultipleStruct(rowsSlicePtr interface{}) (int64, e
 
 			if i == 0 {
 				colNames = append(colNames, col.Name)
+				cols = append(cols, col)
 			}
 			colPlaces = append(colPlaces, "?")
 		}
@@ -208,7 +197,7 @@ func (session *Session) insertMultipleStruct(rowsSlicePtr interface{}) (int64, e
 		return 0, err
 	}
 
-	_ = session.cacheInsert(tableName)
+	session.cacheInsert(tableName)
 
 	lenAfterClosures := len(session.afterClosures)
 	for i := 0; i < size; i++ {
@@ -262,7 +251,7 @@ func (session *Session) insertStruct(bean interface{}) (int64, error) {
 	if err := session.statement.SetRefBean(bean); err != nil {
 		return 0, err
 	}
-	if len(session.statement.TableName()) == 0 {
+	if len(session.statement.TableName()) <= 0 {
 		return 0, ErrTableNotFound
 	}
 
@@ -288,7 +277,6 @@ func (session *Session) insertStruct(bean interface{}) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	sqlStr = session.engine.dialect.Quoter().Replace(sqlStr)
 
 	handleAfterInsertProcessorFunc := func(bean interface{}) {
 		if session.isAutoCommit {
@@ -319,53 +307,20 @@ func (session *Session) insertStruct(bean interface{}) (int64, error) {
 
 	// if there is auto increment column and driver don't support return it
 	if len(table.AutoIncrement) > 0 && !session.engine.driver.Features().SupportReturnInsertedID {
-		var sql string
-		var newArgs []interface{}
-		var needCommit bool
-		var id int64
-		if session.engine.dialect.URI().DBType == schemas.ORACLE || session.engine.dialect.URI().DBType == schemas.DAMENG {
-			if session.isAutoCommit { // if it's not in transaction
-				if err := session.Begin(); err != nil {
-					return 0, err
-				}
-				needCommit = true
-			}
-			_, err := session.exec(sqlStr, args...)
-			if err != nil {
-				return 0, err
-			}
-			i := utils.IndexSlice(colNames, table.AutoIncrement)
-			if i > -1 {
-				id, err = convert.AsInt64(args[i])
-				if err != nil {
-					return 0, err
-				}
-			} else {
-				sql = fmt.Sprintf("select %s.currval from dual", utils.SeqName(tableName))
-			}
-		} else {
-			sql = sqlStr
-			newArgs = args
+		var sql = sqlStr
+		if session.engine.dialect.URI().DBType == schemas.ORACLE {
+			sql = "select seq_atable.currval from dual"
 		}
 
-		if id == 0 {
-			err := session.queryRow(sql, newArgs...).Scan(&id)
-			if err != nil {
-				return 0, err
-			}
-			if needCommit {
-				if err := session.Commit(); err != nil {
-					return 0, err
-				}
-			}
-			if id == 0 {
-				return 0, errors.New("insert successfully but not returned id")
-			}
+		rows, err := session.queryRows(sql, args...)
+		if err != nil {
+			return 0, err
 		}
+		defer rows.Close()
 
 		defer handleAfterInsertProcessorFunc(bean)
 
-		_ = session.cacheInsert(tableName)
+		session.cacheInsert(tableName)
 
 		if table.Version != "" && session.statement.CheckVersion {
 			verValue, err := table.VersionColumn().ValueOf(bean)
@@ -376,6 +331,16 @@ func (session *Session) insertStruct(bean interface{}) (int64, error) {
 			}
 		}
 
+		var id int64
+		if !rows.Next() {
+			if rows.Err() != nil {
+				return 0, rows.Err()
+			}
+			return 0, errors.New("insert successfully but not returned id")
+		}
+		if err := rows.Scan(&id); err != nil {
+			return 1, err
+		}
 		aiValue, err := table.AutoIncrColumn().ValueOf(bean)
 		if err != nil {
 			session.engine.logger.Errorf("%v", err)
@@ -395,7 +360,7 @@ func (session *Session) insertStruct(bean interface{}) (int64, error) {
 
 	defer handleAfterInsertProcessorFunc(bean)
 
-	_ = session.cacheInsert(tableName)
+	session.cacheInsert(tableName)
 
 	if table.Version != "" && session.statement.CheckVersion {
 		verValue, err := table.VersionColumn().ValueOf(bean)
@@ -435,7 +400,6 @@ func (session *Session) insertStruct(bean interface{}) (int64, error) {
 // InsertOne insert only one struct into database as a record.
 // The in parameter bean must a struct or a point to struct. The return
 // parameter is inserted and error
-// Deprecated: Please use Insert directly
 func (session *Session) InsertOne(bean interface{}) (int64, error) {
 	if session.isAutoClose {
 		defer session.Close()
@@ -543,7 +507,7 @@ func (session *Session) insertMapInterface(m map[string]interface{}) (int64, err
 	}
 
 	tableName := session.statement.TableName()
-	if len(tableName) == 0 {
+	if len(tableName) <= 0 {
 		return 0, ErrTableNotFound
 	}
 
@@ -565,12 +529,12 @@ func (session *Session) insertMapInterface(m map[string]interface{}) (int64, err
 }
 
 func (session *Session) insertMultipleMapInterface(maps []map[string]interface{}) (int64, error) {
-	if len(maps) == 0 {
+	if len(maps) <= 0 {
 		return 0, ErrNoElementsOnSlice
 	}
 
 	tableName := session.statement.TableName()
-	if len(tableName) == 0 {
+	if len(tableName) <= 0 {
 		return 0, ErrTableNotFound
 	}
 
@@ -601,7 +565,7 @@ func (session *Session) insertMapString(m map[string]string) (int64, error) {
 	}
 
 	tableName := session.statement.TableName()
-	if len(tableName) == 0 {
+	if len(tableName) <= 0 {
 		return 0, ErrTableNotFound
 	}
 
@@ -624,12 +588,12 @@ func (session *Session) insertMapString(m map[string]string) (int64, error) {
 }
 
 func (session *Session) insertMultipleMapString(maps []map[string]string) (int64, error) {
-	if len(maps) == 0 {
+	if len(maps) <= 0 {
 		return 0, ErrNoElementsOnSlice
 	}
 
 	tableName := session.statement.TableName()
-	if len(tableName) == 0 {
+	if len(tableName) <= 0 {
 		return 0, ErrTableNotFound
 	}
 
@@ -656,7 +620,7 @@ func (session *Session) insertMultipleMapString(maps []map[string]string) (int64
 
 func (session *Session) insertMap(columns []string, args []interface{}) (int64, error) {
 	tableName := session.statement.TableName()
-	if len(tableName) == 0 {
+	if len(tableName) <= 0 {
 		return 0, ErrTableNotFound
 	}
 
@@ -664,7 +628,6 @@ func (session *Session) insertMap(columns []string, args []interface{}) (int64, 
 	if err != nil {
 		return 0, err
 	}
-	sql = session.engine.dialect.Quoter().Replace(sql)
 
 	if err := session.cacheInsert(tableName); err != nil {
 		return 0, err
@@ -683,7 +646,7 @@ func (session *Session) insertMap(columns []string, args []interface{}) (int64, 
 
 func (session *Session) insertMultipleMap(columns []string, argss [][]interface{}) (int64, error) {
 	tableName := session.statement.TableName()
-	if len(tableName) == 0 {
+	if len(tableName) <= 0 {
 		return 0, ErrTableNotFound
 	}
 
@@ -691,7 +654,6 @@ func (session *Session) insertMultipleMap(columns []string, argss [][]interface{
 	if err != nil {
 		return 0, err
 	}
-	sql = session.engine.dialect.Quoter().Replace(sql)
 
 	if err := session.cacheInsert(tableName); err != nil {
 		return 0, err

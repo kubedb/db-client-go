@@ -170,7 +170,6 @@ RETRY:
 	s.buf = append(s.buf[:s.cursor-1], s.buf[s.cursor:]...)
 	s.length--
 	s.cursor--
-	p = s.bufptr()
 	return p, nil
 }
 
@@ -239,23 +238,14 @@ func stringBytes(s *Stream) ([]byte, error) {
 			fallthrough
 		default:
 			// multi bytes character
-			if !utf8.FullRune(s.buf[cursor : len(s.buf)-1]) {
-				s.cursor = cursor
-				if s.read() {
-					_, cursor, p = s.stat()
-					continue
-				}
-				goto ERROR
-			}
-			r, size := utf8.DecodeRune(s.buf[cursor:])
+			r, _ := utf8.DecodeRune(s.buf[cursor:])
+			b := []byte(string(r))
 			if r == utf8.RuneError {
-				s.buf = append(append(append([]byte{}, s.buf[:cursor]...), runeErrBytes...), s.buf[cursor+1:]...)
-				cursor += runeErrBytesLen
-				s.length += runeErrBytesLen
+				s.buf = append(append(append([]byte{}, s.buf[:cursor]...), b...), s.buf[cursor+1:]...)
 				_, _, p = s.stat()
-			} else {
-				cursor += int64(size)
 			}
+			cursor += int64(len(b))
+			s.length += int64(len(b))
 			continue
 		}
 		cursor++
@@ -290,7 +280,7 @@ func (d *stringDecoder) decodeStreamByte(s *Stream) ([]byte, error) {
 		}
 		break
 	}
-	return nil, errors.ErrInvalidBeginningOfValue(s.char(), s.totalOffset())
+	return nil, errors.ErrNotAtBeginningOfValue(s.totalOffset())
 }
 
 func (d *stringDecoder) decodeByte(buf []byte, cursor int64) ([]byte, int64, error) {
@@ -365,7 +355,7 @@ func (d *stringDecoder) decodeByte(buf []byte, cursor int64) ([]byte, int64, err
 			cursor += 4
 			return nil, cursor, nil
 		default:
-			return nil, 0, errors.ErrInvalidBeginningOfValue(buf[cursor], cursor)
+			return nil, 0, errors.ErrNotAtBeginningOfValue(cursor)
 		}
 	}
 }

@@ -862,11 +862,11 @@ func (db *postgres) needQuote(name string) bool {
 func (db *postgres) SetQuotePolicy(quotePolicy QuotePolicy) {
 	switch quotePolicy {
 	case QuotePolicyNone:
-		q := postgresQuoter
+		var q = postgresQuoter
 		q.IsReserved = schemas.AlwaysNoReserve
 		db.quoter = q
 	case QuotePolicyReserved:
-		q := postgresQuoter
+		var q = postgresQuoter
 		q.IsReserved = db.needQuote
 		db.quoter = q
 	case QuotePolicyAlways:
@@ -941,12 +941,6 @@ func (db *postgres) SQLType(c *schemas.Column) string {
 	return res
 }
 
-func (db *postgres) Features() *DialectFeatures {
-	return &DialectFeatures{
-		AutoincrMode: IncrAutoincrMode,
-	}
-}
-
 func (db *postgres) ColumnTypeKind(t string) int {
 	switch strings.ToUpper(t) {
 	case "DATETIME", "TIMESTAMP":
@@ -991,37 +985,13 @@ func (db *postgres) IsTableExist(queryer core.Queryer, ctx context.Context, tabl
 		db.getSchema(), tableName)
 }
 
-func (db *postgres) AddColumnSQL(tableName string, col *schemas.Column) string {
-	s, _ := ColumnString(db.dialect, col, true)
-
-	quoter := db.dialect.Quoter()
-	addColumnSQL := ""
-	commentSQL := "; "
-	if len(db.getSchema()) == 0 || strings.Contains(tableName, ".") {
-		addColumnSQL = fmt.Sprintf("ALTER TABLE %s ADD %s", quoter.Quote(tableName), s)
-		commentSQL += fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'", quoter.Quote(tableName), quoter.Quote(col.Name), col.Comment)
-		return addColumnSQL + commentSQL
-	}
-
-	addColumnSQL = fmt.Sprintf("ALTER TABLE %s.%s ADD %s", quoter.Quote(db.getSchema()), quoter.Quote(tableName), s)
-	commentSQL += fmt.Sprintf("COMMENT ON COLUMN %s.%s.%s IS '%s'", quoter.Quote(db.getSchema()), quoter.Quote(tableName), quoter.Quote(col.Name), col.Comment)
-	return addColumnSQL + commentSQL
-}
-
 func (db *postgres) ModifyColumnSQL(tableName string, col *schemas.Column) string {
-	quoter := db.dialect.Quoter()
-	modifyColumnSQL := ""
-	commentSQL := "; "
-
 	if len(db.getSchema()) == 0 || strings.Contains(tableName, ".") {
-		modifyColumnSQL = fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s TYPE %s", quoter.Quote(tableName), quoter.Quote(col.Name), db.SQLType(col))
-		commentSQL += fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'", quoter.Quote(tableName), quoter.Quote(col.Name), col.Comment)
-		return modifyColumnSQL + commentSQL
+		return fmt.Sprintf("alter table %s ALTER COLUMN %s TYPE %s",
+			db.quoter.Quote(tableName), db.quoter.Quote(col.Name), db.SQLType(col))
 	}
-
-	modifyColumnSQL = fmt.Sprintf("ALTER TABLE %s.%s ALTER COLUMN %s TYPE %s", quoter.Quote(db.getSchema()), quoter.Quote(tableName), quoter.Quote(col.Name), db.SQLType(col))
-	commentSQL += fmt.Sprintf("COMMENT ON COLUMN %s.%s.%s IS '%s'", quoter.Quote(db.getSchema()), quoter.Quote(tableName), quoter.Quote(col.Name), col.Comment)
-	return modifyColumnSQL + commentSQL
+	return fmt.Sprintf("alter table %s.%s ALTER COLUMN %s TYPE %s",
+		db.quoter.Quote(db.getSchema()), db.quoter.Quote(tableName), db.quoter.Quote(col.Name), db.SQLType(col))
 }
 
 func (db *postgres) DropIndexSQL(tableName string, index *schemas.Index) string {
@@ -1125,7 +1095,7 @@ WHERE n.nspname= s.table_schema AND c.relkind = 'r'::char AND c.relname = $1%s A
 		col.Name = strings.Trim(colName, `" `)
 
 		if colDefault != nil {
-			theDefault := *colDefault
+			var theDefault = *colDefault
 			// cockroach has type with the default value with :::
 			// and postgres with ::, we should remove them before store them
 			idx := strings.Index(theDefault, ":::")
@@ -1206,7 +1176,9 @@ WHERE n.nspname= s.table_schema AND c.relkind = 'r'::char AND c.relname = $1%s A
 					col.Default = "'" + col.Default + "'"
 				}
 			} else if col.SQLType.IsTime() {
-				col.Default = strings.TrimSuffix(col.Default, "::timestamp without time zone")
+				if strings.HasSuffix(col.Default, "::timestamp without time zone") {
+					col.Default = strings.TrimSuffix(col.Default, "::timestamp without time zone")
+				}
 			}
 		}
 		cols[col.Name] = col
@@ -1267,7 +1239,7 @@ func (db *postgres) GetIndexes(queryer core.Queryer, ctx context.Context, tableN
 	s := "SELECT indexname, indexdef FROM pg_indexes WHERE tablename=$1"
 	if len(db.getSchema()) != 0 {
 		args = append(args, db.getSchema())
-		s += " AND schemaname=$2"
+		s = s + " AND schemaname=$2"
 	}
 
 	rows, err := queryer.QueryContext(ctx, s, args...)
@@ -1300,12 +1272,6 @@ func (db *postgres) GetIndexes(queryer core.Queryer, ctx context.Context, tableN
 			indexType = schemas.IndexType
 		}
 		colNames = getIndexColName(indexdef)
-
-		// Oid It's a special index. You can't put it in. TODO: This is not perfect.
-		if indexName == tableName+"_oid_index" && len(colNames) == 1 && colNames[0] == "oid" {
-			continue
-		}
-
 		var isRegular bool
 		if strings.HasPrefix(indexName, "IDX_"+tableName) || strings.HasPrefix(indexName, "UQE_"+tableName) {
 			newIdxName := indexName[5+len(tableName):]
@@ -1328,34 +1294,6 @@ func (db *postgres) GetIndexes(queryer core.Queryer, ctx context.Context, tableN
 		return nil, rows.Err()
 	}
 	return indexes, nil
-}
-
-func (db *postgres) CreateTableSQL(ctx context.Context, queryer core.Queryer, table *schemas.Table, tableName string) (string, bool, error) {
-	quoter := db.dialect.Quoter()
-	if len(db.getSchema()) != 0 && !strings.Contains(tableName, ".") {
-		tableName = fmt.Sprintf("%s.%s", db.getSchema(), tableName)
-	}
-
-	createTableSQL, ok, err := db.Base.CreateTableSQL(ctx, queryer, table, tableName)
-	if err != nil {
-		return "", ok, err
-	}
-
-	commentSQL := "; "
-	if table.Comment != "" {
-		// support schema.table -> "schema"."table"
-		commentSQL += fmt.Sprintf("COMMENT ON TABLE %s IS '%s'", quoter.Quote(tableName), table.Comment)
-	}
-
-	for _, colName := range table.ColumnsSeq() {
-		col := table.GetColumn(colName)
-
-		if len(col.Comment) > 0 {
-			commentSQL += fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'", quoter.Quote(tableName), quoter.Quote(col.Name), col.Comment)
-		}
-	}
-
-	return createTableSQL + commentSQL, true, nil
 }
 
 func (db *postgres) Filters() []Filter {

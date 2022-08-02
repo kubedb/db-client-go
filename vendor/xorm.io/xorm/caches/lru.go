@@ -56,7 +56,7 @@ func (m *LRUCacher) GC() {
 	var removedNum int
 	for e := m.idList.Front(); e != nil; {
 		if removedNum <= CacheGcMaxRemoved &&
-			time.Since(e.Value.(*idNode).lastVisit) > m.Expired {
+			time.Now().Sub(e.Value.(*idNode).lastVisit) > m.Expired {
 			removedNum++
 			next := e.Next()
 			node := e.Value.(*idNode)
@@ -70,7 +70,7 @@ func (m *LRUCacher) GC() {
 	removedNum = 0
 	for e := m.sqlList.Front(); e != nil; {
 		if removedNum <= CacheGcMaxRemoved &&
-			time.Since(e.Value.(*sqlNode).lastVisit) > m.Expired {
+			time.Now().Sub(e.Value.(*sqlNode).lastVisit) > m.Expired {
 			removedNum++
 			next := e.Next()
 			node := e.Value.(*sqlNode)
@@ -96,7 +96,7 @@ func (m *LRUCacher) GetIds(tableName, sql string) interface{} {
 		} else {
 			lastTime := el.Value.(*sqlNode).lastVisit
 			// if expired, remove the node and return nil
-			if time.Since(lastTime) > m.Expired {
+			if time.Now().Sub(lastTime) > m.Expired {
 				m.delIds(tableName, sql)
 				return nil
 			}
@@ -122,7 +122,7 @@ func (m *LRUCacher) GetBean(tableName string, id string) interface{} {
 		if el, ok := m.idIndex[tableName][id]; ok {
 			lastTime := el.Value.(*idNode).lastVisit
 			// if expired, remove the node and return nil
-			if time.Since(lastTime) > m.Expired {
+			if time.Now().Sub(lastTime) > m.Expired {
 				m.delBean(tableName, id)
 				return nil
 			}
@@ -145,7 +145,7 @@ func (m *LRUCacher) clearIds(tableName string) {
 	if tis, ok := m.sqlIndex[tableName]; ok {
 		for sql, v := range tis {
 			m.sqlList.Remove(v)
-			_ = m.store.Del(sql)
+			m.store.Del(sql)
 		}
 	}
 	m.sqlIndex[tableName] = make(map[string]*list.Element)
@@ -163,7 +163,7 @@ func (m *LRUCacher) clearBeans(tableName string) {
 		for id, v := range tis {
 			m.idList.Remove(v)
 			tid := genID(tableName, id)
-			_ = m.store.Del(tid)
+			m.store.Del(tid)
 		}
 	}
 	m.idIndex[tableName] = make(map[string]*list.Element)
@@ -188,7 +188,7 @@ func (m *LRUCacher) PutIds(tableName, sql string, ids interface{}) {
 	} else {
 		el.Value.(*sqlNode).lastVisit = time.Now()
 	}
-	_ = m.store.Put(sql, ids)
+	m.store.Put(sql, ids)
 	if m.sqlList.Len() > m.MaxElementSize {
 		e := m.sqlList.Front()
 		node := e.Value.(*sqlNode)
@@ -210,7 +210,7 @@ func (m *LRUCacher) PutBean(tableName string, id string, obj interface{}) {
 		el.Value.(*idNode).lastVisit = time.Now()
 	}
 
-	_ = m.store.Put(genID(tableName, id), obj)
+	m.store.Put(genID(tableName, id), obj)
 	if m.idList.Len() > m.MaxElementSize {
 		e := m.idList.Front()
 		node := e.Value.(*idNode)
@@ -226,7 +226,7 @@ func (m *LRUCacher) delIds(tableName, sql string) {
 			m.sqlList.Remove(el)
 		}
 	}
-	_ = m.store.Del(sql)
+	m.store.Del(sql)
 }
 
 // DelIds deletes ids
@@ -243,7 +243,7 @@ func (m *LRUCacher) delBean(tableName string, id string) {
 		m.idList.Remove(el)
 		m.clearIds(tableName)
 	}
-	_ = m.store.Del(tid)
+	m.store.Del(tid)
 }
 
 // DelBean deletes beans in some table
@@ -263,6 +263,10 @@ type sqlNode struct {
 	tbName    string
 	sql       string
 	lastVisit time.Time
+}
+
+func genSQLKey(sql string, args interface{}) string {
+	return fmt.Sprintf("%s-%v", sql, args)
 }
 
 func genID(prefix string, id string) string {

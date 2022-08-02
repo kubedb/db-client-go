@@ -282,12 +282,6 @@ func (db *mssql) Version(ctx context.Context, queryer core.Queryer) (*schemas.Ve
 	}, nil
 }
 
-func (db *mssql) Features() *DialectFeatures {
-	return &DialectFeatures{
-		AutoincrMode: IncrAutoincrMode,
-	}
-}
-
 func (db *mssql) SQLType(c *schemas.Column) string {
 	var res string
 	switch t := c.SQLType.Name; t {
@@ -631,7 +625,7 @@ WHERE IXS.TYPE_DESC='NONCLUSTERED' and OBJECT_NAME(IXS.OBJECT_ID) =?
 	return indexes, nil
 }
 
-func (db *mssql) CreateTableSQL(ctx context.Context, queryer core.Queryer, table *schemas.Table, tableName string) (string, bool, error) {
+func (db *mssql) CreateTableSQL(table *schemas.Table, tableName string) ([]string, bool) {
 	if tableName == "" {
 		tableName = table.Name
 	}
@@ -662,7 +656,7 @@ func (db *mssql) CreateTableSQL(ctx context.Context, queryer core.Queryer, table
 
 	b.WriteString(")")
 
-	return b.String(), true, nil
+	return []string{b.String()}, true
 }
 
 func (db *mssql) ForUpdateSQL(query string) string {

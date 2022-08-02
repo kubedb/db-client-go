@@ -44,10 +44,6 @@ type RedisSentinel struct {
 }
 
 type RedisSentinelSpec struct {
-	// AutoOps contains configuration of automatic ops-request-recommendation generation
-	// +optional
-	AutoOps AutoOpsSpec `json:"autoOps,omitempty"`
-
 	// Version of Postgres to be deployed.
 	Version string `json:"version"`
 
@@ -90,9 +86,6 @@ type RedisSentinelSpec struct {
 	// TerminationPolicy controls the delete operation for database
 	// +optional
 	TerminationPolicy TerminationPolicy `json:"terminationPolicy,omitempty"`
-
-	// +optional
-	HealthCheck HealthCheckSpec `json:"healthCheck,omitempty"`
 }
 
 type RedisSentinelStatus struct {

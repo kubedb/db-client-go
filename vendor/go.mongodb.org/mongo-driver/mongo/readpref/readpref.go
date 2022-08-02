@@ -65,9 +65,6 @@ func New(mode Mode, opts ...Option) (*ReadPref, error) {
 	}
 
 	for _, opt := range opts {
-		if opt == nil {
-			continue
-		}
 		err := opt(rp)
 		if err != nil {
 			return nil, err

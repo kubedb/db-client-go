@@ -5,10 +5,8 @@
 package zstd
 
 import (
-	"encoding/binary"
 	"errors"
 	"fmt"
-	"io"
 )
 
 const (
@@ -21,7 +19,7 @@ const (
 	 *  Increasing memory usage improves compression ratio
 	 *  Reduced memory usage can improve speed, due to cache effect
 	 *  Recommended max value is 14, for 16KB, which nicely fits into Intel x86 L1 cache */
-	maxMemoryUsage = tablelogAbsoluteMax + 2
+	maxMemoryUsage = 11
 
 	maxTableLog    = maxMemoryUsage - 2
 	maxTablesize   = 1 << maxTableLog
@@ -57,7 +55,7 @@ func (s *fseDecoder) readNCount(b *byteReader, maxSymbol uint16) error {
 	if b.remain() < 4 {
 		return errors.New("input too small")
 	}
-	bitStream := b.Uint32NC()
+	bitStream := b.Uint32()
 	nbBits := uint((bitStream & 0xF) + minTablelog) // extract tableLog
 	if nbBits > tablelogAbsoluteMax {
 		println("Invalid tablelog:", nbBits)
@@ -81,8 +79,7 @@ func (s *fseDecoder) readNCount(b *byteReader, maxSymbol uint16) error {
 				n0 += 24
 				if r := b.remain(); r > 5 {
 					b.advance(2)
-					// The check above should make sure we can read 32 bits
-					bitStream = b.Uint32NC() >> bitCount
+					bitStream = b.Uint32() >> bitCount
 				} else {
 					// end of bit stream
 					bitStream >>= 16
@@ -107,11 +104,10 @@ func (s *fseDecoder) readNCount(b *byteReader, maxSymbol uint16) error {
 				charnum++
 			}
 
-			if r := b.remain(); r >= 7 || r-int(bitCount>>3) >= 4 {
+			if r := b.remain(); r >= 7 || r+int(bitCount>>3) >= 4 {
 				b.advance(bitCount >> 3)
 				bitCount &= 7
-				// The check above should make sure we can read 32 bits
-				bitStream = b.Uint32NC() >> bitCount
+				bitStream = b.Uint32() >> bitCount
 			} else {
 				bitStream >>= 2
 			}
@@ -122,7 +118,7 @@ func (s *fseDecoder) readNCount(b *byteReader, maxSymbol uint16) error {
 
 		if int32(bitStream)&(threshold-1) < max {
 			count = int32(bitStream) & (threshold - 1)
-			if debugAsserts && nbBits < 1 {
+			if debug && nbBits < 1 {
 				panic("nbBits underflow")
 			}
 			bitCount += nbBits - 1
@@ -152,16 +148,17 @@ func (s *fseDecoder) readNCount(b *byteReader, maxSymbol uint16) error {
 			threshold >>= 1
 		}
 
-		if r := b.remain(); r >= 7 || r-int(bitCount>>3) >= 4 {
+		//println("b.off:", b.off, "len:", len(b.b), "bc:", bitCount, "remain:", b.remain())
+		if r := b.remain(); r >= 7 || r+int(bitCount>>3) >= 4 {
 			b.advance(bitCount >> 3)
 			bitCount &= 7
-			// The check above should make sure we can read 32 bits
-			bitStream = b.Uint32NC() >> (bitCount & 31)
 		} else {
 			bitCount -= (uint)(8 * (len(b.b) - 4 - b.off))
 			b.off = len(b.b) - 4
-			bitStream = b.Uint32() >> (bitCount & 31)
+			//println("b.off:", b.off, "len:", len(b.b), "bc:", bitCount, "iend", iend)
 		}
+		bitStream = b.Uint32() >> (bitCount & 31)
+		//printf("bitstream is now: 0b%b", bitStream)
 	}
 	s.symbolLen = charnum
 	if s.symbolLen <= 1 {
@@ -182,29 +179,6 @@ func (s *fseDecoder) readNCount(b *byteReader, maxSymbol uint16) error {
 	b.advance((bitCount + 7) >> 3)
 	// println(s.norm[:s.symbolLen], s.symbolLen)
 	return s.buildDtable()
-}
-
-func (s *fseDecoder) mustReadFrom(r io.Reader) {
-	fatalErr := func(err error) {
-		if err != nil {
-			panic(err)
-		}
-	}
-	// 	dt             [maxTablesize]decSymbol // Decompression table.
-	//	symbolLen      uint16                  // Length of active part of the symbol table.
-	//	actualTableLog uint8                   // Selected tablelog.
-	//	maxBits        uint8                   // Maximum number of additional bits
-	//	// used for table creation to avoid allocations.
-	//	stateTable [256]uint16
-	//	norm       [maxSymbolValue + 1]int16
-	//	preDefined bool
-	fatalErr(binary.Read(r, binary.LittleEndian, &s.dt))
-	fatalErr(binary.Read(r, binary.LittleEndian, &s.symbolLen))
-	fatalErr(binary.Read(r, binary.LittleEndian, &s.actualTableLog))
-	fatalErr(binary.Read(r, binary.LittleEndian, &s.maxBits))
-	fatalErr(binary.Read(r, binary.LittleEndian, &s.stateTable))
-	fatalErr(binary.Read(r, binary.LittleEndian, &s.norm))
-	fatalErr(binary.Read(r, binary.LittleEndian, &s.preDefined))
 }
 
 // decSymbol contains information about a state entry,
@@ -404,7 +378,7 @@ func (s decSymbol) final() (int, uint8) {
 // This can only be used if no symbols are 0 bits.
 // At least tablelog bits must be available in the bit reader.
 func (s *fseState) nextFast(br *bitReader) (uint32, uint8) {
-	lowBits := br.get16BitsFast(s.state.nbBits())
+	lowBits := uint16(br.getBitsFast(s.state.nbBits()))
 	s.state = s.dt[s.state.newState()+lowBits]
 	return s.state.baseline(), s.state.addBits()
 }

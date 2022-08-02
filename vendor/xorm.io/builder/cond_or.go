@@ -12,7 +12,7 @@ var _ Cond = condOr{}
 
 // Or sets OR conditions
 func Or(conds ...Cond) Cond {
-	result := make(condOr, 0, len(conds))
+	var result = make(condOr, 0, len(conds))
 	for _, cond := range conds {
 		if cond == nil || !cond.IsValid() {
 			continue
@@ -27,7 +27,7 @@ func (o condOr) WriteTo(w Writer) error {
 	for i, cond := range o {
 		var needQuote bool
 		switch cond.(type) {
-		case condAnd, *Expression:
+		case condAnd, expr:
 			needQuote = true
 		case Eq:
 			needQuote = (len(cond.(Eq)) > 1)

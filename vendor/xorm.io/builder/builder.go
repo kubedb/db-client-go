@@ -66,7 +66,7 @@ type Builder struct {
 	insertCols []string
 	insertVals []interface{}
 	updates    []UpdateCond
-	orderBy    interface{}
+	orderBy    string
 	groupBy    string
 	having     string
 }
@@ -164,6 +164,7 @@ func (b *Builder) Except(distinctType string, cond *Builder) *Builder {
 }
 
 func (b *Builder) setOperation(opType, distinctType string, cond *Builder) *Builder {
+
 	var builder *Builder
 	if b.optype != setOpType {
 		builder = &Builder{cond: NewCond()}
@@ -280,7 +281,7 @@ func (b *Builder) ToSQL() (string, []interface{}, error) {
 		}
 	}
 
-	sql := w.String()
+	var sql = w.String()
 	var err error
 
 	switch b.dialect {

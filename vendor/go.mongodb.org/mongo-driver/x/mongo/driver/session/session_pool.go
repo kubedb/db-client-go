@@ -20,20 +20,13 @@ type Node struct {
 	prev *Node
 }
 
-// topologyDescription is used to track a subset of the fields present in a description.Topology instance that are
-// relevant for determining session expiration.
-type topologyDescription struct {
-	kind           description.TopologyKind
-	timeoutMinutes uint32
-}
-
 // Pool is a pool of server sessions that can be reused.
 type Pool struct {
-	descChan       <-chan description.Topology
-	head           *Node
-	tail           *Node
-	latestTopology topologyDescription
-	mutex          sync.Mutex // mutex to protect list and sessionTimeout
+	descChan <-chan description.Topology
+	head     *Node
+	tail     *Node
+	timeout  uint32
+	mutex    sync.Mutex // mutex to protect list and sessionTimeout
 
 	checkedOut int // number of sessions checked out of pool
 }
@@ -61,10 +54,7 @@ func NewPool(descChan <-chan description.Topology) *Pool {
 func (p *Pool) updateTimeout() {
 	select {
 	case newDesc := <-p.descChan:
-		p.latestTopology = topologyDescription{
-			kind:           newDesc.Kind,
-			timeoutMinutes: newDesc.SessionTimeoutMinutes,
-		}
+		p.timeout = newDesc.SessionTimeoutMinutes
 	default:
 		// no new description waiting
 	}
@@ -83,7 +73,7 @@ func (p *Pool) GetSession() (*Server, error) {
 	p.updateTimeout()
 	for p.head != nil {
 		// pull session from head of queue and return if it is valid for at least 1 more minute
-		if p.head.expired(p.latestTopology) {
+		if p.head.expired(p.timeout) {
 			p.head = p.head.next
 			continue
 		}
@@ -122,7 +112,7 @@ func (p *Pool) ReturnSession(ss *Server) {
 	p.updateTimeout()
 	// check sessions at end of queue for expired
 	// stop checking after hitting the first valid session
-	for p.tail != nil && p.tail.expired(p.latestTopology) {
+	for p.tail != nil && p.tail.expired(p.timeout) {
 		if p.tail.prev != nil {
 			p.tail.prev.next = nil
 		}
@@ -130,7 +120,7 @@ func (p *Pool) ReturnSession(ss *Server) {
 	}
 
 	// session expired
-	if ss.expired(p.latestTopology) {
+	if ss.expired(p.timeout) {
 		return
 	}
 

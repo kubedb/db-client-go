@@ -21,7 +21,6 @@ type ClientOptions struct {
 	DefaultWriteConcern   *writeconcern.WriteConcern
 	DefaultReadPreference *readpref.ReadPref
 	DefaultMaxCommitTime  *time.Duration
-	Snapshot              *bool
 }
 
 // TransactionOptions represents all possible options for starting a transaction in a session.
@@ -52,9 +51,6 @@ func mergeClientOptions(opts ...*ClientOptions) *ClientOptions {
 		}
 		if opt.DefaultMaxCommitTime != nil {
 			c.DefaultMaxCommitTime = opt.DefaultMaxCommitTime
-		}
-		if opt.Snapshot != nil {
-			c.Snapshot = opt.Snapshot
 		}
 	}
 

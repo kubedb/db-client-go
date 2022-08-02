@@ -22,7 +22,7 @@ spec:
     - jsonPath: .spec.version
       name: Version
       type: string
-    - jsonPath: .spec.proxysql.image
+    - jsonPath: .spec.db.image
       name: ProxySQL_IMAGE
       type: string
     - jsonPath: .spec.deprecated
@@ -65,17 +65,6 @@ spec:
                     type: string
                 required:
                 - image
-                type: object
-              upgradeConstraints:
-                properties:
-                  allowlist:
-                    items:
-                      type: string
-                    type: array
-                  denylist:
-                    items:
-                      type: string
-                    type: array
                 type: object
               version:
                 type: string

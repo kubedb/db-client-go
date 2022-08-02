@@ -9,20 +9,44 @@ import (
 )
 
 type compileContext struct {
-	opcodeIndex       uint32
-	ptrIndex          int
-	indent            uint32
-	escapeKey         bool
-	structTypeToCodes map[uintptr]Opcodes
-	recursiveCodes    *Opcodes
+	typ                      *runtime.Type
+	opcodeIndex              uint32
+	ptrIndex                 int
+	indent                   uint32
+	escapeKey                bool
+	structTypeToCompiledCode map[uintptr]*CompiledCode
+
+	parent *compileContext
 }
 
-func (c *compileContext) incIndent() {
-	c.indent++
+func (c *compileContext) context() *compileContext {
+	return &compileContext{
+		typ:                      c.typ,
+		opcodeIndex:              c.opcodeIndex,
+		ptrIndex:                 c.ptrIndex,
+		indent:                   c.indent,
+		escapeKey:                c.escapeKey,
+		structTypeToCompiledCode: c.structTypeToCompiledCode,
+		parent:                   c,
+	}
 }
 
-func (c *compileContext) decIndent() {
-	c.indent--
+func (c *compileContext) withType(typ *runtime.Type) *compileContext {
+	ctx := c.context()
+	ctx.typ = typ
+	return ctx
+}
+
+func (c *compileContext) incIndent() *compileContext {
+	ctx := c.context()
+	ctx.indent++
+	return ctx
+}
+
+func (c *compileContext) decIndent() *compileContext {
+	ctx := c.context()
+	ctx.indent--
+	return ctx
 }
 
 func (c *compileContext) incIndex() {
@@ -37,18 +61,30 @@ func (c *compileContext) decIndex() {
 
 func (c *compileContext) incOpcodeIndex() {
 	c.opcodeIndex++
+	if c.parent != nil {
+		c.parent.incOpcodeIndex()
+	}
 }
 
 func (c *compileContext) decOpcodeIndex() {
 	c.opcodeIndex--
+	if c.parent != nil {
+		c.parent.decOpcodeIndex()
+	}
 }
 
 func (c *compileContext) incPtrIndex() {
 	c.ptrIndex++
+	if c.parent != nil {
+		c.parent.incPtrIndex()
+	}
 }
 
 func (c *compileContext) decPtrIndex() {
 	c.ptrIndex--
+	if c.parent != nil {
+		c.parent.decPtrIndex()
+	}
 }
 
 const (

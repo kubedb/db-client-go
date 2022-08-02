@@ -22,7 +22,6 @@ var (
 	ErrNoColumnsTobeUpdated = errors.New("no columns found to be updated")
 )
 
-//revive:disable
 func (session *Session) cacheUpdate(table *schemas.Table, tableName, sqlStr string, args ...interface{}) error {
 	if table == nil ||
 		session.tx != nil {
@@ -40,7 +39,7 @@ func (session *Session) cacheUpdate(table *schemas.Table, tableName, sqlStr stri
 
 	var nStart int
 	if len(args) > 0 {
-		if strings.Contains(sqlStr, "?") {
+		if strings.Index(sqlStr, "?") > -1 {
 			nStart = strings.Count(oldhead, "?")
 		} else {
 			// only for pq, TODO: if any other databse?
@@ -60,7 +59,7 @@ func (session *Session) cacheUpdate(table *schemas.Table, tableName, sqlStr stri
 
 		ids = make([]schemas.PK, 0)
 		for rows.Next() {
-			res := make([]string, len(table.PrimaryKeys))
+			var res = make([]string, len(table.PrimaryKeys))
 			err = rows.ScanSlice(&res)
 			if err != nil {
 				return err
@@ -176,14 +175,14 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 	// --
 
 	var err error
-	isMap := t.Kind() == reflect.Map
-	isStruct := t.Kind() == reflect.Struct
+	var isMap = t.Kind() == reflect.Map
+	var isStruct = t.Kind() == reflect.Struct
 	if isStruct {
 		if err := session.statement.SetRefBean(bean); err != nil {
 			return 0, err
 		}
 
-		if len(session.statement.TableName()) == 0 {
+		if len(session.statement.TableName()) <= 0 {
 			return 0, ErrTableNotFound
 		}
 
@@ -226,7 +225,7 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 				args = append(args, val)
 			}
 
-			colName := col.Name
+			var colName = col.Name
 			if isStruct {
 				session.afterClosures = append(session.afterClosures, func(bean interface{}) {
 					col := table.GetColumn(colName)
@@ -258,11 +257,10 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 			}
 			colNames = append(colNames, session.engine.Quote(expr.ColName)+"="+tp)
 		case *builder.Builder:
-			subQuery, subArgs, err := builder.ToSQL(tp)
+			subQuery, subArgs, err := session.statement.GenCondSQL(tp)
 			if err != nil {
 				return 0, err
 			}
-			subQuery = session.statement.ReplaceQuote(subQuery)
 			colNames = append(colNames, session.engine.Quote(expr.ColName)+"=("+subQuery+")")
 			args = append(args, subArgs...)
 		default:
@@ -280,11 +278,7 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 		condBeanIsStruct := false
 		if len(condiBean) > 0 {
 			if c, ok := condiBean[0].(map[string]interface{}); ok {
-				eq := make(builder.Eq)
-				for k, v := range c {
-					eq[session.engine.Quote(k)] = v
-				}
-				autoCond = builder.Eq(eq)
+				autoCond = builder.Eq(c)
 			} else {
 				ct := reflect.TypeOf(condiBean[0])
 				k := ct.Kind()
@@ -324,7 +318,11 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 	st := session.statement
 
 	var (
+		sqlStr   string
+		condArgs []interface{}
+		condSQL  string
 		cond     = session.statement.Conds().And(autoCond)
+
 		doIncVer = isStruct && (table != nil && table.Version != "" && session.statement.CheckVersion)
 		verValue *reflect.Value
 	)
@@ -340,61 +338,66 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 		}
 	}
 
-	if len(colNames) == 0 {
+	if len(colNames) <= 0 {
 		return 0, ErrNoColumnsTobeUpdated
 	}
 
-	whereWriter := builder.NewWriter()
-	if cond.IsValid() {
-		fmt.Fprint(whereWriter, "WHERE ")
-	}
-	if err := cond.WriteTo(st.QuoteReplacer(whereWriter)); err != nil {
-		return 0, err
-	}
-	if err := st.WriteOrderBy(whereWriter); err != nil {
+	condSQL, condArgs, err = session.statement.GenCondSQL(cond)
+	if err != nil {
 		return 0, err
 	}
 
-	tableName := session.statement.TableName()
+	if len(condSQL) > 0 {
+		condSQL = "WHERE " + condSQL
+	}
+
+	if st.OrderStr != "" {
+		condSQL = condSQL + fmt.Sprintf(" ORDER BY %v", st.OrderStr)
+	}
+
+	var tableName = session.statement.TableName()
 	// TODO: Oracle support needed
 	var top string
 	if st.LimitN != nil {
 		limitValue := *st.LimitN
 		switch session.engine.dialect.URI().DBType {
 		case schemas.MYSQL:
-			fmt.Fprintf(whereWriter, " LIMIT %d", limitValue)
+			condSQL = condSQL + fmt.Sprintf(" LIMIT %d", limitValue)
 		case schemas.SQLITE:
-			fmt.Fprintf(whereWriter, " LIMIT %d", limitValue)
-
+			tempCondSQL := condSQL + fmt.Sprintf(" LIMIT %d", limitValue)
 			cond = cond.And(builder.Expr(fmt.Sprintf("rowid IN (SELECT rowid FROM %v %v)",
-				session.engine.Quote(tableName), whereWriter.String()), whereWriter.Args()...))
-
-			whereWriter = builder.NewWriter()
-			fmt.Fprint(whereWriter, "WHERE ")
-			if err := cond.WriteTo(st.QuoteReplacer(whereWriter)); err != nil {
+				session.engine.Quote(tableName), tempCondSQL), condArgs...))
+			condSQL, condArgs, err = session.statement.GenCondSQL(cond)
+			if err != nil {
 				return 0, err
+			}
+			if len(condSQL) > 0 {
+				condSQL = "WHERE " + condSQL
 			}
 		case schemas.POSTGRES:
-			fmt.Fprintf(whereWriter, " LIMIT %d", limitValue)
-
+			tempCondSQL := condSQL + fmt.Sprintf(" LIMIT %d", limitValue)
 			cond = cond.And(builder.Expr(fmt.Sprintf("CTID IN (SELECT CTID FROM %v %v)",
-				session.engine.Quote(tableName), whereWriter.String()), whereWriter.Args()...))
-
-			whereWriter = builder.NewWriter()
-			fmt.Fprint(whereWriter, "WHERE ")
-			if err := cond.WriteTo(st.QuoteReplacer(whereWriter)); err != nil {
+				session.engine.Quote(tableName), tempCondSQL), condArgs...))
+			condSQL, condArgs, err = session.statement.GenCondSQL(cond)
+			if err != nil {
 				return 0, err
 			}
+
+			if len(condSQL) > 0 {
+				condSQL = "WHERE " + condSQL
+			}
 		case schemas.MSSQL:
-			if st.HasOrderBy() && table != nil && len(table.PrimaryKeys) == 1 {
+			if st.OrderStr != "" && table != nil && len(table.PrimaryKeys) == 1 {
 				cond = builder.Expr(fmt.Sprintf("%s IN (SELECT TOP (%d) %s FROM %v%v)",
 					table.PrimaryKeys[0], limitValue, table.PrimaryKeys[0],
-					session.engine.Quote(tableName), whereWriter.String()), whereWriter.Args()...)
+					session.engine.Quote(tableName), condSQL), condArgs...)
 
-				whereWriter = builder.NewWriter()
-				fmt.Fprint(whereWriter, "WHERE ")
-				if err := cond.WriteTo(whereWriter); err != nil {
+				condSQL, condArgs, err = session.statement.GenCondSQL(cond)
+				if err != nil {
 					return 0, err
+				}
+				if len(condSQL) > 0 {
+					condSQL = "WHERE " + condSQL
 				}
 			} else {
 				top = fmt.Sprintf("TOP (%d) ", limitValue)
@@ -402,7 +405,7 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 		}
 	}
 
-	tableAlias := session.engine.Quote(tableName)
+	var tableAlias = session.engine.Quote(tableName)
 	var fromSQL string
 	if session.statement.TableAlias != "" {
 		switch session.engine.dialect.URI().DBType {
@@ -414,19 +417,14 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 		}
 	}
 
-	updateWriter := builder.NewWriter()
-	if _, err := fmt.Fprintf(updateWriter, "UPDATE %v%v SET %v %v",
+	sqlStr = fmt.Sprintf("UPDATE %v%v SET %v %v%v",
 		top,
 		tableAlias,
 		strings.Join(colNames, ", "),
-		fromSQL); err != nil {
-		return 0, err
-	}
-	if err := utils.WriteBuilder(updateWriter, whereWriter); err != nil {
-		return 0, err
-	}
+		fromSQL,
+		condSQL)
 
-	res, err := session.exec(updateWriter.String(), append(args, updateWriter.Args()...)...)
+	res, err := session.exec(sqlStr, append(args, condArgs...)...)
 	if err != nil {
 		return 0, err
 	} else if doIncVer {
@@ -532,7 +530,7 @@ func (session *Session) genUpdateColumns(bean interface{}) ([]string, []interfac
 			}
 			args = append(args, val)
 
-			colName := col.Name
+			var colName = col.Name
 			session.afterClosures = append(session.afterClosures, func(bean interface{}) {
 				col := table.GetColumn(colName)
 				setColumnTime(bean, col, t)

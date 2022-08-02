@@ -51,10 +51,6 @@ type Postgres struct {
 }
 
 type PostgresSpec struct {
-	// AutoOps contains configuration of automatic ops-request-recommendation generation
-	// +optional
-	AutoOps AutoOpsSpec `json:"autoOps,omitempty"`
-
 	// Version of Postgres to be deployed.
 	Version string `json:"version"`
 
@@ -136,9 +132,6 @@ type PostgresSpec struct {
 	// +kubebuilder:default={namespaces:{from: Same}}
 	// +optional
 	AllowedSchemas *AllowedConsumers `json:"allowedSchemas,omitempty"`
-
-	// +optional
-	HealthCheck HealthCheckSpec `json:"healthCheck"`
 }
 
 // PostgreLeaderElectionConfig contains essential attributes of leader election.

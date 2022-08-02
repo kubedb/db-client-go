@@ -57,10 +57,12 @@ func (session *Session) FindAndCount(rowsSlicePtr interface{}, condiBean ...inte
 	if session.statement.SelectStr != "" {
 		session.statement.SelectStr = ""
 	}
-	if len(session.statement.ColumnMap) > 0 && !session.statement.IsDistinct {
+	if len(session.statement.ColumnMap) > 0 {
 		session.statement.ColumnMap = []string{}
 	}
-	session.statement.ResetOrderBy()
+	if session.statement.OrderStr != "" {
+		session.statement.OrderStr = ""
+	}
 	if session.statement.LimitN != nil {
 		session.statement.LimitN = nil
 	}
@@ -69,11 +71,7 @@ func (session *Session) FindAndCount(rowsSlicePtr interface{}, condiBean ...inte
 	}
 
 	// session has stored the conditions so we use `unscoped` to avoid duplicated condition.
-	if sliceElementType.Kind() == reflect.Struct {
-		return session.Unscoped().Count(reflect.New(sliceElementType).Interface())
-	}
-
-	return session.Unscoped().Count()
+	return session.Unscoped().Count(reflect.New(sliceElementType).Interface())
 }
 
 func (session *Session) find(rowsSlicePtr interface{}, condiBean ...interface{}) error {
@@ -83,15 +81,15 @@ func (session *Session) find(rowsSlicePtr interface{}, condiBean ...interface{})
 	}
 
 	sliceValue := reflect.Indirect(reflect.ValueOf(rowsSlicePtr))
-	isSlice := sliceValue.Kind() == reflect.Slice
-	isMap := sliceValue.Kind() == reflect.Map
+	var isSlice = sliceValue.Kind() == reflect.Slice
+	var isMap = sliceValue.Kind() == reflect.Map
 	if !isSlice && !isMap {
 		return errors.New("needs a pointer to a slice or a map")
 	}
 
 	sliceElementType := sliceValue.Type().Elem()
 
-	tp := tpStruct
+	var tp = tpStruct
 	if session.statement.RefTable == nil {
 		if sliceElementType.Kind() == reflect.Ptr {
 			if sliceElementType.Elem().Kind() == reflect.Struct {
@@ -154,6 +152,7 @@ func (session *Session) find(rowsSlicePtr interface{}, condiBean ...interface{})
 			if err != ErrCacheFailed {
 				return err
 			}
+			err = nil // !nashtsai! reset err to nil for ErrCacheFailed
 			session.engine.logger.Warnf("Cache Find Failed")
 		}
 	}
@@ -188,7 +187,7 @@ func (session *Session) noCacheFind(table *schemas.Table, containerValue reflect
 		return err
 	}
 
-	newElemFunc := func(fields []string) reflect.Value {
+	var newElemFunc = func(fields []string) reflect.Value {
 		return utils.New(elemType, len(fields), len(fields))
 	}
 
@@ -233,7 +232,7 @@ func (session *Session) noCacheFind(table *schemas.Table, containerValue reflect
 	}
 
 	if elemType.Kind() == reflect.Struct {
-		newValue := newElemFunc(fields)
+		var newValue = newElemFunc(fields)
 		tb, err := session.engine.tagParser.ParseWithCache(newValue)
 		if err != nil {
 			return err
@@ -247,14 +246,14 @@ func (session *Session) noCacheFind(table *schemas.Table, containerValue reflect
 	}
 
 	for rows.Next() {
-		newValue := newElemFunc(fields)
+		var newValue = newElemFunc(fields)
 		bean := newValue.Interface()
 
 		switch elemType.Kind() {
 		case reflect.Slice:
-			err = session.getSlice(rows, types, fields, bean)
+			err = rows.ScanSlice(bean)
 		case reflect.Map:
-			err = session.getMap(rows, types, fields, bean)
+			err = rows.ScanMap(bean)
 		default:
 			err = rows.Scan(bean)
 		}
@@ -308,7 +307,7 @@ func (session *Session) cacheFind(t reflect.Type, sqlStr string, rowsSlicePtr in
 				session.engine.logger.Debugf("[cacheFind] ids length > 500, no cache")
 				return ErrCacheFailed
 			}
-			res := make([]string, len(table.PrimaryKeys))
+			var res = make([]string, len(table.PrimaryKeys))
 			err = rows.ScanSlice(&res)
 			if err != nil {
 				return err
@@ -340,7 +339,7 @@ func (session *Session) cacheFind(t reflect.Type, sqlStr string, rowsSlicePtr in
 
 	ididxes := make(map[string]int)
 	var ides []schemas.PK
-	temps := make([]interface{}, len(ids))
+	var temps = make([]interface{}, len(ids))
 
 	for idx, id := range ids {
 		sid, err := id.ToString()
@@ -455,7 +454,7 @@ func (session *Session) cacheFind(t reflect.Type, sqlStr string, rowsSlicePtr in
 				sliceValue.Set(reflect.Append(sliceValue, reflect.Indirect(reflect.ValueOf(bean))))
 			}
 		} else if sliceValue.Kind() == reflect.Map {
-			key := ids[j]
+			var key = ids[j]
 			keyType := sliceValue.Type().Key()
 			keyValue := reflect.New(keyType)
 			var ikey interface{}

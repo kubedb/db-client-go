@@ -2,11 +2,6 @@
 kind: pipeline
 name: testing
 
-trigger:
-  ref:
-  - refs/heads/master
-  - refs/pull/*/head
-
 steps:
 - name: test
   pull: default
@@ -17,5 +12,10 @@ steps:
   - go vet
   - go test -v -race -coverprofile=coverage.txt -covermode=atomic
   environment:
-    GOPROXY: https://goproxy.io
+    GOPROXY: https://goproxy.cn
     GO111MODULE: "on"
+  when:
+    event:
+    - push
+    - tag
+    - pull_request

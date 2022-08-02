@@ -37,7 +37,7 @@ type Interface interface {
 	Exist(bean ...interface{}) (bool, error)
 	Find(interface{}, ...interface{}) error
 	FindAndCount(interface{}, ...interface{}) (int64, error)
-	Get(...interface{}) (bool, error)
+	Get(interface{}) (bool, error)
 	GroupBy(keys string) *Session
 	ID(interface{}) *Session
 	In(string, ...interface{}) *Session
@@ -54,7 +54,7 @@ type Interface interface {
 	Nullable(...string) *Session
 	Join(joinOperator string, tablename interface{}, condition string, args ...interface{}) *Session
 	Omit(columns ...string) *Session
-	OrderBy(order interface{}, args ...interface{}) *Session
+	OrderBy(order string) *Session
 	Ping() error
 	Query(sqlOrArgs ...interface{}) (resultsSlice []map[string][]byte, err error)
 	QueryInterface(sqlOrArgs ...interface{}) ([]map[string]interface{}, error)
@@ -99,7 +99,6 @@ type EngineInterface interface {
 	MapCacher(interface{}, caches.Cacher) error
 	NewSession() *Session
 	NoAutoTime() *Session
-	Prepare() *Session
 	Quote(string) string
 	SetCacher(string, caches.Cacher)
 	SetConnMaxLifetime(time.Duration)

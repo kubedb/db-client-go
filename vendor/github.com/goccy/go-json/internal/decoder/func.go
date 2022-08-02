@@ -76,7 +76,7 @@ func (d *funcDecoder) DecodeStream(s *Stream, depth int64, p unsafe.Pointer) err
 			}
 		}
 	}
-	return errors.ErrInvalidBeginningOfValue(s.buf[s.cursor], s.totalOffset())
+	return errors.ErrNotAtBeginningOfValue(start)
 }
 
 func (d *funcDecoder) Decode(ctx *RuntimeContext, cursor, depth int64, p unsafe.Pointer) (int64, error) {
@@ -137,5 +137,5 @@ func (d *funcDecoder) Decode(ctx *RuntimeContext, cursor, depth int64, p unsafe.
 			}
 		}
 	}
-	return cursor, errors.ErrInvalidBeginningOfValue(buf[cursor], cursor)
+	return 0, errors.ErrNotAtBeginningOfValue(start)
 }

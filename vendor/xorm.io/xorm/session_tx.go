@@ -75,7 +75,7 @@ func (session *Session) Commit() error {
 		}
 		cleanUpFunc := func(slices *map[interface{}]*[]func(interface{})) {
 			if len(*slices) > 0 {
-				*slices = make(map[interface{}]*[]func(interface{}))
+				*slices = make(map[interface{}]*[]func(interface{}), 0)
 			}
 		}
 		cleanUpFunc(&session.afterInsertBeans)

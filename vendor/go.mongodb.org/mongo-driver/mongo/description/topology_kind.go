@@ -16,7 +16,6 @@ const (
 	ReplicaSetNoPrimary   TopologyKind = 4 + ReplicaSet
 	ReplicaSetWithPrimary TopologyKind = 8 + ReplicaSet
 	Sharded               TopologyKind = 256
-	LoadBalanced          TopologyKind = 512
 )
 
 // String implements the fmt.Stringer interface.
@@ -32,8 +31,6 @@ func (kind TopologyKind) String() string {
 		return "ReplicaSetWithPrimary"
 	case Sharded:
 		return "Sharded"
-	case LoadBalanced:
-		return "LoadBalanced"
 	}
 
 	return "Unknown"

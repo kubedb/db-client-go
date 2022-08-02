@@ -6,7 +6,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/elastic/go-elasticsearch/v5 v5.6.1
 	github.com/elastic/go-elasticsearch/v6 v6.8.10
-	github.com/elastic/go-elasticsearch/v7 v7.13.1
+	github.com/elastic/go-elasticsearch/v7 v7.17.1
 	github.com/elastic/go-elasticsearch/v8 v8.2.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/go-sql-driver/mysql v1.6.0
@@ -14,8 +14,6 @@ require (
 	github.com/pkg/errors v0.9.1
 	go.mongodb.org/mongo-driver v1.9.1
 	k8s.io/api v0.21.1
-	k8s.io/apimachinery v0.21.1
-	k8s.io/client-go v0.21.1
 	k8s.io/klog/v2 v2.9.0
 	kmodules.xyz/client-go v0.0.0-20220512223652-dc247aa7f6df
 	kubedb.dev/apimachinery v0.26.1-0.20220519193141-3634eb14c9ac
@@ -92,6 +90,8 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	k8s.io/apiextensions-apiserver v0.21.1 // indirect
+	k8s.io/apimachinery v0.21.1 // indirect
+	k8s.io/client-go v0.21.1 // indirect
 	k8s.io/component-base v0.21.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65 // indirect
 	k8s.io/utils v0.0.0-20210930125809-cb0fa318a74b // indirect

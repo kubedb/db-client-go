@@ -225,7 +225,6 @@ spec:
                 - Failed
                 - Approved
                 - Denied
-                - Skipped
                 type: string
             type: object
         type: object

@@ -175,8 +175,8 @@ func (condIn condIn) WriteTo(w Writer) error {
 			return err
 		}
 		w.Append(vals...)
-	case *Expression:
-		val := condIn.vals[0].(*Expression)
+	case expr:
+		val := condIn.vals[0].(expr)
 		if _, err := fmt.Fprintf(w, "%s IN (", condIn.col); err != nil {
 			return err
 		}

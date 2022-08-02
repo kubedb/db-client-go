@@ -11,6 +11,7 @@ import (
 
 	"xorm.io/builder"
 	"xorm.io/xorm/core"
+	"xorm.io/xorm/internal/utils"
 )
 
 // Rows rows wrapper a rows to
@@ -40,7 +41,7 @@ func newRows(session *Session, bean interface{}) (*Rows, error) {
 		return nil, err
 	}
 
-	if len(session.statement.TableName()) == 0 {
+	if len(session.statement.TableName()) <= 0 {
 		return nil, ErrTableNotFound
 	}
 
@@ -98,26 +99,17 @@ func (rows *Rows) Err() error {
 }
 
 // Scan row record to bean properties
-func (rows *Rows) Scan(beans ...interface{}) error {
+func (rows *Rows) Scan(bean interface{}) error {
 	if rows.Err() != nil {
 		return rows.Err()
 	}
 
-	var bean = beans[0]
-	var tp = reflect.TypeOf(bean)
-	if tp.Kind() == reflect.Ptr {
-		tp = tp.Elem()
+	if reflect.Indirect(reflect.ValueOf(bean)).Type() != rows.beanType {
+		return fmt.Errorf("scan arg is incompatible type to [%v]", rows.beanType)
 	}
-	var beanKind = tp.Kind()
 
-	if len(beans) == 1 {
-		if reflect.Indirect(reflect.ValueOf(bean)).Type() != rows.beanType {
-			return fmt.Errorf("scan arg is incompatible type to [%v]", rows.beanType)
-		}
-
-		if err := rows.session.statement.SetRefBean(bean); err != nil {
-			return err
-		}
+	if err := rows.session.statement.SetRefBean(bean); err != nil {
+		return err
 	}
 
 	fields, err := rows.rows.Columns()
@@ -129,7 +121,14 @@ func (rows *Rows) Scan(beans ...interface{}) error {
 		return err
 	}
 
-	if err := rows.session.scan(rows.rows, rows.session.statement.RefTable, beanKind, beans, types, fields); err != nil {
+	scanResults, err := rows.session.row2Slice(rows.rows, fields, types, bean)
+	if err != nil {
+		return err
+	}
+
+	dataStruct := utils.ReflectValue(bean)
+	_, err = rows.session.slice2Bean(scanResults, fields, bean, &dataStruct, rows.session.statement.RefTable)
+	if err != nil {
 		return err
 	}
 
@@ -146,5 +145,5 @@ func (rows *Rows) Close() error {
 		return rows.rows.Close()
 	}
 
-	return nil
+	return rows.Err()
 }

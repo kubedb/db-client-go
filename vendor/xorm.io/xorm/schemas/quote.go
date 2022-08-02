@@ -37,7 +37,7 @@ func (q Quoter) IsEmpty() bool {
 // Quote quote a string
 func (q Quoter) Quote(s string) string {
 	var buf strings.Builder
-	_ = q.QuoteTo(&buf, s)
+	q.QuoteTo(&buf, s)
 	return buf.String()
 }
 
@@ -64,7 +64,7 @@ func (q Quoter) Trim(s string) string {
 // Join joins a slice with quoters
 func (q Quoter) Join(a []string, sep string) string {
 	var b strings.Builder
-	_ = q.JoinWrite(&b, a, sep)
+	q.JoinWrite(&b, a, sep)
 	return b.String()
 }
 
@@ -86,9 +86,7 @@ func (q Quoter) JoinWrite(b *strings.Builder, a []string, sep string) error {
 				return err
 			}
 		}
-		if err := q.QuoteTo(b, strings.TrimSpace(s)); err != nil {
-			return err
-		}
+		q.QuoteTo(b, strings.TrimSpace(s))
 	}
 	return nil
 }
@@ -123,7 +121,7 @@ func findStart(value string, start int) int {
 	}
 
 	if (value[k] == 'A' || value[k] == 'a') && (value[k+1] == 'S' || value[k+1] == 's') {
-		k += 2
+		k = k + 2
 	}
 
 	for j := k; j < len(value); j++ {

@@ -9,7 +9,6 @@ package connstring // import "go.mongodb.org/mongo-driver/x/mongo/driver/connstr
 import (
 	"errors"
 	"fmt"
-	"math/rand"
 	"net"
 	"net/url"
 	"strconv"
@@ -17,14 +16,10 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/internal"
-	"go.mongodb.org/mongo-driver/internal/randutil"
 	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/dns"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/wiremessage"
 )
-
-// random is a package-global pseudo-random number generator.
-var random = randutil.NewLockedRand(rand.NewSource(randutil.CryptoSeed()))
 
 // ParseAndValidate parses the provided URI into a ConnString object.
 // It check that all values are valid.
@@ -75,8 +70,6 @@ type ConnString struct {
 	Hosts                              []string
 	J                                  bool
 	JSet                               bool
-	LoadBalanced                       bool
-	LoadBalancedSet                    bool
 	LocalThreshold                     time.Duration
 	LocalThresholdSet                  bool
 	MaxConnIdleTime                    time.Duration
@@ -85,8 +78,6 @@ type ConnString struct {
 	MaxPoolSizeSet                     bool
 	MinPoolSize                        uint64
 	MinPoolSizeSet                     bool
-	MaxConnecting                      uint64
-	MaxConnectingSet                   bool
 	Password                           string
 	PasswordSet                        bool
 	ReadConcernLevel                   string
@@ -104,8 +95,6 @@ type ConnString struct {
 	ServerSelectionTimeoutSet          bool
 	SocketTimeout                      time.Duration
 	SocketTimeoutSet                   bool
-	SRVMaxHosts                        int
-	SRVServiceName                     string
 	SSL                                bool
 	SSLSet                             bool
 	SSLClientCertificateKeyFile        string
@@ -263,25 +252,14 @@ func (p *parser) parse(original string) error {
 		hosts = uri[:idx]
 	}
 
-	parsedHosts := strings.Split(hosts, ",")
-	uri = uri[len(hosts):]
-	extractedDatabase, err := extractDatabaseFromURI(uri)
-	if err != nil {
-		return err
-	}
-
-	uri = extractedDatabase.uri
-	p.Database = extractedDatabase.db
-
-	// grab connection arguments from URI
-	connectionArgsFromQueryString, err := extractQueryArgsFromURI(uri)
-	if err != nil {
-		return err
-	}
-
-	// grab connection arguments from TXT record and enable SSL if "mongodb+srv://"
 	var connectionArgsFromTXT []string
+	parsedHosts := strings.Split(hosts, ",")
+
 	if p.Scheme == SchemeMongoDBSRV {
+		parsedHosts, err = p.dnsResolver.ParseHosts(hosts, true)
+		if err != nil {
+			return err
+		}
 		connectionArgsFromTXT, err = p.dnsResolver.GetConnectionArgsFromTXT(hosts)
 		if err != nil {
 			return err
@@ -292,32 +270,6 @@ func (p *parser) parse(original string) error {
 		p.SSLSet = true
 	}
 
-	// add connection arguments from URI and TXT records to connstring
-	connectionArgPairs := append(connectionArgsFromTXT, connectionArgsFromQueryString...)
-	for _, pair := range connectionArgPairs {
-		err := p.addOption(pair)
-		if err != nil {
-			return err
-		}
-	}
-
-	// do SRV lookup if "mongodb+srv://"
-	if p.Scheme == SchemeMongoDBSRV {
-		parsedHosts, err = p.dnsResolver.ParseHosts(hosts, p.SRVServiceName, true)
-		if err != nil {
-			return err
-		}
-
-		// If p.SRVMaxHosts is non-zero and is less than the number of hosts, randomly
-		// select SRVMaxHosts hosts from parsedHosts.
-		if p.SRVMaxHosts > 0 && p.SRVMaxHosts < len(parsedHosts) {
-			random.Shuffle(len(parsedHosts), func(i, j int) {
-				parsedHosts[i], parsedHosts[j] = parsedHosts[j], parsedHosts[i]
-			})
-			parsedHosts = parsedHosts[:p.SRVMaxHosts]
-		}
-	}
-
 	for _, host := range parsedHosts {
 		err = p.addHost(host)
 		if err != nil {
@@ -326,6 +278,26 @@ func (p *parser) parse(original string) error {
 	}
 	if len(p.Hosts) == 0 {
 		return fmt.Errorf("must have at least 1 host")
+	}
+
+	uri = uri[len(hosts):]
+
+	extractedDatabase, err := extractDatabaseFromURI(uri)
+	if err != nil {
+		return err
+	}
+
+	uri = extractedDatabase.uri
+	p.Database = extractedDatabase.db
+
+	connectionArgsFromQueryString, err := extractQueryArgsFromURI(uri)
+	connectionArgPairs := append(connectionArgsFromTXT, connectionArgsFromQueryString...)
+
+	for _, pair := range connectionArgPairs {
+		err = p.addOption(pair)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = p.setDefaultAuthParams(extractedDatabase.db)
@@ -365,29 +337,6 @@ func (p *parser) validate() error {
 		}
 		if p.Scheme == SchemeMongoDBSRV {
 			return errors.New("a direct connection cannot be made if an SRV URI is used")
-		}
-		if p.LoadBalancedSet && p.LoadBalanced {
-			return internal.ErrLoadBalancedWithDirectConnection
-		}
-	}
-
-	// Validation for load-balanced mode.
-	if p.LoadBalancedSet && p.LoadBalanced {
-		if len(p.Hosts) > 1 {
-			return internal.ErrLoadBalancedWithMultipleHosts
-		}
-		if p.ReplicaSet != "" {
-			return internal.ErrLoadBalancedWithReplicaSet
-		}
-	}
-
-	// Check for invalid use of SRVMaxHosts.
-	if p.SRVMaxHosts > 0 {
-		if p.ReplicaSet != "" {
-			return internal.ErrSRVMaxHostsWithReplicaSet
-		}
-		if p.LoadBalanced {
-			return internal.ErrSRVMaxHostsWithLoadBalanced
 		}
 	}
 
@@ -694,17 +643,6 @@ func (p *parser) addOption(pair string) error {
 		}
 
 		p.JSet = true
-	case "loadbalanced":
-		switch value {
-		case "true":
-			p.LoadBalanced = true
-		case "false":
-			p.LoadBalanced = false
-		default:
-			return fmt.Errorf("invalid value for %s: %s", key, value)
-		}
-
-		p.LoadBalancedSet = true
 	case "localthresholdms":
 		n, err := strconv.Atoi(value)
 		if err != nil || n < 0 {
@@ -733,22 +671,13 @@ func (p *parser) addOption(pair string) error {
 		}
 		p.MinPoolSize = uint64(n)
 		p.MinPoolSizeSet = true
-	case "maxconnecting":
-		n, err := strconv.Atoi(value)
-		if err != nil || n < 0 {
-			return fmt.Errorf("invalid value for %s: %s", key, value)
-		}
-		p.MaxConnecting = uint64(n)
-		p.MaxConnectingSet = true
 	case "readconcernlevel":
 		p.ReadConcernLevel = value
 	case "readpreference":
 		p.ReadPreference = value
 	case "readpreferencetags":
 		if value == "" {
-			// If "readPreferenceTags=" is supplied, append an empty map to tag sets to
-			// represent a wild-card.
-			p.ReadPreferenceTagSets = append(p.ReadPreferenceTagSets, map[string]string{})
+			// for when readPreferenceTags= at end of URI
 			break
 		}
 
@@ -807,31 +736,6 @@ func (p *parser) addOption(pair string) error {
 		}
 		p.SocketTimeout = time.Duration(n) * time.Millisecond
 		p.SocketTimeoutSet = true
-	case "srvmaxhosts":
-		// srvMaxHosts can only be set on URIs with the "mongodb+srv" scheme
-		if p.Scheme != SchemeMongoDBSRV {
-			return fmt.Errorf("cannot specify srvMaxHosts on non-SRV URI")
-		}
-
-		n, err := strconv.Atoi(value)
-		if err != nil || n < 0 {
-			return fmt.Errorf("invalid value for %s: %s", key, value)
-		}
-		p.SRVMaxHosts = n
-	case "srvservicename":
-		// srvServiceName can only be set on URIs with the "mongodb+srv" scheme
-		if p.Scheme != SchemeMongoDBSRV {
-			return fmt.Errorf("cannot specify srvServiceName on non-SRV URI")
-		}
-
-		// srvServiceName must be between 1 and 62 characters according to
-		// our specification. Empty service names are not valid, and the service
-		// name (including prepended underscore) should not exceed the 63 character
-		// limit for DNS query subdomains.
-		if len(value) < 1 || len(value) > 62 {
-			return fmt.Errorf("srvServiceName value must be between 1 and 62 characters")
-		}
-		p.SRVServiceName = value
 	case "ssl", "tls":
 		switch value {
 		case "true":
