@@ -86,6 +86,10 @@ func (o *KubeDBClientBuilder) WithCerts(certs *certholder.ResourceCerts) *KubeDB
 func (o *KubeDBClientBuilder) GetMongoClient() (*Client, error) {
 	db := o.db
 
+	if o.ctx == nil {
+		o.ctx = context.Background()
+	}
+
 	if o.podName != "" {
 		o.url = o.getURL()
 	}
