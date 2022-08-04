@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 7.13.1: DO NOT EDIT
+// Code generated from specification version 7.17.1: DO NOT EDIT
 
 package esapi
 
@@ -38,8 +38,6 @@ func newGetScriptLanguagesFunc(t Transport) GetScriptLanguages {
 // ----- API Definition -------------------------------------------------------
 
 // GetScriptLanguages returns available script types, languages and contexts
-//
-// This API is experimental.
 //
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/modules-scripting.html.
 //

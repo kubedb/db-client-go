@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 7.13.1: DO NOT EDIT
+// Code generated from specification version 7.17.1: DO NOT EDIT
 
 package esapi
 
@@ -39,8 +39,6 @@ func newMonitoringBulkFunc(t Transport) MonitoringBulk {
 // ----- API Definition -------------------------------------------------------
 
 // MonitoringBulk - Used by the monitoring features to send monitoring data.
-//
-// This API is experimental.
 //
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/monitor-elasticsearch-cluster.html.
 //

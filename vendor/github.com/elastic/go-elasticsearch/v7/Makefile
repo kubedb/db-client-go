@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-ELASTICSEARCH_DEFAULT_BUILD_VERSION = "7.13.1-SNAPSHOT"
+ELASTICSEARCH_DEFAULT_BUILD_VERSION = "7.17.1-SNAPSHOT"
 
 ##@ Test
 test-unit:  ## Run unit tests
@@ -101,7 +101,7 @@ test-examples: ## Execute the _examples
 			printf "\033[2m────────────────────────────────────────────────────────────────────────────────\n"; \
 			printf "\033[1mUpdating dependencies for $$d\033[0m\n"; \
 			printf "\033[2m────────────────────────────────────────────────────────────────────────────────\033[0m\n"; \
-			(cd $$d && go mod download) || \
+			(cd $$d && go mod download && make setup) || \
 			( \
 				printf "\033[31m────────────────────────────────────────────────────────────────────────────────\033[0m\n"; \
 				printf "\033[31;1m⨯ ERROR\033[0m\n"; \
@@ -152,7 +152,7 @@ lint:  ## Run lint on the package
 		set -e ; \
 		trap "test -d ../../../.git && git checkout --quiet go.mod" INT TERM EXIT; \
 		echo "cd internal/build/ && go vet ./..."; \
-		cd "internal/build/" && go mod download && go vet ./...; \
+		cd "internal/build/" && go mod tidy && go mod download && go vet ./...; \
 	}
 
 
@@ -187,7 +187,7 @@ ifeq ($(origin commits), undefined)
 	@exit 2
 endif
 ifndef branches
-	$(eval branches_list = '7.x' '6.x' '5.x')
+	$(eval branches_list = '7.17' '6.x' '5.x')
 else
 	$(eval branches_list = $(shell echo $(branches) | tr ',' ' ') )
 endif
@@ -267,7 +267,7 @@ godoc: ## Display documentation for the package
 	godoc --http=localhost:6060 --play
 
 cluster: ## Launch an Elasticsearch cluster with Docker
-	$(eval version ?= "elasticsearch:7.13.1-SNAPSHOT")
+	$(eval version ?= "elasticsearch:7.17.1-SNAPSHOT")
 	$(eval flavor ?= "core")
 	$(eval elasticsearch_url = "http://es1:9200")
 

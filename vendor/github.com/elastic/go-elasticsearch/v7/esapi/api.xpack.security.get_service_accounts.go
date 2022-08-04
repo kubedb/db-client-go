@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 7.13.1: DO NOT EDIT
+// Code generated from specification version 7.17.1: DO NOT EDIT
 
 package esapi
 
@@ -38,8 +38,6 @@ func newSecurityGetServiceAccountsFunc(t Transport) SecurityGetServiceAccounts {
 // ----- API Definition -------------------------------------------------------
 
 // SecurityGetServiceAccounts - Retrieves information about service accounts.
-//
-// This API is beta.
 //
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-get-service-accounts.html.
 //
