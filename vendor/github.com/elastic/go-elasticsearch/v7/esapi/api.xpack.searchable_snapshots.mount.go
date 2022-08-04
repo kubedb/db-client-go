@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 7.13.1: DO NOT EDIT
+// Code generated from specification version 7.17.1: DO NOT EDIT
 
 package esapi
 
@@ -41,8 +41,6 @@ func newSearchableSnapshotsMountFunc(t Transport) SearchableSnapshotsMount {
 // ----- API Definition -------------------------------------------------------
 
 // SearchableSnapshotsMount - Mount a snapshot as a searchable index.
-//
-// This API is experimental.
 //
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/searchable-snapshots-api-mount-snapshot.html.
 //

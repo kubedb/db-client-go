@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 7.13.1: DO NOT EDIT
+// Code generated from specification version 7.17.1: DO NOT EDIT
 
 package esapi
 
@@ -27,7 +27,7 @@ import (
 
 func newSecurityCreateServiceTokenFunc(t Transport) SecurityCreateServiceToken {
 	return func(namespace string, service string, o ...func(*SecurityCreateServiceTokenRequest)) (*Response, error) {
-		var r = SecurityCreateServiceTokenRequest{Namespace: namespace, Service: service}
+		var r = SecurityCreateServiceTokenRequest{Service: service, Namespace: namespace}
 		for _, f := range o {
 			f(&r)
 		}
@@ -38,8 +38,6 @@ func newSecurityCreateServiceTokenFunc(t Transport) SecurityCreateServiceToken {
 // ----- API Definition -------------------------------------------------------
 
 // SecurityCreateServiceToken - Creates a service account token for access without requiring basic authentication.
-//
-// This API is beta.
 //
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-create-service-token.html.
 //
