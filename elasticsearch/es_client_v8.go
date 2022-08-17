@@ -143,7 +143,7 @@ func (es *ESClientV8) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 		Pretty: true,
 	}.Do(ctx, es.client.Transport)
 	if err3 != nil {
-		return errors.Wrap(err3, fmt.Sprintf("Failed to perform write request"))
+		return errors.Wrap(err3, "Failed to perform write request")
 	}
 	if res.IsError() {
 		return errors.New(fmt.Sprintf("Failed to get response from write request with error statuscode %d", res.StatusCode))
