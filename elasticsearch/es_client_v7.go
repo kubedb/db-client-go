@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
@@ -36,10 +35,22 @@ import (
 )
 
 var _ ESClient = &ESClientV7{}
+var healthCheckerIndex = "kubedb-system"
 
 type ESClientV7 struct {
 	client *esv7.Client
 }
+
+//type MetadataRequest struct {
+//	Labels            map[string]string
+//	Name              string
+//	Namespace         string
+//	Generation        string
+//	UID               string
+//	ResourceVersion   string
+//	CreationTimestamp string
+//	Annotations       map[string]string
+//}
 
 func (es *ESClientV7) ClusterHealthInfo() (map[string]interface{}, error) {
 	res, err := es.client.Cluster.Health(
@@ -184,25 +195,26 @@ func (es *ESClientV7) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 		},
 	}
 
-	reqBody := map[string]interface{}{
-		"Metadata": map[string]interface{}{
-			"labels":            db.OffshootLabels(),
-			"name":              db.GetName(),
-			"Namespace":         db.GetNamespace(),
-			"Generation":        strconv.FormatInt(db.GetGeneration(), 10),
-			"uid":               string(db.GetUID()),
-			"ResourceVersion":   db.GetResourceVersion(),
-			"creationTimestamp": db.GetCreationTimestamp().String(),
-			"annotations":       db.GetAnnotations(),
-		},
-	}
+	//
+	//reqBody := map[string]interface{}{
+	//	"Metadata": map[string]interface{}{
+	//		"labels":            db.OffshootLabels(),
+	//		"name":              db.GetName(),
+	//		"Namespace":         db.GetNamespace(),
+	//		"Generation":        strconv.FormatInt(db.GetGeneration(), 10),
+	//		"uid":               string(db.GetUID()),
+	//		"ResourceVersion":   db.GetResourceVersion(),
+	//		"creationTimestamp": db.GetCreationTimestamp().String(),
+	//		"annotations":       db.GetAnnotations(),
+	//	},
+	//}
 
 	// encode the request index & request body
 	index, err1 := json.Marshal(indexReq)
 	if err1 != nil {
 		return errors.Wrap(err1, "Failed to encode index for performing write request")
 	}
-	body, err2 := json.Marshal(reqBody)
+	body, err2 := json.Marshal(db)
 	if err2 != nil {
 		return errors.Wrap(err2, "Failed to encode request body for performing write request")
 	}
@@ -210,7 +222,7 @@ func (es *ESClientV7) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 	// make write request & fetch response
 	// check for write request failure & error from response body
 	res, err3 := esapi.BulkRequest{
-		Index:  "kubedb-system",
+		Index:  healthCheckerIndex,
 		Body:   strings.NewReader(strings.Join([]string{string(index), string(body)}, "\n") + "\n"),
 		Pretty: true,
 	}.Do(ctx, es.client.Transport)
@@ -249,7 +261,7 @@ func (es *ESClientV7) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 
 func (es *ESClientV7) GetClusterReadStatus(ctx context.Context, db *api.Elasticsearch) error {
 	res, err := esapi.GetRequest{
-		Index:      "kubedb-system",
+		Index:      healthCheckerIndex,
 		DocumentID: "info",
 	}.Do(ctx, es.client.Transport)
 
