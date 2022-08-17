@@ -186,7 +186,7 @@ func (es *ESClientV7) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 
 	reqBody := map[string]interface{}{
 		"Metadata": map[string]interface{}{
-			"labels":            db.Labels,
+			"labels":            db.OffshootLabels(),
 			"name":              db.GetName(),
 			"Namespace":         db.GetNamespace(),
 			"Generation":        strconv.FormatInt(db.GetGeneration(), 10),
