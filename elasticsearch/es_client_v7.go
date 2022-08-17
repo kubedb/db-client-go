@@ -184,10 +184,9 @@ func (es *ESClientV7) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 		},
 	}
 
-	var dbLabels interface{} = db.OffshootLabels()
 	reqBody := map[string]interface{}{
-		"Labels": dbLabels,
 		"Metadata": map[string]interface{}{
+			"labels":            db.OffshootLabels(),
 			"name":              db.GetName(),
 			"Namespace":         db.GetNamespace(),
 			"Generation":        strconv.FormatInt(db.GetGeneration(), 10),
