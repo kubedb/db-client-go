@@ -239,7 +239,7 @@ func (es *ESClientV7) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 			if !strValue {
 				return nil
 			}
-			return errors.New("Write request responded with error")
+			return errors.Errorf("Write request responded with error", responseBody)
 		}
 		return errors.New("Failed to parse value for `errors` in response from write request")
 	}
