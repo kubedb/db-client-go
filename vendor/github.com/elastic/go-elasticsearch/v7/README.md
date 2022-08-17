@@ -4,27 +4,26 @@ The official Go client for [Elasticsearch](https://www.elastic.co/products/elast
 
 [![GoDoc](https://godoc.org/github.com/elastic/go-elasticsearch?status.svg)](https://pkg.go.dev/github.com/elastic/go-elasticsearch/v7)
 [![Go Report Card](https://goreportcard.com/badge/github.com/elastic/go-elasticsearch)](https://goreportcard.com/report/github.com/elastic/go-elasticsearch)
-[![codecov.io](https://codecov.io/github/elastic/go-elasticsearch/coverage.svg?branch=main)](https://codecov.io/gh/elastic/go-elasticsearch?branch=main)
-[![Build](https://github.com/elastic/go-elasticsearch/workflows/Build/badge.svg)](https://github.com/elastic/go-elasticsearch/actions?query=branch%3Amain)
-[![Unit](https://github.com/elastic/go-elasticsearch/workflows/Unit/badge.svg)](https://github.com/elastic/go-elasticsearch/actions?query=branch%3Amain)
-[![Integration](https://github.com/elastic/go-elasticsearch/workflows/Integration/badge.svg)](https://github.com/elastic/go-elasticsearch/actions?query=branch%3Amain)
-[![API](https://github.com/elastic/go-elasticsearch/workflows/API/badge.svg)](https://github.com/elastic/go-elasticsearch/actions?query=branch%3Amain)
+[![codecov.io](https://codecov.io/github/elastic/go-elasticsearch/coverage.svg?branch=master)](https://codecov.io/gh/elastic/go-elasticsearch?branch=master)
+[![Build](https://github.com/elastic/go-elasticsearch/workflows/Build/badge.svg)](https://github.com/elastic/go-elasticsearch/actions?query=branch%3A7.x)
+[![Unit](https://github.com/elastic/go-elasticsearch/workflows/Unit/badge.svg)](https://github.com/elastic/go-elasticsearch/actions?query=branch%3A7.x)
+[![Integration](https://github.com/elastic/go-elasticsearch/workflows/Integration/badge.svg)](https://github.com/elastic/go-elasticsearch/actions?query=branch%3A7.x)
+[![API](https://github.com/elastic/go-elasticsearch/workflows/API/badge.svg)](https://github.com/elastic/go-elasticsearch/actions?query=branch%3A7.x)
 
 ## Compatibility
 
-Language clients are forward compatible; meaning that clients support communicating with greater or equal minor versions of Elasticsearch.
-Elasticsearch language clients are only backwards compatible with default distributions and without guarantees made.
+The client major versions correspond to the compatible Elasticsearch major versions: to connect to Elasticsearch `7.x`, use a [`7.x`](https://github.com/elastic/go-elasticsearch/tree/7.x) version of the client, to connect to Elasticsearch `6.x`, use a [`6.x`](https://github.com/elastic/go-elasticsearch/tree/6.x) version of the client.
 
 When using Go modules, include the version in the import path, and specify either an explicit version or a branch:
 
-    require github.com/elastic/go-elasticsearch/v7 7.16
+    require github.com/elastic/go-elasticsearch/v7 7.x
     require github.com/elastic/go-elasticsearch/v7 7.0.0
 
 It's possible to use multiple versions of the client in a single project:
 
     // go.mod
     github.com/elastic/go-elasticsearch/v6 6.x
-    github.com/elastic/go-elasticsearch/v7 7.16
+    github.com/elastic/go-elasticsearch/v7 7.x
 
     // main.go
     import (
@@ -35,7 +34,7 @@ It's possible to use multiple versions of the client in a single project:
     es6, _ := elasticsearch6.NewDefaultClient()
     es7, _ := elasticsearch7.NewDefaultClient()
 
-The `main` branch of the client is compatible with the current `master` branch of Elasticsearch.
+The `master` branch of the client is compatible with the current `master` branch of Elasticsearch.
 
 <!-- ----------------------------------------------------------------------------------------------- -->
 
@@ -43,11 +42,11 @@ The `main` branch of the client is compatible with the current `master` branch o
 
 Add the package to your `go.mod` file:
 
-    require github.com/elastic/go-elasticsearch/v8 main
+    require github.com/elastic/go-elasticsearch/v7 7.x
 
 Or, clone the repository:
 
-    git clone --branch main https://github.com/elastic/go-elasticsearch.git $GOPATH/src/github.com/elastic/go-elasticsearch
+    git clone --branch 7.x https://github.com/elastic/go-elasticsearch.git $GOPATH/src/github.com/elastic/go-elasticsearch
 
 A complete example:
 
@@ -57,7 +56,7 @@ mkdir my-elasticsearch-app && cd my-elasticsearch-app
 cat > go.mod <<-END
   module my-elasticsearch-app
 
-  require github.com/elastic/go-elasticsearch/v8 main
+  require github.com/elastic/go-elasticsearch/v7 7.x
 END
 
 cat > main.go <<-END
@@ -159,7 +158,7 @@ cfg := elasticsearch.Config{
     MaxIdleConnsPerHost:   10,
     ResponseHeaderTimeout: time.Second,
     TLSClientConfig: &tls.Config{
-      MinVersion: tls.VersionTLS12,
+      MinVersion: tls.VersionTLS11,
       // ...
     },
     // ...

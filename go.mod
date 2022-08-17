@@ -115,6 +115,8 @@ replace k8s.io/apiserver => github.com/kmodules/apiserver v0.0.0-20220603223637-
 
 replace k8s.io/kubernetes => github.com/kmodules/kubernetes v1.25.0-alpha.0.0.20220603172133-1c9d09d1b3b8
 
+replace github.com/elastic/go-elasticsearch/v7 => github.com/elastic/go-elasticsearch/v7 v7.13.1
+
 replace (
 	go.opentelemetry.io/contrib => go.opentelemetry.io/contrib v0.20.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc => go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.20.0

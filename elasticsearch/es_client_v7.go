@@ -176,7 +176,7 @@ func (es *ESClientV7) SyncCredentialFromSecret(secret *core.Secret) error {
 }
 
 func (es *ESClientV7) GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error {
-	// Build the request body.
+	// Build the request index & request body.
 	indexReq := map[string]map[string]string{
 		"index": {
 			"_id":   "info",
@@ -195,55 +195,55 @@ func (es *ESClientV7) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 			"annotations":       db.GetAnnotations(),
 		},
 	}
+
+	// encode the request index & request body
 	index, err1 := json.Marshal(indexReq)
 	if err1 != nil {
-		return err1
+		return errors.Wrap(err1, "Failed to encode index for performing write request")
 	}
 	body, err2 := json.Marshal(reqBody)
 	if err2 != nil {
-		return err2
+		return errors.Wrap(err2, "Failed to encode request body for performing write request")
 	}
 
+	// make write request & fetch response
+	// check for write request failure & error from response body
 	res, err3 := esapi.BulkRequest{
 		Index:  "kubedb-system",
 		Body:   strings.NewReader(strings.Join([]string{string(index), string(body)}, "\n") + "\n"),
 		Pretty: true,
 	}.Do(ctx, es.client.Transport)
+	if err3 != nil {
+		return errors.Wrap(err3, fmt.Sprintf("Failed to perform write request"))
+	}
+	if res.IsError() {
+		return errors.New(fmt.Sprintf("Failed to get response from write request with error statuscode %d", res.StatusCode))
+	}
 
 	defer func(res *esapi.Response) {
 		if res != nil {
 			err3 = res.Body.Close()
 			if err3 != nil {
-				klog.Errorf("failed to close write request response body", err3)
+				klog.Errorf("Failed to close write request response body", err3)
 			}
 		}
 	}(res)
 
-	if err3 != nil {
-		klog.Infoln("Failed to check", db.Name, "write Access", err3)
-		return err3
-	}
-
 	responseBody := make(map[string]interface{})
 	if err4 := json.NewDecoder(res.Body).Decode(&responseBody); err4 != nil {
-		return errors.Wrap(err4, "failed to parse the response body")
+		return errors.Wrap(err4, "Failed to decode response from write request")
 	}
+
 	if value, ok := responseBody["errors"]; ok {
 		if strValue, ok := value.(bool); ok {
 			if !strValue {
 				return nil
 			}
-			return errors.New("DBWriteCheckFailed")
+			return errors.New("Write request responded with error")
 		}
-		return errors.New("failed to convert response to string")
+		return errors.New("Failed to parse value for `errors` in response from write request")
 	}
-
-	if !res.IsError() {
-		return nil
-	}
-
-	klog.Infoln("DB Write Request Failed with status code ", res.StatusCode)
-	return errors.New("DBWriteCheckFailed")
+	return errors.New("Failed to parse key `errors` in response from write request")
 }
 
 func (es *ESClientV7) GetClusterReadStatus(ctx context.Context, db *api.Elasticsearch) error {
