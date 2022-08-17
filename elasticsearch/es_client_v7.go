@@ -214,7 +214,7 @@ func (es *ESClientV7) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 	if err1 != nil {
 		return errors.Wrap(err1, "Failed to encode index for performing write request")
 	}
-	body, err2 := json.Marshal(db)
+	body, err2 := json.Marshal(db.Spec)
 	if err2 != nil {
 		return errors.Wrap(err2, "Failed to encode request body for performing write request")
 	}
