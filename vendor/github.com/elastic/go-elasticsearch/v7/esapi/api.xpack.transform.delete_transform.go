@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 7.17.1: DO NOT EDIT
+// Code generated from specification version 7.13.1: DO NOT EDIT
 
 package esapi
 
@@ -24,7 +24,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 )
 
 func newTransformDeleteTransformFunc(t Transport) TransformDeleteTransform {
@@ -50,8 +49,7 @@ type TransformDeleteTransform func(transform_id string, o ...func(*TransformDele
 type TransformDeleteTransformRequest struct {
 	TransformID string
 
-	Force   *bool
-	Timeout time.Duration
+	Force *bool
 
 	Pretty     bool
 	Human      bool
@@ -84,10 +82,6 @@ func (r TransformDeleteTransformRequest) Do(ctx context.Context, transport Trans
 
 	if r.Force != nil {
 		params["force"] = strconv.FormatBool(*r.Force)
-	}
-
-	if r.Timeout != 0 {
-		params["timeout"] = formatDuration(r.Timeout)
 	}
 
 	if r.Pretty {
@@ -162,14 +156,6 @@ func (f TransformDeleteTransform) WithContext(v context.Context) func(*Transform
 func (f TransformDeleteTransform) WithForce(v bool) func(*TransformDeleteTransformRequest) {
 	return func(r *TransformDeleteTransformRequest) {
 		r.Force = &v
-	}
-}
-
-// WithTimeout - controls the time to wait for the transform deletion.
-//
-func (f TransformDeleteTransform) WithTimeout(v time.Duration) func(*TransformDeleteTransformRequest) {
-	return func(r *TransformDeleteTransformRequest) {
-		r.Timeout = v
 	}
 }
 

@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 7.17.1: DO NOT EDIT
+// Code generated from specification version 7.13.1: DO NOT EDIT
 
 package esapi
 
@@ -23,7 +23,6 @@ import (
 	"context"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -53,7 +52,6 @@ type IngestPutPipelineRequest struct {
 
 	Body io.Reader
 
-	IfVersion     *int
 	MasterTimeout time.Duration
 	Timeout       time.Duration
 
@@ -87,10 +85,6 @@ func (r IngestPutPipelineRequest) Do(ctx context.Context, transport Transport) (
 	path.WriteString(r.PipelineID)
 
 	params = make(map[string]string)
-
-	if r.IfVersion != nil {
-		params["if_version"] = strconv.FormatInt(int64(*r.IfVersion), 10)
-	}
 
 	if r.MasterTimeout != 0 {
 		params["master_timeout"] = formatDuration(r.MasterTimeout)
@@ -168,14 +162,6 @@ func (r IngestPutPipelineRequest) Do(ctx context.Context, transport Transport) (
 func (f IngestPutPipeline) WithContext(v context.Context) func(*IngestPutPipelineRequest) {
 	return func(r *IngestPutPipelineRequest) {
 		r.ctx = v
-	}
-}
-
-// WithIfVersion - required version for optimistic concurrency control for pipeline updates.
-//
-func (f IngestPutPipeline) WithIfVersion(v int) func(*IngestPutPipelineRequest) {
-	return func(r *IngestPutPipelineRequest) {
-		r.IfVersion = &v
 	}
 }
 

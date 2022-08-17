@@ -24,6 +24,21 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
+var (
+	writeRequestIndex = "kubedb-system"
+	writeRequestID    = "info"
+	writeRequestType  = "_doc"
+)
+
+type WriteRequestIndex struct {
+	Index WriteRequestIndexBody `json:"index"`
+}
+
+type WriteRequestIndexBody struct {
+	ID   string `json:"_id"`
+	Type string `json:"_type,omitempty"`
+}
+
 type ESClient interface {
 	ClusterHealthInfo() (map[string]interface{}, error)
 	NodesStats() (map[string]interface{}, error)

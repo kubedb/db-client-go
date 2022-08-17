@@ -3,9 +3,9 @@ package elasticsearch
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
@@ -113,80 +113,80 @@ func (es *ESClientV8) SyncCredentialFromSecret(secret *core.Secret) error {
 }
 
 func (es *ESClientV8) GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error {
-	// Build the request body.
-	indexReq := map[string]map[string]string{
-		"index": {
-			"_id": "info",
-		},
-	}
-	reqBody := map[string]interface{}{
-		"Labels": db.OffshootLabels(),
-		"Metadata": map[string]interface{}{
-			"name":              db.GetName(),
-			"Namespace":         db.GetNamespace(),
-			"Generation":        strconv.FormatInt(db.GetGeneration(), 10),
-			"uid":               string(db.GetUID()),
-			"ResourceVersion":   db.GetResourceVersion(),
-			"creationTimestamp": db.GetCreationTimestamp().String(),
-			"annotations":       db.GetAnnotations(),
-		},
-	}
-	index, err1 := json.Marshal(indexReq)
-	if err1 != nil {
-		return err1
-	}
-	body, err2 := json.Marshal(reqBody)
-	if err2 != nil {
-		return err2
+	// Build the request index & request body
+	// send the db specs as body
+	indexBody := WriteRequestIndexBody{
+		ID: writeRequestID,
 	}
 
+	indexReq := WriteRequestIndex{indexBody}
+	ReqBody := db.Spec
+
+	// encode the request index & request body
+	index, err1 := json.Marshal(indexReq)
+	if err1 != nil {
+		return errors.Wrap(err1, "Failed to encode index for performing write request")
+	}
+	body, err2 := json.Marshal(ReqBody)
+	if err2 != nil {
+		return errors.Wrap(err2, "Failed to encode request body for performing write request")
+	}
+
+	// make write request & fetch response
+	// check for write request failure & error from response body
+	// Bulk API Performs multiple indexing or delete operations in a single API call
+	// This reduces overhead and can greatly increase indexing speed it Indexes the specified document
+	// If the document exists, replaces the document and increments the version
 	res, err3 := esapi.BulkRequest{
-		Index:  "kubedb-system",
+		Index:  writeRequestIndex,
 		Body:   strings.NewReader(strings.Join([]string{string(index), string(body)}, "\n") + "\n"),
 		Pretty: true,
 	}.Do(ctx, es.client.Transport)
+	if err3 != nil {
+		return errors.Wrap(err3, "Failed to perform write request")
+	}
+	if res.IsError() {
+		return errors.New(fmt.Sprintf("Failed to get response from write request with error statuscode %d", res.StatusCode))
+	}
 
 	defer func(res *esapi.Response) {
 		if res != nil {
 			err3 = res.Body.Close()
 			if err3 != nil {
-				klog.Errorf("failed to close write request response body", err3)
+				klog.Errorf("Failed to close write request response body", err3)
 			}
 		}
 	}(res)
 
-	if err3 != nil {
-		klog.V(5).ErrorS(err3, "Failed to check", db.Name, "write Access")
-		return err3
-	}
-
 	responseBody := make(map[string]interface{})
 	if err4 := json.NewDecoder(res.Body).Decode(&responseBody); err4 != nil {
-		return errors.Wrap(err4, "failed to parse the response body")
+		return errors.Wrap(err4, "Failed to decode response from write request")
 	}
+
+	// Parse the responseBody to check if write operation failed after request being successful
+	// `errors` field(boolean) in the json response becomes true if there's and error caused, otherwise it stays nil
 	if value, ok := responseBody["errors"]; ok {
 		if strValue, ok := value.(bool); ok {
 			if !strValue {
 				return nil
 			}
-			return errors.New("DBWriteCheckFailed")
+			return errors.Errorf("Write request responded with error, %v", responseBody)
 		}
-		return errors.New("failed to convert response to string")
+		return errors.New("Failed to parse value for `errors` in response from write request")
 	}
-
-	if !res.IsError() {
-		return nil
-	}
-
-	klog.Infoln("DB Write Request Failed with status code ", res.StatusCode)
-	return errors.New("DBWriteCheckFailed")
+	return errors.New("Failed to parse key `errors` in response from write request")
 }
 
 func (es *ESClientV8) GetClusterReadStatus(ctx context.Context, db *api.Elasticsearch) error {
+	// Perform a read request in writeRequestIndex/writeRequestID (kubedb-system/info) API
+	// Handle error specifically if index has not been created yet
 	res, err := esapi.GetRequest{
-		Index:      "kubedb-system",
-		DocumentID: "info",
+		Index:      writeRequestIndex,
+		DocumentID: writeRequestID,
 	}.Do(ctx, es.client.Transport)
+	if err != nil {
+		return errors.Wrap(err, "Failed to perform read request")
+	}
 
 	defer func(res *esapi.Response) {
 		if res != nil {
@@ -197,19 +197,12 @@ func (es *ESClientV8) GetClusterReadStatus(ctx context.Context, db *api.Elastics
 		}
 	}(res)
 
-	if err != nil {
-		klog.V(5).ErrorS(err, "Failed to check", db.Name, "read Access")
-		return err
-	}
-
-	if !res.IsError() {
-		return nil
-	}
-
 	if res.StatusCode == http.StatusNotFound {
 		return kutil.ErrNotFound
 	}
+	if res.IsError() {
+		return errors.New(fmt.Sprintf("Failed to get response from write request with error statuscode %d", res.StatusCode))
+	}
 
-	klog.Infoln("DB Read request failed with status code ", res.StatusCode)
-	return errors.New("DBReadCheckFailed")
+	return nil
 }
