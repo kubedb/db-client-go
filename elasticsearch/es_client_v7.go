@@ -36,23 +36,8 @@ import (
 
 var _ ESClient = &ESClientV7{}
 
-var (
-	writeRequestIndex = "kubedb-system"
-	writeRequestID    = "info"
-	writeRequestType  = "_doc"
-)
-
 type ESClientV7 struct {
 	client *esv7.Client
-}
-
-type WriteRequestIndex struct {
-	Index WriteRequestIndexBody `json:"index"`
-}
-
-type WriteRequestIndexBody struct {
-	ID   string `json:"_id"`
-	Type string `json:"_type"`
 }
 
 func (es *ESClientV7) ClusterHealthInfo() (map[string]interface{}, error) {
