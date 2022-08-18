@@ -6,7 +6,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/elastic/go-elasticsearch/v5 v5.6.1
 	github.com/elastic/go-elasticsearch/v6 v6.8.10
-	github.com/elastic/go-elasticsearch/v7 v7.17.1
+	github.com/elastic/go-elasticsearch/v7 v7.13.1
 	github.com/elastic/go-elasticsearch/v8 v8.3.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-sql-driver/mysql v1.6.0
@@ -114,8 +114,6 @@ replace k8s.io/apimachinery => github.com/kmodules/apimachinery v0.24.2-rc.0.0.2
 replace k8s.io/apiserver => github.com/kmodules/apiserver v0.0.0-20220603223637-59dad1716c43
 
 replace k8s.io/kubernetes => github.com/kmodules/kubernetes v1.25.0-alpha.0.0.20220603172133-1c9d09d1b3b8
-
-replace github.com/elastic/go-elasticsearch/v7 => github.com/elastic/go-elasticsearch/v7 v7.13.1
 
 replace (
 	go.opentelemetry.io/contrib => go.opentelemetry.io/contrib v0.20.0
