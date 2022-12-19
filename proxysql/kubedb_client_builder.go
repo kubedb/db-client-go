@@ -130,6 +130,6 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		o.url = o.getURL()
 	}
 
-	connector := fmt.Sprintf("%v:%v@tcp(%s:%d)/", user, pass, o.url, 6032)
+	connector := fmt.Sprintf("%v:%v@tcp(%s:%d)/", user, pass, o.url, api.ProxySQLAdminPort)
 	return connector, nil
 }
