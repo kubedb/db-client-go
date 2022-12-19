@@ -130,42 +130,6 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		o.url = o.getURL()
 	}
 
-	//tlsConfig := ""
-	//if o.db.Spec.TLS != nil {
-	//	// get client-secret
-	//	var clientSecret core.Secret
-	//	err := o.kc.Get(context.TODO(), client.ObjectKey{Namespace: o.db.GetNamespace(), Name: o.db.GetCertSecretName(api.ProxySQLClientCert)}, &clientSecret)
-	//	if err != nil {
-	//		return "", err
-	//	}
-	//	cacrt := clientSecret.Data["ca.crt"]
-	//	certPool := x509.NewCertPool()
-	//	certPool.AppendCertsFromPEM(cacrt)
-	//
-	//	crt := clientSecret.Data["tls.crt"]
-	//	key := clientSecret.Data["tls.key"]
-	//	cert, err := tls.X509KeyPair(crt, key)
-	//	if err != nil {
-	//		return "", err
-	//	}
-	//	var clientCert []tls.Certificate
-	//	clientCert = append(clientCert, cert)
-	//
-	//	// tls custom setup
-	//	if o.db.Spec.RequireSSL {
-	//		err = sql_driver.RegisterTLSConfig(api.MySQLTLSConfigCustom, &tls.Config{
-	//			RootCAs:      certPool,
-	//			Certificates: clientCert,
-	//		})
-	//		if err != nil {
-	//			return "", err
-	//		}
-	//		tlsConfig = fmt.Sprintf("tls=%s", api.MySQLTLSConfigCustom)
-	//	} else {
-	//		tlsConfig = fmt.Sprintf("tls=%s", api.MySQLTLSConfigSkipVerify)
-	//	}
-	//}
-
 	connector := fmt.Sprintf("%v:%v@tcp(%s:%d)/", user, pass, o.url, 6032)
 	return connector, nil
 }
