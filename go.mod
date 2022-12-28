@@ -10,13 +10,14 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.4.0
 	github.com/go-redis/redis/v9 v9.0.0-rc.2
 	github.com/go-sql-driver/mysql v1.6.0
+	github.com/lib/pq v1.10.2
 	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/pkg/errors v0.9.1
 	go.mongodb.org/mongo-driver v1.10.2
 	k8s.io/api v0.25.3
 	k8s.io/klog/v2 v2.80.1
 	kmodules.xyz/client-go v0.25.17
-	kubedb.dev/apimachinery v0.30.0-rc.1.0.20221224061557-c221f8b7d588
+	kubedb.dev/apimachinery v0.30.2-0.20230127132400-d3c65a9782f3
 	sigs.k8s.io/controller-runtime v0.13.1
 	xorm.io/xorm v1.3.2
 )
