@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package redis
+package redissentinel
 
 import (
 	"context"
@@ -40,12 +40,12 @@ const (
 
 type KubeDBClientBuilder struct {
 	kc      client.Client
-	db      *api.Redis
+	db      *api.RedisSentinel
 	podName string
 	url     string
 }
 
-func NewKubeDBClientBuilder(kc client.Client, db *api.Redis) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *api.RedisSentinel) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc: kc,
 		db: db,
@@ -62,10 +62,10 @@ func (o *KubeDBClientBuilder) WithURL(url string) *KubeDBClientBuilder {
 	return o
 }
 
-func (o *KubeDBClientBuilder) GetRedisClient(ctx context.Context) (*Client, error) {
+func (o *KubeDBClientBuilder) GetRedisSentinelClient(ctx context.Context) (*Client, error) {
 	var err error
 	if o.podName != "" {
-		o.url = o.getPodURL()
+		o.url = o.getSentinelPodURL()
 	}
 	if o.url == "" {
 		o.url = o.db.Address()
@@ -87,51 +87,14 @@ func (o *KubeDBClientBuilder) GetRedisClient(ctx context.Context) (*Client, erro
 		if err != nil {
 			return nil, err
 		}
+		rdOpts.TLSConfig.InsecureSkipVerify = true
 	}
-
-	rdClient := rd.NewClient(rdOpts)
+	rdClient := rd.NewSentinelClient(rdOpts)
 	_, err = rdClient.Ping(ctx).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %v", err)
 	}
 	return &Client{
-		rdClient,
-	}, nil
-}
-
-func (o *KubeDBClientBuilder) GetRedisClusterClient(ctx context.Context) (*ClusterClient, error) {
-	var err error
-	if o.podName != "" {
-		o.url = o.getPodURL()
-	}
-	if o.url == "" {
-		o.url = o.db.Address()
-	}
-	rdClusterOpts := &rd.ClusterOptions{
-		DialTimeout:     DefaultDialTimeout,
-		ConnMaxIdleTime: DefaultConnMaxIdleTime,
-		PoolSize:        DefaultPoolSize,
-		Addrs:           []string{o.url},
-	}
-	if !o.db.Spec.DisableAuth {
-		rdClusterOpts.Password, err = o.getClientPassword(ctx)
-		if err != nil {
-			return nil, err
-		}
-	}
-	if o.db.Spec.TLS != nil {
-		rdClusterOpts.TLSConfig, err = o.getTLSConfig(ctx)
-		if err != nil {
-			return nil, err
-		}
-		rdClusterOpts.TLSConfig.InsecureSkipVerify = true
-	}
-	rdClient := rd.NewClusterClient(rdClusterOpts)
-	_, err = rdClient.Ping(ctx).Result()
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %v", err)
-	}
-	return &ClusterClient{
 		rdClient,
 	}, nil
 }
@@ -173,6 +136,6 @@ func (o *KubeDBClientBuilder) getTLSConfig(ctx context.Context) (*tls.Config, er
 	return clientTlS, nil
 }
 
-func (o *KubeDBClientBuilder) getPodURL() string {
-	return fmt.Sprintf("%v.%v.%v.svc:%d", o.podName, o.db.GoverningServiceName(), o.db.Namespace, api.RedisDatabasePort)
+func (o *KubeDBClientBuilder) getSentinelPodURL() string {
+	return fmt.Sprintf("%v.%v.%v.svc:%d", o.podName, o.db.GoverningServiceName(), o.db.Namespace, api.RedisSentinelPort)
 }

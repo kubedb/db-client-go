@@ -20,6 +20,6 @@ import (
 	rd "github.com/go-redis/redis/v9"
 )
 
-type Client struct {
-	*rd.Client
+type ClusterClient struct {
+	*rd.ClusterClient
 }

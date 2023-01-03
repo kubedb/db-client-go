@@ -45,7 +45,7 @@ endif
 ### These variables should not need tweaking.
 ###
 
-SRC_PKGS := elasticsearch mariadb mongodb mysql postgres redis
+SRC_PKGS := elasticsearch mariadb mongodb mysql postgres redis redissentinel
 SRC_DIRS := $(SRC_PKGS)
 
 DOCKER_PLATFORMS := linux/amd64 linux/arm linux/arm64
