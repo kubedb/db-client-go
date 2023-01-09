@@ -4,7 +4,7 @@ github.com/Masterminds/semver/v3
 # github.com/beorn7/perks v1.0.1
 ## explicit; go 1.11
 github.com/beorn7/perks/quantile
-# github.com/cespare/xxhash/v2 v2.1.2
+# github.com/cespare/xxhash/v2 v2.2.0
 ## explicit; go 1.11
 github.com/cespare/xxhash/v2
 # github.com/davecgh/go-spew v1.1.1
@@ -656,16 +656,16 @@ github.com/go-openapi/jsonreference/internal
 # github.com/go-openapi/swag v0.22.3
 ## explicit; go 1.18
 github.com/go-openapi/swag
-# github.com/go-redis/redis/v8 v8.11.5
+# github.com/go-redis/redis/v9 v9.0.0-rc.2
 ## explicit; go 1.17
-github.com/go-redis/redis/v8
-github.com/go-redis/redis/v8/internal
-github.com/go-redis/redis/v8/internal/hashtag
-github.com/go-redis/redis/v8/internal/hscan
-github.com/go-redis/redis/v8/internal/pool
-github.com/go-redis/redis/v8/internal/proto
-github.com/go-redis/redis/v8/internal/rand
-github.com/go-redis/redis/v8/internal/util
+github.com/go-redis/redis/v9
+github.com/go-redis/redis/v9/internal
+github.com/go-redis/redis/v9/internal/hashtag
+github.com/go-redis/redis/v9/internal/hscan
+github.com/go-redis/redis/v9/internal/pool
+github.com/go-redis/redis/v9/internal/proto
+github.com/go-redis/redis/v9/internal/rand
+github.com/go-redis/redis/v9/internal/util
 # github.com/go-sql-driver/mysql v1.6.0
 ## explicit; go 1.10
 github.com/go-sql-driver/mysql
@@ -761,6 +761,10 @@ github.com/montanaflynn/stats
 # github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
 ## explicit
 github.com/munnerz/goautoneg
+# github.com/onsi/ginkgo/v2 v2.6.1
+## explicit; go 1.18
+# github.com/onsi/gomega v1.24.2
+## explicit; go 1.18
 # github.com/opensearch-project/opensearch-go v1.1.0
 ## explicit; go 1.11
 github.com/opensearch-project/opensearch-go

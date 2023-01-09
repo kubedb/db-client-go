@@ -14,12 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package redis
+package redissentinel
 
 import (
 	rd "github.com/go-redis/redis/v9"
 )
 
 type Client struct {
-	*rd.Client
+	*rd.SentinelClient
 }
