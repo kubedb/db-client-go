@@ -736,6 +736,11 @@ github.com/klauspost/compress/internal/cpuinfo
 github.com/klauspost/compress/internal/snapref
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
+# github.com/lib/pq v1.10.2
+## explicit; go 1.13
+github.com/lib/pq
+github.com/lib/pq/oid
+github.com/lib/pq/scram
 # github.com/mailru/easyjson v0.7.7
 ## explicit; go 1.12
 github.com/mailru/easyjson/buffer
@@ -1261,7 +1266,7 @@ kmodules.xyz/monitoring-agent-api/api/v1
 # kmodules.xyz/offshoot-api v0.25.0
 ## explicit; go 1.18
 kmodules.xyz/offshoot-api/api/v1
-# kubedb.dev/apimachinery v0.30.0-rc.1.0.20221224061557-c221f8b7d588
+# kubedb.dev/apimachinery v0.30.2-0.20230127132400-d3c65a9782f3
 ## explicit; go 1.18
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog
