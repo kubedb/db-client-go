@@ -17,9 +17,14 @@ require (
 	k8s.io/api v0.25.3
 	k8s.io/klog/v2 v2.80.1
 	kmodules.xyz/client-go v0.25.17
-	kubedb.dev/apimachinery v0.30.2-0.20230127132400-d3c65a9782f3
+	kubedb.dev/apimachinery v0.31.0
 	sigs.k8s.io/controller-runtime v0.13.1
 	xorm.io/xorm v1.3.2
+)
+
+require (
+	github.com/kr/pretty v0.3.0 // indirect
+	github.com/rogpeppe/go-internal v1.8.1 // indirect
 )
 
 require (
