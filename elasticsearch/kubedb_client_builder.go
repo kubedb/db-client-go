@@ -36,8 +36,10 @@ import (
 	esv7 "github.com/elastic/go-elasticsearch/v7"
 	esv8 "github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
-	"github.com/opensearch-project/opensearch-go"
-	"github.com/opensearch-project/opensearch-go/opensearchapi"
+	os "github.com/opensearch-project/opensearch-go"
+	osapi "github.com/opensearch-project/opensearch-go/opensearchapi"
+	osv2 "github.com/opensearch-project/opensearch-go/v2"
+	osv2api "github.com/opensearch-project/opensearch-go/v2/opensearchapi"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
@@ -322,7 +324,7 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 
 			}
 
-			osClient, err := opensearch.NewClient(opensearch.Config{
+			osClient, err := os.NewClient(os.Config{
 				Addresses:         []string{o.url},
 				Username:          username,
 				Password:          password,
@@ -341,7 +343,7 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 				return nil, err
 			}
 
-			res, err := opensearchapi.PingRequest{}.Do(o.ctx, osClient.Transport)
+			res, err := osapi.PingRequest{}.Do(o.ctx, osClient.Transport)
 			if err != nil {
 				return nil, err
 			}
@@ -358,6 +360,51 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 			}
 			return &Client{
 				&OSClientV1{client: osClient},
+			}, nil
+		case version.Major() == 2:
+			defaultTLSConfig, err := o.getDefaultTLSConfig()
+			if err != nil {
+				klog.Errorf("Failed get default TLS configuration")
+				return nil, err
+
+			}
+
+			osClient, err := osv2.NewClient(osv2.Config{
+				Addresses:         []string{o.url},
+				Username:          username,
+				Password:          password,
+				EnableDebugLogger: true,
+				DisableRetry:      true,
+				Transport: &http.Transport{
+					IdleConnTimeout: 3 * time.Second,
+					DialContext: (&net.Dialer{
+						Timeout: 30 * time.Second,
+					}).DialContext,
+					TLSClientConfig: defaultTLSConfig,
+				},
+			})
+			if err != nil {
+				klog.Errorf("Failed to create HTTP client for Elasticsearch: %s/%s with: %s", o.db.Namespace, o.db.Name, err.Error())
+				return nil, err
+			}
+
+			res, err := osv2api.PingRequest{}.Do(o.ctx, osClient.Transport)
+			if err != nil {
+				return nil, err
+			}
+
+			defer func(Body io.ReadCloser) {
+				err = Body.Close()
+				if err != nil {
+					klog.Errorf("failed to close response body", err)
+				}
+			}(res.Body)
+
+			if res.IsError() {
+				return nil, fmt.Errorf("cluster ping request failed with status code: %d", res.StatusCode)
+			}
+			return &Client{
+				&OSClientV2{client: osClient},
 			}, nil
 		}
 	}

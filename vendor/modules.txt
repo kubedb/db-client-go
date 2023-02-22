@@ -779,6 +779,13 @@ github.com/opensearch-project/opensearch-go/internal/version
 github.com/opensearch-project/opensearch-go/opensearchapi
 github.com/opensearch-project/opensearch-go/opensearchtransport
 github.com/opensearch-project/opensearch-go/signer
+# github.com/opensearch-project/opensearch-go/v2 v2.2.0
+## explicit; go 1.15
+github.com/opensearch-project/opensearch-go/v2
+github.com/opensearch-project/opensearch-go/v2/internal/version
+github.com/opensearch-project/opensearch-go/v2/opensearchapi
+github.com/opensearch-project/opensearch-go/v2/opensearchtransport
+github.com/opensearch-project/opensearch-go/v2/signer
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
