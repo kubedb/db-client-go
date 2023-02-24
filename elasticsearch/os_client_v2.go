@@ -83,7 +83,6 @@ func (os *OSClientV2) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 	// send the db specs as body
 	indexBody := WriteRequestIndexBody{
 		ID:   writeRequestID,
-		Type: writeRequestType,
 	}
 
 	indexReq := WriteRequestIndex{indexBody}
@@ -149,7 +148,6 @@ func (os *OSClientV2) GetClusterReadStatus(ctx context.Context, db *api.Elastics
 	// Handle error specifically if index has not been created yet
 	res, err := osv2api.GetRequest{
 		Index:      writeRequestIndex,
-		DocumentID: writeRequestID,
 	}.Do(ctx, os.client.Transport)
 	if err != nil {
 		return errors.Wrap(err, "Failed to perform read request")
