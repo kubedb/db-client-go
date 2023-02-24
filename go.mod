@@ -12,6 +12,7 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/lib/pq v1.10.2
 	github.com/opensearch-project/opensearch-go v1.1.0
+	github.com/opensearch-project/opensearch-go/v2 v2.2.0
 	github.com/pkg/errors v0.9.1
 	go.mongodb.org/mongo-driver v1.10.2
 	k8s.io/api v0.25.3

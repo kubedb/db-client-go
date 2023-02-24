@@ -25,34 +25,34 @@ import (
 
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
-	"github.com/opensearch-project/opensearch-go"
-	"github.com/opensearch-project/opensearch-go/opensearchapi"
+	osv2 "github.com/opensearch-project/opensearch-go/v2"
+	osv2api "github.com/opensearch-project/opensearch-go/v2/opensearchapi"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 	kutil "kmodules.xyz/client-go"
 )
 
-var _ ESClient = &OSClientV1{}
+var _ ESClient = &OSClientV2{}
 
-type OSClientV1 struct {
-	client *opensearch.Client
+type OSClientV2 struct {
+	client *osv2.Client
 }
 
-func (os *OSClientV1) ClusterHealthInfo() (map[string]interface{}, error) {
+func (os *OSClientV2) ClusterHealthInfo() (map[string]interface{}, error) {
 	return nil, nil
 }
 
-func (os *OSClientV1) NodesStats() (map[string]interface{}, error) {
+func (os *OSClientV2) NodesStats() (map[string]interface{}, error) {
 	return nil, nil
 }
 
 // GetIndicesInfo will return the indices' info of an Elasticsearch database
-func (os *OSClientV1) GetIndicesInfo() ([]interface{}, error) {
+func (os *OSClientV2) GetIndicesInfo() ([]interface{}, error) {
 	return nil, nil
 }
 
-func (os *OSClientV1) ClusterStatus() (string, error) {
+func (os *OSClientV2) ClusterStatus() (string, error) {
 	res, err := os.client.Cluster.Health(
 		os.client.Cluster.Health.WithPretty(),
 	)
@@ -74,16 +74,15 @@ func (os *OSClientV1) ClusterStatus() (string, error) {
 	return "", errors.New("status is missing")
 }
 
-func (os *OSClientV1) SyncCredentialFromSecret(secret *core.Secret) error {
+func (os *OSClientV2) SyncCredentialFromSecret(secret *core.Secret) error {
 	return nil
 }
 
-func (os *OSClientV1) GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error {
+func (os *OSClientV2) GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error {
 	// Build the request index & request body
 	// send the db specs as body
 	indexBody := WriteRequestIndexBody{
-		ID:   writeRequestID,
-		Type: writeRequestType,
+		ID: writeRequestID,
 	}
 
 	indexReq := WriteRequestIndex{indexBody}
@@ -104,7 +103,7 @@ func (os *OSClientV1) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 	// Bulk API Performs multiple indexing or delete operations in a single API call
 	// This reduces overhead and can greatly increase indexing speed it Indexes the specified document
 	// If the document exists, replaces the document and increments the version
-	res, err3 := opensearchapi.BulkRequest{
+	res, err3 := osv2api.BulkRequest{
 		Index:  writeRequestIndex,
 		Body:   strings.NewReader(strings.Join([]string{string(index), string(body)}, "\n") + "\n"),
 		Pretty: true,
@@ -116,7 +115,7 @@ func (os *OSClientV1) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 		return errors.New(fmt.Sprintf("Failed to get response from write request with error statuscode %d", res.StatusCode))
 	}
 
-	defer func(res *opensearchapi.Response) {
+	defer func(res *osv2api.Response) {
 		if res != nil {
 			err3 = res.Body.Close()
 			if err3 != nil {
@@ -144,10 +143,10 @@ func (os *OSClientV1) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 	return errors.New("Failed to parse key `errors` in response from write request")
 }
 
-func (os *OSClientV1) GetClusterReadStatus(ctx context.Context, db *api.Elasticsearch) error {
+func (os *OSClientV2) GetClusterReadStatus(ctx context.Context, db *api.Elasticsearch) error {
 	// Perform a read request in writeRequestIndex/writeRequestID (kubedb-system/info) API
 	// Handle error specifically if index has not been created yet
-	res, err := opensearchapi.GetRequest{
+	res, err := osv2api.GetRequest{
 		Index:      writeRequestIndex,
 		DocumentID: writeRequestID,
 	}.Do(ctx, os.client.Transport)
@@ -155,7 +154,7 @@ func (os *OSClientV1) GetClusterReadStatus(ctx context.Context, db *api.Elastics
 		return errors.Wrap(err, "Failed to perform read request")
 	}
 
-	defer func(res *opensearchapi.Response) {
+	defer func(res *osv2api.Response) {
 		if res != nil {
 			err = res.Body.Close()
 			if err != nil {
