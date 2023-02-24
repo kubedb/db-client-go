@@ -36,10 +36,10 @@ import (
 	esv7 "github.com/elastic/go-elasticsearch/v7"
 	esv8 "github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
-	os "github.com/opensearch-project/opensearch-go"
-	osapi "github.com/opensearch-project/opensearch-go/opensearchapi"
+	osv1 "github.com/opensearch-project/opensearch-go"
+	osapiv1 "github.com/opensearch-project/opensearch-go/opensearchapi"
 	osv2 "github.com/opensearch-project/opensearch-go/v2"
-	osv2api "github.com/opensearch-project/opensearch-go/v2/opensearchapi"
+	osapiv2 "github.com/opensearch-project/opensearch-go/v2/opensearchapi"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
@@ -324,7 +324,7 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 
 			}
 
-			osClient, err := os.NewClient(os.Config{
+			osClient, err := osv1.NewClient(osv1.Config{
 				Addresses:         []string{o.url},
 				Username:          username,
 				Password:          password,
@@ -343,7 +343,7 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 				return nil, err
 			}
 
-			res, err := osapi.PingRequest{}.Do(o.ctx, osClient.Transport)
+			res, err := osapiv1.PingRequest{}.Do(o.ctx, osClient.Transport)
 			if err != nil {
 				return nil, err
 			}
@@ -388,7 +388,7 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 				return nil, err
 			}
 
-			res, err := osv2api.PingRequest{}.Do(o.ctx, osClient.Transport)
+			res, err := osapiv2.PingRequest{}.Do(o.ctx, osClient.Transport)
 			if err != nil {
 				return nil, err
 			}
