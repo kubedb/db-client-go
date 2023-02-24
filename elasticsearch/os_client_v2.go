@@ -148,6 +148,7 @@ func (os *OSClientV2) GetClusterReadStatus(ctx context.Context, db *api.Elastics
 	// Handle error specifically if index has not been created yet
 	res, err := osv2api.GetRequest{
 		Index:      writeRequestIndex,
+		DocumentID: writeRequestID,
 	}.Do(ctx, os.client.Transport)
 	if err != nil {
 		return errors.Wrap(err, "Failed to perform read request")
@@ -166,7 +167,7 @@ func (os *OSClientV2) GetClusterReadStatus(ctx context.Context, db *api.Elastics
 		return kutil.ErrNotFound
 	}
 	if res.IsError() {
-		return errors.New(fmt.Sprintf("Failed to get response from write request with error statuscode %d", res.StatusCode))
+		return errors.New(fmt.Sprintf("Failed to get response from read request with error statuscode %d", res.StatusCode))
 	}
 
 	return nil

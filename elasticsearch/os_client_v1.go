@@ -168,7 +168,7 @@ func (os *OSClientV1) GetClusterReadStatus(ctx context.Context, db *api.Elastics
 		return kutil.ErrNotFound
 	}
 	if res.IsError() {
-		return errors.New(fmt.Sprintf("Failed to get response from write request with error statuscode %d", res.StatusCode))
+		return errors.New(fmt.Sprintf("Failed to get response from read request with error statuscode %d", res.StatusCode))
 	}
 
 	return nil
