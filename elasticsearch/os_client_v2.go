@@ -82,7 +82,7 @@ func (os *OSClientV2) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 	// Build the request index & request body
 	// send the db specs as body
 	indexBody := WriteRequestIndexBody{
-		ID:   writeRequestID,
+		ID: writeRequestID,
 	}
 
 	indexReq := WriteRequestIndex{indexBody}
