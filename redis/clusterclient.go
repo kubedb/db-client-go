@@ -17,7 +17,7 @@ limitations under the License.
 package redis
 
 import (
-	rd "github.com/go-redis/redis/v9"
+	rd "github.com/redis/go-redis/v9"
 )
 
 type ClusterClient struct {
