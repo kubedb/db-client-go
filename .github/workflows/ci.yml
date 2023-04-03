@@ -27,11 +27,6 @@ jobs:
 
       - uses: actions/checkout@v2
 
-      - name: Prepare Host
-        run: |
-          sudo apt-get -qq update
-          sudo apt-get install -y bzr || true
-
       - name: Run checks
         run: |
           make ci
