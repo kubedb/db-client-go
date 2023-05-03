@@ -269,3 +269,57 @@ func (es *ESClientV7) GetClusterReadStatus(ctx context.Context, db *api.Elastics
 
 	return nil
 }
+
+func (es *ESClientV7) GetTotalDiskUsage(ctx context.Context) (string, error) {
+	// Perform a DiskUsageRequest to database to calculate store size of all the elasticsearch indices
+	// primary purpose of this function is to provide operator calculated storage of interimVolumeTemplate while taking backup
+	// Analyzing field disk usage is resource-intensive. To use the API, RunExpensiveTasks must be set to true. Defaults to false.
+	// Get disk usage for all indices using "*" wildcard.
+	flag := true
+	res, err := esapi.IndicesDiskUsageRequest{
+		Index:             diskUsageRequestIndex,
+		Pretty:            true,
+		Human:             true,
+		RunExpensiveTasks: &flag,
+		ExpandWildcards:   diskUsageRequestWildcards,
+	}.Do(ctx, es.client.Transport)
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to perform Disk Usage Request")
+	}
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			klog.Errorf("failed to close response body from Disk Usage Request", err)
+		}
+	}(res.Body)
+
+	var totalDiskUsageInBytes float64
+	resMap := make(map[string]interface{})
+	if err := json.NewDecoder(res.Body).Decode(&resMap); err != nil {
+		klog.Errorf("failed to deserialize the response body for disk usage request: %v", err)
+		return "", err
+	}
+
+	// Parse the deserialized json response to find out storage of each index
+	for _, val := range resMap {
+		if valMap, ok := val.(map[string]interface{}); ok {
+			for key, field := range valMap {
+				if key == diskUsageRequestKey {
+					storeSizeInByes := field.(float64)
+					totalDiskUsageInBytes += storeSizeInByes
+				}
+			}
+		}
+	}
+
+	if totalDiskUsageInBytes == 0 {
+		return "1Mi", nil
+	}
+
+	// take an estimated percent of extra storage for safety & taking metadata into account.
+	// convert bytes to Gib
+	totalDiskUsageInGib := (totalDiskUsageInBytes + (totalDiskUsageInBytes*float64(diskUsageEstimateThreshold))/100) / (1024 * 1024 * 1024)
+	totalDiskUsageInString := fmt.Sprintf("%f", totalDiskUsageInGib) + "Gi"
+
+	return totalDiskUsageInString, nil
+}
