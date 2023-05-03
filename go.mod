@@ -9,7 +9,7 @@ require (
 	github.com/elastic/go-elasticsearch/v7 v7.13.1
 	github.com/elastic/go-elasticsearch/v8 v8.4.0
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/lib/pq v1.10.2
+	github.com/lib/pq v1.10.4
 	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/opensearch-project/opensearch-go/v2 v2.2.0
 	github.com/pkg/errors v0.9.1
@@ -17,14 +17,15 @@ require (
 	go.mongodb.org/mongo-driver v1.10.2
 	k8s.io/api v0.25.3
 	k8s.io/klog/v2 v2.80.1
-	kmodules.xyz/client-go v0.25.17
-	kubedb.dev/apimachinery v0.31.0
+	kmodules.xyz/client-go v0.25.18
+	kubedb.dev/apimachinery v0.33.2-0.20230503123451-70ebcf524ed7
 	sigs.k8s.io/controller-runtime v0.13.1
 	xorm.io/xorm v1.3.2
 )
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/cert-manager/cert-manager v1.9.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
@@ -51,7 +52,6 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.15.11 // indirect
-	github.com/kr/pretty v0.3.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
@@ -62,6 +62,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/onsi/ginkgo/v2 v2.6.1 // indirect
 	github.com/onsi/gomega v1.24.2 // indirect
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.59.1 // indirect
 	github.com/prometheus/client_golang v1.13.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
@@ -78,7 +79,7 @@ require (
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
 	golang.org/x/crypto v0.6.0 // indirect
 	golang.org/x/net v0.7.0 // indirect
-	golang.org/x/oauth2 v0.1.0 // indirect
+	golang.org/x/oauth2 v0.5.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/term v0.5.0 // indirect
@@ -100,8 +101,9 @@ require (
 	k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280 // indirect
 	k8s.io/utils v0.0.0-20221012122500-cfd413dd9e85 // indirect
 	kmodules.xyz/custom-resources v0.25.1 // indirect
-	kmodules.xyz/monitoring-agent-api v0.25.0 // indirect
-	kmodules.xyz/offshoot-api v0.25.0 // indirect
+	kmodules.xyz/monitoring-agent-api v0.25.1 // indirect
+	kmodules.xyz/offshoot-api v0.25.3 // indirect
+	sigs.k8s.io/gateway-api v0.4.3 // indirect
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
