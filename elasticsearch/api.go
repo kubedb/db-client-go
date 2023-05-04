@@ -32,6 +32,7 @@ var (
 	diskUsageRequestWildcards  = "all"
 	diskUsageRequestKey        = "store_size_in_bytes"
 	diskUsageEstimateThreshold = 20
+	diskUsageDefault           = "1Mi"
 )
 
 type WriteRequestIndex struct {

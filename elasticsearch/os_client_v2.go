@@ -217,7 +217,7 @@ func (os *OSClientV2) GetTotalDiskUsage(ctx context.Context) (string, error) {
 	}
 
 	if totalDiskUsageInBytes == 0 {
-		return "1Mi", nil
+		return diskUsageDefault, nil
 	}
 
 	// take an estimated percent of extra storage for safety & taking metadata into account.
