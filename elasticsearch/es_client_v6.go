@@ -208,6 +208,7 @@ func (es *ESClientV6) GetClusterReadStatus(ctx context.Context, db *api.Elastics
 
 	return nil
 }
+
 func (es *ESClientV6) GetTotalDiskUsage(ctx context.Context) (string, error) {
 	return "", nil
 }

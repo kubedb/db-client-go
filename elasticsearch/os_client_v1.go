@@ -174,6 +174,7 @@ func (os *OSClientV1) GetClusterReadStatus(ctx context.Context, db *api.Elastics
 
 	return nil
 }
+
 func (os *OSClientV1) GetTotalDiskUsage(ctx context.Context) (string, error) {
 	// Perform a DiskUsageRequest to database to calculate store size of all the elasticsearch indices
 	// primary purpose of this function is to provide operator calculated storage of interimVolumeTemplate while taking backup

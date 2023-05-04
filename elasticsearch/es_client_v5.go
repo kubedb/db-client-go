@@ -84,6 +84,7 @@ func (es *ESClientV5) GetClusterWriteStatus(ctx context.Context, db *api.Elastic
 func (es *ESClientV5) GetClusterReadStatus(ctx context.Context, db *api.Elasticsearch) error {
 	return nil
 }
+
 func (es *ESClientV5) GetTotalDiskUsage(ctx context.Context) (string, error) {
 	return "", nil
 }
