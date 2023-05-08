@@ -271,7 +271,7 @@ func (es *ESClientV8) GetTotalDiskUsage(ctx context.Context) (string, error) {
 
 	// take an estimated percent of extra storage for safety & taking metadata into account.
 	// convert bytes to Gib
-	totalDiskUsageInGib := (totalDiskUsageInBytes + (totalDiskUsageInBytes*float64(diskUsageEstimateThreshold))/100) / (1024 * 1024 * 1024)
+	totalDiskUsageInGib := (totalDiskUsageInBytes + (totalDiskUsageInBytes*float64(diskUsageEstimateThreshold))/100) / float64(1024*1024*1024)
 	totalDiskUsageInString := fmt.Sprintf("%f", totalDiskUsageInGib) + "Gi"
 
 	return totalDiskUsageInString, nil
