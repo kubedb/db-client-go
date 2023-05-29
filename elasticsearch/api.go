@@ -25,14 +25,9 @@ import (
 )
 
 var (
-	writeRequestIndex          = "kubedb-system"
-	writeRequestID             = "info"
-	writeRequestType           = "_doc"
-	diskUsageRequestIndex      = "*"
-	diskUsageRequestWildcards  = "all"
-	diskUsageRequestKey        = "store_size_in_bytes"
-	diskUsageEstimateThreshold = 20
-	diskUsageDefault           = "1Mi"
+	writeRequestIndex = "kubedb-system"
+	writeRequestID    = "info"
+	writeRequestType  = "_doc"
 )
 
 type WriteRequestIndex struct {

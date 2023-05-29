@@ -198,7 +198,7 @@ func (os *OSClientV2) GetTotalDiskUsage(ctx context.Context) (string, error) {
 	}(res.Body)
 
 	// Parse the json response to get total storage used for all index
-	totalDiskUsage, err := parseDiskUsageResponse(res.Body)
+	totalDiskUsage, err := calculateDatabaseSize(res.Body)
 	if err != nil {
 		return "", errors.Wrap(err, "Failed to parse json response to get disk usage")
 	}
