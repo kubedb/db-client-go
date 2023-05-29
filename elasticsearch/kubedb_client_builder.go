@@ -479,7 +479,7 @@ func parseDiskUsageResponse(body io.ReadCloser) (string, error) {
 	}
 
 	// take an estimated percent of extra storage for safety & taking metadata into account.
-	// convert bytes to Gib
+	// convert bytes to Mib
 	totalDiskUsageInMi := (totalDiskUsageInBytes + (totalDiskUsageInBytes*float64(diskUsageEstimateThreshold))/100) / float64(1024*1024)
 	totalDiskUsageInString := fmt.Sprintf("%f", totalDiskUsageInMi) + "Mi"
 
