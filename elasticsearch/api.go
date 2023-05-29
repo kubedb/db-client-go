@@ -47,4 +47,5 @@ type ESClient interface {
 	SyncCredentialFromSecret(secret *core.Secret) error
 	GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error
 	GetClusterReadStatus(ctx context.Context, db *api.Elasticsearch) error
+	GetTotalDiskUsage(ctx context.Context) (string, error)
 }

@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -171,4 +172,36 @@ func (os *OSClientV2) GetClusterReadStatus(ctx context.Context, db *api.Elastics
 	}
 
 	return nil
+}
+
+func (os *OSClientV2) GetTotalDiskUsage(ctx context.Context) (string, error) {
+	// Perform a DiskUsageRequest to database to calculate store size of all the elasticsearch indices
+	// primary purpose of this function is to provide operator calculated storage of interimVolumeTemplate while taking backup
+	// Analyzing field disk usage is resource-intensive. To use the API, RunExpensiveTasks must be set to true. Defaults to false.
+	// Get disk usage for all indices using "*" wildcard.
+	flag := true
+	res, err := osv2api.IndicesDiskUsageRequest{
+		Index:             diskUsageRequestIndex,
+		Pretty:            true,
+		Human:             true,
+		RunExpensiveTasks: &flag,
+		ExpandWildcards:   diskUsageRequestWildcards,
+	}.Do(ctx, os.client.Transport)
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to perform Disk Usage Request")
+	}
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			klog.Errorf("failed to close response body from Disk Usage Request", err)
+		}
+	}(res.Body)
+
+	// Parse the json response to get total storage used for all index
+	totalDiskUsage, err := calculateDatabaseSize(res.Body)
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to parse json response to get disk usage")
+	}
+
+	return totalDiskUsage, nil
 }
