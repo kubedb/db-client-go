@@ -22,7 +22,6 @@ import (
 	"crypto/x509"
 	"database/sql"
 	"fmt"
-	"time"
 
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
@@ -38,6 +37,7 @@ type KubeDBClientBuilder struct {
 	db      *api.MySQL
 	url     string
 	podName string
+	ctx     context.Context
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *api.MySQL) *KubeDBClientBuilder {
@@ -57,7 +57,16 @@ func (o *KubeDBClientBuilder) WithPod(podName string) *KubeDBClientBuilder {
 	return o
 }
 
+func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
+	o.ctx = ctx
+	return o
+}
+
 func (o *KubeDBClientBuilder) GetMySQLClient() (*Client, error) {
+	if o.ctx == nil {
+		o.ctx = context.Background()
+	}
+
 	connector, err := o.getConnectionString()
 	if err != nil {
 		return nil, err
@@ -70,9 +79,7 @@ func (o *KubeDBClientBuilder) GetMySQLClient() (*Client, error) {
 	}
 
 	// ping to database to check the connection
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	if err := db.PingContext(ctx); err != nil {
+	if err := db.PingContext(o.ctx); err != nil {
 		closeErr := db.Close()
 		if closeErr != nil {
 			klog.Errorf("Failed to close client. error: %v", closeErr)
@@ -84,6 +91,9 @@ func (o *KubeDBClientBuilder) GetMySQLClient() (*Client, error) {
 }
 
 func (o *KubeDBClientBuilder) GetMySQLXormClient() (*XormClient, error) {
+	if o.ctx == nil {
+		o.ctx = context.Background()
+	}
 	connector, err := o.getConnectionString()
 	if err != nil {
 		return nil, err
@@ -96,6 +106,8 @@ func (o *KubeDBClientBuilder) GetMySQLXormClient() (*XormClient, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	engine.SetDefaultContext(o.ctx)
 	return &XormClient{
 		engine,
 	}, nil
@@ -112,7 +124,7 @@ func (o *KubeDBClientBuilder) getMySQLRootCredentials() (string, string, error) 
 		secretName = db.GetAuthSecretName()
 	}
 	var secret core.Secret
-	err := o.kc.Get(context.Background(), client.ObjectKey{Namespace: db.Namespace, Name: secretName}, &secret)
+	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: db.Namespace, Name: secretName}, &secret)
 	if err != nil {
 		return "", "", err
 	}
@@ -141,7 +153,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	if o.db.Spec.RequireSSL && o.db.Spec.TLS != nil {
 		// get client-secret
 		var clientSecret core.Secret
-		err := o.kc.Get(context.TODO(), client.ObjectKey{Namespace: o.db.GetNamespace(), Name: o.db.GetCertSecretName(api.MySQLClientCert)}, &clientSecret)
+		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.GetNamespace(), Name: o.db.GetCertSecretName(api.MySQLClientCert)}, &clientSecret)
 		if err != nil {
 			return "", err
 		}
