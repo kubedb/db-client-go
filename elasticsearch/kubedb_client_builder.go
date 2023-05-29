@@ -20,6 +20,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -452,4 +453,35 @@ func (o *KubeDBClientBuilder) getDefaultTLSConfig() (*tls.Config, error) {
 
 func (o *KubeDBClientBuilder) ServiceURL() string {
 	return fmt.Sprintf("%v://%s.%s.svc:%d", o.db.GetConnectionScheme(), o.db.ServiceName(), o.db.GetNamespace(), api.ElasticsearchRestPort)
+}
+
+func parseDiskUsageResponse(body io.ReadCloser) (string, error) {
+	var totalDiskUsageInBytes float64
+	resMap := make(map[string]interface{})
+	if err := json.NewDecoder(body).Decode(&resMap); err != nil {
+		klog.Errorf("failed to deserialize the response body for disk usage request: %v", err)
+		return "", err
+	}
+
+	// Parse the deserialized json response to find out storage of each index
+	for _, val := range resMap {
+		if valMap, ok := val.(map[string]interface{}); ok {
+			for key, field := range valMap {
+				if key == diskUsageRequestKey {
+					storeSizeInByes := field.(float64)
+					totalDiskUsageInBytes += storeSizeInByes
+				}
+			}
+		}
+	}
+	if totalDiskUsageInBytes == 0 {
+		return diskUsageDefault, nil
+	}
+
+	// take an estimated percent of extra storage for safety & taking metadata into account.
+	// convert bytes to Gib
+	totalDiskUsageInMi := (totalDiskUsageInBytes + (totalDiskUsageInBytes*float64(diskUsageEstimateThreshold))/100) / float64(1024*1024)
+	totalDiskUsageInString := fmt.Sprintf("%f", totalDiskUsageInMi) + "Mi"
+
+	return totalDiskUsageInString, nil
 }

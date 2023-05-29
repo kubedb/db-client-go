@@ -197,33 +197,11 @@ func (os *OSClientV2) GetTotalDiskUsage(ctx context.Context) (string, error) {
 		}
 	}(res.Body)
 
-	var totalDiskUsageInBytes float64
-	resMap := make(map[string]interface{})
-	if err := json.NewDecoder(res.Body).Decode(&resMap); err != nil {
-		klog.Errorf("failed to deserialize the response body for disk usage request: %v", err)
-		return "", err
+	// Parse the json response to get total storage used for all index
+	totalDiskUsage, err := parseDiskUsageResponse(res.Body)
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to parse json response to get disk usage")
 	}
 
-	// Parse the deserialized json response to find out storage of each index
-	for _, val := range resMap {
-		if valMap, ok := val.(map[string]interface{}); ok {
-			for key, field := range valMap {
-				if key == diskUsageRequestKey {
-					storeSizeInByes := field.(float64)
-					totalDiskUsageInBytes += storeSizeInByes
-				}
-			}
-		}
-	}
-
-	if totalDiskUsageInBytes == 0 {
-		return diskUsageDefault, nil
-	}
-
-	// take an estimated percent of extra storage for safety & taking metadata into account.
-	// convert bytes to Gib
-	totalDiskUsageInGib := (totalDiskUsageInBytes + (totalDiskUsageInBytes*float64(diskUsageEstimateThreshold))/100) / (1024 * 1024 * 1024)
-	totalDiskUsageInString := fmt.Sprintf("%f", totalDiskUsageInGib) + "Gi"
-
-	return totalDiskUsageInString, nil
+	return totalDiskUsage, nil
 }
