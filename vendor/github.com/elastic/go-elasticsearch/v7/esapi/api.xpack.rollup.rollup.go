@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 7.15.0: DO NOT EDIT
+// Code generated from specification version 7.13.1: DO NOT EDIT
 
 package esapi
 
@@ -40,9 +40,7 @@ func newRollupRollupFunc(t Transport) RollupRollup {
 
 // RollupRollup - Rollup an index
 //
-// This API is experimental.
-//
-// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/xpack-rollup.html.
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/rollup-api.html.
 //
 type RollupRollup func(index string, body io.Reader, rollup_index string, o ...func(*RollupRollupRequest)) (*Response, error)
 
