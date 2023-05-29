@@ -21,7 +21,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
 
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
@@ -42,6 +41,7 @@ type KubeDBClientBuilder struct {
 	url        string
 	podName    string
 	postgresDB string
+	ctx        context.Context
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *api.Postgres) *KubeDBClientBuilder {
@@ -66,7 +66,15 @@ func (o *KubeDBClientBuilder) WithPostgresDB(pgDB string) *KubeDBClientBuilder {
 	return o
 }
 
+func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
+	o.ctx = ctx
+	return o
+}
+
 func (o *KubeDBClientBuilder) GetPostgresXormClient() (*XormClient, error) {
+	if o.ctx == nil {
+		o.ctx = context.Background()
+	}
 	connector, err := o.getConnectionString()
 	if err != nil {
 		return nil, err
@@ -80,6 +88,7 @@ func (o *KubeDBClientBuilder) GetPostgresXormClient() (*XormClient, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to run query: %v", err)
 	}
+	engine.SetDefaultContext(o.ctx)
 	return &XormClient{engine}, nil
 }
 
@@ -92,7 +101,7 @@ func (o *KubeDBClientBuilder) getPostgresAuthCredentials() (string, string, erro
 		return "", "", errors.New("no database secret")
 	}
 	var secret core.Secret
-	err := o.kc.Get(context.TODO(), client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.AuthSecret.Name}, &secret)
+	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.AuthSecret.Name}, &secret)
 	if err != nil {
 		return "", "", err
 	}
@@ -100,6 +109,9 @@ func (o *KubeDBClientBuilder) getPostgresAuthCredentials() (string, string, erro
 }
 
 func (o *KubeDBClientBuilder) GetPostgresClient() (*Client, error) {
+	if o.ctx == nil {
+		o.ctx = context.Background()
+	}
 	connector, err := o.getConnectionString()
 	if err != nil {
 		return nil, err
@@ -111,9 +123,9 @@ func (o *KubeDBClientBuilder) GetPostgresClient() (*Client, error) {
 	}
 
 	// ping to database to check the connection
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	if err := db.PingContext(ctx); err != nil {
+	// ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	// defer cancel()
+	if err := db.PingContext(o.ctx); err != nil {
 		closeErr := db.Close()
 		if closeErr != nil {
 			klog.Errorf("Failed to close client. error: %v", closeErr)
@@ -152,7 +164,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		secretName := o.db.GetCertSecretName(api.PostgresClientCert)
 
 		var certSecret core.Secret
-		err := o.kc.Get(context.TODO(), client.ObjectKey{Namespace: o.db.Namespace, Name: secretName}, &certSecret)
+		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: secretName}, &certSecret)
 		if err != nil {
 			klog.Error(err, "failed to get certificate secret.", secretName)
 			return "", err
