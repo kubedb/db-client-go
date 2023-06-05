@@ -22,13 +22,13 @@ import (
 	"crypto/x509"
 	"database/sql"
 	"fmt"
-	"log"
 	"time"
 
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	sql_driver "github.com/go-sql-driver/mysql"
 	core "k8s.io/api/core/v1"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"xorm.io/xorm"
 )
@@ -77,7 +77,11 @@ func (o *KubeDBClientBuilder) GetMariaDBClient() (*Client, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	if err := db.PingContext(ctx); err != nil {
-		log.Fatal(err)
+		closeErr := db.Close()
+		if closeErr != nil {
+			klog.Errorf("Failed to close client. error: %v", closeErr)
+		}
+		return nil, err
 	}
 
 	return &Client{db}, nil
