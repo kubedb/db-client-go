@@ -21,7 +21,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
@@ -115,7 +114,11 @@ func (o *KubeDBClientBuilder) GetPostgresClient() (*Client, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	if err := db.PingContext(ctx); err != nil {
-		log.Fatal(err)
+		closeErr := db.Close()
+		if closeErr != nil {
+			klog.Errorf("Failed to close client. error: %v", closeErr)
+		}
+		return nil, err
 	}
 
 	return &Client{db}, nil

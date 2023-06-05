@@ -92,6 +92,10 @@ func (o *KubeDBClientBuilder) GetRedisClient(ctx context.Context) (*Client, erro
 	rdClient := rd.NewClient(rdOpts)
 	_, err = rdClient.Ping(ctx).Result()
 	if err != nil {
+		closeErr := rdClient.Close()
+		if closeErr != nil {
+			klog.Errorf("Failed to close client. error: %v", closeErr)
+		}
 		return nil, fmt.Errorf("failed to connect to database: %v", err)
 	}
 	return &Client{
@@ -129,6 +133,10 @@ func (o *KubeDBClientBuilder) GetRedisClusterClient(ctx context.Context) (*Clust
 	rdClient := rd.NewClusterClient(rdClusterOpts)
 	_, err = rdClient.Ping(ctx).Result()
 	if err != nil {
+		closeErr := rdClient.Close()
+		if closeErr != nil {
+			klog.Errorf("Failed to close client. error: %v", closeErr)
+		}
 		return nil, fmt.Errorf("failed to connect to database: %v", err)
 	}
 	return &ClusterClient{

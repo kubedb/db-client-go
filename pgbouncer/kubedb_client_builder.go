@@ -112,7 +112,11 @@ func (o *KubeDBClientBuilder) GetPgBouncerClient(ctx context.Context) (*Client, 
 
 	// ping to database to check the connection
 	if _, err := db.QueryContext(ctx, "SHOW HELP;"); err != nil {
-		return nil, fmt.Errorf("failed to ping database: %v", err)
+		closeErr := db.Close()
+		if closeErr != nil {
+			klog.Errorf("Failed to close client. error: %v", closeErr)
+		}
+		return nil, err
 	}
 
 	return &Client{db}, nil
