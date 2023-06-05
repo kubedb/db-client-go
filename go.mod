@@ -13,7 +13,7 @@ require (
 	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/opensearch-project/opensearch-go/v2 v2.2.0
 	github.com/pkg/errors v0.9.1
-	github.com/redis/go-redis/v9 v9.0.2
+	github.com/redis/go-redis/v9 v9.0.5
 	go.mongodb.org/mongo-driver v1.10.2
 	k8s.io/api v0.25.3
 	k8s.io/klog/v2 v2.80.1
