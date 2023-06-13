@@ -20,7 +20,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"time"
 
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
@@ -35,6 +34,7 @@ type KubeDBClientBuilder struct {
 	db      *api.ProxySQL
 	url     string
 	podName string
+	ctx     context.Context
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *api.ProxySQL) *KubeDBClientBuilder {
@@ -54,7 +54,15 @@ func (o *KubeDBClientBuilder) WithPod(podName string) *KubeDBClientBuilder {
 	return o
 }
 
+func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
+	o.ctx = ctx
+	return o
+}
+
 func (o *KubeDBClientBuilder) GetProxySQLClient() (*Client, error) {
+	if o.ctx == nil {
+		o.ctx = context.Background()
+	}
 	connector, err := o.getConnectionString()
 	if err != nil {
 		return nil, err
@@ -67,9 +75,7 @@ func (o *KubeDBClientBuilder) GetProxySQLClient() (*Client, error) {
 	}
 
 	// ping to database to check the connection
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	if err := db.PingContext(ctx); err != nil {
+	if err := db.PingContext(o.ctx); err != nil {
 		closeErr := db.Close()
 		if closeErr != nil {
 			klog.Errorf("Failed to close client. error: %v", closeErr)
@@ -81,6 +87,9 @@ func (o *KubeDBClientBuilder) GetProxySQLClient() (*Client, error) {
 }
 
 func (o *KubeDBClientBuilder) GetProxySQLXormClient() (*XormClient, error) {
+	if o.ctx == nil {
+		o.ctx = context.Background()
+	}
 	connector, err := o.getConnectionString()
 	if err != nil {
 		return nil, err
@@ -93,6 +102,7 @@ func (o *KubeDBClientBuilder) GetProxySQLXormClient() (*XormClient, error) {
 	if err != nil {
 		return nil, err
 	}
+	engine.SetDefaultContext(o.ctx)
 	return &XormClient{
 		engine,
 	}, nil
@@ -109,7 +119,7 @@ func (o *KubeDBClientBuilder) getProxySQLRootCredentials() (string, string, erro
 		secretName = db.GetAuthSecretName()
 	}
 	var secret core.Secret
-	err := o.kc.Get(context.Background(), client.ObjectKey{Namespace: db.Namespace, Name: secretName}, &secret)
+	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: db.Namespace, Name: secretName}, &secret)
 	if err != nil {
 		return "", "", err
 	}

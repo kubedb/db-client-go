@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package mysql
+package perconaxtradb
 
 import (
 	"context"
@@ -34,13 +34,13 @@ import (
 
 type KubeDBClientBuilder struct {
 	kc      client.Client
-	db      *api.MySQL
+	db      *api.PerconaXtraDB
 	url     string
 	podName string
 	ctx     context.Context
 }
 
-func NewKubeDBClientBuilder(kc client.Client, db *api.MySQL) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *api.PerconaXtraDB) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc: kc,
 		db: db,
@@ -62,7 +62,7 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 	return o
 }
 
-func (o *KubeDBClientBuilder) GetMySQLClient() (*Client, error) {
+func (o *KubeDBClientBuilder) GetPerconaXtradbClient() (*Client, error) {
 	if o.ctx == nil {
 		o.ctx = context.Background()
 	}
@@ -90,7 +90,7 @@ func (o *KubeDBClientBuilder) GetMySQLClient() (*Client, error) {
 	return &Client{db}, nil
 }
 
-func (o *KubeDBClientBuilder) GetMySQLXormClient() (*XormClient, error) {
+func (o *KubeDBClientBuilder) GetPerconaXtradbXormClient() (*XormClient, error) {
 	if o.ctx == nil {
 		o.ctx = context.Background()
 	}
@@ -117,7 +117,7 @@ func (o *KubeDBClientBuilder) getURL() string {
 	return fmt.Sprintf("%s.%s.%s.svc", o.podName, o.db.GoverningServiceName(), o.db.Namespace)
 }
 
-func (o *KubeDBClientBuilder) getMySQLRootCredentials() (string, string, error) {
+func (o *KubeDBClientBuilder) getPerconaXtradbRootCredentials() (string, string, error) {
 	db := o.db
 	var secretName string
 	if db.Spec.AuthSecret != nil {
@@ -140,7 +140,7 @@ func (o *KubeDBClientBuilder) getMySQLRootCredentials() (string, string, error) 
 }
 
 func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
-	user, pass, err := o.getMySQLRootCredentials()
+	user, pass, err := o.getPerconaXtradbRootCredentials()
 	if err != nil {
 		return "", err
 	}
@@ -153,7 +153,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	if o.db.Spec.RequireSSL && o.db.Spec.TLS != nil {
 		// get client-secret
 		var clientSecret core.Secret
-		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.GetNamespace(), Name: o.db.GetCertSecretName(api.MySQLClientCert)}, &clientSecret)
+		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.GetNamespace(), Name: o.db.GetCertSecretName(api.PerconaXtraDBClientCert)}, &clientSecret)
 		if err != nil {
 			return "", err
 		}
@@ -172,14 +172,14 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 
 		// tls custom setup
 		if o.db.Spec.RequireSSL {
-			err = sql_driver.RegisterTLSConfig(api.MySQLTLSConfigCustom, &tls.Config{
+			err = sql_driver.RegisterTLSConfig(api.PerconaXtraDBTLSConfigCustom, &tls.Config{
 				RootCAs:      certPool,
 				Certificates: clientCert,
 			})
 			if err != nil {
 				return "", err
 			}
-			tlsConfig = fmt.Sprintf("tls=%s", api.MySQLTLSConfigCustom)
+			tlsConfig = fmt.Sprintf("tls=%s", api.PerconaXtraDBTLSConfigCustom)
 		} else {
 			tlsConfig = fmt.Sprintf("tls=%s", api.MySQLTLSConfigSkipVerify)
 		}

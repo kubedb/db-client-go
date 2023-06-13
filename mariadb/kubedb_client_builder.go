@@ -22,7 +22,6 @@ import (
 	"crypto/x509"
 	"database/sql"
 	"fmt"
-	"time"
 
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
@@ -42,6 +41,7 @@ type KubeDBClientBuilder struct {
 	db      *api.MariaDB
 	url     string
 	podName string
+	ctx     context.Context
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *api.MariaDB) *KubeDBClientBuilder {
@@ -61,7 +61,16 @@ func (o *KubeDBClientBuilder) WithPod(podName string) *KubeDBClientBuilder {
 	return o
 }
 
+func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
+	o.ctx = ctx
+	return o
+}
+
 func (o *KubeDBClientBuilder) GetMariaDBClient() (*Client, error) {
+	if o.ctx == nil {
+		o.ctx = context.Background()
+	}
+
 	connector, err := o.getConnectionString()
 	if err != nil {
 		return nil, err
@@ -74,9 +83,7 @@ func (o *KubeDBClientBuilder) GetMariaDBClient() (*Client, error) {
 	}
 
 	// ping to database to check the connection
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	if err := db.PingContext(ctx); err != nil {
+	if err := db.PingContext(o.ctx); err != nil {
 		closeErr := db.Close()
 		if closeErr != nil {
 			klog.Errorf("Failed to close client. error: %v", closeErr)
@@ -88,6 +95,10 @@ func (o *KubeDBClientBuilder) GetMariaDBClient() (*Client, error) {
 }
 
 func (o *KubeDBClientBuilder) GetMariaDBXormClient() (*XormClient, error) {
+	if o.ctx == nil {
+		o.ctx = context.Background()
+	}
+
 	connector, err := o.getConnectionString()
 	if err != nil {
 		return nil, err
@@ -100,6 +111,7 @@ func (o *KubeDBClientBuilder) GetMariaDBXormClient() (*XormClient, error) {
 	if err != nil {
 		return nil, err
 	}
+	engine.SetDefaultContext(o.ctx)
 	return &XormClient{
 		engine,
 	}, nil
@@ -111,7 +123,7 @@ func (o *KubeDBClientBuilder) getMariaDBBasicAuth() (string, string, error) {
 		secretName = o.db.GetAuthSecretName()
 	}
 	var secret core.Secret
-	err := o.kc.Get(context.TODO(), client.ObjectKey{Namespace: o.db.Namespace, Name: secretName}, &secret)
+	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: secretName}, &secret)
 	if err != nil {
 		return "", "", err
 	}
@@ -148,7 +160,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	if o.SSLEnabledMariaDB() {
 		// get client-secret
 		var clientSecret core.Secret
-		err := o.kc.Get(context.TODO(), client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.GetCertSecretName(api.MariaDBClientCert)}, &clientSecret)
+		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.GetCertSecretName(api.MariaDBClientCert)}, &clientSecret)
 		if err != nil {
 			return "", err
 		}
