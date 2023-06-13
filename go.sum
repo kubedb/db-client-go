@@ -1494,8 +1494,8 @@ kmodules.xyz/monitoring-agent-api v0.25.1 h1:E1H8U/vMfYQ8wevmJv6Lcj0Z4DF7cH3hZ2x
 kmodules.xyz/monitoring-agent-api v0.25.1/go.mod h1:IphGzRWbuV00B3TLalcBs6+IlchSZVTwKDty+J3LLz4=
 kmodules.xyz/offshoot-api v0.25.4 h1:IjJNvkphcdYUG8XO/pBwXpuP8W+jxAWJZ3yH8vgI/as=
 kmodules.xyz/offshoot-api v0.25.4/go.mod h1:PUk4EuJFhhyQykCflHj7EgXcljGIqs9vi0IN0RpxtY4=
-kubedb.dev/apimachinery v0.33.2-0.20230503123451-70ebcf524ed7 h1:v5dONAxkaDy9rBdvVpu1oX6hNijjdValKvMgalFQgGI=
-kubedb.dev/apimachinery v0.33.2-0.20230503123451-70ebcf524ed7/go.mod h1:uanD/CoIJz9Zc+so9VvD4+f1KN6MH2CrPjeHcE2ybWE=
+kubedb.dev/apimachinery v0.33.2-0.20230613082109-19397df99ef7 h1:uxx+5CIZWBckBql9Vb3E87qXudgQBxgkfbBkL7nBgvA=
+kubedb.dev/apimachinery v0.33.2-0.20230613082109-19397df99ef7/go.mod h1:bFkJ6mbKUpmvmfVML6dczw/+BEO8AMKcuWZckydR2Y0=
 lukechampine.com/uint128 v1.1.1 h1:pnxCASz787iMf+02ssImqk6OLt+Z5QHMoZyUXR4z6JU=
 lukechampine.com/uint128 v1.1.1/go.mod h1:c4eWIwlEGaxC/+H1VguhU4PHXNWDCDMUlWdIWl2j1gk=
 modernc.org/cc/v3 v3.33.6/go.mod h1:iPJg1pkwXqAV16SNgFBVYmggfMg6xhs+2oiO0vclK3g=
