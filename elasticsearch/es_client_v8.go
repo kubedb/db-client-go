@@ -41,16 +41,62 @@ type ESClientV8 struct {
 }
 
 func (es *ESClientV8) ClusterHealthInfo() (map[string]interface{}, error) {
-	return nil, nil
+	res, err := es.client.Cluster.Health(
+		es.client.Cluster.Health.WithPretty(),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	response := make(map[string]interface{})
+	if err2 := json.NewDecoder(res.Body).Decode(&response); err2 != nil {
+		return nil, errors.Wrap(err2, "failed to parse the response body")
+	}
+	return response, nil
 }
 
 func (es *ESClientV8) NodesStats() (map[string]interface{}, error) {
-	return nil, nil
+	req := esapi.NodesStatsRequest{
+		Pretty: true,
+		Human:  true,
+	}
+
+	resp, err := req.Do(context.Background(), es.client)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	nodesStats := make(map[string]interface{})
+	if err := json.NewDecoder(resp.Body).Decode(&nodesStats); err != nil {
+		return nil, fmt.Errorf("failed to deserialize the response: %v", err)
+	}
+
+	return nodesStats, nil
 }
 
 // GetIndicesInfo will return the indices' info of an Elasticsearch database
 func (es *ESClientV8) GetIndicesInfo() ([]interface{}, error) {
-	return nil, nil
+	req := esapi.CatIndicesRequest{
+		Bytes:  "b", // will return resource size field into byte unit
+		Format: "json",
+		Pretty: true,
+		Human:  true,
+	}
+
+	resp, err := req.Do(context.Background(), es.client)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	indicesInfo := make([]interface{}, 0)
+	if err := json.NewDecoder(resp.Body).Decode(&indicesInfo); err != nil {
+		return nil, fmt.Errorf("failed to deserialize the response: %v", err)
+	}
+
+	return indicesInfo, nil
 }
 
 func (es *ESClientV8) ClusterStatus() (string, error) {
