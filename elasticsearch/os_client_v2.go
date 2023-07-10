@@ -41,16 +41,61 @@ type OSClientV2 struct {
 }
 
 func (os *OSClientV2) ClusterHealthInfo() (map[string]interface{}, error) {
-	return nil, nil
+	res, err := os.client.Cluster.Health(
+		os.client.Cluster.Health.WithPretty(),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	response := make(map[string]interface{})
+	if err2 := json.NewDecoder(res.Body).Decode(&response); err2 != nil {
+		return nil, errors.Wrap(err2, "failed to parse the response body")
+	}
+	return response, nil
 }
 
 func (os *OSClientV2) NodesStats() (map[string]interface{}, error) {
-	return nil, nil
+	req := osv2api.NodesStatsRequest{
+		Pretty: true,
+		Human:  true,
+	}
+
+	resp, err := req.Do(context.Background(), os.client)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	nodesStats := make(map[string]interface{})
+	if err := json.NewDecoder(resp.Body).Decode(&nodesStats); err != nil {
+		return nil, fmt.Errorf("failed to deserialize the response: %v", err)
+	}
+
+	return nodesStats, nil
 }
 
 // GetIndicesInfo will return the indices' info of an Elasticsearch database
 func (os *OSClientV2) GetIndicesInfo() ([]interface{}, error) {
-	return nil, nil
+	req := osv2api.CatIndicesRequest{
+		Bytes:  "b", // will return resource size field into byte unit
+		Format: "json",
+		Pretty: true,
+		Human:  true,
+	}
+	resp, err := req.Do(context.Background(), os.client)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	indicesInfo := make([]interface{}, 0)
+	if err := json.NewDecoder(resp.Body).Decode(&indicesInfo); err != nil {
+		return nil, fmt.Errorf("failed to deserialize the response: %v", err)
+	}
+
+	return indicesInfo, nil
 }
 
 func (os *OSClientV2) ClusterStatus() (string, error) {
@@ -73,10 +118,6 @@ func (os *OSClientV2) ClusterStatus() (string, error) {
 		return "", errors.New("failed to convert response to string")
 	}
 	return "", errors.New("status is missing")
-}
-
-func (os *OSClientV2) SyncCredentialFromSecret(secret *core.Secret) error {
-	return nil
 }
 
 func (os *OSClientV2) GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error {
@@ -204,4 +245,8 @@ func (os *OSClientV2) GetTotalDiskUsage(ctx context.Context) (string, error) {
 	}
 
 	return totalDiskUsage, nil
+}
+
+func (os *OSClientV2) SyncCredentialFromSecret(secret *core.Secret) error {
+	return nil
 }
