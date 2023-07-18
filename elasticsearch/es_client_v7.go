@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
@@ -300,4 +301,54 @@ func (es *ESClientV7) GetTotalDiskUsage(ctx context.Context) (string, error) {
 	}
 
 	return totalDiskUsage, nil
+}
+
+func (es *ESClientV7) GetDBUserRole(ctx context.Context) bool {
+	req := esapi.SecurityGetRoleRequest{
+		Name: []string{"my_admin"},
+		Header: map[string][]string{
+			"Content-Type": {"application/json"},
+		},
+	}
+	res, err := req.Do(ctx, es.client.Transport)
+	if err != nil {
+		fmt.Println("faced error while making request in getdbuserrole function")
+		os.Exit(1)
+	}
+	resBody, err := io.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println("faced error while converting io.readcloser to bytes")
+		os.Exit(1)
+	}
+	if string(resBody) == "{}" {
+		return false
+	}
+	return true
+}
+
+func (es *ESClientV7) EnsureDBUserRole(ctx context.Context) error {
+	if !es.GetDBUserRole(ctx) {
+		jsonBody := `{"cluster":["all"],"indices":[{"names":["*"],"privileges":["read","write"],"allow_restricted_indices":false}],"applications":[{"application":"kibana-.kibana","privileges":["admin","read"],"resources":["*"]}],"run_as":[],"metadata":{},"transient_metadata":{"enabled":true}}`
+		body := strings.NewReader(jsonBody)
+		req := esapi.SecurityPutRoleRequest{
+			Name: "my_admin",
+			Body: body,
+			Header: map[string][]string{
+				"Content-Type": {"application/json"},
+			},
+		}
+
+		res, err := req.Do(ctx, es.client.Transport)
+		if err != nil {
+			fmt.Println("faced error while making request in ensuredbuserrole function")
+			os.Exit(1)
+		}
+		resBody, err := io.ReadAll(res.Body)
+		fmt.Println("newly added role ", resBody)
+		if err != nil {
+			fmt.Println("faced error while converting io.readcloser to bytes")
+			os.Exit(1)
+		}
+	}
+	return nil
 }

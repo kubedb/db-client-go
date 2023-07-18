@@ -18,7 +18,6 @@ package elasticsearch
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -303,13 +302,11 @@ func (es *ESClientV8) GetTotalDiskUsage(ctx context.Context) (string, error) {
 	return totalDiskUsage, nil
 }
 
-func (es *ESClientV8) GetDBUserRole(ctx context.Context, user, pass string) bool {
-	auth := user + ":" + pass
+func (es *ESClientV8) GetDBUserRole(ctx context.Context) bool {
 	req := esapi.SecurityGetRoleRequest{
 		Name: []string{"my_admin"},
 		Header: map[string][]string{
-			"Content-Type":  {"application/json"},
-			"Authorization": {"Basic " + base64.StdEncoding.EncodeToString([]byte(auth))},
+			"Content-Type": {"application/json"},
 		},
 	}
 	res, err := req.Do(ctx, es.client.Transport)
@@ -328,17 +325,15 @@ func (es *ESClientV8) GetDBUserRole(ctx context.Context, user, pass string) bool
 	return true
 }
 
-func (es *ESClientV8) EnsureDBUserRole(ctx context.Context, user, pass string) error {
-	auth := user + ":" + pass
-	if !es.GetDBUserRole(ctx, user, pass) {
+func (es *ESClientV8) EnsureDBUserRole(ctx context.Context) error {
+	if !es.GetDBUserRole(ctx) {
 		jsonBody := `{"cluster":["all"],"indices":[{"names":["*"],"privileges":["read","write"],"allow_restricted_indices":false}],"applications":[{"application":"kibana-.kibana","privileges":["admin","read"],"resources":["*"]}],"run_as":[],"metadata":{},"transient_metadata":{"enabled":true}}`
 		body := strings.NewReader(jsonBody)
 		req := esapi.SecurityPutRoleRequest{
 			Name: "my_admin",
 			Body: body,
 			Header: map[string][]string{
-				"Content-Type":  {"application/json"},
-				"Authorization": {"Basic " + base64.StdEncoding.EncodeToString([]byte(auth))},
+				"Content-Type": {"application/json"},
 			},
 		}
 
