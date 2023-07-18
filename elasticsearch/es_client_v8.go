@@ -18,10 +18,12 @@ package elasticsearch
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
@@ -299,4 +301,58 @@ func (es *ESClientV8) GetTotalDiskUsage(ctx context.Context) (string, error) {
 	}
 
 	return totalDiskUsage, nil
+}
+
+func (es *ESClientV8) GetDBUserRole(ctx context.Context, user, pass string) bool {
+	auth := user + ":" + pass
+	req := esapi.SecurityGetRoleRequest{
+		Name: []string{"my_admin"},
+		Header: map[string][]string{
+			"Content-Type":  {"application/json"},
+			"Authorization": {"Basic " + base64.StdEncoding.EncodeToString([]byte(auth))},
+		},
+	}
+	res, err := req.Do(ctx, es.client.Transport)
+	if err != nil {
+		fmt.Println("faced error while making request in getdbuserrole function")
+		os.Exit(1)
+	}
+	resBody, err := io.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println("faced error while converting io.readcloser to bytes")
+		os.Exit(1)
+	}
+	if string(resBody) == "{}" {
+		return false
+	}
+	return true
+}
+
+func (es *ESClientV8) EnsureDBUserRole(ctx context.Context, user, pass string) error {
+	auth := user + ":" + pass
+	if !es.GetDBUserRole(ctx, user, pass) {
+		jsonBody := `{"cluster":["all"],"indices":[{"names":["*"],"privileges":["read","write"],"allow_restricted_indices":false}],"applications":[{"application":"kibana-.kibana","privileges":["admin","read"],"resources":["*"]}],"run_as":[],"metadata":{},"transient_metadata":{"enabled":true}}`
+		body := strings.NewReader(jsonBody)
+		req := esapi.SecurityPutRoleRequest{
+			Name: "my_admin",
+			Body: body,
+			Header: map[string][]string{
+				"Content-Type":  {"application/json"},
+				"Authorization": {"Basic " + base64.StdEncoding.EncodeToString([]byte(auth))},
+			},
+		}
+
+		res, err := req.Do(ctx, es.client.Transport)
+		if err != nil {
+			fmt.Println("faced error while making request in ensuredbuserrole function")
+			os.Exit(1)
+		}
+		resBody, err := io.ReadAll(res.Body)
+		fmt.Println("newly added role ", resBody)
+		if err != nil {
+			fmt.Println("faced error while converting io.readcloser to bytes")
+			os.Exit(1)
+		}
+	}
+	return nil
 }
