@@ -369,6 +369,7 @@ func (es *ESClientV7) EnsureDBUserRole(ctx context.Context) error {
 		jsonStr, err := json.Marshal(map1)
 		if err != nil {
 			fmt.Printf("Error: %s", err.Error())
+
 		} else {
 			fmt.Println(string(jsonStr))
 		}
