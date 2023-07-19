@@ -322,6 +322,7 @@ func (es *ESClientV8) GetDBUserRole(ctx context.Context) bool {
 	if string(resBody) == "{}" {
 		return false
 	}
+	fmt.Println("---------------------existing role", string(resBody))
 	return true
 }
 
@@ -343,7 +344,7 @@ func (es *ESClientV8) EnsureDBUserRole(ctx context.Context) error {
 			os.Exit(1)
 		}
 		resBody, err := io.ReadAll(res.Body)
-		fmt.Println("newly added role ", resBody)
+		fmt.Println("---------------------------newly added role ", string(resBody))
 		if err != nil {
 			fmt.Println("faced error while converting io.readcloser to bytes")
 			os.Exit(1)
