@@ -355,7 +355,7 @@ func (es *ESClientV8) EnsureDBUserRole(ctx context.Context) error {
 			"applications": []map[string]interface{}{
 				{
 					"application": "kibana-.kibana",
-					"privileges":  []string{"admin", "read", "write"},
+					"privileges":  []string{"read"},
 					"resources":   []string{"*"},
 				},
 			},
