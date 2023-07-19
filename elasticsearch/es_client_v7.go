@@ -315,21 +315,33 @@ func (es *ESClientV7) GetDBUserRole(ctx context.Context) (error, bool) {
 			klog.Errorf("failed to close response body from GetDBUser", err)
 		}
 	}(res.Body)
+	bd, err := io.ReadAll(res.Body)
+	fmt.Println("retrieved role------------------>", string(bd))
+
 	if err != nil {
 		fmt.Println("faced error while making request in getdbuserrole function")
 		return err, false
 	}
 	if res.IsError() {
-		if res.StatusCode == 404 {
-			return nil, false
-		}
 		return err, false
 	}
 	return nil, true
+	//resBody, err := io.ReadAll(res.Body)
+	//if err != nil {
+	//	fmt.Println("faced error while converting io.readcloser to bytes")
+	//	return false
+	//}
+	//fmt.Println("---------role we got ", string(resBody))
+	//if string(resBody) == "{}" {
+	//	return false
+	//}
+	//fmt.Println("---------------------existing role", string(resBody))
+	//return true
 }
 
 func (es *ESClientV7) EnsureDBUserRole(ctx context.Context) error {
 	err, flg := es.GetDBUserRole(ctx)
+
 	if err != nil {
 		return err
 	}
@@ -341,17 +353,19 @@ func (es *ESClientV7) EnsureDBUserRole(ctx context.Context) error {
 				"privileges":               []string{"read", "write"},
 				"allow_restricted_indices": false,
 			}},
-			"applictions": map[string]interface{}{
-				"application": "kibana-.kibana",
-				"privileges":  []string{"admin", "read"},
-				"resources":   []string{"*"},
+			"applications": []map[string]interface{}{
+				{
+					"application": "kibana-.kibana",
+					"privileges":  []string{"admin", "read"},
+					"resources":   []string{"*"},
+				},
 			},
 			"run_as": []string{},
 			"transient_metadata": map[string]interface{}{
 				"enabled": true,
 			},
 		}
-		fmt.Println(map1)
+		//fmt.Println(map1)
 		jsonStr, err := json.Marshal(map1)
 		if err != nil {
 			fmt.Printf("Error: %s", err.Error())
