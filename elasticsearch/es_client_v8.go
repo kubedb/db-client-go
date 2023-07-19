@@ -340,6 +340,7 @@ func (es *ESClientV8) GetDBUserRole(ctx context.Context) (error, bool) {
 
 func (es *ESClientV8) EnsureDBUserRole(ctx context.Context) error {
 	err, flg := es.GetDBUserRole(ctx)
+
 	if err != nil {
 		return err
 	}
