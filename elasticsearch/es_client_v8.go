@@ -304,7 +304,7 @@ func (es *ESClientV8) GetTotalDiskUsage(ctx context.Context) (string, error) {
 
 func (es *ESClientV8) GetDBUserRole(ctx context.Context) bool {
 	req := esapi.SecurityGetRoleRequest{
-		Name: []string{"my_admin"},
+		Name: []string{"testerr"},
 		Header: map[string][]string{
 			"Content-Type": {"application/json"},
 		},
