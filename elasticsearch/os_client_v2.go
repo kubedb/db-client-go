@@ -257,5 +257,5 @@ func (es *OSClientV2) GetDBUserRole(ctx context.Context) (error, bool) {
 
 func (es *OSClientV2) EnsureDBUserRole(ctx context.Context) error {
 
-	return nil
+	return errors.New("")
 }
