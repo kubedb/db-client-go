@@ -320,6 +320,7 @@ func (es *ESClientV8) GetDBUserRole(ctx context.Context) (error, bool) {
 	}
 	if res.IsError() {
 		if res.StatusCode == 404 {
+			fmt.Println("it didn't got")
 			return nil, false
 		}
 		return err, false
