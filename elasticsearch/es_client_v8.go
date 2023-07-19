@@ -310,6 +310,7 @@ func (es *ESClientV8) GetDBUserRole(ctx context.Context) bool {
 		},
 	}
 	res, err := req.Do(ctx, es.client.Transport)
+	defer res.Body.Close()
 	if err != nil {
 		fmt.Println("faced error while making request in getdbuserrole function")
 		os.Exit(1)
@@ -319,6 +320,7 @@ func (es *ESClientV8) GetDBUserRole(ctx context.Context) bool {
 		fmt.Println("faced error while converting io.readcloser to bytes")
 		os.Exit(1)
 	}
+	fmt.Println("---------role we got ", string(resBody))
 	if string(resBody) == "{}" {
 		return false
 	}
@@ -339,6 +341,7 @@ func (es *ESClientV8) EnsureDBUserRole(ctx context.Context) error {
 		}
 
 		res, err := req.Do(ctx, es.client.Transport)
+		defer res.Body.Close()
 		if err != nil {
 			fmt.Println("faced error while making request in ensuredbuserrole function")
 			os.Exit(1)
