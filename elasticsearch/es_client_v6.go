@@ -213,8 +213,8 @@ func (es *ESClientV6) GetTotalDiskUsage(ctx context.Context) (string, error) {
 	return "", nil
 }
 
-func (es *ESClientV6) GetDBUserRole(ctx context.Context) bool {
-	return false
+func (es *ESClientV6) GetDBUserRole(ctx context.Context) (error, bool) {
+	return nil, false
 }
 
 func (es *ESClientV6) EnsureDBUserRole(ctx context.Context) error {

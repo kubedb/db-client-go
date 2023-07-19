@@ -251,11 +251,11 @@ func (os *OSClientV2) SyncCredentialFromSecret(secret *core.Secret) error {
 	return nil
 }
 
-func (es *OSClientV2) GetDBUserRole(ctx context.Context) bool {
-	return false
+func (es *OSClientV2) GetDBUserRole(ctx context.Context) (error, bool) {
+	return nil, false
 }
 
 func (es *OSClientV2) EnsureDBUserRole(ctx context.Context) error {
 
-	return errors.New("not supported in os version 1")
+	return nil
 }

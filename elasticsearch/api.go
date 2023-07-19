@@ -49,5 +49,5 @@ type ESClient interface {
 	GetClusterReadStatus(ctx context.Context, db *api.Elasticsearch) error
 	GetTotalDiskUsage(ctx context.Context) (string, error)
 	EnsureDBUserRole(ctx context.Context) error
-	GetDBUserRole(ctx context.Context) bool
+	GetDBUserRole(ctx context.Context) (error, bool)
 }

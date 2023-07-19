@@ -17,6 +17,7 @@ limitations under the License.
 package elasticsearch
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -303,48 +304,74 @@ func (es *ESClientV7) GetTotalDiskUsage(ctx context.Context) (string, error) {
 	return totalDiskUsage, nil
 }
 
-func (es *ESClientV7) GetDBUserRole(ctx context.Context) bool {
+func (es *ESClientV7) GetDBUserRole(ctx context.Context) (error, bool) {
 	req := esapi.SecurityGetRoleRequest{
 		Name: []string{"my_admin"},
-		Header: map[string][]string{
-			"Content-Type": {"application/json"},
-		},
 	}
 	res, err := req.Do(ctx, es.client.Transport)
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			klog.Errorf("failed to close response body from GetDBUser", err)
+		}
+	}(res.Body)
 	if err != nil {
 		fmt.Println("faced error while making request in getdbuserrole function")
-		os.Exit(1)
+		return err, false
 	}
-	resBody, err := io.ReadAll(res.Body)
-	if err != nil {
-		fmt.Println("faced error while converting io.readcloser to bytes")
-		os.Exit(1)
+	if res.IsError() {
+		if res.StatusCode == 404 {
+			return nil, false
+		}
+		return err, false
 	}
-	if string(resBody) == "{}" {
-		return false
-	}
-	return true
+	return nil, true
 }
 
 func (es *ESClientV7) EnsureDBUserRole(ctx context.Context) error {
-	if !es.GetDBUserRole(ctx) {
-		jsonBody := `{"cluster":["all"],"indices":[{"names":["*"],"privileges":["read","write"],"allow_restricted_indices":false}],"applications":[{"application":"kibana-.kibana","privileges":["admin","read"],"resources":["*"]}],"run_as":[],"metadata":{},"transient_metadata":{"enabled":true}}`
-		body := strings.NewReader(jsonBody)
+	err, flg := es.GetDBUserRole(ctx)
+	if err != nil {
+		return err
+	}
+	if !flg {
+		map1 := map[string]interface{}{
+			"cluster": []string{"all"},
+			"indices": []map[string]interface{}{{
+				"names":                    []string{"*"},
+				"privileges":               []string{"read", "write"},
+				"allow_restricted_indices": false,
+			}},
+			"applictions": map[string]interface{}{
+				"application": "kibana-.kibana",
+				"privileges":  []string{"admin", "read"},
+				"resources":   []string{"*"},
+			},
+			"run_as": []string{},
+			"transient_metadata": map[string]interface{}{
+				"enabled": true,
+			},
+		}
+		fmt.Println(map1)
+		jsonStr, err := json.Marshal(map1)
+		if err != nil {
+			fmt.Printf("Error: %s", err.Error())
+		} else {
+			fmt.Println(string(jsonStr))
+		}
+		body := bytes.NewReader(jsonStr)
 		req := esapi.SecurityPutRoleRequest{
 			Name: "my_admin",
 			Body: body,
-			Header: map[string][]string{
-				"Content-Type": {"application/json"},
-			},
 		}
 
 		res, err := req.Do(ctx, es.client.Transport)
+		defer res.Body.Close()
 		if err != nil {
 			fmt.Println("faced error while making request in ensuredbuserrole function")
 			os.Exit(1)
 		}
 		resBody, err := io.ReadAll(res.Body)
-		fmt.Println("newly added role ", resBody)
+		fmt.Println("---------------------------newly added role ", string(resBody))
 		if err != nil {
 			fmt.Println("faced error while converting io.readcloser to bytes")
 			os.Exit(1)
