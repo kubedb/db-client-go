@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
@@ -380,7 +379,7 @@ func (es *ESClientV7) EnsureDBUserRole(ctx context.Context) error {
 		}(res.Body)
 		if err != nil {
 			fmt.Println("faced error while making request in ensuredbuserrole function")
-			os.Exit(1)
+			return err
 		}
 		resBody, err := io.ReadAll(res.Body)
 		fmt.Println("---------------------------newly added role ", string(resBody))
