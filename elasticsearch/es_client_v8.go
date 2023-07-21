@@ -314,8 +314,8 @@ func (es *ESClientV8) GetDBUserRole(ctx context.Context) (error, bool) {
 			klog.Errorf("failed to close response body from GetDBUser", err)
 		}
 	}(res.Body)
-	bd, err := io.ReadAll(res.Body)
-	fmt.Println("retrieved role------------------>", string(bd))
+	//bd, err := io.ReadAll(res.Body)
+	//fmt.Println("retrieved role------------------>", string(bd))
 
 	if err != nil {
 		fmt.Println("faced error while making request in getdbuserrole function")
@@ -325,17 +325,6 @@ func (es *ESClientV8) GetDBUserRole(ctx context.Context) (error, bool) {
 		return err, false
 	}
 	return nil, true
-	//resBody, err := io.ReadAll(res.Body)
-	//if err != nil {
-	//	fmt.Println("faced error while converting io.readcloser to bytes")
-	//	return false
-	//}
-	//fmt.Println("---------role we got ", string(resBody))
-	//if string(resBody) == "{}" {
-	//	return false
-	//}
-	//fmt.Println("---------------------existing role", string(resBody))
-	//return true
 }
 
 func (es *ESClientV8) EnsureDBUserRole(ctx context.Context) error {
@@ -368,6 +357,8 @@ func (es *ESClientV8) EnsureDBUserRole(ctx context.Context) error {
 		jsonStr, err := json.Marshal(map1)
 		if err != nil {
 			fmt.Printf("Error: %s", err.Error())
+			return err
+
 		} else {
 			fmt.Println(string(jsonStr))
 		}
@@ -378,7 +369,12 @@ func (es *ESClientV8) EnsureDBUserRole(ctx context.Context) error {
 		}
 
 		res, err := req.Do(ctx, es.client.Transport)
-		defer res.Body.Close()
+		defer func(Body io.ReadCloser) {
+			err := Body.Close()
+			if err != nil {
+				klog.Errorf("failed to close response body from GetDBUser", err)
+			}
+		}(res.Body)
 		if err != nil {
 			fmt.Println("faced error while making request in ensuredbuserrole function")
 			os.Exit(1)
@@ -387,7 +383,7 @@ func (es *ESClientV8) EnsureDBUserRole(ctx context.Context) error {
 		fmt.Println("---------------------------newly added role ", string(resBody))
 		if err != nil {
 			fmt.Println("faced error while converting io.readcloser to bytes")
-			os.Exit(1)
+			return err
 		}
 	}
 	return nil
