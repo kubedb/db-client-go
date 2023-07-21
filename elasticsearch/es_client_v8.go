@@ -336,12 +336,12 @@ func (es *ESClientV8) EnsureDBUserRole(ctx context.Context) error {
 	if !flg {
 		dbPrivileges := map[string]interface{}{
 			Names:                  []string{All},
-			Privileges:             []string{PrivilegeReadKey, PrivilegeWriteKey, PrivilegeCreateIndexKey},
+			Privileges:             []string{PrivilegeReadKey, PrivilegeWriteKey},
 			AllowRestrictedIndices: false,
 		}
 		applicationPrivileges := map[string]interface{}{
 			Application: Kibana,
-			Privileges:  []string{PrivilegeReadKey, PrivilegeWriteKey},
+			Privileges:  []string{PrivilegeReadKey},
 			Resources:   []string{Any},
 		}
 		transientMetaPrivileges := map[string]interface{}{
