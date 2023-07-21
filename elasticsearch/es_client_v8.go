@@ -305,7 +305,7 @@ func (es *ESClientV8) GetTotalDiskUsage(ctx context.Context) (string, error) {
 
 func (es *ESClientV8) GetDBUserRole(ctx context.Context) (error, bool) {
 	req := esapi.SecurityGetRoleRequest{
-		Name: []string{"my_admin"},
+		Name: []string{"custom-user"},
 	}
 	res, err := req.Do(ctx, es.client.Transport)
 	defer func(Body io.ReadCloser) {
@@ -324,6 +324,8 @@ func (es *ESClientV8) GetDBUserRole(ctx context.Context) (error, bool) {
 	if res.IsError() {
 		return err, false
 	}
+	bd, err := io.ReadAll(res.Body)
+	fmt.Println("retrieved role------------------>", string(bd))
 	return nil, true
 }
 
@@ -338,13 +340,13 @@ func (es *ESClientV8) EnsureDBUserRole(ctx context.Context) error {
 			"cluster": []string{"all"},
 			"indices": []map[string]interface{}{{
 				"names":                    []string{"*"},
-				"privileges":               []string{"read", "write"},
+				"privileges":               []string{"read", "write", "create_index"},
 				"allow_restricted_indices": false,
 			}},
 			"applications": []map[string]interface{}{
 				{
 					"application": "kibana-.kibana",
-					"privileges":  []string{"read"},
+					"privileges":  []string{"read", "write"},
 					"resources":   []string{"*"},
 				},
 			},
@@ -364,7 +366,7 @@ func (es *ESClientV8) EnsureDBUserRole(ctx context.Context) error {
 		}
 		body := bytes.NewReader(jsonStr)
 		req := esapi.SecurityPutRoleRequest{
-			Name: "my_admin",
+			Name: "custom-user",
 			Body: body,
 		}
 
