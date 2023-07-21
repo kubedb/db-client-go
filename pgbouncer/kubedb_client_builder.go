@@ -42,6 +42,7 @@ type KubeDBClientBuilder struct {
 	url         string
 	podName     string
 	pgBouncerDB string
+	ctx         context.Context
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *api.PgBouncer) *KubeDBClientBuilder {
@@ -63,6 +64,11 @@ func (o *KubeDBClientBuilder) WithURL(url string) *KubeDBClientBuilder {
 
 func (o *KubeDBClientBuilder) WithPgBouncerDB(pgDB string) *KubeDBClientBuilder {
 	o.pgBouncerDB = pgDB
+	return o
+}
+
+func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
+	o.ctx = ctx
 	return o
 }
 
