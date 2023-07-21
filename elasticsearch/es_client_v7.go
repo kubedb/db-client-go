@@ -341,13 +341,13 @@ func (es *ESClientV7) EnsureDBUserRole(ctx context.Context) error {
 			"cluster": []string{"all"},
 			"indices": []map[string]interface{}{{
 				"names":                    []string{"*"},
-				"privileges":               []string{"read", "write"},
+				"privileges":               []string{"read", "write", "create_index"},
 				"allow_restricted_indices": false,
 			}},
 			"applications": []map[string]interface{}{
 				{
 					"application": "kibana-.kibana",
-					"privileges":  []string{"read"},
+					"privileges":  []string{"read", "write"},
 					"resources":   []string{"*"},
 				},
 			},
