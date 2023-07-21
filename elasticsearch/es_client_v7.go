@@ -315,8 +315,8 @@ func (es *ESClientV7) GetDBUserRole(ctx context.Context) (error, bool) {
 			klog.Errorf("failed to close response body from GetDBUser", err)
 		}
 	}(res.Body)
-	//bd, err := io.ReadAll(res.Body)
-	//fmt.Println("retrieved role------------------>", string(bd))
+	// bd, err := io.ReadAll(res.Body)
+	// fmt.Println("retrieved role------------------>", string(bd))
 
 	if err != nil {
 		fmt.Println("faced error while making request in getdbuserrole function")
@@ -356,7 +356,7 @@ func (es *ESClientV7) EnsureDBUserRole(ctx context.Context) error {
 				"enabled": true,
 			},
 		}
-		//fmt.Println(map1)
+		// fmt.Println(map1)
 		jsonStr, err := json.Marshal(map1)
 		if err != nil {
 			fmt.Printf("Error: %s", err.Error())

@@ -257,6 +257,5 @@ func (es *OSClientV1) GetDBUserRole(ctx context.Context) (error, bool) {
 }
 
 func (es *OSClientV1) EnsureDBUserRole(ctx context.Context) error {
-
 	return errors.New("not supported in os version 1")
 }

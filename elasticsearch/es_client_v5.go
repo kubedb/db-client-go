@@ -19,6 +19,7 @@ package elasticsearch
 import (
 	"context"
 	"encoding/json"
+
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	esv5 "github.com/elastic/go-elasticsearch/v5"
@@ -93,6 +94,5 @@ func (es *ESClientV5) GetDBUserRole(ctx context.Context) (error, bool) {
 }
 
 func (es *ESClientV5) EnsureDBUserRole(ctx context.Context) error {
-
 	return errors.New("not supported in es version 5")
 }
