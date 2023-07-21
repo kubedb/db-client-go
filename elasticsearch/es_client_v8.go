@@ -334,25 +334,25 @@ func (es *ESClientV8) EnsureDBUserRole(ctx context.Context) error {
 		return err
 	}
 	if !flg {
-		elasticMap := map[string]interface{}{
+		dbPrivileges := map[string]interface{}{
 			Names:                  []string{All},
 			Privileges:             []string{PrivilegeReadKey, PrivilegeWriteKey, PrivilegeCreateIndexKey},
 			AllowRestrictedIndices: false,
 		}
-		applicationMap := map[string]interface{}{
+		applicationPrivileges := map[string]interface{}{
 			Application: Kibana,
 			Privileges:  []string{PrivilegeReadKey, PrivilegeWriteKey},
 			Resources:   []string{Any},
 		}
-		transientMetaMap := map[string]interface{}{
+		transientMetaPrivileges := map[string]interface{}{
 			Enabled: true,
 		}
 		userRoleReqMap := map[string]interface{}{
 			Cluster:           []string{All},
-			Indices:           []map[string]interface{}{elasticMap},
-			Applications:      []map[string]interface{}{applicationMap},
+			Indices:           []map[string]interface{}{dbPrivileges},
+			Applications:      []map[string]interface{}{applicationPrivileges},
 			RunAs:             []string{},
-			TransientMetadata: transientMetaMap,
+			TransientMetadata: transientMetaPrivileges,
 		}
 		// fmt.Println(map1)
 		jsonStr, err := json.Marshal(userRoleReqMap)
