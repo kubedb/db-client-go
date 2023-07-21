@@ -303,9 +303,9 @@ func (es *ESClientV7) GetTotalDiskUsage(ctx context.Context) (string, error) {
 	return totalDiskUsage, nil
 }
 
-func (es *ESClientV7) GetDBUserRole(ctx context.Context) (error, bool) {
+func (es *ESClientV7) getDBUserRole(ctx context.Context) (error, bool) {
 	req := esapi.SecurityGetRoleRequest{
-		Name: []string{"custom-user"},
+		Name: []string{CustomUser},
 	}
 	res, err := req.Do(ctx, es.client.Transport)
 	defer func(Body io.ReadCloser) {
@@ -314,6 +314,8 @@ func (es *ESClientV7) GetDBUserRole(ctx context.Context) (error, bool) {
 			klog.Errorf("failed to close response body from GetDBUser", err)
 		}
 	}(res.Body)
+	// bd, err := io.ReadAll(res.Body)
+	// fmt.Println("retrieved role------------------>", string(bd))
 
 	if err != nil {
 		fmt.Println("faced error while making request in getdbuserrole function")
@@ -327,33 +329,34 @@ func (es *ESClientV7) GetDBUserRole(ctx context.Context) (error, bool) {
 }
 
 func (es *ESClientV7) EnsureDBUserRole(ctx context.Context) error {
-	err, flg := es.GetDBUserRole(ctx)
+	err, flg := es.getDBUserRole(ctx)
 
 	if err != nil {
 		return err
 	}
 	if !flg {
-		map1 := map[string]interface{}{
-			"cluster": []string{"all"},
-			"indices": []map[string]interface{}{{
-				"names":                    []string{"*"},
-				"privileges":               []string{"read", "write", "create_index"},
-				"allow_restricted_indices": false,
-			}},
-			"applications": []map[string]interface{}{
-				{
-					"application": "kibana-.kibana",
-					"privileges":  []string{"read", "write"},
-					"resources":   []string{"*"},
-				},
-			},
-			"run_as": []string{},
-			"transient_metadata": map[string]interface{}{
-				"enabled": true,
-			},
+		elasticMap := map[string]interface{}{
+			Names:                  []string{All},
+			Privileges:             []string{PrivilegeReadKey, PrivilegeWriteKey, PrivilegeCreateIndexKey},
+			AllowRestrictedIndices: false,
+		}
+		applicationMap := map[string]interface{}{
+			Application: Kibana,
+			Privileges:  []string{PrivilegeReadKey, PrivilegeWriteKey},
+			Resources:   []string{Any},
+		}
+		transientMetaMap := map[string]interface{}{
+			Enabled: true,
+		}
+		userRoleReqMap := map[string]interface{}{
+			Cluster:           []string{All},
+			Indices:           []map[string]interface{}{elasticMap},
+			Applications:      []map[string]interface{}{applicationMap},
+			RunAs:             []string{},
+			TransientMetadata: transientMetaMap,
 		}
 		// fmt.Println(map1)
-		jsonStr, err := json.Marshal(map1)
+		jsonStr, err := json.Marshal(userRoleReqMap)
 		if err != nil {
 			fmt.Printf("Error: %s", err.Error())
 			return err
@@ -363,7 +366,7 @@ func (es *ESClientV7) EnsureDBUserRole(ctx context.Context) error {
 		}
 		body := bytes.NewReader(jsonStr)
 		req := esapi.SecurityPutRoleRequest{
-			Name: "custom-user",
+			Name: CustomUser,
 			Body: body,
 		}
 
@@ -377,6 +380,7 @@ func (es *ESClientV7) EnsureDBUserRole(ctx context.Context) error {
 		if err != nil {
 			fmt.Println("faced error while making request in ensuredbuserrole function")
 			return err
+
 		}
 
 	}

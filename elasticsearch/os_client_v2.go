@@ -251,10 +251,6 @@ func (os *OSClientV2) SyncCredentialFromSecret(secret *core.Secret) error {
 	return nil
 }
 
-func (es *OSClientV2) GetDBUserRole(ctx context.Context) (error, bool) {
-	return nil, false
-}
-
 func (es *OSClientV2) EnsureDBUserRole(ctx context.Context) error {
 	return errors.New("")
 }
