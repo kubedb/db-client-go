@@ -34,19 +34,32 @@ var (
 	PrivilegeCreateIndexKey = "create-index"
 	Any                     = "*"
 	All                     = "all"
-	Names                   = "names"
-	Privileges              = "privileges"
-	AllowRestrictedIndices  = "allow_restricted_indices"
-	Enabled                 = "enabled"
-	Cluster                 = "cluster"
-	Indices                 = "indices"
-	Applications            = "applications"
-	Application             = "application"
-	RunAs                   = "run_as"
-	TransientMetadata       = "transient_metadata"
-	Resources               = "resources"
 	Kibana                  = "kibana-.kibana"
 )
+
+type DBPrivileges struct {
+	Names                  []string `json:"names"`
+	Privileges             []string `json:"privileges"`
+	AllowRestrictedIndices bool     `json:"allow_restricted_indices"`
+}
+
+type ApplicationPrivileges struct {
+	Application string   `json:"application"`
+	Privileges  []string `json:"privileges"`
+	Resources   []string `json:"resources"`
+}
+
+type TransientMetaPrivileges struct {
+	Enabled bool `json:"enabled"`
+}
+
+type UserRoleReq struct {
+	Cluster           []string                `json:"cluster"`
+	Indices           []DBPrivileges          `json:"indices"`
+	Applications      []ApplicationPrivileges `json:"applications"`
+	RunAs             []string                `json:"run_as"`
+	TransientMetaData TransientMetaPrivileges `json:"transient_metadata"`
+}
 
 type WriteRequestIndex struct {
 	Index WriteRequestIndexBody `json:"index"`
@@ -66,5 +79,6 @@ type ESClient interface {
 	GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error
 	GetClusterReadStatus(ctx context.Context, db *api.Elasticsearch) error
 	GetTotalDiskUsage(ctx context.Context) (string, error)
-	EnsureDBUserRole(ctx context.Context) error
+	GetDBUserRole(ctx context.Context) (error, bool)
+	CreateDBUserRole(ctx context.Context) error
 }

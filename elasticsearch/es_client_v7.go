@@ -303,7 +303,7 @@ func (es *ESClientV7) GetTotalDiskUsage(ctx context.Context) (string, error) {
 	return totalDiskUsage, nil
 }
 
-func (es *ESClientV7) getDBUserRole(ctx context.Context) (error, bool) {
+func (es *ESClientV7) GetDBUserRole(ctx context.Context) (error, bool) {
 	req := esapi.SecurityGetRoleRequest{
 		Name: []string{CustomUser},
 	}
@@ -316,8 +316,8 @@ func (es *ESClientV7) getDBUserRole(ctx context.Context) (error, bool) {
 	}(res.Body)
 
 	if err != nil {
-		fmt.Println("faced error while making request in GetDBUserRole function")
-		return err, false
+		klog.Errorf("failed to get existing DB user role", err)
+		return nil, false
 	}
 	if res.IsError() {
 		return err, false
@@ -326,60 +326,53 @@ func (es *ESClientV7) getDBUserRole(ctx context.Context) (error, bool) {
 	return nil, true
 }
 
-func (es *ESClientV7) EnsureDBUserRole(ctx context.Context) error {
-	err, flg := es.getDBUserRole(ctx)
-
-	if err != nil {
-		return err
+func (es *ESClientV7) CreateDBUserRole(ctx context.Context) error {
+	dbPrivileges := DBPrivileges{
+		[]string{All},
+		[]string{PrivilegeReadKey, PrivilegeWriteKey, PrivilegeCreateIndexKey},
+		false,
 	}
-	if !flg {
-		dbPrivileges := map[string]interface{}{
-			Names:                  []string{All},
-			Privileges:             []string{PrivilegeReadKey, PrivilegeWriteKey, PrivilegeCreateIndexKey},
-			AllowRestrictedIndices: false,
-		}
-		applicationPrivileges := map[string]interface{}{
-			Application: Kibana,
-			Privileges:  []string{PrivilegeReadKey, PrivilegeWriteKey},
-			Resources:   []string{Any},
-		}
-		transientMetaPrivileges := map[string]interface{}{
-			Enabled: true,
-		}
-		userRoleReqMap := map[string]interface{}{
-			Cluster:           []string{All},
-			Indices:           []map[string]interface{}{dbPrivileges},
-			Applications:      []map[string]interface{}{applicationPrivileges},
-			RunAs:             []string{},
-			TransientMetadata: transientMetaPrivileges,
-		}
-		// fmt.Println(map1)
-		userRoleReqJSON, err := json.Marshal(userRoleReqMap)
+
+	applicationPrivileges := ApplicationPrivileges{
+		Kibana,
+		[]string{PrivilegeReadKey, PrivilegeWriteKey},
+		[]string{Any},
+	}
+
+	transientMetaPrivileges := TransientMetaPrivileges{
+		true,
+	}
+
+	userRoleReqStruct := UserRoleReq{
+		[]string{All},
+		[]DBPrivileges{dbPrivileges},
+		[]ApplicationPrivileges{applicationPrivileges},
+		[]string{},
+		transientMetaPrivileges,
+	}
+
+	userRoleReqJSON, err := json.Marshal(userRoleReqStruct)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("JSON form of roll", string(userRoleReqJSON))
+	}
+	body := bytes.NewReader(userRoleReqJSON)
+	req := esapi.SecurityPutRoleRequest{
+		Name: CustomUser,
+		Body: body,
+	}
+
+	res, err := req.Do(ctx, es.client.Transport)
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
 		if err != nil {
-			fmt.Printf("Error: %s", err.Error())
-			return err
-
-		} else {
-			fmt.Println(string(userRoleReqJSON))
+			klog.Errorf("failed to close response body from EnsureDBUserRole function", err)
 		}
-		body := bytes.NewReader(userRoleReqJSON)
-		req := esapi.SecurityPutRoleRequest{
-			Name: CustomUser,
-			Body: body,
-		}
-
-		res, err := req.Do(ctx, es.client.Transport)
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			if err != nil {
-				klog.Errorf("failed to close response body from EnsureDBUserRole function", err)
-			}
-		}(res.Body)
-		if err != nil {
-			fmt.Println("faced error while making request in EnsureDBUserRole function")
-			return err
-
-		}
+	}(res.Body)
+	if err != nil {
+		klog.Errorf("FAILED TO CREATE DATABASE USER ROLE", err)
+		return err
 
 	}
 	return nil

@@ -213,6 +213,10 @@ func (es *ESClientV6) GetTotalDiskUsage(ctx context.Context) (string, error) {
 	return "", nil
 }
 
-func (es *ESClientV6) EnsureDBUserRole(ctx context.Context) error {
+func (es *ESClientV6) GetDBUserRole(ctx context.Context) (error, bool) {
+	return errors.New("not supported in es version 6"), false
+}
+
+func (es *ESClientV6) CreateDBUserRole(ctx context.Context) error {
 	return errors.New("not supported in es version 6")
 }

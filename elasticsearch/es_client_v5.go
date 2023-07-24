@@ -89,6 +89,10 @@ func (es *ESClientV5) GetTotalDiskUsage(ctx context.Context) (string, error) {
 	return "", nil
 }
 
-func (es *ESClientV5) EnsureDBUserRole(ctx context.Context) error {
+func (es *ESClientV5) GetDBUserRole(ctx context.Context) (error, bool) {
+	return errors.New("not supported in es version 5"), false
+}
+
+func (es *ESClientV5) CreateDBUserRole(ctx context.Context) error {
 	return errors.New("not supported in es version 5")
 }
