@@ -321,7 +321,7 @@ func (es *ESClientV8) GetDBUserRole(ctx context.Context) (error, bool) {
 	if res.IsError() {
 		err = errors.New(fmt.Sprintf("fetching DB user role failed with error status code %d", res.StatusCode))
 		klog.Errorf("Failed to fetch DB user role", err)
-		return err, false
+		return nil, false
 	}
 
 	return nil, true
