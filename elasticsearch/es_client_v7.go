@@ -311,7 +311,7 @@ func (es *ESClientV7) getDBUserRole(ctx context.Context) (error, bool) {
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
-			klog.Errorf("failed to close response body from GetDBUser", err)
+			klog.Errorf("failed to close response body from GetDBUserRole", err)
 		}
 	}(res.Body)
 
@@ -372,7 +372,7 @@ func (es *ESClientV7) EnsureDBUserRole(ctx context.Context) error {
 		defer func(Body io.ReadCloser) {
 			err := Body.Close()
 			if err != nil {
-				klog.Errorf("failed to close response body from GetDBUser", err)
+				klog.Errorf("failed to close response body from EnsureDBUserRole function", err)
 			}
 		}(res.Body)
 		if err != nil {
