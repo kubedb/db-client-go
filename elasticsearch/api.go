@@ -28,7 +28,7 @@ var (
 	writeRequestIndex       = "kubedb-system"
 	writeRequestID          = "info"
 	writeRequestType        = "_doc"
-	CustomUser              = "custom-user"
+	CustomUser              = "custom_user"
 	PrivilegeReadKey        = "read"
 	PrivilegeWriteKey       = "write"
 	PrivilegeCreateIndexKey = "create_index"
