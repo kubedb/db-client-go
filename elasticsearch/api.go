@@ -31,7 +31,7 @@ var (
 	CustomUser              = "custom-user"
 	PrivilegeReadKey        = "read"
 	PrivilegeWriteKey       = "write"
-	PrivilegeCreateIndexKey = "create-index"
+	PrivilegeCreateIndexKey = "create_index"
 	Any                     = "*"
 	All                     = "all"
 	Kibana                  = "kibana-.kibana"
