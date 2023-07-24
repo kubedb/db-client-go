@@ -316,7 +316,7 @@ func (es *ESClientV7) getDBUserRole(ctx context.Context) (error, bool) {
 	}(res.Body)
 
 	if err != nil {
-		fmt.Println("faced error while making request in getdbuserrole function")
+		fmt.Println("faced error while making request in GetDBUserRole function")
 		return err, false
 	}
 	if res.IsError() {
@@ -376,7 +376,7 @@ func (es *ESClientV7) EnsureDBUserRole(ctx context.Context) error {
 			}
 		}(res.Body)
 		if err != nil {
-			fmt.Println("faced error while making request in ensuredbuserrole function")
+			fmt.Println("faced error while making request in EnsureDBUserRole function")
 			return err
 
 		}
