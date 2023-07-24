@@ -314,8 +314,6 @@ func (es *ESClientV7) getDBUserRole(ctx context.Context) (error, bool) {
 			klog.Errorf("failed to close response body from GetDBUser", err)
 		}
 	}(res.Body)
-	// bd, err := io.ReadAll(res.Body)
-	// fmt.Println("retrieved role------------------>", string(bd))
 
 	if err != nil {
 		fmt.Println("faced error while making request in getdbuserrole function")
