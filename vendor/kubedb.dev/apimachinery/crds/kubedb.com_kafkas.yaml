@@ -49,6 +49,12 @@ spec:
                     type: string
                 type: object
                 x-kubernetes-map-type: atomic
+              configSecret:
+                properties:
+                  name:
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
               disableSecurity:
                 type: boolean
               enableSSL:
@@ -3096,14 +3102,14 @@ spec:
                       type: integer
                     reason:
                       type: string
+                    severity:
+                      type: string
                     status:
                       type: string
                     type:
                       type: string
                   required:
                   - lastTransitionTime
-                  - message
-                  - reason
                   - status
                   - type
                   type: object

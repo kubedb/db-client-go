@@ -17,8 +17,8 @@ require (
 	go.mongodb.org/mongo-driver v1.10.2
 	k8s.io/api v0.25.3
 	k8s.io/klog/v2 v2.80.1
-	kmodules.xyz/client-go v0.25.23
-	kubedb.dev/apimachinery v0.33.2-0.20230613082109-19397df99ef7
+	kmodules.xyz/client-go v0.25.27
+	kubedb.dev/apimachinery v0.34.1-0.20230724122802-eb1b7f2152cc
 	sigs.k8s.io/controller-runtime v0.13.1
 	xorm.io/xorm v1.3.2
 )
