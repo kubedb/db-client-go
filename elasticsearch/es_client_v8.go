@@ -372,7 +372,7 @@ func (es *ESClientV8) CreateDBUserRole(ctx context.Context) error {
 	if err != nil {
 		klog.Errorf("FAILED TO CREATE DATABASE USER ROLE", err)
 		return err
-
 	}
+	fmt.Println("our role ", res.Body)
 	return nil
 }
