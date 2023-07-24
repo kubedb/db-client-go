@@ -17,6 +17,7 @@ limitations under the License.
 package elasticsearch
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -299,4 +300,88 @@ func (es *ESClientV8) GetTotalDiskUsage(ctx context.Context) (string, error) {
 	}
 
 	return totalDiskUsage, nil
+}
+
+func (es *ESClientV8) getDBUserRole(ctx context.Context) (error, bool) {
+	req := esapi.SecurityGetRoleRequest{
+		Name: []string{CustomUser},
+	}
+	res, err := req.Do(ctx, es.client.Transport)
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			klog.Errorf("failed to close response body from GetDBUser", err)
+		}
+	}(res.Body)
+	// bd, err := io.ReadAll(res.Body)
+	// fmt.Println("retrieved role------------------>", string(bd))
+
+	if err != nil {
+		fmt.Println("faced error while making request in getdbuserrole function")
+		return err, false
+	}
+	if res.IsError() {
+		return err, false
+	}
+
+	return nil, true
+}
+
+func (es *ESClientV8) EnsureDBUserRole(ctx context.Context) error {
+	err, flg := es.getDBUserRole(ctx)
+
+	if err != nil {
+		return err
+	}
+	if !flg {
+		dbPrivileges := map[string]interface{}{
+			Names:                  []string{All},
+			Privileges:             []string{PrivilegeReadKey, PrivilegeWriteKey, PrivilegeCreateIndexKey},
+			AllowRestrictedIndices: false,
+		}
+		applicationPrivileges := map[string]interface{}{
+			Application: Kibana,
+			Privileges:  []string{PrivilegeReadKey, PrivilegeWriteKey},
+			Resources:   []string{Any},
+		}
+		transientMetaPrivileges := map[string]interface{}{
+			Enabled: true,
+		}
+		userRoleReqMap := map[string]interface{}{
+			Cluster:           []string{All},
+			Indices:           []map[string]interface{}{dbPrivileges},
+			Applications:      []map[string]interface{}{applicationPrivileges},
+			RunAs:             []string{},
+			TransientMetadata: transientMetaPrivileges,
+		}
+		// fmt.Println(map1)
+		jsonStr, err := json.Marshal(userRoleReqMap)
+		if err != nil {
+			fmt.Printf("Error: %s", err.Error())
+			return err
+
+		} else {
+			fmt.Println(string(jsonStr))
+		}
+		body := bytes.NewReader(jsonStr)
+		req := esapi.SecurityPutRoleRequest{
+			Name: CustomUser,
+			Body: body,
+		}
+
+		res, err := req.Do(ctx, es.client.Transport)
+		defer func(Body io.ReadCloser) {
+			err := Body.Close()
+			if err != nil {
+				klog.Errorf("failed to close response body from GetDBUser", err)
+			}
+		}(res.Body)
+		if err != nil {
+			fmt.Println("faced error while making request in ensuredbuserrole function")
+			return err
+
+		}
+
+	}
+	return nil
 }

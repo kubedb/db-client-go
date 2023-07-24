@@ -88,3 +88,7 @@ func (es *ESClientV5) GetClusterReadStatus(ctx context.Context, db *api.Elastics
 func (es *ESClientV5) GetTotalDiskUsage(ctx context.Context) (string, error) {
 	return "", nil
 }
+
+func (es *ESClientV5) EnsureDBUserRole(ctx context.Context) error {
+	return errors.New("not supported in es version 5")
+}

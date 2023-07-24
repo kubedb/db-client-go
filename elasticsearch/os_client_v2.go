@@ -250,3 +250,7 @@ func (os *OSClientV2) GetTotalDiskUsage(ctx context.Context) (string, error) {
 func (os *OSClientV2) SyncCredentialFromSecret(secret *core.Secret) error {
 	return nil
 }
+
+func (es *OSClientV2) EnsureDBUserRole(ctx context.Context) error {
+	return errors.New("")
+}

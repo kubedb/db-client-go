@@ -25,9 +25,27 @@ import (
 )
 
 var (
-	writeRequestIndex = "kubedb-system"
-	writeRequestID    = "info"
-	writeRequestType  = "_doc"
+	writeRequestIndex       = "kubedb-system"
+	writeRequestID          = "info"
+	writeRequestType        = "_doc"
+	CustomUser              = "custom-user"
+	PrivilegeReadKey        = "read"
+	PrivilegeWriteKey       = "write"
+	PrivilegeCreateIndexKey = "create-index"
+	Any                     = "*"
+	All                     = "all"
+	Names                   = "names"
+	Privileges              = "privileges"
+	AllowRestrictedIndices  = "allow_restricted_indices"
+	Enabled                 = "enabled"
+	Cluster                 = "cluster"
+	Indices                 = "indices"
+	Applications            = "applications"
+	Application             = "application"
+	RunAs                   = "run_as"
+	TransientMetadata       = "transient_metadata"
+	Resources               = "resources"
+	Kibana                  = "kibana-.kibana"
 )
 
 type WriteRequestIndex struct {
@@ -48,4 +66,5 @@ type ESClient interface {
 	GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error
 	GetClusterReadStatus(ctx context.Context, db *api.Elasticsearch) error
 	GetTotalDiskUsage(ctx context.Context) (string, error)
+	EnsureDBUserRole(ctx context.Context) error
 }
