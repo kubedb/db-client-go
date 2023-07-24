@@ -304,7 +304,7 @@ func (es *ESClientV8) GetTotalDiskUsage(ctx context.Context) (string, error) {
 
 func (es *ESClientV8) GetDBUserRole(ctx context.Context) (error, bool) {
 	req := esapi.SecurityGetRoleRequest{
-		Name: []string{CustomUser},
+		Name: []string{CustomUserName},
 	}
 	res, err := req.Do(ctx, es.client.Transport)
 	defer func(Body io.ReadCloser) {
@@ -316,9 +316,11 @@ func (es *ESClientV8) GetDBUserRole(ctx context.Context) (error, bool) {
 
 	if err != nil {
 		klog.Errorf("failed to get existing DB user role", err)
-		return nil, false
+		return err, false
 	}
 	if res.IsError() {
+		err = errors.New(fmt.Sprintf("fetching DB user role failed with error status code %d", res.StatusCode))
+		klog.Errorf("Failed to fetch DB user role", err)
 		return err, false
 	}
 
@@ -326,39 +328,36 @@ func (es *ESClientV8) GetDBUserRole(ctx context.Context) (error, bool) {
 }
 
 func (es *ESClientV8) CreateDBUserRole(ctx context.Context) error {
-	dbPrivileges := DBPrivileges{
-		[]string{Any},
-		[]string{PrivilegeReadKey, PrivilegeWriteKey, PrivilegeCreateIndexKey},
-		false,
-	}
-
-	applicationPrivileges := ApplicationPrivileges{
-		Kibana,
-		[]string{PrivilegeReadKey, PrivilegeWriteKey},
-		[]string{Any},
-	}
-
-	transientMetaPrivileges := TransientMetaPrivileges{
-		true,
-	}
-
 	userRoleReqStruct := UserRoleReq{
-		[]string{All},
-		[]DBPrivileges{dbPrivileges},
-		[]ApplicationPrivileges{applicationPrivileges},
+		[]string{ClusterAccessAll},
+		[]DBPrivileges{
+			{
+				[]string{PrivilegeIndexAny},
+				[]string{PrivilegeRead, PrivilegeWrite, PrivilegeCreateIndex},
+				false,
+			},
+		},
+		[]ApplicationPrivileges{
+			{
+				ApplicationKibana,
+				[]string{PrivilegeRead, PrivilegeWrite},
+				[]string{PrivilegeIndexAny},
+			},
+		},
 		[]string{},
-		transientMetaPrivileges,
+		TransientMetaPrivileges{
+			true,
+		},
 	}
 
 	userRoleReqJSON, err := json.Marshal(userRoleReqStruct)
 	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println("JSON form of roll", string(userRoleReqJSON))
+		klog.Errorf("Failed to parse rollRequest body to JSOn", err)
+		return err
 	}
 	body := bytes.NewReader(userRoleReqJSON)
 	req := esapi.SecurityPutRoleRequest{
-		Name: CustomUser,
+		Name: CustomUserName,
 		Body: body,
 	}
 
@@ -370,9 +369,14 @@ func (es *ESClientV8) CreateDBUserRole(ctx context.Context) error {
 		}
 	}(res.Body)
 	if err != nil {
-		klog.Errorf("FAILED TO CREATE DATABASE USER ROLE", err)
+		klog.Errorf("Failed to perform request to create DB user role", err)
 		return err
 	}
-	fmt.Println("our role ", res.Body)
+
+	if res.IsError() {
+		err = errors.New(fmt.Sprintf("DB user role creation failed with error status code %d", res.StatusCode))
+		klog.Errorf("Failed to create DB user role", err)
+		return err
+	}
 	return nil
 }

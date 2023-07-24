@@ -18,23 +18,22 @@ package elasticsearch
 
 import (
 	"context"
+	core "k8s.io/api/core/v1"
 
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
-
-	core "k8s.io/api/core/v1"
 )
 
 var (
-	writeRequestIndex       = "kubedb-system"
-	writeRequestID          = "info"
-	writeRequestType        = "_doc"
-	CustomUser              = "custom_user"
-	PrivilegeReadKey        = "read"
-	PrivilegeWriteKey       = "write"
-	PrivilegeCreateIndexKey = "create_index"
-	Any                     = "*"
-	All                     = "all"
-	Kibana                  = "kibana-.kibana"
+	writeRequestIndex    = "kubedb-system"
+	writeRequestID       = "info"
+	writeRequestType     = "_doc"
+	CustomUserName       = "custom_user"
+	PrivilegeRead        = "read"
+	PrivilegeWrite       = "write"
+	PrivilegeCreateIndex = "create_index"
+	PrivilegeIndexAny    = "*"
+	ClusterAccessAll     = "all"
+	ApplicationKibana    = "kibana-.kibana"
 )
 
 type DBPrivileges struct {
@@ -72,13 +71,13 @@ type WriteRequestIndexBody struct {
 
 type ESClient interface {
 	ClusterHealthInfo() (map[string]interface{}, error)
-	NodesStats() (map[string]interface{}, error)
-	GetIndicesInfo() ([]interface{}, error)
+	CreateDBUserRole(ctx context.Context) error
 	ClusterStatus() (string, error)
-	SyncCredentialFromSecret(secret *core.Secret) error
+	GetIndicesInfo() ([]interface{}, error)
 	GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error
 	GetClusterReadStatus(ctx context.Context, db *api.Elasticsearch) error
 	GetTotalDiskUsage(ctx context.Context) (string, error)
 	GetDBUserRole(ctx context.Context) (error, bool)
-	CreateDBUserRole(ctx context.Context) error
+	NodesStats() (map[string]interface{}, error)
+	SyncCredentialFromSecret(secret *core.Secret) error
 }
