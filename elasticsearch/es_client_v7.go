@@ -356,15 +356,15 @@ func (es *ESClientV7) EnsureDBUserRole(ctx context.Context) error {
 			TransientMetadata: transientMetaPrivileges,
 		}
 		// fmt.Println(map1)
-		jsonStr, err := json.Marshal(userRoleReqMap)
+		userRoleReqJSON, err := json.Marshal(userRoleReqMap)
 		if err != nil {
 			fmt.Printf("Error: %s", err.Error())
 			return err
 
 		} else {
-			fmt.Println(string(jsonStr))
+			fmt.Println(string(userRoleReqJSON))
 		}
-		body := bytes.NewReader(jsonStr)
+		body := bytes.NewReader(userRoleReqJSON)
 		req := esapi.SecurityPutRoleRequest{
 			Name: CustomUser,
 			Body: body,
