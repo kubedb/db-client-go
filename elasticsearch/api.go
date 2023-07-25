@@ -35,6 +35,12 @@ var (
 	PrivilegeIndexAny    = "*"
 	ClusterAccessAll     = "all"
 	ApplicationKibana    = "kibana-.kibana"
+	CreateSnapshot       = "create_snapshot"
+	Manage               = "manage"
+	ManageILM            = "manage_ilm"
+	ManageRoleup         = "manage_rollup"
+	Monitor              = "monitor"
+	ReadSecurity         = "read_security"
 )
 
 type DBPrivileges struct {

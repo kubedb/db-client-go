@@ -330,7 +330,7 @@ func (es *ESClientV7) GetDBUserRole(ctx context.Context) (error, bool) {
 
 func (es *ESClientV7) CreateDBUserRole(ctx context.Context) error {
 	userRoleReqStruct := UserRoleReq{
-		[]string{ClusterAccessAll},
+		[]string{CreateSnapshot, Manage, ManageILM, ManageRoleup, Monitor, ReadSecurity},
 		[]DBPrivileges{
 			{
 				[]string{PrivilegeIndexAny},
