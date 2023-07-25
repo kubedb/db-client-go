@@ -305,7 +305,7 @@ func (es *ESClientV7) GetTotalDiskUsage(ctx context.Context) (string, error) {
 
 func (es *ESClientV7) GetDBUserRole(ctx context.Context) (error, bool) {
 	req := esapi.SecurityGetRoleRequest{
-		Name: []string{CustomUserName},
+		Name: []string{CustomRoleName},
 	}
 	res, err := req.Do(ctx, es.client.Transport)
 	defer func(Body io.ReadCloser) {
@@ -358,7 +358,7 @@ func (es *ESClientV7) CreateDBUserRole(ctx context.Context) error {
 	}
 	body := bytes.NewReader(userRoleReqJSON)
 	req := esapi.SecurityPutRoleRequest{
-		Name: CustomUserName,
+		Name: CustomRoleName,
 		Body: body,
 	}
 
