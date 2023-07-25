@@ -251,3 +251,11 @@ func (os *OSClientV1) GetTotalDiskUsage(ctx context.Context) (string, error) {
 func (os *OSClientV1) SyncCredentialFromSecret(secret *core.Secret) error {
 	return nil
 }
+
+func (os *OSClientV1) GetDBUserRole(ctx context.Context) (error, bool) {
+	return errors.New("not supported in os version 1"), false
+}
+
+func (os *OSClientV1) CreateDBUserRole(ctx context.Context) error {
+	return errors.New("not supported in os version 1")
+}

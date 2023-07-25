@@ -24,11 +24,50 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-var (
+const (
 	writeRequestIndex = "kubedb-system"
 	writeRequestID    = "info"
 	writeRequestType  = "_doc"
+	CustomRoleName    = "readWriteAnyDatabase"
+	ApplicationKibana = "kibana-.kibana"
 )
+
+const (
+	PrivilegeCreateSnapshot = "create_snapshot"
+	PrivilegeManage         = "manage"
+	PrivilegeManageILM      = "manage_ilm"
+	PrivilegeManageRoleup   = "manage_rollup"
+	PrivilegeMonitor        = "monitor"
+	PrivilegeManageCCR      = "manage_ccr"
+	PrivilegeRead           = "read"
+	PrivilegeWrite          = "write"
+	PrivilegeCreateIndex    = "create_index"
+	PrivilegeIndexAny       = "*"
+)
+
+type DBPrivileges struct {
+	Names                  []string `json:"names"`
+	Privileges             []string `json:"privileges"`
+	AllowRestrictedIndices bool     `json:"allow_restricted_indices"`
+}
+
+type ApplicationPrivileges struct {
+	Application string   `json:"application"`
+	Privileges  []string `json:"privileges"`
+	Resources   []string `json:"resources"`
+}
+
+type TransientMetaPrivileges struct {
+	Enabled bool `json:"enabled"`
+}
+
+type UserRoleReq struct {
+	Cluster           []string                `json:"cluster"`
+	Indices           []DBPrivileges          `json:"indices"`
+	Applications      []ApplicationPrivileges `json:"applications"`
+	RunAs             []string                `json:"run_as"`
+	TransientMetaData TransientMetaPrivileges `json:"transient_metadata"`
+}
 
 type WriteRequestIndex struct {
 	Index WriteRequestIndexBody `json:"index"`
@@ -41,11 +80,13 @@ type WriteRequestIndexBody struct {
 
 type ESClient interface {
 	ClusterHealthInfo() (map[string]interface{}, error)
-	NodesStats() (map[string]interface{}, error)
-	GetIndicesInfo() ([]interface{}, error)
+	CreateDBUserRole(ctx context.Context) error
 	ClusterStatus() (string, error)
-	SyncCredentialFromSecret(secret *core.Secret) error
+	GetIndicesInfo() ([]interface{}, error)
 	GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error
 	GetClusterReadStatus(ctx context.Context, db *api.Elasticsearch) error
 	GetTotalDiskUsage(ctx context.Context) (string, error)
+	GetDBUserRole(ctx context.Context) (error, bool)
+	NodesStats() (map[string]interface{}, error)
+	SyncCredentialFromSecret(secret *core.Secret) error
 }

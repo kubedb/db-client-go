@@ -17,6 +17,7 @@ limitations under the License.
 package elasticsearch
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -299,4 +300,83 @@ func (es *ESClientV8) GetTotalDiskUsage(ctx context.Context) (string, error) {
 	}
 
 	return totalDiskUsage, nil
+}
+
+func (es *ESClientV8) GetDBUserRole(ctx context.Context) (error, bool) {
+	req := esapi.SecurityGetRoleRequest{
+		Name: []string{CustomRoleName},
+	}
+	res, err := req.Do(ctx, es.client.Transport)
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			klog.Errorf("failed to close response body from GetDBUserRole", err)
+		}
+	}(res.Body)
+
+	if err != nil {
+		klog.Errorf("failed to get existing DB user role", err)
+		return err, false
+	}
+	if res.IsError() {
+		err = errors.New(fmt.Sprintf("fetching DB user role failed with error status code %d", res.StatusCode))
+		klog.Errorf("Failed to fetch DB user role", err)
+		return nil, false
+	}
+
+	return nil, true
+}
+
+func (es *ESClientV8) CreateDBUserRole(ctx context.Context) error {
+	userRoleReqStruct := UserRoleReq{
+		[]string{PrivilegeCreateSnapshot, PrivilegeManage, PrivilegeManageILM, PrivilegeManageRoleup, PrivilegeMonitor, PrivilegeManageCCR},
+		[]DBPrivileges{
+			{
+				[]string{PrivilegeIndexAny},
+				[]string{PrivilegeRead, PrivilegeWrite, PrivilegeCreateIndex},
+				false,
+			},
+		},
+		[]ApplicationPrivileges{
+			{
+				ApplicationKibana,
+				[]string{PrivilegeRead, PrivilegeWrite},
+				[]string{PrivilegeIndexAny},
+			},
+		},
+		[]string{},
+		TransientMetaPrivileges{
+			true,
+		},
+	}
+
+	userRoleReqJSON, err := json.Marshal(userRoleReqStruct)
+	if err != nil {
+		klog.Errorf("Failed to parse rollRequest body to JSOn", err)
+		return err
+	}
+	body := bytes.NewReader(userRoleReqJSON)
+	req := esapi.SecurityPutRoleRequest{
+		Name: CustomRoleName,
+		Body: body,
+	}
+
+	res, err := req.Do(ctx, es.client.Transport)
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			klog.Errorf("failed to close response body from EnsureDBUserRole function", err)
+		}
+	}(res.Body)
+	if err != nil {
+		klog.Errorf("Failed to perform request to create DB user role", err)
+		return err
+	}
+
+	if res.IsError() {
+		err = errors.New(fmt.Sprintf("DB user role creation failed with error status code %d", res.StatusCode))
+		klog.Errorf("Failed to create DB user role", err)
+		return err
+	}
+	return nil
 }
