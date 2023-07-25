@@ -24,22 +24,25 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-var (
-	writeRequestIndex    = "kubedb-system"
-	writeRequestID       = "info"
-	writeRequestType     = "_doc"
-	CustomRoleName       = "readWriteAnyDatabase"
-	PrivilegeRead        = "read"
-	PrivilegeWrite       = "write"
-	PrivilegeCreateIndex = "create_index"
-	PrivilegeIndexAny    = "*"
-	ApplicationKibana    = "kibana-.kibana"
-	CreateSnapshot       = "create_snapshot"
-	Manage               = "manage"
-	ManageILM            = "manage_ilm"
-	ManageRoleup         = "manage_rollup"
-	Monitor              = "monitor"
-	ManageCCR            = "manage_ccr"
+const (
+	writeRequestIndex = "kubedb-system"
+	writeRequestID    = "info"
+	writeRequestType  = "_doc"
+	CustomRoleName    = "readWriteAnyDatabase"
+	ApplicationKibana = "kibana-.kibana"
+)
+
+const (
+	PrivilegeCreateSnapshot = "create_snapshot"
+	PrivilegeManage         = "manage"
+	PrivilegeManageILM      = "manage_ilm"
+	PrivilegeManageRoleup   = "manage_rollup"
+	PrivilegeMonitor        = "monitor"
+	PrivilegeManageCCR      = "manage_ccr"
+	PrivilegeRead           = "read"
+	PrivilegeWrite          = "write"
+	PrivilegeCreateIndex    = "create_index"
+	PrivilegeIndexAny       = "*"
 )
 
 type DBPrivileges struct {
