@@ -274,7 +274,10 @@ func (es *OSClientV2) IndexExistsOrNot(_index string) (bool, error) {
 	if res.IsError() {
 		return false, decodeError(res.Body, res.StatusCode)
 	}
-	return true, nil
+	if res.StatusCode == 200 {
+		return true, nil
+	}
+	return false, nil
 
 }
 
