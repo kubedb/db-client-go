@@ -387,12 +387,14 @@ func (es *ESClientV8) IndexExistsOrNot(_index string) (bool, error) {
 	}
 	res, err := req.Do(context.Background(), es.client)
 	if err != nil {
+		fmt.Println("error her 1")
 		return false, err
 	}
 
 	defer res.Body.Close()
 
 	if res.IsError() {
+		fmt.Println("errior here 2")
 		return false, decodeError(res.Body, res.StatusCode)
 	}
 	return true, nil
