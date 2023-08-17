@@ -381,3 +381,69 @@ func (es *ESClientV7) CreateDBUserRole(ctx context.Context) error {
 	}
 	return nil
 }
+
+func (es *ESClientV7) CreateIndex(_index string) error {
+	reqCreateIndex := esapi.IndicesCreateRequest{
+		Index:  _index,
+		Pretty: true,
+		Human:  true,
+	}
+
+	res, err := reqCreateIndex.Do(context.Background(), es.client)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return decodeError(res.Body, res.StatusCode)
+	}
+
+	return nil
+}
+
+func (es *ESClientV7) DeleteIndex(_index string) error {
+	req := esapi.IndicesDeleteRequest{
+		Index: []string{_index},
+	}
+
+	res, err := req.Do(context.Background(), es.client)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return decodeError(res.Body, res.StatusCode)
+	}
+
+	return nil
+}
+
+func (es *ESClientV7) PutData(_index, _id string, data map[string]interface{}) error {
+	var b strings.Builder
+	dataBytes, err := json.Marshal(data)
+	if err != nil {
+		return errors.Wrap(err, "failed to Marshal data")
+	}
+	b.Write(dataBytes)
+
+	req := esapi.CreateRequest{
+		Index:      _index,
+		DocumentID: _id,
+		Body:       strings.NewReader(b.String()),
+		Pretty:     true,
+		Human:      true,
+	}
+
+	res, err := req.Do(context.Background(), es.client)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return decodeError(res.Body, res.StatusCode)
+	}
+	return nil
+}

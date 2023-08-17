@@ -81,6 +81,7 @@ type WriteRequestIndexBody struct {
 type ESClient interface {
 	ClusterHealthInfo() (map[string]interface{}, error)
 	CreateDBUserRole(ctx context.Context) error
+	CreateIndex(_index string) error
 	ClusterStatus() (string, error)
 	GetIndicesInfo() ([]interface{}, error)
 	GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error
@@ -88,5 +89,6 @@ type ESClient interface {
 	GetTotalDiskUsage(ctx context.Context) (string, error)
 	GetDBUserRole(ctx context.Context) (error, bool)
 	NodesStats() (map[string]interface{}, error)
+	PutData(_index, _id string, data map[string]interface{}) error
 	SyncCredentialFromSecret(secret *core.Secret) error
 }
