@@ -294,6 +294,9 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 					TLSClientConfig: defaultTLSConfig,
 				},
 			})
+			if err == nil {
+				fmt.Println("new client request succeded")
+			}
 			if err != nil {
 				klog.Errorf("Failed to create HTTP client for Elasticsearch: %s/%s with: %s", o.db.Namespace, o.db.Name, err.Error())
 				return nil, err
