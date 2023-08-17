@@ -260,6 +260,24 @@ func (os *OSClientV1) CreateDBUserRole(ctx context.Context) error {
 	return errors.New("not supported in os version 1")
 }
 
+func (es *OSClientV1) IndexExistsOrNot(_index string) (bool, error) {
+	req := opensearchapi.IndicesExistsRequest{
+		Index: []string{_index},
+	}
+	res, err := req.Do(context.Background(), es.client)
+	if err != nil {
+		return false, err
+	}
+
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return false, decodeError(res.Body, res.StatusCode)
+	}
+	return true, nil
+
+}
+
 func (os *OSClientV1) CreateIndex(_index string) error {
 	reqCreateIndex := opensearchapi.IndicesCreateRequest{
 		Index:  _index,

@@ -99,6 +99,24 @@ func (es *ESClientV5) CreateDBUserRole(ctx context.Context) error {
 	return errors.New("not supported in es version 5")
 }
 
+func (es *ESClientV5) IndexExistsOrNot(_index string) (bool, error) {
+	req := esapi.IndicesExistsRequest{
+		Index: []string{_index},
+	}
+	res, err := req.Do(context.Background(), es.client)
+	if err != nil {
+		return false, err
+	}
+
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return false, decodeError(res.Body, res.StatusCode)
+	}
+	return true, nil
+
+}
+
 func (es *ESClientV5) CreateIndex(_index string) error {
 	reqCreateIndex := esapi.IndicesCreateRequest{
 		Index:  _index,
