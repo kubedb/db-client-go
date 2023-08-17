@@ -272,7 +272,7 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 		case version.Major() == 8:
 			defaultTLSConfig, err := o.getDefaultTLSConfig()
 			if err == nil {
-				fmt.Println("got efault tls config")
+				fmt.Println("got efault tls config", o.url)
 			}
 			if err != nil {
 				klog.Errorf("Failed get default TLS configuration")
@@ -305,6 +305,8 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 			res, err := esapi.PingRequest{}.Do(o.ctx, esClient.Transport)
 			if err != nil {
 				return nil, err
+			} else {
+				fmt.Println("pinged successfully")
 			}
 
 			defer func(Body io.ReadCloser) {
@@ -316,6 +318,8 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 
 			if res.IsError() {
 				return nil, fmt.Errorf("cluster ping request failed with status code: %d", res.StatusCode)
+			} else {
+				fmt.Println("error in ping response")
 			}
 			fmt.Println("successfully client created")
 
