@@ -271,9 +271,6 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 		// for Elasticsearch 8.x.x
 		case version.Major() == 8:
 			defaultTLSConfig, err := o.getDefaultTLSConfig()
-			if err == nil {
-				fmt.Println("got efault tls config", o.url)
-			}
 			if err != nil {
 				klog.Errorf("Failed get default TLS configuration")
 				return nil, err
@@ -294,32 +291,15 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 					TLSClientConfig: defaultTLSConfig,
 				},
 			})
-			if err == nil {
-				fmt.Println("new client request succeded")
-			}
+
 			if err != nil {
 				klog.Errorf("Failed to create HTTP client for Elasticsearch: %s/%s with: %s", o.db.Namespace, o.db.Name, err.Error())
 				return nil, err
 			}
 
-			//res, err := esapi.PingRequest{}.Do(o.ctx, esClient.Transport)
-			//if err != nil {
-			//	fmt.Println("here is error", err)
-			//	return nil, err
-			//} else {
-			//	fmt.Println("pinged successfully")
-			//}
-
-			res, err := esClient.Ping(
-				esClient.Ping.WithContext(context.Background()),
-				esClient.Ping.WithPretty(),
-				esClient.Ping.WithHuman(),
-			)
+			res, err := esapi.PingRequest{}.Do(o.ctx, esClient.Transport)
 			if err != nil {
-				fmt.Println("here is error", err)
 				return nil, err
-			} else {
-				fmt.Println("pinged successfully")
 			}
 
 			defer func(Body io.ReadCloser) {
@@ -331,10 +311,7 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 
 			if res.IsError() {
 				return nil, fmt.Errorf("cluster ping request failed with status code: %d", res.StatusCode)
-			} else {
-				fmt.Println("error in ping response")
 			}
-			fmt.Println("successfully client created")
 
 			return &Client{
 				&ESClientV8{client: esClient},
