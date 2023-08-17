@@ -271,7 +271,9 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 		// for Elasticsearch 8.x.x
 		case version.Major() == 8:
 			defaultTLSConfig, err := o.getDefaultTLSConfig()
-			fmt.Println("got efault tls config")
+			if err == nil {
+				fmt.Println("got efault tls config")
+			}
 			if err != nil {
 				klog.Errorf("Failed get default TLS configuration")
 				return nil, err
