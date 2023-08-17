@@ -302,7 +302,19 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 				return nil, err
 			}
 
-			res, err := esapi.PingRequest{}.Do(o.ctx, esClient.Transport)
+			//res, err := esapi.PingRequest{}.Do(o.ctx, esClient.Transport)
+			//if err != nil {
+			//	fmt.Println("here is error", err)
+			//	return nil, err
+			//} else {
+			//	fmt.Println("pinged successfully")
+			//}
+
+			res, err := esClient.Ping(
+				esClient.Ping.WithContext(context.Background()),
+				esClient.Ping.WithPretty(),
+				esClient.Ping.WithHuman(),
+			)
 			if err != nil {
 				fmt.Println("here is error", err)
 				return nil, err
