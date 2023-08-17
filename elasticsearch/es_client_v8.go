@@ -394,7 +394,7 @@ func (es *ESClientV8) IndexExistsOrNot(_index string) (bool, error) {
 	defer res.Body.Close()
 
 	if res.IsError() {
-		fmt.Println("errior here 2")
+		fmt.Println("errior here 2", res.StatusCode)
 		return false, decodeError(res.Body, res.StatusCode)
 	}
 	return true, nil
