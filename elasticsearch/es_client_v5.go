@@ -139,7 +139,7 @@ func (es *ESClientV5) CountData(_index string) (int, error) {
 		return 0, err
 	}
 
-	count := int(response["count"].(int))
+	count := int(response["count"].(float64))
 	//fmt.Printf("Number of documents in index %s: %d\n", _index, count)
 	return count, nil
 }
