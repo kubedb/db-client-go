@@ -362,7 +362,7 @@ func (os *OSClientV2) PutData(_index, _id string, data map[string]interface{}) e
 	defer res.Body.Close()
 
 	if res.IsError() {
-		fmt.Println("faced an error here 2")
+		fmt.Println("faced an error here 2", res.StatusCode)
 		return decodeError(res.Body, res.StatusCode)
 	}
 	return nil
