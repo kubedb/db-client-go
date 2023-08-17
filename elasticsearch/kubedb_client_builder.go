@@ -465,5 +465,6 @@ func decodeError(respBody io.Reader, statusCode int) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal error message with statuscode %d. Reason: %v", statusCode, err)
 	}
+	fmt.Println("solve it", string(jsonResponse))
 	return errors.New(string(jsonResponse))
 }
