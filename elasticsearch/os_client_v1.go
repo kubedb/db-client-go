@@ -260,22 +260,20 @@ func (os *OSClientV1) CreateDBUserRole(ctx context.Context) error {
 	return errors.New("not supported in os version 1")
 }
 
-func (es *OSClientV1) IndexExistsOrNot(_index string) (bool, error) {
+func (os *OSClientV1) IndexExistsOrNot(_index string) (bool, error) {
 	req := opensearchapi.IndicesExistsRequest{
 		Index: []string{_index},
 	}
-	res, err := req.Do(context.Background(), es.client)
+	res, err := req.Do(context.Background(), os.client)
 	if err != nil {
 		return false, err
 	}
-
 	defer res.Body.Close()
 
-	if res.IsError() {
-		return false, decodeError(res.Body, res.StatusCode)
+	if res.StatusCode > 299 {
+		return false, nil
 	}
 	return true, nil
-
 }
 
 func (os *OSClientV1) CreateIndex(_index string) error {
@@ -319,7 +317,7 @@ func (os *OSClientV1) CountData(_index string) (int, error) {
 	}
 
 	count := int(response["count"].(float64))
-	//fmt.Printf("Number of documents in index %s: %d\n", _index, count)
+	// fmt.Printf("Number of documents in index %s: %d\n", _index, count)
 	return count, nil
 }
 

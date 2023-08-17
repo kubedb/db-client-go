@@ -389,20 +389,12 @@ func (es *ESClientV8) IndexExistsOrNot(_index string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	fmt.Println("statuscode", res.StatusCode)
-
 	defer res.Body.Close()
 
 	if res.StatusCode > 299 {
 		return false, nil
 	}
-
-	//if res.IsError() {
-	//	fmt.Println("errior here 2", res.StatusCode)
-	//	return false, decodeError(res.Body, res.StatusCode)
-	//}
 	return true, nil
-
 }
 
 func (es *ESClientV8) CreateIndex(_index string) error {
@@ -464,7 +456,7 @@ func (es *ESClientV8) CountData(_index string) (int, error) {
 	}
 
 	count := int(response["count"].(float64))
-	//fmt.Printf("Number of documents in index %s: %d\n", _index, count)
+	// fmt.Printf("Number of documents in index %s: %d\n", _index, count)
 	return count, nil
 }
 

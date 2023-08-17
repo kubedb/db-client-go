@@ -20,13 +20,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/opensearch-project/opensearch-go/opensearchapi"
 	"io"
 	"net/http"
 	"strings"
 
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
+	"github.com/opensearch-project/opensearch-go/opensearchapi"
 	osv2 "github.com/opensearch-project/opensearch-go/v2"
 	osv2api "github.com/opensearch-project/opensearch-go/v2/opensearchapi"
 	"github.com/pkg/errors"
@@ -260,25 +260,20 @@ func (os *OSClientV2) CreateDBUserRole(ctx context.Context) error {
 	return errors.New("not supported in os version 2")
 }
 
-func (es *OSClientV2) IndexExistsOrNot(_index string) (bool, error) {
+func (os *OSClientV2) IndexExistsOrNot(_index string) (bool, error) {
 	req := opensearchapi.IndicesExistsRequest{
 		Index: []string{_index},
 	}
-	res, err := req.Do(context.Background(), es.client)
+	res, err := req.Do(context.Background(), os.client)
 	if err != nil {
 		return false, err
 	}
-
 	defer res.Body.Close()
 
-	if res.IsError() {
-		return false, decodeError(res.Body, res.StatusCode)
+	if res.StatusCode > 299 {
+		return false, nil
 	}
-	if res.StatusCode == 200 {
-		return true, nil
-	}
-	return false, nil
-
+	return true, nil
 }
 
 func (os *OSClientV2) CreateIndex(_index string) error {
@@ -322,7 +317,6 @@ func (os *OSClientV2) CountData(_index string) (int, error) {
 	}
 
 	count := int(response["count"].(float64))
-	//fmt.Printf("Number of documents in index %s: %d\n", _index, count)
 	return count, nil
 }
 

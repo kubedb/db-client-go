@@ -291,7 +291,6 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 					TLSClientConfig: defaultTLSConfig,
 				},
 			})
-
 			if err != nil {
 				klog.Errorf("Failed to create HTTP client for Elasticsearch: %s/%s with: %s", o.db.Namespace, o.db.Name, err.Error())
 				return nil, err
@@ -462,11 +461,11 @@ func decodeError(respBody io.Reader, statusCode int) error {
 	var response map[string]interface{}
 	err := json.NewDecoder(respBody).Decode(&response)
 	if err != nil {
-		return fmt.Errorf("failed to extract response body. Reason: %v", err)
+		return fmt.Errorf("failed to extract response body with statuscode %d. Reason: %v", statusCode, err)
 	}
 	jsonResponse, err := json.MarshalIndent(&response, "", "\t")
 	if err != nil {
-		return fmt.Errorf("failed to marshal error message. Reason: %v", err)
+		return fmt.Errorf("failed to marshal error message with statuscode %d. Reason: %v", statusCode, err)
 	}
-	return errors.New(fmt.Sprintf("%s", string(jsonResponse)))
+	return errors.New(string(jsonResponse))
 }
