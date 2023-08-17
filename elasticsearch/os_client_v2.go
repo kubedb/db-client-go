@@ -356,6 +356,7 @@ func (os *OSClientV2) PutData(_index, _id string, data map[string]interface{}) e
 
 	res, err := req.Do(context.Background(), os.client)
 	if err != nil {
+		fmt.Println("faced an error here")
 		return err
 	}
 	defer res.Body.Close()
