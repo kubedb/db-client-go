@@ -78,7 +78,6 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 }
 
 func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
-	fmt.Println("creating elastic search client----------->")
 	if o.podName != "" {
 		o.url = o.ServiceURL()
 	}
@@ -117,7 +116,6 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 			return nil, errors.New("password is missing")
 		}
 	}
-	fmt.Println("user pass------------------->", username, password)
 
 	// parse version
 	version, err := semver.NewVersion(esVersion.Spec.Version)
