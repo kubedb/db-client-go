@@ -356,12 +356,13 @@ func (os *OSClientV2) PutData(_index, _id string, data map[string]interface{}) e
 
 	res, err := req.Do(context.Background(), os.client)
 	if err != nil {
-		fmt.Println("faced an error here")
+		fmt.Println("faced an error here 1")
 		return err
 	}
 	defer res.Body.Close()
 
 	if res.IsError() {
+		fmt.Println("faced an error here 2")
 		return decodeError(res.Body, res.StatusCode)
 	}
 	return nil
