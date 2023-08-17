@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/opensearch-project/opensearch-go/opensearchapi"
 	"io"
 	"net/http"
 	"strings"
@@ -257,4 +258,95 @@ func (os *OSClientV2) GetDBUserRole(ctx context.Context) (error, bool) {
 
 func (os *OSClientV2) CreateDBUserRole(ctx context.Context) error {
 	return errors.New("not supported in os version 2")
+}
+
+func (os *OSClientV2) CreateIndex(_index string) error {
+	reqCreateIndex := opensearchapi.IndicesCreateRequest{
+		Index:  _index,
+		Pretty: true,
+		Human:  true,
+	}
+
+	res, err := reqCreateIndex.Do(context.Background(), os.client)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return decodeError(res.Body, res.StatusCode)
+	}
+
+	return nil
+}
+
+func (os *OSClientV2) CountData(_index string) (int, error) {
+	req := opensearchapi.CountRequest{
+		Index: []string{_index},
+	}
+
+	res, err := req.Do(context.Background(), os.client)
+	if err != nil {
+		return 0, err
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return 0, decodeError(res.Body, res.StatusCode)
+	}
+
+	var response map[string]interface{}
+	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
+		return 0, err
+	}
+
+	count := int(response["count"].(int))
+	//fmt.Printf("Number of documents in index %s: %d\n", _index, count)
+	return count, nil
+}
+
+func (os *OSClientV2) DeleteIndex(_index string) error {
+	req := opensearchapi.IndicesDeleteRequest{
+		Index: []string{_index},
+	}
+
+	res, err := req.Do(context.Background(), os.client)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return decodeError(res.Body, res.StatusCode)
+	}
+
+	return nil
+}
+
+func (os *OSClientV2) PutData(_index, _id string, data map[string]interface{}) error {
+	var b strings.Builder
+	dataBytes, err := json.Marshal(data)
+	if err != nil {
+		return errors.Wrap(err, "failed to Marshal data")
+	}
+	b.Write(dataBytes)
+
+	req := opensearchapi.CreateRequest{
+		Index:      _index,
+		DocumentID: _id,
+		Body:       strings.NewReader(b.String()),
+		Pretty:     true,
+		Human:      true,
+	}
+
+	res, err := req.Do(context.Background(), os.client)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return decodeError(res.Body, res.StatusCode)
+	}
+	return nil
 }
