@@ -387,9 +387,9 @@ func (es *ESClientV8) IndexExistsOrNot(_index string) (bool, error) {
 	}
 	res, err := req.Do(context.Background(), es.client)
 	if err != nil {
-		fmt.Println("error her 1")
 		return false, err
 	}
+	fmt.Println("statuscode", res.StatusCode)
 
 	defer res.Body.Close()
 
