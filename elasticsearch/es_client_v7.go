@@ -468,7 +468,7 @@ func (es *ESClientV7) PutData(_index, _id string, data map[string]interface{}) e
 	}
 	b.Write(dataBytes)
 
-	req := esapi.IndexRequest{
+	req := esapi.CreateRequest{
 		Index:      _index,
 		DocumentID: _id,
 		Body:       strings.NewReader(b.String()),
