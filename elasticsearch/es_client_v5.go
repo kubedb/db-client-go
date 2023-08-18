@@ -156,7 +156,6 @@ func (es *ESClientV5) CountData(_index string) (int, error) {
 	}
 
 	count := int(response["count"].(float64))
-	// fmt.Printf("Number of documents in index %s: %d\n", _index, count)
 	return count, nil
 }
 
@@ -186,7 +185,7 @@ func (es *ESClientV5) PutData(_index, _id string, data map[string]interface{}) e
 	}
 	b.Write(dataBytes)
 
-	req := esapi.CreateRequest{
+	req := esapi.IndexRequest{
 		Index:      _index,
 		DocumentID: _id,
 		Body:       strings.NewReader(b.String()),

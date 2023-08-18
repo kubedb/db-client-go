@@ -369,7 +369,6 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 				return nil, err
 
 			}
-			fmt.Println("user pass", username, password)
 
 			osClient, err := osv2.NewClient(osv2.Config{
 				Addresses:         []string{o.url},
@@ -466,6 +465,5 @@ func decodeError(respBody io.Reader, statusCode int) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal error message with statuscode %d. Reason: %v", statusCode, err)
 	}
-	fmt.Println("solve it", string(jsonResponse))
 	return errors.New(string(jsonResponse))
 }
