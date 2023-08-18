@@ -346,7 +346,7 @@ func (os *OSClientV2) PutData(_index, _id string, data map[string]interface{}) e
 	}
 	b.Write(dataBytes)
 
-	req := opensearchapi.CreateRequest{
+	req := opensearchapi.IndexRequest{
 		Index:      _index,
 		DocumentID: _id,
 		Body:       strings.NewReader(b.String()),
