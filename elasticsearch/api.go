@@ -80,13 +80,18 @@ type WriteRequestIndexBody struct {
 
 type ESClient interface {
 	ClusterHealthInfo() (map[string]interface{}, error)
-	CreateDBUserRole(ctx context.Context) error
 	ClusterStatus() (string, error)
+	CountData(index string) (int, error)
+	CreateDBUserRole(ctx context.Context) error
+	CreateIndex(index string) error
+	DeleteIndex(index string) error
 	GetIndicesInfo() ([]interface{}, error)
 	GetClusterWriteStatus(ctx context.Context, db *api.Elasticsearch) error
 	GetClusterReadStatus(ctx context.Context, db *api.Elasticsearch) error
 	GetTotalDiskUsage(ctx context.Context) (string, error)
 	GetDBUserRole(ctx context.Context) (error, bool)
+	IndexExistsOrNot(index string) error
 	NodesStats() (map[string]interface{}, error)
+	PutData(index, id string, data map[string]interface{}) error
 	SyncCredentialFromSecret(secret *core.Secret) error
 }

@@ -259,3 +259,147 @@ func (os *OSClientV1) GetDBUserRole(ctx context.Context) (error, bool) {
 func (os *OSClientV1) CreateDBUserRole(ctx context.Context) error {
 	return errors.New("not supported in os version 1")
 }
+
+func (os *OSClientV1) IndexExistsOrNot(index string) error {
+	req := opensearchapi.IndicesExistsRequest{
+		Index: []string{index},
+	}
+	res, err := req.Do(context.Background(), os.client)
+	if err != nil {
+		klog.Errorf(fmt.Sprintf("failed to get response while checking either index exists or not %v", err))
+		return err
+	}
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			klog.Errorf("failed to close response body for checking the existence of index", err)
+		}
+	}(res.Body)
+
+	if res.IsError() {
+		klog.Errorf(fmt.Sprintf("failed to get index with statuscode %d", res.StatusCode))
+		return errors.New("index does not exist")
+	}
+	return nil
+}
+
+func (os *OSClientV1) CreateIndex(index string) error {
+	req := opensearchapi.IndicesCreateRequest{
+		Index:  index,
+		Pretty: true,
+		Human:  true,
+	}
+
+	res, err := req.Do(context.Background(), os.client)
+	if err != nil {
+		klog.Errorf("failed to apply create index request ", err)
+		return err
+	}
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			klog.Errorf("failed to close response body for creating index", err)
+		}
+	}(res.Body)
+
+	if res.IsError() {
+		klog.Errorf(fmt.Sprintf("Creating index failed with statuscode %d", res.StatusCode))
+		return errors.New("failed to create index")
+	}
+
+	return nil
+}
+
+func (os *OSClientV1) DeleteIndex(index string) error {
+	req := opensearchapi.IndicesDeleteRequest{
+		Index: []string{index},
+	}
+
+	res, err := req.Do(context.Background(), os.client)
+	if err != nil {
+		klog.Errorf("failed to apply delete index request", err)
+		return err
+	}
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			klog.Errorf("failed to close response body for deleting index", err)
+		}
+	}(res.Body)
+
+	if res.IsError() {
+		klog.Errorf(fmt.Sprintf("failed to delete index with status code %d", res.StatusCode))
+		return errors.New("failed to delete index")
+	}
+
+	return nil
+}
+
+func (os *OSClientV1) CountData(index string) (int, error) {
+	req := opensearchapi.CountRequest{
+		Index: []string{index},
+	}
+
+	res, err := req.Do(context.Background(), os.client)
+	if err != nil {
+		return 0, err
+	}
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			klog.Errorf("failed to close response body for counting data", err)
+		}
+	}(res.Body)
+
+	if res.IsError() {
+		klog.Errorf(fmt.Sprintf("failed to count number of documents in index with statuscode %d", res.StatusCode))
+		return 0, errors.New("failed to count number of documents in index")
+	}
+
+	var response map[string]interface{}
+	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
+		return 0, err
+	}
+
+	count, ok := response["count"]
+	if !ok {
+		return 0, errors.New("failed to parse value for index count in response body")
+	}
+
+	return int(count.(float64)), nil
+}
+
+func (os *OSClientV1) PutData(index, id string, data map[string]interface{}) error {
+	var b strings.Builder
+	dataBytes, err := json.Marshal(data)
+	if err != nil {
+		return errors.Wrap(err, "failed to Marshal data")
+	}
+	b.Write(dataBytes)
+
+	req := opensearchapi.CreateRequest{
+		Index:      index,
+		DocumentID: id,
+		Body:       strings.NewReader(b.String()),
+		Pretty:     true,
+		Human:      true,
+	}
+
+	res, err := req.Do(context.Background(), os.client)
+	if err != nil {
+		klog.Errorf("failed to put data in the index", err)
+		return err
+	}
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			klog.Errorf("failed to close response body for putting data in the index", err)
+		}
+	}(res.Body)
+
+	if res.IsError() {
+		klog.Errorf(fmt.Sprintf("failed to put data in an index with statuscode %d", res.StatusCode))
+		return errors.New("failed to put data in an index")
+	}
+	return nil
+}

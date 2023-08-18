@@ -96,3 +96,23 @@ func (es *ESClientV5) GetDBUserRole(ctx context.Context) (error, bool) {
 func (es *ESClientV5) CreateDBUserRole(ctx context.Context) error {
 	return errors.New("not supported in es version 5")
 }
+
+func (es *ESClientV5) IndexExistsOrNot(index string) error {
+	return errors.New("not supported in es version 5")
+}
+
+func (es *ESClientV5) CreateIndex(index string) error {
+	return errors.New("not supported in es version 5")
+}
+
+func (es *ESClientV5) DeleteIndex(index string) error {
+	return errors.New("not supported in es version 5")
+}
+
+func (es *ESClientV5) CountData(index string) (int, error) {
+	return 0, errors.New("not supported in es version 5")
+}
+
+func (es *ESClientV5) PutData(index, id string, data map[string]interface{}) error {
+	return errors.New("not supported in es version 5")
+}
