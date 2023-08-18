@@ -19,12 +19,9 @@ package elasticsearch
 import (
 	"context"
 	"encoding/json"
-	"strings"
-
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	esv5 "github.com/elastic/go-elasticsearch/v5"
-	"github.com/elastic/go-elasticsearch/v5/esapi"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 )
@@ -99,108 +96,22 @@ func (es *ESClientV5) CreateDBUserRole(ctx context.Context) error {
 	return errors.New("not supported in es version 5")
 }
 
-func (es *ESClientV5) IndexExistsOrNot(_index string) (bool, error) {
-	req := esapi.IndicesExistsRequest{
-		Index: []string{_index},
-	}
-	res, err := req.Do(context.Background(), es.client)
-	if err != nil {
-		return false, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode > 299 {
-		return false, nil
-	}
-	return true, nil
+func (es *ESClientV5) IndexExistsOrNot(index string) error {
+	return errors.New("not supported in es version 5")
 }
 
-func (es *ESClientV5) CreateIndex(_index string) error {
-	reqCreateIndex := esapi.IndicesCreateRequest{
-		Index:  _index,
-		Pretty: true,
-		Human:  true,
-	}
-
-	res, err := reqCreateIndex.Do(context.Background(), es.client)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	if res.IsError() {
-		return decodeError(res.Body, res.StatusCode)
-	}
-
-	return nil
+func (es *ESClientV5) CreateIndex(index string) error {
+	return errors.New("not supported in es version 5")
 }
 
-func (es *ESClientV5) CountData(_index string) (int, error) {
-	req := esapi.CountRequest{
-		Index: []string{_index},
-	}
-
-	res, err := req.Do(context.Background(), es.client)
-	if err != nil {
-		return 0, err
-	}
-	defer res.Body.Close()
-
-	if res.IsError() {
-		return 0, decodeError(res.Body, res.StatusCode)
-	}
-
-	var response map[string]interface{}
-	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
-		return 0, err
-	}
-
-	count := int(response["count"].(float64))
-	return count, nil
+func (es *ESClientV5) DeleteIndex(index string) error {
+	return errors.New("not supported in es version 5")
 }
 
-func (es *ESClientV5) DeleteIndex(_index string) error {
-	req := esapi.IndicesDeleteRequest{
-		Index: []string{_index},
-	}
-
-	res, err := req.Do(context.Background(), es.client)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	if res.IsError() {
-		return decodeError(res.Body, res.StatusCode)
-	}
-
-	return nil
+func (es *ESClientV5) CountData(index string) (int, error) {
+	return 0, errors.New("not supported in es version 5")
 }
 
-func (es *ESClientV5) PutData(_index, _id string, data map[string]interface{}) error {
-	var b strings.Builder
-	dataBytes, err := json.Marshal(data)
-	if err != nil {
-		return errors.Wrap(err, "failed to Marshal data")
-	}
-	b.Write(dataBytes)
-
-	req := esapi.CreateRequest{
-		Index:      _index,
-		DocumentID: _id,
-		Body:       strings.NewReader(b.String()),
-		Pretty:     true,
-		Human:      true,
-	}
-
-	res, err := req.Do(context.Background(), es.client)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	if res.IsError() {
-		return decodeError(res.Body, res.StatusCode)
-	}
-	return nil
+func (es *ESClientV5) PutData(index, id string, data map[string]interface{}) error {
+	return errors.New("not supported in es version 5")
 }

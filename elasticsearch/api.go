@@ -90,7 +90,7 @@ type ESClient interface {
 	GetClusterReadStatus(ctx context.Context, db *api.Elasticsearch) error
 	GetTotalDiskUsage(ctx context.Context) (string, error)
 	GetDBUserRole(ctx context.Context) (error, bool)
-	IndexExistsOrNot(_index string) (bool, error)
+	IndexExistsOrNot(_index string) error
 	NodesStats() (map[string]interface{}, error)
 	PutData(_index, _id string, data map[string]interface{}) error
 	SyncCredentialFromSecret(secret *core.Secret) error

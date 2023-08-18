@@ -381,73 +381,100 @@ func (es *ESClientV8) CreateDBUserRole(ctx context.Context) error {
 	return nil
 }
 
-func (es *ESClientV8) IndexExistsOrNot(_index string) (bool, error) {
+func (es *ESClientV8) IndexExistsOrNot(index string) error {
 	req := esapi.IndicesExistsRequest{
-		Index: []string{_index},
+		Index: []string{index},
 	}
 	res, err := req.Do(context.Background(), es.client)
 	if err != nil {
-		return false, err
+		klog.Errorf(fmt.Sprintf("failed to get response while checking either index exists or not %v", err))
+		return err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			klog.Errorf("failed to close response body for checking the existence if index", err)
+		}
+	}(res.Body)
 
-	if res.StatusCode > 299 {
-		return false, nil
+	if res.IsError() {
+		klog.Errorf("Index does not exist")
+		return errors.New(fmt.Sprintf("Failed to get index since it does not existy with error statuscode %d", res.StatusCode))
 	}
-	return true, nil
+	return nil
 }
 
-func (es *ESClientV8) CreateIndex(_index string) error {
+func (es *ESClientV8) CreateIndex(index string) error {
 	req := esapi.IndicesCreateRequest{
-		Index:  _index,
+		Index:  index,
 		Pretty: true,
 		Human:  true,
 	}
 
 	res, err := req.Do(context.Background(), es.client)
 	if err != nil {
+		klog.Errorf("failed to apply create index request ", err)
 		return err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			klog.Errorf("failed to close response body for creating index", err)
+		}
+	}(res.Body)
 
 	if res.IsError() {
-		return decodeError(res.Body, res.StatusCode)
+		klog.Errorf(fmt.Sprintf("Creating index failed with statuscode %d", res.StatusCode))
+		return errors.New("failed to create index")
 	}
 
 	return nil
 }
 
-func (es *ESClientV8) DeleteIndex(_index string) error {
+func (es *ESClientV8) DeleteIndex(index string) error {
 	req := esapi.IndicesDeleteRequest{
-		Index: []string{_index},
+		Index: []string{index},
 	}
 
 	res, err := req.Do(context.Background(), es.client)
 	if err != nil {
+		klog.Errorf("Failed to apply delete index request", err)
 		return err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			klog.Errorf("failed to close response body for deleting index", err)
+		}
+	}(res.Body)
 
 	if res.IsError() {
-		return decodeError(res.Body, res.StatusCode)
+		klog.Errorf(fmt.Sprintf("Failed to delete index with status code %d", res.StatusCode))
+		return errors.New("Failed to delete index")
 	}
 
 	return nil
 }
 
-func (es *ESClientV8) CountData(_index string) (int, error) {
+func (es *ESClientV8) CountData(index string) (int, error) {
 	req := esapi.CountRequest{
-		Index: []string{_index},
+		Index: []string{index},
 	}
 
 	res, err := req.Do(context.Background(), es.client)
 	if err != nil {
 		return 0, err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			klog.Errorf("failed to close response body for counting data", err)
+		}
+	}(res.Body)
 
 	if res.IsError() {
-		return 0, decodeError(res.Body, res.StatusCode)
+		klog.Errorf(fmt.Sprintf("failed to count data with statuscode %d", res.StatusCode))
+		return 0, errors.New("Failed to count data")
 	}
 
 	var response map[string]interface{}
@@ -455,11 +482,15 @@ func (es *ESClientV8) CountData(_index string) (int, error) {
 		return 0, err
 	}
 
-	count := int(response["count"].(float64))
-	return count, nil
+	count, ok := response["count"]
+	if !ok {
+		return 0, errors.New("Failed to parse value for index count in response body")
+	}
+
+	return int(count.(float64)), nil
 }
 
-func (es *ESClientV8) PutData(_index, _id string, data map[string]interface{}) error {
+func (es *ESClientV8) PutData(index, id string, data map[string]interface{}) error {
 	var b strings.Builder
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
@@ -468,8 +499,8 @@ func (es *ESClientV8) PutData(_index, _id string, data map[string]interface{}) e
 	b.Write(dataBytes)
 
 	req := esapi.CreateRequest{
-		Index:      _index,
-		DocumentID: _id,
+		Index:      index,
+		DocumentID: id,
 		Body:       strings.NewReader(b.String()),
 		Pretty:     true,
 		Human:      true,
@@ -477,12 +508,19 @@ func (es *ESClientV8) PutData(_index, _id string, data map[string]interface{}) e
 
 	res, err := req.Do(context.Background(), es.client)
 	if err != nil {
+		klog.Errorf("Failed to put data in the index", err)
 		return err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			klog.Errorf("failed to close response body for putting data in the index", err)
+		}
+	}(res.Body)
 
 	if res.IsError() {
-		return decodeError(res.Body, res.StatusCode)
+		klog.Errorf(fmt.Sprintf("Failed to put data in an index with statuscode %d", res.StatusCode))
+		return errors.New("Failed to put data in an index")
 	}
 	return nil
 }

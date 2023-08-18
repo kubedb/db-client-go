@@ -221,108 +221,22 @@ func (es *ESClientV6) CreateDBUserRole(ctx context.Context) error {
 	return errors.New("not supported in es version 6")
 }
 
-func (es *ESClientV6) IndexExistsOrNot(_index string) (bool, error) {
-	req := esapi.IndicesExistsRequest{
-		Index: []string{_index},
-	}
-	res, err := req.Do(context.Background(), es.client)
-	if err != nil {
-		return false, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode > 299 {
-		return false, nil
-	}
-	return true, nil
+func (es *ESClientV6) IndexExistsOrNot(index string) error {
+	return errors.New("not supported in es version 6")
 }
 
-func (es *ESClientV6) CreateIndex(_index string) error {
-	reqCreateIndex := esapi.IndicesCreateRequest{
-		Index:  _index,
-		Pretty: true,
-		Human:  true,
-	}
-
-	res, err := reqCreateIndex.Do(context.Background(), es.client)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	if res.IsError() {
-		return decodeError(res.Body, res.StatusCode)
-	}
-
-	return nil
+func (es *ESClientV6) CreateIndex(index string) error {
+	return errors.New("not supported in es version 6")
 }
 
-func (es *ESClientV6) CountData(_index string) (int, error) {
-	req := esapi.CountRequest{
-		Index: []string{_index},
-	}
-
-	res, err := req.Do(context.Background(), es.client)
-	if err != nil {
-		return 0, err
-	}
-	defer res.Body.Close()
-
-	if res.IsError() {
-		return 0, decodeError(res.Body, res.StatusCode)
-	}
-
-	var response map[string]interface{}
-	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
-		return 0, err
-	}
-
-	count := int(response["count"].(float64))
-	return count, nil
+func (es *ESClientV6) DeleteIndex(index string) error {
+	return errors.New("not supported in es version 6")
 }
 
-func (es *ESClientV6) DeleteIndex(_index string) error {
-	req := esapi.IndicesDeleteRequest{
-		Index: []string{_index},
-	}
-
-	res, err := req.Do(context.Background(), es.client)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	if res.IsError() {
-		return decodeError(res.Body, res.StatusCode)
-	}
-
-	return nil
+func (es *ESClientV6) CountData(index string) (int, error) {
+	return 0, errors.New("not supported in es version 6")
 }
 
-func (es *ESClientV6) PutData(_index, _id string, data map[string]interface{}) error {
-	var b strings.Builder
-	dataBytes, err := json.Marshal(data)
-	if err != nil {
-		return errors.Wrap(err, "failed to Marshal data")
-	}
-	b.Write(dataBytes)
-
-	req := esapi.CreateRequest{
-		Index:      _index,
-		DocumentID: _id,
-		Body:       strings.NewReader(b.String()),
-		Pretty:     true,
-		Human:      true,
-	}
-
-	res, err := req.Do(context.Background(), es.client)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	if res.IsError() {
-		return decodeError(res.Body, res.StatusCode)
-	}
-	return nil
+func (es *ESClientV6) PutData(index, id string, data map[string]interface{}) error {
+	return errors.New("not supported in es version 6")
 }
