@@ -19,6 +19,7 @@ package elasticsearch
 import (
 	"context"
 	"encoding/json"
+
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	esv5 "github.com/elastic/go-elasticsearch/v5"

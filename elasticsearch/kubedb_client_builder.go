@@ -20,7 +20,6 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -453,17 +452,4 @@ func (o *KubeDBClientBuilder) getDefaultTLSConfig() (*tls.Config, error) {
 
 func (o *KubeDBClientBuilder) ServiceURL() string {
 	return fmt.Sprintf("%v://%s.%s.svc:%d", o.db.GetConnectionScheme(), o.db.ServiceName(), o.db.GetNamespace(), api.ElasticsearchRestPort)
-}
-
-func decodeError(respBody io.Reader, statusCode int) error {
-	var response map[string]interface{}
-	err := json.NewDecoder(respBody).Decode(&response)
-	if err != nil {
-		return fmt.Errorf("failed to extract response body with statuscode %d. Reason: %v", statusCode, err)
-	}
-	jsonResponse, err := json.MarshalIndent(&response, "", "\t")
-	if err != nil {
-		return fmt.Errorf("failed to marshal error message with statuscode %d. Reason: %v", statusCode, err)
-	}
-	return errors.New(string(jsonResponse))
 }
