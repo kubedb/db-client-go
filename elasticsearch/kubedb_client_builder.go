@@ -369,6 +369,7 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 				return nil, err
 
 			}
+			fmt.Println("user pass", username, password)
 
 			osClient, err := osv2.NewClient(osv2.Config{
 				Addresses:         []string{o.url},
