@@ -272,13 +272,13 @@ func (os *OSClientV2) IndexExistsOrNot(index string) error {
 	defer func(Body io.ReadCloser) {
 		err = Body.Close()
 		if err != nil {
-			klog.Errorf("failed to close response body for checking the existence if index", err)
+			klog.Errorf("failed to close response body for checking the existence of index", err)
 		}
 	}(res.Body)
 
 	if res.IsError() {
-		klog.Errorf("Index does not exist")
-		return errors.New(fmt.Sprintf("Failed to get index since it does not existy with error statuscode %d", res.StatusCode))
+		klog.Errorf("index does not exist")
+		return errors.New(fmt.Sprintf("failed to get index with statuscode %d", res.StatusCode))
 	}
 	return nil
 }
@@ -303,7 +303,7 @@ func (os *OSClientV2) CreateIndex(index string) error {
 	}(res.Body)
 
 	if res.IsError() {
-		klog.Errorf(fmt.Sprintf("Creating index failed with statuscode %d", res.StatusCode))
+		klog.Errorf(fmt.Sprintf("creating index failed with statuscode %d", res.StatusCode))
 		return errors.New("failed to create index")
 	}
 
@@ -317,7 +317,7 @@ func (os *OSClientV2) DeleteIndex(index string) error {
 
 	res, err := req.Do(context.Background(), os.client)
 	if err != nil {
-		klog.Errorf("Failed to apply delete index request", err)
+		klog.Errorf("failed to apply delete index request", err)
 		return err
 	}
 	defer func(Body io.ReadCloser) {
@@ -328,8 +328,8 @@ func (os *OSClientV2) DeleteIndex(index string) error {
 	}(res.Body)
 
 	if res.IsError() {
-		klog.Errorf(fmt.Sprintf("Failed to delete index with status code %d", res.StatusCode))
-		return errors.New("Failed to delete index")
+		klog.Errorf(fmt.Sprintf("failed to delete index with status code %d", res.StatusCode))
+		return errors.New("failed to delete index")
 	}
 
 	return nil
@@ -352,8 +352,8 @@ func (os *OSClientV2) CountData(index string) (int, error) {
 	}(res.Body)
 
 	if res.IsError() {
-		klog.Errorf(fmt.Sprintf("failed to count data with statuscode %d", res.StatusCode))
-		return 0, errors.New("Failed to count data")
+		klog.Errorf(fmt.Sprintf("failed to count number of documents in index with statuscode %d", res.StatusCode))
+		return 0, errors.New("failed to count number of documents in index")
 	}
 
 	var response map[string]interface{}
@@ -363,7 +363,7 @@ func (os *OSClientV2) CountData(index string) (int, error) {
 
 	count, ok := response["count"]
 	if !ok {
-		return 0, errors.New("Failed to parse value for index count in response body")
+		return 0, errors.New("failed to parse value for index count in response body")
 	}
 
 	return int(count.(float64)), nil
@@ -388,7 +388,7 @@ func (os *OSClientV2) PutData(index, id string, data map[string]interface{}) err
 
 	res, err := req.Do(context.Background(), os.client)
 	if err != nil {
-		klog.Errorf("Failed to put data in the index", err)
+		klog.Errorf("failed to put data in the index", err)
 		return err
 	}
 	defer func(Body io.ReadCloser) {
@@ -399,8 +399,8 @@ func (os *OSClientV2) PutData(index, id string, data map[string]interface{}) err
 	}(res.Body)
 
 	if res.IsError() {
-		klog.Errorf(fmt.Sprintf("Failed to put data in an index with statuscode %d", res.StatusCode))
-		return errors.New("Failed to put data in an index")
+		klog.Errorf(fmt.Sprintf("failed to put data in an index with statuscode %d", res.StatusCode))
+		return errors.New("failed to put data in an index")
 	}
 	return nil
 }

@@ -394,13 +394,13 @@ func (es *ESClientV7) IndexExistsOrNot(index string) error {
 	defer func(Body io.ReadCloser) {
 		err = Body.Close()
 		if err != nil {
-			klog.Errorf("failed to close response body for checking the existence if index", err)
+			klog.Errorf("failed to close response body for checking the existence of index", err)
 		}
 	}(res.Body)
 
 	if res.IsError() {
-		klog.Errorf("Index does not exist")
-		return errors.New(fmt.Sprintf("Failed to get index since it does not existy with error statuscode %d", res.StatusCode))
+		klog.Errorf(fmt.Sprintf("failed to get index with statuscode %d", res.StatusCode))
+		return errors.New("index does not exist")
 	}
 	return nil
 }
@@ -425,7 +425,7 @@ func (es *ESClientV7) CreateIndex(index string) error {
 	}(res.Body)
 
 	if res.IsError() {
-		klog.Errorf(fmt.Sprintf("Creating index failed with statuscode %d", res.StatusCode))
+		klog.Errorf(fmt.Sprintf("creating index failed with statuscode %d", res.StatusCode))
 		return errors.New("failed to create index")
 	}
 
@@ -474,8 +474,8 @@ func (es *ESClientV7) CountData(index string) (int, error) {
 	}(res.Body)
 
 	if res.IsError() {
-		klog.Errorf(fmt.Sprintf("failed to count data with statuscode %d", res.StatusCode))
-		return 0, errors.New("Failed to count data")
+		klog.Errorf(fmt.Sprintf("failed to count number of documents in index with statuscode %d", res.StatusCode))
+		return 0, errors.New("Failed to count number of documents")
 	}
 
 	var response map[string]interface{}
