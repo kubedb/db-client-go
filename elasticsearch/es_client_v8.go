@@ -449,7 +449,7 @@ func (es *ESClientV8) DeleteIndex(index string) error {
 	}(res.Body)
 
 	if res.IsError() {
-		klog.Errorf(fmt.Sprintf("Failed to delete index with status code %d", res.StatusCode))
+		klog.Errorf(fmt.Sprintf("failed to delete index with status code %d", res.StatusCode))
 		return errors.New("failed to delete index")
 	}
 
