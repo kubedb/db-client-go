@@ -111,7 +111,9 @@ func (os *OSClientV1) ClusterStatus() (string, error) {
 	if err2 := json.NewDecoder(res.Body).Decode(&response); err2 != nil {
 		return "", errors.Wrap(err2, "failed to parse the response body")
 	}
+	klog.Info("response------------->", response)
 	if value, ok := response["status"]; ok {
+		klog.Info("value------------->", value)
 		if strValue, ok := value.(string); ok {
 			return strValue, nil
 		}
