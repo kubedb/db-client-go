@@ -22,24 +22,24 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"github.com/go-resty/resty/v2"
-	core "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"net"
 	"net/http"
 	"time"
 
+	"github.com/go-resty/resty/v2"
+	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog/v2"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type KubeDBClientBuilder struct {
-	kc         client.Client
-	dbConnect  *api.KafkaConnectCluster
-	url        string
-	podName    string
-	postgresDB string
-	ctx        context.Context
+	kc        client.Client
+	dbConnect *api.KafkaConnectCluster
+	url       string
+	podName   string
+	ctx       context.Context
 }
 
 func NewKubeDBClientBuilder(kc client.Client, dbConnect *api.KafkaConnectCluster) *KubeDBClientBuilder {
@@ -86,7 +86,7 @@ func (o *KubeDBClientBuilder) GetKafkaConnectClusterClient() (*Client, error) {
 			Name:      o.dbConnect.GetCertSecretName(api.KafkaConnectClusterClientCert),
 		}, &certSecret)
 		if err != nil {
-			config.log.Error(err, "failed to get kafka connect cluster client secret")
+			klog.Error(err, "failed to get kafka connect cluster client secret")
 			return nil, err
 		}
 
@@ -97,7 +97,7 @@ func (o *KubeDBClientBuilder) GetKafkaConnectClusterClient() (*Client, error) {
 
 		crt, err := tls.X509KeyPair(certSecret.Data[core.TLSCertKey], certSecret.Data[core.TLSPrivateKeyKey])
 		if err != nil {
-			config.log.Error(err, "failed to create certificate for TLS config")
+			klog.Error(err, "failed to create certificate for TLS config")
 			return nil, err
 		}
 		clientCA.AppendCertsFromPEM(certSecret.Data[api.CACert])
@@ -128,14 +128,14 @@ func (o *KubeDBClientBuilder) GetKafkaConnectClusterClient() (*Client, error) {
 		if value, ok := secret.Data[core.BasicAuthUsernameKey]; ok {
 			username = string(value)
 		} else {
-			config.log.Info(fmt.Sprintf("Failed for secret: %s/%s, username is missing", secret.Namespace, secret.Name))
+			klog.Info(fmt.Sprintf("Failed for secret: %s/%s, username is missing", secret.Namespace, secret.Name))
 			return nil, errors.New("username is missing")
 		}
 
 		if value, ok := secret.Data[core.BasicAuthPasswordKey]; ok {
 			password = string(value)
 		} else {
-			config.log.Info(fmt.Sprintf("Failed for secret: %s/%s, password is missing", secret.Namespace, secret.Name))
+			klog.Info(fmt.Sprintf("Failed for secret: %s/%s, password is missing", secret.Namespace, secret.Name))
 			return nil, errors.New("password is missing")
 		}
 

@@ -21,7 +21,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
-	"fmt"
+	"strings"
+
 	kafkago "github.com/IBM/sarama"
 	core "k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
@@ -32,12 +33,11 @@ import (
 )
 
 type KubeDBClientBuilder struct {
-	kc         client.Client
-	db         *api.Kafka
-	url        string
-	podName    string
-	postgresDB string
-	ctx        context.Context
+	kc      client.Client
+	db      *api.Kafka
+	url     string
+	podName string
+	ctx     context.Context
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *api.Kafka) *KubeDBClientBuilder {
@@ -62,7 +62,7 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 	return o
 }
 
-func (o *KubeDBClientBuilder) GetKafkaClient() (*Client, error) {
+func (o *KubeDBClientBuilder) GetConfig() (*kafkago.Config, error) {
 	clientConfig := kafkago.NewConfig()
 	if !o.db.Spec.DisableSecurity {
 		if o.db.Spec.AuthSecret == nil {
@@ -126,16 +126,23 @@ func (o *KubeDBClientBuilder) GetKafkaClient() (*Client, error) {
 
 	}
 
-	brokers := o.getBrokerAddresses()
-
 	clientConfig.Producer.Return.Successes = true
 	clientConfig.Producer.Retry.Max = 10
 	clientConfig.Producer.Timeout = 1000
 	clientConfig.Consumer.Offsets.Retry.Max = 10
 	clientConfig.Consumer.Return.Errors = true
 
+	return clientConfig, nil
+}
+
+func (o *KubeDBClientBuilder) GetKafkaClient() (*Client, error) {
+
+	clientConfig, err := o.GetConfig()
+	if err != nil {
+		return nil, err
+	}
 	kafkaClient, err := kafkago.NewClient(
-		brokers,
+		strings.Split(o.url, ","),
 		clientConfig,
 	)
 	if err != nil {
@@ -144,25 +151,43 @@ func (o *KubeDBClientBuilder) GetKafkaClient() (*Client, error) {
 
 	return &Client{
 		Client: kafkaClient,
-		config: clientConfig,
 	}, nil
 }
 
-// Returns all the DNS for brokers
-func (o *KubeDBClientBuilder) getBrokerAddresses() []string {
-	var brokers []string
-	if o.db.Spec.Topology != nil {
-		if o.db.Spec.Topology.Broker != nil {
-			for i := int32(0); i < *o.db.Spec.Topology.Broker.Replicas; i++ {
-				brokers = append(brokers,
-					fmt.Sprintf("%s-%v.%s.%s.svc.cluster.local:%v", o.db.BrokerStatefulSetName(), i, o.db.GoverningServiceName(), o.db.Namespace, api.KafkaRESTPort))
-			}
-		}
-	} else {
-		for i := int32(0); i < *o.db.Spec.Replicas; i++ {
-			brokers = append(brokers,
-				fmt.Sprintf("%s-%v.%s.%s.svc.cluster.local:%v", o.db.CombinedStatefulSetName(), i, o.db.GoverningServiceName(), o.db.Namespace, api.KafkaRESTPort))
-		}
+func (o *KubeDBClientBuilder) GetKafkaProducerClient() (*ProducerClient, error) {
+
+	clientConfig, err := o.GetConfig()
+	if err != nil {
+		return nil, err
 	}
-	return brokers
+	kafkaProducerClient, err := kafkago.NewSyncProducer(
+		strings.Split(o.url, ","),
+		clientConfig,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ProducerClient{
+		kafkaProducerClient,
+	}, nil
+}
+
+func (o *KubeDBClientBuilder) GetKafkaAdminClient() (*AdminClient, error) {
+
+	clientConfig, err := o.GetConfig()
+	if err != nil {
+		return nil, err
+	}
+	kafkaAdminClient, err := kafkago.NewClusterAdmin(
+		strings.Split(o.url, ","),
+		clientConfig,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AdminClient{
+		kafkaAdminClient,
+	}, nil
 }

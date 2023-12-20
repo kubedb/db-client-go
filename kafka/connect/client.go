@@ -18,12 +18,12 @@ package connect
 
 import (
 	"encoding/json"
-	"github.com/go-logr/logr"
+	"io"
+	"net/http"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
-	"io"
 	"k8s.io/klog/v2"
-	"net/http"
 )
 
 type Client struct {
@@ -38,7 +38,6 @@ type Config struct {
 	password         string
 	connectionScheme string
 	transport        *http.Transport
-	log              logr.Logger
 }
 
 type Response struct {
