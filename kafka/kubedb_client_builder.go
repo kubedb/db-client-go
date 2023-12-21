@@ -66,7 +66,7 @@ func (o *KubeDBClientBuilder) GetConfig() (*kafkago.Config, error) {
 	clientConfig := kafkago.NewConfig()
 	if !o.db.Spec.DisableSecurity {
 		if o.db.Spec.AuthSecret == nil {
-			klog.Info("Authsecret not set")
+			klog.Info("Auth-secret not set")
 			return nil, errors.New("auth-secret is not set")
 		}
 
@@ -77,10 +77,10 @@ func (o *KubeDBClientBuilder) GetConfig() (*kafkago.Config, error) {
 		}, authSecret)
 		if err != nil {
 			if kerr.IsNotFound(err) {
-				klog.Error(err, "Authsecret not found")
+				klog.Error(err, "Auth-secret not found")
 				return nil, errors.New("auth-secret is not found")
 			}
-			klog.Error(err, "Failed to get authsecret")
+			klog.Error(err, "Failed to get auth-secret")
 			return nil, err
 		}
 
@@ -136,7 +136,6 @@ func (o *KubeDBClientBuilder) GetConfig() (*kafkago.Config, error) {
 }
 
 func (o *KubeDBClientBuilder) GetKafkaClient() (*Client, error) {
-
 	clientConfig, err := o.GetConfig()
 	if err != nil {
 		return nil, err
@@ -155,7 +154,6 @@ func (o *KubeDBClientBuilder) GetKafkaClient() (*Client, error) {
 }
 
 func (o *KubeDBClientBuilder) GetKafkaProducerClient() (*ProducerClient, error) {
-
 	clientConfig, err := o.GetConfig()
 	if err != nil {
 		return nil, err
@@ -174,7 +172,6 @@ func (o *KubeDBClientBuilder) GetKafkaProducerClient() (*ProducerClient, error) 
 }
 
 func (o *KubeDBClientBuilder) GetKafkaAdminClient() (*AdminClient, error) {
-
 	clientConfig, err := o.GetConfig()
 	if err != nil {
 		return nil, err
@@ -193,7 +190,6 @@ func (o *KubeDBClientBuilder) GetKafkaAdminClient() (*AdminClient, error) {
 }
 
 func (o *KubeDBClientBuilder) GetKafkaConsumerClient() (*ConsumerClient, error) {
-
 	clientConfig, err := o.GetConfig()
 	if err != nil {
 		return nil, err

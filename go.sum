@@ -803,6 +803,7 @@ k8s.io/utils v0.0.0-20231127182322-b307cd553661 h1:FepOBzJ0GXm8t0su67ln2wAZjbQ6R
 k8s.io/utils v0.0.0-20231127182322-b307cd553661/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
 kmodules.xyz/apiversion v0.2.0 h1:vAQYqZFm4xu4pbB1cAdHbFEPES6EQkcR4wc06xdTOWk=
 kmodules.xyz/apiversion v0.2.0/go.mod h1:oPX8g8LvlPdPX3Yc5YvCzJHQnw3YF/X4/jdW0b1am80=
+<<<<<<< HEAD
 kmodules.xyz/client-go v0.29.6-0.20240106073345-92f92b4d6985 h1:TrYD40aWXVm+8KkFoQ+FSw5rr6DN2EwjYX9MCzy5y3c=
 kmodules.xyz/client-go v0.29.6-0.20240106073345-92f92b4d6985/go.mod h1:pHuzpwzEcDUIGjVVvwz9N8lY+6A7HXwvs2d7NtK7Hho=
 kmodules.xyz/custom-resources v0.29.0 h1:RaDM2+wSVXiwIvLqmkTVYpwoH83AC8wruXe2p2rOZNY=
@@ -813,6 +814,19 @@ kmodules.xyz/offshoot-api v0.29.0 h1:GHLhxxT9jU1N8+FvOCCeJNyU5g0duYS46UGrs6AHNLY
 kmodules.xyz/offshoot-api v0.29.0/go.mod h1:5NxhBblXoDHWStx9HCDJR2KFTwYjEZ7i1Id3jelIunw=
 kubedb.dev/apimachinery v0.40.1-0.20240106103518-87c402a1ae51 h1:6RgHui7DPEXOSGIAWY9N3gytdbQHH1Yry2hwKSQdDsc=
 kubedb.dev/apimachinery v0.40.1-0.20240106103518-87c402a1ae51/go.mod h1:pa3rY23DEC7j4c0H2uIe6uG7YUbNnT1qA3p7UBr3pwQ=
+=======
+kmodules.xyz/client-go v0.25.43 h1:R3+Xqw1CARiQDWe+9NFq1avsXzmky/KQFzCAQpP1/Ko=
+kmodules.xyz/client-go v0.25.43/go.mod h1:bUfkYVd0Z7NKY87y87JZKYHxP0qk17FQD5zQazNrklQ=
+kmodules.xyz/custom-resources v0.25.2 h1:+PJgUZvbbSgyNT7EX9gUZ3PIzY2LAW03TDW8cevvXqo=
+kmodules.xyz/custom-resources v0.25.2/go.mod h1:b9XjjKQMZ6KrLHXKqQz7YwV3M3BK8Hwi4KEwu5RadCo=
+kmodules.xyz/monitoring-agent-api v0.25.6 h1:NxPkk2MRUWusI8L5u1U7w8GBUagnKqK49C2r65qks/w=
+kmodules.xyz/monitoring-agent-api v0.25.6/go.mod h1:vvgbaYZkVb+KsxeiLRM7xe1M2BkBZVCYcM32ak5bin8=
+kmodules.xyz/offshoot-api v0.25.5 h1:erUtTDj9iljikd9CvrCz0E32P5mgEqq1NYxy06lxrNo=
+kmodules.xyz/offshoot-api v0.25.5/go.mod h1:wotLtcXWHw6KrWX6Ry2EsHn2I2QTvyLX7gXAuwBjkFc=
+kubedb.dev/apimachinery v0.39.1-0.20231222063121-fbbd57ae9c72 h1:hI9Zsn+QnTMVpANE8P6WGaTq7kObeErvdM1Gs/ZpS7o=
+kubedb.dev/apimachinery v0.39.1-0.20231222063121-fbbd57ae9c72/go.mod h1:hMFtRnxRCZR39lvguqtqq6PZ5dDRDHFjupQZQ37QIo8=
+lukechampine.com/uint128 v1.1.1 h1:pnxCASz787iMf+02ssImqk6OLt+Z5QHMoZyUXR4z6JU=
+>>>>>>> cd0d824e (Modify some functions)
 lukechampine.com/uint128 v1.1.1/go.mod h1:c4eWIwlEGaxC/+H1VguhU4PHXNWDCDMUlWdIWl2j1gk=
 lukechampine.com/uint128 v1.2.0 h1:mBi/5l91vocEN8otkC5bDLhi2KdCticRiwbdB0O+rjI=
 lukechampine.com/uint128 v1.2.0/go.mod h1:c4eWIwlEGaxC/+H1VguhU4PHXNWDCDMUlWdIWl2j1gk=

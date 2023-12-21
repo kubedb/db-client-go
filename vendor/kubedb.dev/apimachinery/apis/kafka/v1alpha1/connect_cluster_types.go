@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha2
+package v1alpha1
 
 import (
 	core "k8s.io/api/core/v1"
@@ -25,13 +25,13 @@ import (
 )
 
 const (
-	ResourceCodeKafkaConnectCluster     = "kcc"
-	ResourceKindKafkaConnectCluster     = "KafkaConnectCluster"
-	ResourceSingularKafkaConnectCluster = "kafkaconnectcluster"
-	ResourcePluralKafkaConnectCluster   = "kafkaconnectclusters"
+	ResourceCodeConnectCluster     = "kcc"
+	ResourceKindConnectCluster     = "ConnectCluster"
+	ResourceSingularConnectCluster = "connectcluster"
+	ResourcePluralConnectCluster   = "connectclusters"
 )
 
-// KafkaConnectCluster defines a framework for connecting Kafka with external systems
+// ConnectCluster defines a framework for connecting Kafka with external systems
 
 // +genclient
 // +k8s:openapi-gen=true
@@ -44,17 +44,17 @@ const (
 // +kubebuilder:printcolumn:name="Version",type="string",JSONPath=".spec.version"
 // +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.phase"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
-type KafkaConnectCluster struct {
+type ConnectCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   KafkaConnectClusterSpec   `json:"spec,omitempty"`
-	Status KafkaConnectClusterStatus `json:"status,omitempty"`
+	Spec   ConnectClusterSpec   `json:"spec,omitempty"`
+	Status ConnectClusterStatus `json:"status,omitempty"`
 }
 
-// KafkaConnectClusterSpec defines the desired state of KafkaConnectCluster
-type KafkaConnectClusterSpec struct {
-	// Version of KafkaConnectCluster to be deployed.
+// ConnectClusterSpec defines the desired state of ConnectCluster
+type ConnectClusterSpec struct {
+	// Version of ConnectCluster to be deployed.
 	Version string `json:"version"`
 
 	// Number of instances to deploy for a Kafka database.
@@ -62,7 +62,7 @@ type KafkaConnectClusterSpec struct {
 	Replicas *int32 `json:"replicas,omitempty"`
 
 	// Kafka app-binding reference
-	// KafkaRef is a required field, where KafkaConnectCluster will store its metadata
+	// KafkaRef is a required field, where ConnectCluster will store its metadata
 	KafkaRef *kmapi.ObjectReference `json:"kafkaRef"`
 
 	// disable security. It disables authentication security of user.
@@ -115,11 +115,11 @@ type KafkaConnectClusterSpec struct {
 	Monitor *mona.AgentSpec `json:"monitor,omitempty"`
 }
 
-// KafkaConnectClusterStatus defines the observed state of KafkaConnectCluster
-type KafkaConnectClusterStatus struct {
+// ConnectClusterStatus defines the observed state of ConnectCluster
+type ConnectClusterStatus struct {
 	// Specifies the current phase of the database
 	// +optional
-	Phase KafkaConnectClusterPhase `json:"phase,omitempty"`
+	Phase ConnectClusterPhase `json:"phase,omitempty"`
 	// observedGeneration is the most recent generation observed for this resource. It corresponds to the
 	// resource's generation, which is updated on mutation by the API Server.
 	// +optional
@@ -130,32 +130,32 @@ type KafkaConnectClusterStatus struct {
 }
 
 // +kubebuilder:validation:Enum=Provisioning;Ready;NotReady;Critical;Unknown
-type KafkaConnectClusterPhase string
+type ConnectClusterPhase string
 
 const (
-	KafkaConnectClusterPhaseProvisioning KafkaConnectClusterPhase = "Provisioning"
-	KafkaConnectClusterPhaseReady        KafkaConnectClusterPhase = "Ready"
-	KafkaConnectClusterPhaseNotReady     KafkaConnectClusterPhase = "NotReady"
-	KafkaConnectClusterPhaseCritical     KafkaConnectClusterPhase = "Critical"
-	KafkaConnectClusterPhaseUnknown      KafkaConnectClusterPhase = "Unknown"
+	ConnectClusterPhaseProvisioning ConnectClusterPhase = "Provisioning"
+	ConnectClusterPhaseReady        ConnectClusterPhase = "Ready"
+	ConnectClusterPhaseNotReady     ConnectClusterPhase = "NotReady"
+	ConnectClusterPhaseCritical     ConnectClusterPhase = "Critical"
+	ConnectClusterPhaseUnknown      ConnectClusterPhase = "Unknown"
 )
 
 // +kubebuilder:validation:Enum=ca;transport;http;client;server
-type KafkaConnectClusterCertificateAlias string
+type ConnectClusterCertificateAlias string
 
 const (
-	KafkaConnectClusterCACert        KafkaConnectClusterCertificateAlias = "ca"
-	KafkaConnectClusterTransportCert KafkaConnectClusterCertificateAlias = "transport"
-	KafkaConnectClusterHTTPCert      KafkaConnectClusterCertificateAlias = "http"
-	KafkaConnectClusterClientCert    KafkaConnectClusterCertificateAlias = "client"
-	KafkaConnectClusterServerCert    KafkaConnectClusterCertificateAlias = "server"
+	ConnectClusterCACert        ConnectClusterCertificateAlias = "ca"
+	ConnectClusterTransportCert ConnectClusterCertificateAlias = "transport"
+	ConnectClusterHTTPCert      ConnectClusterCertificateAlias = "http"
+	ConnectClusterClientCert    ConnectClusterCertificateAlias = "client"
+	ConnectClusterServerCert    ConnectClusterCertificateAlias = "server"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// KafkaConnectClusterList contains a list of KafkaConnectCluster
-type KafkaConnectClusterList struct {
+// ConnectClusterList contains a list of ConnectCluster
+type ConnectClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []KafkaConnectCluster `json:"items"`
+	Items           []ConnectCluster `json:"items"`
 }

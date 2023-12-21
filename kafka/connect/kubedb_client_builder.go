@@ -30,19 +30,21 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
+	kapi "kubedb.dev/apimachinery/apis/kafka/v1alpha1"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type KubeDBClientBuilder struct {
 	kc        client.Client
-	dbConnect *api.KafkaConnectCluster
+	dbConnect *kapi.ConnectCluster
 	url       string
+	path      string
 	podName   string
 	ctx       context.Context
 }
 
-func NewKubeDBClientBuilder(kc client.Client, dbConnect *api.KafkaConnectCluster) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, dbConnect *kapi.ConnectCluster) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc:        kc,
 		dbConnect: dbConnect,
@@ -59,22 +61,27 @@ func (o *KubeDBClientBuilder) WithURL(url string) *KubeDBClientBuilder {
 	return o
 }
 
+func (o *KubeDBClientBuilder) WithPath(path string) *KubeDBClientBuilder {
+	o.path = path
+	return o
+}
+
 func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
 	o.ctx = ctx
 	return o
 }
 
-func (o *KubeDBClientBuilder) GetKafkaConnectClusterClient() (*Client, error) {
+func (o *KubeDBClientBuilder) GetConnectClusterClient() (*Client, error) {
 	config := Config{
-		host: o.getHostPath(),
-		api:  "/",
+		host: o.url,
+		api:  o.path,
 		transport: &http.Transport{
 			IdleConnTimeout: time.Second * 3,
 			DialContext: (&net.Dialer{
 				Timeout: time.Second * 30,
 			}).DialContext,
 		},
-		connectionScheme: o.getConnectionScheme(),
+		connectionScheme: o.dbConnect.GetConnectionScheme(),
 	}
 
 	// If EnableSSL is true set tls config,
@@ -83,10 +90,10 @@ func (o *KubeDBClientBuilder) GetKafkaConnectClusterClient() (*Client, error) {
 		var certSecret core.Secret
 		err := o.kc.Get(o.ctx, types.NamespacedName{
 			Namespace: o.dbConnect.Namespace,
-			Name:      o.dbConnect.GetCertSecretName(api.KafkaConnectClusterClientCert),
+			Name:      o.dbConnect.GetCertSecretName(kapi.ConnectClusterClientCert),
 		}, &certSecret)
 		if err != nil {
-			klog.Error(err, "failed to get kafka connect cluster client secret")
+			klog.Error(err, "failed to get connect cluster client secret")
 			return nil, err
 		}
 
@@ -154,18 +161,4 @@ func (o *KubeDBClientBuilder) GetKafkaConnectClusterClient() (*Client, error) {
 		Client: newClient,
 		Config: &config,
 	}, nil
-}
-
-// return host path in
-// format https://svc_name.namespace.svc:8083/
-func (o *KubeDBClientBuilder) getHostPath() string {
-	return fmt.Sprintf("%v://%s.%s.svc:%d", o.getConnectionScheme(), o.dbConnect.ServiceName(), o.dbConnect.GetNamespace(), 8083)
-}
-
-// will remove later
-func (o *KubeDBClientBuilder) getConnectionScheme() string {
-	if o.dbConnect.Spec.EnableSSL && o.dbConnect.Spec.TLS != nil {
-		return "https"
-	}
-	return "http"
 }

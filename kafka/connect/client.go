@@ -52,7 +52,7 @@ type ResponseBody struct {
 	KafkaClusterId string `json:"kafka_cluster_id"`
 }
 
-func (cc *Client) GetKafkaConnectClusterStatus() (*Response, error) {
+func (cc *Client) GetConnectClusterStatus() (*Response, error) {
 	req := cc.Client.R().SetDoNotParseResponse(true)
 	res, err := req.Get(cc.Config.api)
 	if err != nil {

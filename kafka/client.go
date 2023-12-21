@@ -48,7 +48,6 @@ type MessageMetadata struct {
 }
 
 func (c *Client) IsDBConnected() (bool, error) {
-	// TODO: try using refreshcontroller
 	controller, err := c.RefreshController()
 	if err != nil || controller == nil {
 		klog.Error(err, "Failed to Get kafka controller")
@@ -61,9 +60,9 @@ func (c *Client) IsDBConnected() (bool, error) {
 		return false, err
 	}
 	if connected {
-		klog.Info(fmt.Sprintf("Successfully connected broker: %s", controller.Addr()))
+		klog.V(5).Info(fmt.Sprintf("Successfully connected broker: %s", controller.Addr()))
 	} else {
-		klog.Info(fmt.Sprintf("Failed to connect broker: %s", controller.Addr()))
+		klog.Error(fmt.Sprintf("Failed to connect broker: %s", controller.Addr()))
 	}
 
 	return connected, nil
@@ -121,7 +120,7 @@ func (a *AdminClient) EnsureKafkaTopic(topic string, topicConfig map[string]*str
 	}
 	return nil
 }
-func (c *Client) DeleteTopic(topics ...string) {
+func (c *Client) DeleteTopics(topics ...string) {
 	broker, err := c.RefreshController()
 	if err != nil {
 		klog.Error(err, "Failed to refresh controller for kafka-health topic")
@@ -164,7 +163,7 @@ func (p *ProducerClient) SendMessageWithProducer(partition int32, topic, key, me
 	return &msgMetadata, nil
 }
 
-func (c ConsumerClient) ConsumeMessages(partition int32, topic string, offset int64, signal *chan bool, message *chan MessageMetadata) error {
+func (c *ConsumerClient) ConsumeMessages(partition int32, topic string, offset int64, signal *chan bool, message *chan MessageMetadata) error {
 	var err error
 	var partitionConsumer kafkago.PartitionConsumer
 	partitionConsumer, err = c.ConsumePartition(topic, partition, offset)
@@ -179,7 +178,7 @@ func (c ConsumerClient) ConsumeMessages(partition int32, topic string, offset in
 		case <-*signal:
 			return nil
 		case err := <-partitionConsumer.Errors():
-			klog.Info(fmt.Sprintf("could not process message, err: %s", err.Error()))
+			klog.Error(fmt.Sprintf("could not process message, err: %s", err.Error()))
 			return err
 		case msg := <-partitionConsumer.Messages():
 			msgMetadata := MessageMetadata{
