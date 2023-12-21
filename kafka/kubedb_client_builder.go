@@ -191,3 +191,22 @@ func (o *KubeDBClientBuilder) GetKafkaAdminClient() (*AdminClient, error) {
 		kafkaAdminClient,
 	}, nil
 }
+
+func (o *KubeDBClientBuilder) GetKafkaConsumerClient() (*ConsumerClient, error) {
+
+	clientConfig, err := o.GetConfig()
+	if err != nil {
+		return nil, err
+	}
+	kafkaConsumerClient, err := kafkago.NewConsumer(
+		strings.Split(o.url, ","),
+		clientConfig,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ConsumerClient{
+		kafkaConsumerClient,
+	}, nil
+}

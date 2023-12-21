@@ -18,6 +18,7 @@ package kafka
 
 import (
 	"fmt"
+	"time"
 
 	kafkago "github.com/IBM/sarama"
 	"k8s.io/klog/v2"
@@ -33,6 +34,10 @@ type ProducerClient struct {
 
 type AdminClient struct {
 	kafkago.ClusterAdmin
+}
+
+type ConsumerClient struct {
+	kafkago.Consumer
 }
 
 type MessageMetadata struct {
@@ -64,15 +69,22 @@ func (c *Client) IsDBConnected() (bool, error) {
 	return connected, nil
 }
 
-func (c *Client) GetPartitionLeaderAddress(partition int32, topic string) (string, error) {
-	err := c.RefreshMetadata(topic)
+func (c *Client) RefreshTopicMetadata(topics ...string) error {
+	err := c.RefreshMetadata(topics...)
 	if err != nil {
-		klog.Error(err, fmt.Sprintf("Failed to refresh metadata for %s topic", topic))
-		return "", err
+		klog.Error(err, "Failed to refresh metadata", "Topics", topics)
+		return err
 	}
 	_, err = c.RefreshController()
 	if err != nil {
-		klog.Error(err, fmt.Sprintf("Failed to refresh controller for %s topic", topic))
+		klog.Error(err, "Failed to refresh controller")
+		return err
+	}
+	return nil
+}
+
+func (c *Client) GetPartitionLeaderAddress(partition int32, topic string) (string, error) {
+	if err := c.RefreshTopicMetadata(topic); err != nil {
 		return "", err
 	}
 	leader, err := c.Leader(topic, partition)
@@ -109,6 +121,27 @@ func (a *AdminClient) EnsureKafkaTopic(topic string, topicConfig map[string]*str
 	}
 	return nil
 }
+func (c *Client) DeleteTopic(topics ...string) {
+	broker, err := c.RefreshController()
+	if err != nil {
+		klog.Error(err, "Failed to refresh controller for kafka-health topic")
+		return
+	}
+	_, err = broker.DeleteTopics(&kafkago.DeleteTopicsRequest{
+		Topics:  topics,
+		Timeout: 5 * time.Second,
+	})
+	if err != nil {
+		klog.Error(err, "Failed to delete kafka health topic")
+		return
+	}
+
+	err = c.RefreshTopicMetadata(topics...)
+	if err != nil {
+		klog.Error("Failed to refresh topic metadata")
+		return
+	}
+}
 
 func (p *ProducerClient) SendMessageWithProducer(partition int32, topic, key, message string) (*MessageMetadata, error) {
 	producerMsg := &kafkago.ProducerMessage{
@@ -129,4 +162,33 @@ func (p *ProducerClient) SendMessageWithProducer(partition int32, topic, key, me
 	}
 
 	return &msgMetadata, nil
+}
+
+func (c ConsumerClient) ConsumeMessages(partition int32, topic string, offset int64, signal *chan bool, message *chan MessageMetadata) error {
+	var err error
+	var partitionConsumer kafkago.PartitionConsumer
+	partitionConsumer, err = c.ConsumePartition(topic, partition, offset)
+	if err != nil {
+		klog.Error(err, "Failed to create partition consumer")
+		return err
+	}
+	defer partitionConsumer.AsyncClose()
+
+	for {
+		select {
+		case <-*signal:
+			return nil
+		case err := <-partitionConsumer.Errors():
+			klog.Info(fmt.Sprintf("could not process message, err: %s", err.Error()))
+			return err
+		case msg := <-partitionConsumer.Messages():
+			msgMetadata := MessageMetadata{
+				Key:       string(msg.Key),
+				Value:     string(msg.Value),
+				Partition: msg.Partition,
+				Offset:    msg.Offset,
+			}
+			*message <- msgMetadata
+		}
+	}
 }
