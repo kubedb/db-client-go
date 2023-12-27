@@ -24,6 +24,7 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	apiv1 "kmodules.xyz/client-go/api/v1"
+	"kmodules.xyz/offshoot-api/api/v2"
 	kubedbv1alpha2 "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 )
 
@@ -129,7 +130,11 @@ func (in *PgpoolSpec) DeepCopyInto(out *PgpoolSpec) {
 		*out = new(v1.LocalObjectReference)
 		**out = **in
 	}
-	in.PodTemplate.DeepCopyInto(&out.PodTemplate)
+	if in.PodTemplate != nil {
+		in, out := &in.PodTemplate, &out.PodTemplate
+		*out = new(v2.PodTemplateSpec)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.InitConfiguration != nil {
 		in, out := &in.InitConfiguration, &out.InitConfiguration
 		*out = new(PgpoolConfiguration)
@@ -141,6 +146,11 @@ func (in *PgpoolSpec) DeepCopyInto(out *PgpoolSpec) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.HealthChecker != nil {
+		in, out := &in.HealthChecker, &out.HealthChecker
+		*out = new(apiv1.HealthCheckSpec)
+		(*in).DeepCopyInto(*out)
 	}
 }
 
