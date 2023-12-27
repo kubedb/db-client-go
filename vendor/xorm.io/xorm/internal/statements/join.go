@@ -15,64 +15,97 @@ import (
 )
 
 // Join The joinOP should be one of INNER, LEFT OUTER, CROSS etc - this will be prepended to JOIN
-func (statement *Statement) Join(joinOP string, tablename interface{}, condition string, args ...interface{}) *Statement {
-	var buf strings.Builder
-	if len(statement.JoinStr) > 0 {
-		fmt.Fprintf(&buf, "%v %v JOIN ", statement.JoinStr, joinOP)
-	} else {
-		fmt.Fprintf(&buf, "%v JOIN ", joinOP)
-	}
-
-	switch tp := tablename.(type) {
-	case builder.Builder:
-		subSQL, subQueryArgs, err := tp.ToSQL()
-		if err != nil {
-			statement.LastError = err
-			return statement
-		}
-
-		fields := strings.Split(tp.TableName(), ".")
-		aliasName := statement.dialect.Quoter().Trim(fields[len(fields)-1])
-		aliasName = schemas.CommonQuoter.Trim(aliasName)
-
-		fmt.Fprintf(&buf, "(%s) %s ON %v", statement.ReplaceQuote(subSQL), statement.quote(aliasName), statement.ReplaceQuote(condition))
-		statement.joinArgs = append(statement.joinArgs, subQueryArgs...)
-	case *builder.Builder:
-		subSQL, subQueryArgs, err := tp.ToSQL()
-		if err != nil {
-			statement.LastError = err
-			return statement
-		}
-
-		fields := strings.Split(tp.TableName(), ".")
-		aliasName := statement.dialect.Quoter().Trim(fields[len(fields)-1])
-		aliasName = schemas.CommonQuoter.Trim(aliasName)
-
-		fmt.Fprintf(&buf, "(%s) %s ON %v", statement.ReplaceQuote(subSQL), statement.quote(aliasName), statement.ReplaceQuote(condition))
-		statement.joinArgs = append(statement.joinArgs, subQueryArgs...)
-	default:
-		tbName := dialects.FullTableName(statement.dialect, statement.tagParser.GetTableMapper(), tablename, true)
-		if !utils.IsSubQuery(tbName) {
-			var buf strings.Builder
-			_ = statement.dialect.Quoter().QuoteTo(&buf, tbName)
-			tbName = buf.String()
-		} else {
-			tbName = statement.ReplaceQuote(tbName)
-		}
-		fmt.Fprintf(&buf, "%s ON %v", tbName, statement.ReplaceQuote(condition))
-	}
-
-	statement.JoinStr = buf.String()
-	statement.joinArgs = append(statement.joinArgs, args...)
+func (statement *Statement) Join(joinOP string, joinTable interface{}, condition interface{}, args ...interface{}) *Statement {
+	statement.joins = append(statement.joins, join{
+		op:        joinOP,
+		table:     joinTable,
+		condition: condition,
+		args:      args,
+	})
 	return statement
 }
 
-func (statement *Statement) writeJoin(w builder.Writer) error {
-	if statement.JoinStr != "" {
-		if _, err := fmt.Fprint(w, " ", statement.JoinStr); err != nil {
+func (statement *Statement) writeJoins(w *builder.BytesWriter) error {
+	for _, join := range statement.joins {
+		if err := statement.writeJoin(w, join); err != nil {
 			return err
 		}
-		w.Append(statement.joinArgs...)
 	}
+	return nil
+}
+
+func (statement *Statement) writeJoin(buf *builder.BytesWriter, join join) error {
+	// write join operator
+	if _, err := fmt.Fprint(buf, " ", join.op, " JOIN"); err != nil {
+		return err
+	}
+
+	// write join table or subquery
+	switch tp := join.table.(type) {
+	case builder.Builder:
+		if _, err := fmt.Fprintf(buf, " ("); err != nil {
+			return err
+		}
+		if err := tp.WriteTo(statement.QuoteReplacer(buf)); err != nil {
+			return err
+		}
+
+		fields := strings.Split(tp.TableName(), ".")
+		aliasName := statement.dialect.Quoter().Trim(fields[len(fields)-1])
+		aliasName = schemas.CommonQuoter.Trim(aliasName)
+
+		if _, err := fmt.Fprintf(buf, ") %s", statement.quote(aliasName)); err != nil {
+			return err
+		}
+	case *builder.Builder:
+		if _, err := fmt.Fprintf(buf, " ("); err != nil {
+			return err
+		}
+		if err := tp.WriteTo(statement.QuoteReplacer(buf)); err != nil {
+			return err
+		}
+
+		fields := strings.Split(tp.TableName(), ".")
+		aliasName := statement.dialect.Quoter().Trim(fields[len(fields)-1])
+		aliasName = schemas.CommonQuoter.Trim(aliasName)
+
+		if _, err := fmt.Fprintf(buf, ") %s", statement.quote(aliasName)); err != nil {
+			return err
+		}
+	default:
+		tbName := dialects.FullTableName(statement.dialect, statement.tagParser.GetTableMapper(), join.table, true)
+		if !utils.IsSubQuery(tbName) {
+			var sb strings.Builder
+			if err := statement.dialect.Quoter().QuoteTo(&sb, tbName); err != nil {
+				return err
+			}
+			tbName = sb.String()
+		} else {
+			tbName = statement.ReplaceQuote(tbName)
+		}
+		if _, err := fmt.Fprint(buf, " ", tbName); err != nil {
+			return err
+		}
+	}
+
+	// write on condition
+	if _, err := fmt.Fprint(buf, " ON "); err != nil {
+		return err
+	}
+
+	switch condTp := join.condition.(type) {
+	case string:
+		if _, err := fmt.Fprint(buf, statement.ReplaceQuote(condTp)); err != nil {
+			return err
+		}
+	case builder.Cond:
+		if err := condTp.WriteTo(statement.QuoteReplacer(buf)); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("unsupported join condition type: %v", condTp)
+	}
+	buf.Append(join.args...)
+
 	return nil
 }

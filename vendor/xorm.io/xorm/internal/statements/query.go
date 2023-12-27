@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"xorm.io/builder"
-	"xorm.io/xorm/internal/utils"
 	"xorm.io/xorm/schemas"
 )
 
@@ -29,37 +28,15 @@ func (statement *Statement) GenQuerySQL(sqlOrArgs ...interface{}) (string, []int
 		return "", nil, ErrTableNotFound
 	}
 
-	columnStr := statement.ColumnStr()
-	if len(statement.SelectStr) > 0 {
-		columnStr = statement.SelectStr
-	} else {
-		if statement.JoinStr == "" {
-			if columnStr == "" {
-				if statement.GroupByStr != "" {
-					columnStr = statement.quoteColumnStr(statement.GroupByStr)
-				} else {
-					columnStr = statement.genColumnStr()
-				}
-			}
-		} else {
-			if columnStr == "" {
-				if statement.GroupByStr != "" {
-					columnStr = statement.quoteColumnStr(statement.GroupByStr)
-				} else {
-					columnStr = "*"
-				}
-			}
-		}
-		if columnStr == "" {
-			columnStr = "*"
-		}
-	}
-
 	if err := statement.ProcessIDParam(); err != nil {
 		return "", nil, err
 	}
 
-	return statement.genSelectSQL(columnStr, true, true)
+	buf := builder.NewWriter()
+	if err := statement.writeSelect(buf, statement.genSelectColumnStr(), false); err != nil {
+		return "", nil, err
+	}
+	return buf.String(), buf.Args(), nil
 }
 
 // GenSumSQL generates sum SQL
@@ -81,13 +58,16 @@ func (statement *Statement) GenSumSQL(bean interface{}, columns ...string) (stri
 		}
 		sumStrs = append(sumStrs, fmt.Sprintf("COALESCE(sum(%s),0)", colName))
 	}
-	sumSelect := strings.Join(sumStrs, ", ")
 
 	if err := statement.MergeConds(bean); err != nil {
 		return "", nil, err
 	}
 
-	return statement.genSelectSQL(sumSelect, true, true)
+	buf := builder.NewWriter()
+	if err := statement.writeSelect(buf, strings.Join(sumStrs, ", "), true); err != nil {
+		return "", nil, err
+	}
+	return buf.String(), buf.Args(), nil
 }
 
 // GenGetSQL generates Get SQL
@@ -108,7 +88,7 @@ func (statement *Statement) GenGetSQL(bean interface{}) (string, []interface{}, 
 		columnStr = statement.SelectStr
 	} else {
 		// TODO: always generate column names, not use * even if join
-		if len(statement.JoinStr) == 0 {
+		if len(statement.joins) == 0 {
 			if len(columnStr) == 0 {
 				if len(statement.GroupByStr) > 0 {
 					columnStr = statement.quoteColumnStr(statement.GroupByStr)
@@ -139,7 +119,11 @@ func (statement *Statement) GenGetSQL(bean interface{}) (string, []interface{}, 
 		}
 	}
 
-	return statement.genSelectSQL(columnStr, true, true)
+	buf := builder.NewWriter()
+	if err := statement.writeSelect(buf, columnStr, false); err != nil {
+		return "", nil, err
+	}
+	return buf.String(), buf.Args(), nil
 }
 
 // GenCountSQL generates the SQL for counting
@@ -148,8 +132,6 @@ func (statement *Statement) GenCountSQL(beans ...interface{}) (string, []interfa
 		return statement.GenRawSQL(), statement.RawParams, nil
 	}
 
-	var condArgs []interface{}
-	var err error
 	if len(beans) > 0 {
 		if err := statement.SetRefBean(beans[0]); err != nil {
 			return "", nil, err
@@ -169,6 +151,14 @@ func (statement *Statement) GenCountSQL(beans ...interface{}) (string, []interfa
 			selectSQL = "count(*)"
 		}
 	}
+
+	buf := builder.NewWriter()
+	if statement.GroupByStr != "" {
+		if _, err := fmt.Fprintf(buf, "SELECT %s FROM (", selectSQL); err != nil {
+			return "", nil, err
+		}
+	}
+
 	var subQuerySelect string
 	if statement.GroupByStr != "" {
 		subQuerySelect = statement.GroupByStr
@@ -176,195 +166,123 @@ func (statement *Statement) GenCountSQL(beans ...interface{}) (string, []interfa
 		subQuerySelect = selectSQL
 	}
 
-	sqlStr, condArgs, err := statement.genSelectSQL(subQuerySelect, false, false)
-	if err != nil {
+	if err := statement.writeSelect(buf, subQuerySelect, true); err != nil {
 		return "", nil, err
 	}
 
 	if statement.GroupByStr != "" {
-		sqlStr = fmt.Sprintf("SELECT %s FROM (%s) sub", selectSQL, sqlStr)
-	}
-
-	return sqlStr, condArgs, nil
-}
-
-func (statement *Statement) writeFrom(w builder.Writer) error {
-	if _, err := fmt.Fprint(w, " FROM "); err != nil {
-		return err
-	}
-	if err := statement.writeTableName(w); err != nil {
-		return err
-	}
-	if err := statement.writeAlias(w); err != nil {
-		return err
-	}
-	return statement.writeJoin(w)
-}
-
-func (statement *Statement) writeLimitOffset(w builder.Writer) error {
-	if statement.Start > 0 {
-		if statement.LimitN != nil {
-			_, err := fmt.Fprintf(w, " LIMIT %v OFFSET %v", *statement.LimitN, statement.Start)
-			return err
-		}
-		_, err := fmt.Fprintf(w, " LIMIT 0 OFFSET %v", statement.Start)
-		return err
-	}
-	if statement.LimitN != nil {
-		_, err := fmt.Fprint(w, " LIMIT ", *statement.LimitN)
-		return err
-	}
-	// no limit statement
-	return nil
-}
-
-func (statement *Statement) genSelectSQL(columnStr string, needLimit, needOrderBy bool) (string, []interface{}, error) {
-	var (
-		distinct      string
-		dialect       = statement.dialect
-		top, whereStr string
-		mssqlCondi    = builder.NewWriter()
-	)
-
-	if statement.IsDistinct && !strings.HasPrefix(columnStr, "count") {
-		distinct = "DISTINCT "
-	}
-
-	condWriter := builder.NewWriter()
-	if err := statement.cond.WriteTo(statement.QuoteReplacer(condWriter)); err != nil {
-		return "", nil, err
-	}
-
-	if condWriter.Len() > 0 {
-		whereStr = " WHERE "
-	}
-
-	pLimitN := statement.LimitN
-	if dialect.URI().DBType == schemas.MSSQL {
-		if pLimitN != nil {
-			LimitNValue := *pLimitN
-			top = fmt.Sprintf("TOP %d ", LimitNValue)
-		}
-		if statement.Start > 0 {
-			if statement.RefTable == nil {
-				return "", nil, errors.New("Unsupported query limit without reference table")
-			}
-			var column string
-			if len(statement.RefTable.PKColumns()) == 0 {
-				for _, index := range statement.RefTable.Indexes {
-					if len(index.Cols) == 1 {
-						column = index.Cols[0]
-						break
-					}
-				}
-				if len(column) == 0 {
-					column = statement.RefTable.ColumnsSeq()[0]
-				}
-			} else {
-				column = statement.RefTable.PKColumns()[0].Name
-			}
-			if statement.needTableName() {
-				if len(statement.TableAlias) > 0 {
-					column = fmt.Sprintf("%s.%s", statement.TableAlias, column)
-				} else {
-					column = fmt.Sprintf("%s.%s", statement.TableName(), column)
-				}
-			}
-
-			if _, err := fmt.Fprintf(mssqlCondi, "(%s NOT IN (SELECT TOP %d %s",
-				column, statement.Start, column); err != nil {
-				return "", nil, err
-			}
-			if err := statement.writeFrom(mssqlCondi); err != nil {
-				return "", nil, err
-			}
-			if whereStr != "" {
-				if _, err := fmt.Fprint(mssqlCondi, whereStr); err != nil {
-					return "", nil, err
-				}
-				if err := utils.WriteBuilder(mssqlCondi, statement.QuoteReplacer(condWriter)); err != nil {
-					return "", nil, err
-				}
-			}
-			if needOrderBy {
-				if err := statement.WriteOrderBy(mssqlCondi); err != nil {
-					return "", nil, err
-				}
-			}
-			if err := statement.WriteGroupBy(mssqlCondi); err != nil {
-				return "", nil, err
-			}
-			if _, err := fmt.Fprint(mssqlCondi, "))"); err != nil {
-				return "", nil, err
-			}
-		}
-	}
-
-	buf := builder.NewWriter()
-	if _, err := fmt.Fprintf(buf, "SELECT %v%v%v", distinct, top, columnStr); err != nil {
-		return "", nil, err
-	}
-	if err := statement.writeFrom(buf); err != nil {
-		return "", nil, err
-	}
-	if whereStr != "" {
-		if _, err := fmt.Fprint(buf, whereStr); err != nil {
+		if _, err := fmt.Fprintf(buf, ") sub"); err != nil {
 			return "", nil, err
 		}
-		if err := utils.WriteBuilder(buf, statement.QuoteReplacer(condWriter)); err != nil {
-			return "", nil, err
-		}
-	}
-	if mssqlCondi.Len() > 0 {
-		if len(whereStr) > 0 {
-			if _, err := fmt.Fprint(buf, " AND "); err != nil {
-				return "", nil, err
-			}
-		} else {
-			if _, err := fmt.Fprint(buf, " WHERE "); err != nil {
-				return "", nil, err
-			}
-		}
-
-		if err := utils.WriteBuilder(buf, mssqlCondi); err != nil {
-			return "", nil, err
-		}
-	}
-
-	if err := statement.WriteGroupBy(buf); err != nil {
-		return "", nil, err
-	}
-	if err := statement.writeHaving(buf); err != nil {
-		return "", nil, err
-	}
-	if needOrderBy {
-		if err := statement.WriteOrderBy(buf); err != nil {
-			return "", nil, err
-		}
-	}
-	if needLimit {
-		if dialect.URI().DBType != schemas.MSSQL && dialect.URI().DBType != schemas.ORACLE {
-			if err := statement.writeLimitOffset(buf); err != nil {
-				return "", nil, err
-			}
-		} else if dialect.URI().DBType == schemas.ORACLE {
-			if pLimitN != nil {
-				oldString := buf.String()
-				buf.Reset()
-				rawColStr := columnStr
-				if rawColStr == "*" {
-					rawColStr = "at.*"
-				}
-				fmt.Fprintf(buf, "SELECT %v FROM (SELECT %v,ROWNUM RN FROM (%v) at WHERE ROWNUM <= %d) aat WHERE RN > %d",
-					columnStr, rawColStr, oldString, statement.Start+*pLimitN, statement.Start)
-			}
-		}
-	}
-	if statement.IsForUpdate {
-		return dialect.ForUpdateSQL(buf.String()), buf.Args(), nil
 	}
 
 	return buf.String(), buf.Args(), nil
+}
+
+func (statement *Statement) writeFrom(w *builder.BytesWriter) error {
+	return statement.writeMultiple(w,
+		statement.writeStrings(" FROM "),
+		statement.writeTableName,
+		statement.writeAlias,
+		statement.writeJoins,
+	)
+}
+
+// write "TOP <n>" (mssql only)
+func (statement *Statement) writeTop(w *builder.BytesWriter) error {
+	if statement.LimitN == nil {
+		return nil
+	}
+	_, err := fmt.Fprintf(w, " TOP %d", *statement.LimitN)
+	return err
+}
+
+func (statement *Statement) writeDistinct(w *builder.BytesWriter) error {
+	if statement.IsDistinct && !strings.HasPrefix(statement.SelectStr, "count(") {
+		_, err := fmt.Fprint(w, " DISTINCT")
+		return err
+	}
+	return nil
+}
+
+func (statement *Statement) writeSelectColumns(columnStr string) func(w *builder.BytesWriter) error {
+	return statement.groupWriteFns(
+		statement.writeStrings("SELECT"),
+		statement.writeDistinct,
+		statement.writeStrings(" ", columnStr),
+	)
+}
+
+func (statement *Statement) writeWhereCond(w *builder.BytesWriter, cond builder.Cond) error {
+	if !cond.IsValid() {
+		return nil
+	}
+
+	if _, err := fmt.Fprint(w, " WHERE "); err != nil {
+		return err
+	}
+	return cond.WriteTo(statement.QuoteReplacer(w))
+}
+
+func (statement *Statement) writeWhere(w *builder.BytesWriter) error {
+	return statement.writeWhereCond(w, statement.cond)
+}
+
+func (statement *Statement) writeForUpdate(w *builder.BytesWriter) error {
+	if !statement.IsForUpdate {
+		return nil
+	}
+
+	if statement.dialect.URI().DBType != schemas.MYSQL {
+		return errors.New("only support mysql for update")
+	}
+	_, err := fmt.Fprint(w, " FOR UPDATE")
+	return err
+}
+
+func (statement *Statement) writeSelect(buf *builder.BytesWriter, columnStr string, isCounting bool) error {
+	dbType := statement.dialect.URI().DBType
+	if statement.isUsingLegacyLimitOffset() {
+		if dbType == "mssql" {
+			return statement.writeMssqlLegacySelect(buf, columnStr)
+		}
+		if dbType == "oracle" {
+			return statement.writeOracleLegacySelect(buf, columnStr)
+		}
+	}
+
+	return statement.writeMultiple(buf,
+		statement.writeSelectColumns(columnStr),
+		statement.writeFrom,
+		statement.writeWhere,
+		statement.writeGroupBy,
+		statement.writeHaving,
+		func(bw *builder.BytesWriter) (err error) {
+			if dbType == "mssql" && len(statement.orderBy) == 0 {
+				// ORDER BY is mandatory to use OFFSET and FETCH clause (only in sqlserver)
+				if statement.LimitN == nil && statement.Start == 0 {
+					// no need to add
+					return
+				}
+				if statement.IsDistinct || len(statement.GroupByStr) > 0 || isCounting {
+					// the order-by column should be one of distincts or group-bys
+					// order by the first column
+					_, err = bw.WriteString(" ORDER BY 1 ASC")
+					return
+				}
+				if statement.RefTable == nil || len(statement.RefTable.PrimaryKeys) != 1 {
+					// no primary key, order by the first column
+					_, err = bw.WriteString(" ORDER BY 1 ASC")
+					return
+				}
+				// order by primary key
+				statement.orderBy = []orderBy{{orderStr: statement.colName(statement.RefTable.GetColumn(statement.RefTable.PrimaryKeys[0]), statement.TableName()), direction: "ASC"}}
+			}
+			return statement.writeOrderBys(bw)
+		},
+		statement.writePagination,
+		statement.writeForUpdate,
+	)
 }
 
 // GenExistSQL generates Exist SQL
@@ -402,22 +320,17 @@ func (statement *Statement) GenExistSQL(bean ...interface{}) (string, []interfac
 		if _, err := fmt.Fprintf(buf, "SELECT TOP 1 * FROM %s", tableName); err != nil {
 			return "", nil, err
 		}
-		if err := statement.writeJoin(buf); err != nil {
+		if err := statement.writeJoins(buf); err != nil {
 			return "", nil, err
 		}
-		if statement.Conds().IsValid() {
-			if _, err := fmt.Fprintf(buf, " WHERE "); err != nil {
-				return "", nil, err
-			}
-			if err := statement.Conds().WriteTo(statement.QuoteReplacer(buf)); err != nil {
-				return "", nil, err
-			}
+		if err := statement.writeWhere(buf); err != nil {
+			return "", nil, err
 		}
 	} else if statement.dialect.URI().DBType == schemas.ORACLE {
 		if _, err := fmt.Fprintf(buf, "SELECT * FROM %s", tableName); err != nil {
 			return "", nil, err
 		}
-		if err := statement.writeJoin(buf); err != nil {
+		if err := statement.writeJoins(buf); err != nil {
 			return "", nil, err
 		}
 		if _, err := fmt.Fprintf(buf, " WHERE "); err != nil {
@@ -438,16 +351,11 @@ func (statement *Statement) GenExistSQL(bean ...interface{}) (string, []interfac
 		if _, err := fmt.Fprintf(buf, "SELECT 1 FROM %s", tableName); err != nil {
 			return "", nil, err
 		}
-		if err := statement.writeJoin(buf); err != nil {
+		if err := statement.writeJoins(buf); err != nil {
 			return "", nil, err
 		}
-		if statement.Conds().IsValid() {
-			if _, err := fmt.Fprintf(buf, " WHERE "); err != nil {
-				return "", nil, err
-			}
-			if err := statement.Conds().WriteTo(statement.QuoteReplacer(buf)); err != nil {
-				return "", nil, err
-			}
+		if err := statement.writeWhere(buf); err != nil {
+			return "", nil, err
 		}
 		if _, err := fmt.Fprintf(buf, " LIMIT 1"); err != nil {
 			return "", nil, err
@@ -455,6 +363,33 @@ func (statement *Statement) GenExistSQL(bean ...interface{}) (string, []interfac
 	}
 
 	return buf.String(), buf.Args(), nil
+}
+
+func (statement *Statement) genSelectColumnStr() string {
+	// manually select columns
+	if len(statement.SelectStr) > 0 {
+		return statement.SelectStr
+	}
+
+	columnStr := statement.ColumnStr()
+	if columnStr != "" {
+		return columnStr
+	}
+
+	// autodetect columns
+	if statement.GroupByStr != "" {
+		return statement.quoteColumnStr(statement.GroupByStr)
+	}
+
+	if len(statement.joins) != 0 {
+		return "*"
+	}
+
+	columnStr = statement.genColumnStr()
+	if columnStr == "" {
+		columnStr = "*"
+	}
+	return columnStr
 }
 
 // GenFindSQL generates Find SQL
@@ -467,33 +402,11 @@ func (statement *Statement) GenFindSQL(autoCond builder.Cond) (string, []interfa
 		return "", nil, ErrTableNotFound
 	}
 
-	columnStr := statement.ColumnStr()
-	if len(statement.SelectStr) > 0 {
-		columnStr = statement.SelectStr
-	} else {
-		if statement.JoinStr == "" {
-			if columnStr == "" {
-				if statement.GroupByStr != "" {
-					columnStr = statement.quoteColumnStr(statement.GroupByStr)
-				} else {
-					columnStr = statement.genColumnStr()
-				}
-			}
-		} else {
-			if columnStr == "" {
-				if statement.GroupByStr != "" {
-					columnStr = statement.quoteColumnStr(statement.GroupByStr)
-				} else {
-					columnStr = "*"
-				}
-			}
-		}
-		if columnStr == "" {
-			columnStr = "*"
-		}
-	}
-
 	statement.cond = statement.cond.And(autoCond)
 
-	return statement.genSelectSQL(columnStr, true, true)
+	buf := builder.NewWriter()
+	if err := statement.writeSelect(buf, statement.genSelectColumnStr(), false); err != nil {
+		return "", nil, err
+	}
+	return buf.String(), buf.Args(), nil
 }

@@ -217,6 +217,7 @@ type mssql struct {
 	Base
 	defaultVarchar string
 	defaultChar    string
+	useLegacy      bool
 }
 
 func (db *mssql) Init(uri *URI) error {
@@ -225,6 +226,8 @@ func (db *mssql) Init(uri *URI) error {
 	db.defaultVarchar = "VARCHAR"
 	return db.Base.Init(db, uri)
 }
+
+func (db *mssql) UseLegacyLimitOffset() bool { return db.useLegacy }
 
 func (db *mssql) SetParams(params map[string]string) {
 	defaultVarchar, ok := params["DEFAULT_VARCHAR"]
@@ -251,6 +254,13 @@ func (db *mssql) SetParams(params map[string]string) {
 		}
 	} else {
 		db.defaultChar = "CHAR"
+	}
+
+	useLegacy, ok := params["USE_LEGACY_LIMIT_OFFSET"]
+	if ok {
+		if b, _ := strconv.ParseBool(useLegacy); b {
+			db.useLegacy = true
+		}
 	}
 }
 
@@ -332,7 +342,7 @@ func (db *mssql) SQLType(c *schemas.Column) string {
 		res = schemas.Int
 	case schemas.Text, schemas.MediumText, schemas.TinyText, schemas.LongText, schemas.Json:
 		res = db.defaultVarchar + "(MAX)"
-	case schemas.Double:
+	case schemas.Double, schemas.UnsignedFloat:
 		res = schemas.Real
 	case schemas.Uuid:
 		res = schemas.Varchar
@@ -428,7 +438,7 @@ func (db *mssql) DropTableSQL(tableName string) (string, bool) {
 }
 
 func (db *mssql) ModifyColumnSQL(tableName string, col *schemas.Column) string {
-	s, _ := ColumnString(db.dialect, col, false)
+	s, _ := ColumnString(db.dialect, col, false, true)
 	return fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s", db.quoter.Quote(tableName), s)
 }
 
@@ -454,7 +464,7 @@ func (db *mssql) GetColumns(queryer core.Queryer, ctx context.Context, tableName
 	s := `select a.name as name, b.name as ctype,a.max_length,a.precision,a.scale,a.is_nullable as nullable,
 		  "default_is_null" = (CASE WHEN c.text is null THEN 1 ELSE 0 END),
 	      replace(replace(isnull(c.text,''),'(',''),')','') as vdefault,
-		  ISNULL(p.is_primary_key, 0), a.is_identity as is_identity
+		  ISNULL(p.is_primary_key, 0), a.is_identity as is_identity, a.collation_name
           from sys.columns a 
 		  left join sys.types b on a.user_type_id=b.user_type_id
           left join sys.syscomments c on a.default_object_id=c.id
@@ -475,9 +485,10 @@ func (db *mssql) GetColumns(queryer core.Queryer, ctx context.Context, tableName
 	colSeq := make([]string, 0)
 	for rows.Next() {
 		var name, ctype, vdefault string
+		var collation *string
 		var maxLen, precision, scale int64
 		var nullable, isPK, defaultIsNull, isIncrement bool
-		err = rows.Scan(&name, &ctype, &maxLen, &precision, &scale, &nullable, &defaultIsNull, &vdefault, &isPK, &isIncrement)
+		err = rows.Scan(&name, &ctype, &maxLen, &precision, &scale, &nullable, &defaultIsNull, &vdefault, &isPK, &isIncrement, &collation)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -498,6 +509,9 @@ func (db *mssql) GetColumns(queryer core.Queryer, ctx context.Context, tableName
 			col.Length2 = scale
 		} else {
 			col.Length = maxLen
+		}
+		if collation != nil {
+			col.Collation = *collation
 		}
 		switch ct {
 		case "DATETIMEOFFSET":
@@ -646,7 +660,7 @@ func (db *mssql) CreateTableSQL(ctx context.Context, queryer core.Queryer, table
 
 	for i, colName := range table.ColumnsSeq() {
 		col := table.GetColumn(colName)
-		s, _ := ColumnString(db.dialect, col, col.IsPrimaryKey && len(table.PrimaryKeys) == 1)
+		s, _ := ColumnString(db.dialect, col, col.IsPrimaryKey && len(table.PrimaryKeys) == 1, true)
 		b.WriteString(s)
 
 		if i != len(table.ColumnsSeq())-1 {
@@ -663,10 +677,6 @@ func (db *mssql) CreateTableSQL(ctx context.Context, queryer core.Queryer, table
 	b.WriteString(")")
 
 	return b.String(), true, nil
-}
-
-func (db *mssql) ForUpdateSQL(query string) string {
-	return query
 }
 
 func (db *mssql) Filters() []Filter {

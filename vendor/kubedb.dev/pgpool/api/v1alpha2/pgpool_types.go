@@ -63,7 +63,7 @@ type PgpoolSpec struct {
 	// +optional
 	// SyncUsers is a boolean type and when enabled, operator fetches all users created in the backend server to the
 	// Pgpool server . Password changes are also synced in pgpool when it is enabled.
-	//SyncUsers bool `json:"syncUsers,omitempty"`
+	SyncUsers bool `json:"syncUsers,omitempty"`
 
 	// Version of Pgpool to be deployed.
 	Version string `json:"version"`
@@ -85,7 +85,7 @@ type PgpoolSpec struct {
 
 	// PodTemplate is an optional configuration for pods used to expose Pgpool
 	// +optional
-	PodTemplate ofst.PodTemplateSpec `json:"podTemplate,omitempty"`
+	PodTemplate *ofst.PodTemplateSpec `json:"podTemplate,omitempty"`
 
 	// +optional
 	// InitConfiguration contains information with which the Pgpool will bootstrap
@@ -94,6 +94,11 @@ type PgpoolSpec struct {
 	// ServiceTemplates is an optional configuration for services used to expose Pgpool
 	// +optional
 	ServiceTemplates []api.NamedServiceTemplateSpec `json:"serviceTemplates,omitempty"`
+
+	// HealthChecker defines attributes of the health checker
+	// +optional
+	// +kubebuilder:default={periodSeconds: 10, timeoutSeconds: 10, failureThreshold: 1}
+	HealthChecker *kmapi.HealthCheckSpec `json:"healthChecker"`
 
 	// TerminationPolicy controls the delete operation for Pgpool
 	// +optional

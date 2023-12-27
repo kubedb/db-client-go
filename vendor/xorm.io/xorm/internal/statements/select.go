@@ -102,7 +102,7 @@ func (statement *Statement) genColumnStr() string {
 			buf.WriteString(", ")
 		}
 
-		if statement.JoinStr != "" {
+		if len(statement.joins) > 0 {
 			if statement.TableAlias != "" {
 				buf.WriteString(statement.TableAlias)
 			} else {
@@ -119,7 +119,7 @@ func (statement *Statement) genColumnStr() string {
 }
 
 func (statement *Statement) colName(col *schemas.Column, tableName string) string {
-	if statement.needTableName() {
+	if statement.NeedTableName() {
 		nm := tableName
 		if len(statement.TableAlias) > 0 {
 			nm = statement.TableAlias

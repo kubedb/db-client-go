@@ -2,6 +2,7 @@ package v1alpha2
 
 import (
 	"fmt"
+	"gomodules.xyz/pointer"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	meta_util "kmodules.xyz/client-go/meta"
 	"kubedb.dev/apimachinery/apis/kubedb"
@@ -50,11 +51,21 @@ func (p *Pgpool) Owner() *meta.OwnerReference {
 }
 
 func (p *Pgpool) PodLabels(extraLabels ...map[string]string) map[string]string {
-	return p.offshootLabels(meta_util.OverwriteKeys(p.OffshootSelectors(), extraLabels...), p.Spec.PodTemplate.Labels)
+	var labels map[string]string
+	if p.Spec.PodTemplate != nil {
+		return p.offshootLabels(meta_util.OverwriteKeys(p.OffshootSelectors(), extraLabels...), p.Spec.PodTemplate.Labels)
+	} else {
+		return p.offshootLabels(meta_util.OverwriteKeys(p.OffshootSelectors(), extraLabels...), labels)
+	}
 }
 
 func (p *Pgpool) PodControllerLabels(extraLabels ...map[string]string) map[string]string {
-	return p.offshootLabels(meta_util.OverwriteKeys(p.OffshootSelectors(), extraLabels...), p.Spec.PodTemplate.Controller.Labels)
+	var labels map[string]string
+	if p.Spec.PodTemplate != nil {
+		return p.offshootLabels(meta_util.OverwriteKeys(p.OffshootSelectors(), extraLabels...), p.Spec.PodTemplate.Controller.Labels)
+	} else {
+		return p.offshootLabels(meta_util.OverwriteKeys(p.OffshootSelectors(), extraLabels...), labels)
+	}
 }
 
 func (p *Pgpool) OffshootLabels() map[string]string {
@@ -88,4 +99,25 @@ func (p *Pgpool) GetAuthSecretName() string {
 		return p.Spec.AuthSecret.Name
 	}
 	return meta_util.NameWithSuffix(p.OffshootName(), "auth")
+}
+
+func (p *Pgpool) SetHealthCheckerDefaults() {
+	if p.Spec.HealthChecker.PeriodSeconds == nil {
+		p.Spec.HealthChecker.PeriodSeconds = pointer.Int32P(10)
+	}
+	if p.Spec.HealthChecker.TimeoutSeconds == nil {
+		p.Spec.HealthChecker.TimeoutSeconds = pointer.Int32P(10)
+	}
+	if p.Spec.HealthChecker.FailureThreshold == nil {
+		p.Spec.HealthChecker.FailureThreshold = pointer.Int32P(1)
+	}
+}
+
+// PrimaryServiceDNS make primary host dns with require template
+func (p *Pgpool) PrimaryServiceDNS() string {
+	return fmt.Sprintf("%v.%v.svc", p.ServiceName(), p.Namespace)
+}
+
+func (p *Pgpool) GetNameSpacedName() string {
+	return p.Namespace + "/" + p.Name
 }
