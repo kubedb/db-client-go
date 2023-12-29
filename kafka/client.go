@@ -48,24 +48,45 @@ type MessageMetadata struct {
 }
 
 func (c *Client) IsDBConnected() (bool, error) {
-	controller, err := c.RefreshController()
-	if err != nil || controller == nil {
-		klog.Error(err, "Failed to Get kafka controller")
+	broker, err := c.Controller()
+	if err != nil || broker == nil {
+		klog.Error(err, "Failed to Get kafka broker")
 		return false, err
 	}
 
-	connected, err := controller.Connected()
+	connected, err := broker.Connected()
 	if err != nil {
-		klog.Error(err, fmt.Sprintf("Failed to connect broker: %s", controller.Addr()))
+		klog.Error(err, fmt.Sprintf("Failed to connect broker: %s", broker.Addr()))
 		return false, err
 	}
 	if connected {
-		klog.V(5).Info(fmt.Sprintf("Successfully connected broker: %s", controller.Addr()))
+		klog.V(5).Info(fmt.Sprintf("Successfully connected broker: %s", broker.Addr()))
 	} else {
-		klog.Error(fmt.Sprintf("Failed to connect broker: %s", controller.Addr()))
+		klog.Error(fmt.Sprintf("Failed to connect broker: %s", broker.Addr()))
 	}
 
 	return connected, nil
+}
+
+func (c *Client) CheckKafkaBrokers(numOfBrokers int32) error {
+	for i := int32(0); i < numOfBrokers; i++ {
+		broker, err := c.Broker(i)
+		if err != nil {
+			klog.ErrorS(err, "Failed to get broker with id", "id", i)
+			return err
+		}
+		connected, err := broker.Connected()
+		if err != nil {
+			klog.ErrorS(err, "Failed to connect broker", "id", i)
+			return err
+		}
+		if !connected {
+			klog.ErrorS(err, "Broker is not connected", "id", i)
+			return fmt.Errorf("broker %d, is not connected", i)
+		}
+	}
+	klog.V(5).Info("all brokers are available to accept request")
+	return nil
 }
 
 func (c *Client) RefreshTopicMetadata(topics ...string) error {
@@ -83,17 +104,9 @@ func (c *Client) RefreshTopicMetadata(topics ...string) error {
 }
 
 func (c *Client) GetPartitionLeaderAddress(partition int32, topic string) (string, error) {
-	if err := c.RefreshTopicMetadata(topic); err != nil {
-		return "", err
-	}
 	leader, err := c.Leader(topic, partition)
 	if err != nil {
 		klog.Error(err, "Failed to get leader", "partition", partition)
-		return "", err
-	}
-	err = c.RefreshBrokers([]string{leader.Addr()})
-	if err != nil {
-		klog.Error(err, fmt.Sprintf("Failed to refresh broker for %s topic", topic))
 		return "", err
 	}
 	return leader.Addr(), nil
@@ -121,9 +134,9 @@ func (a *AdminClient) EnsureKafkaTopic(topic string, topicConfig map[string]*str
 	return nil
 }
 func (c *Client) DeleteTopics(topics ...string) {
-	broker, err := c.RefreshController()
+	broker, err := c.Controller()
 	if err != nil {
-		klog.Error(err, "Failed to refresh controller for kafka-health topic")
+		klog.Error(err, "Failed to get controller broker")
 		return
 	}
 	_, err = broker.DeleteTopics(&kafkago.DeleteTopicsRequest{
@@ -132,12 +145,6 @@ func (c *Client) DeleteTopics(topics ...string) {
 	})
 	if err != nil {
 		klog.Error(err, "Failed to delete kafka health topic")
-		return
-	}
-
-	err = c.RefreshTopicMetadata(topics...)
-	if err != nil {
-		klog.Error("Failed to refresh topic metadata")
 		return
 	}
 }
