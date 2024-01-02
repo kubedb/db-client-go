@@ -5,149 +5,61 @@
 package xorm
 
 import (
-	"errors"
-	"fmt"
 	"reflect"
-	"strconv"
-	"strings"
 
 	"xorm.io/builder"
-	"xorm.io/xorm/caches"
+	"xorm.io/xorm/internal/statements"
 	"xorm.io/xorm/internal/utils"
 	"xorm.io/xorm/schemas"
 )
 
 // enumerated all errors
 var (
-	ErrNoColumnsTobeUpdated = errors.New("no columns found to be updated")
+	ErrNoColumnsTobeUpdated = statements.ErrNoColumnsTobeUpdated
 )
 
-//revive:disable
-func (session *Session) cacheUpdate(table *schemas.Table, tableName, sqlStr string, args ...interface{}) error {
-	if table == nil ||
-		session.tx != nil {
-		return ErrCacheFailed
+func (session *Session) genAutoCond(condiBean interface{}) (builder.Cond, error) {
+	if session.statement.NoAutoCondition {
+		return builder.NewCond(), nil
 	}
 
-	oldhead, newsql := session.statement.ConvertUpdateSQL(sqlStr)
-	if newsql == "" {
-		return ErrCacheFailed
-	}
-	for _, filter := range session.engine.dialect.Filters() {
-		newsql = filter.Do(newsql)
-	}
-	session.engine.logger.Debugf("[cache] new sql: %v, %v", oldhead, newsql)
-
-	var nStart int
-	if len(args) > 0 {
-		if strings.Contains(sqlStr, "?") {
-			nStart = strings.Count(oldhead, "?")
-		} else {
-			// only for pq, TODO: if any other databse?
-			nStart = strings.Count(oldhead, "$")
+	if c, ok := condiBean.(map[string]interface{}); ok {
+		eq := make(builder.Eq)
+		for k, v := range c {
+			eq[session.engine.Quote(k)] = v
 		}
+
+		if session.statement.RefTable != nil {
+			if col := session.statement.RefTable.DeletedColumn(); col != nil && !session.statement.GetUnscoped() { // tag "deleted" is enabled
+				return eq.And(session.statement.CondDeleted(col)), nil
+			}
+		}
+		return eq, nil
 	}
 
-	cacher := session.engine.GetCacher(tableName)
-	session.engine.logger.Debugf("[cache] get cache sql: %v, %v", newsql, args[nStart:])
-	ids, err := caches.GetCacheSql(cacher, tableName, newsql, args[nStart:])
+	ct := reflect.TypeOf(condiBean)
+	k := ct.Kind()
+	if k == reflect.Ptr {
+		k = ct.Elem().Kind()
+	}
+	if k != reflect.Struct {
+		return nil, ErrConditionType
+	}
+
+	condTable, err := session.engine.TableInfo(condiBean)
 	if err != nil {
-		rows, err := session.NoCache().queryRows(newsql, args[nStart:]...)
-		if err != nil {
-			return err
-		}
-		defer rows.Close()
-
-		ids = make([]schemas.PK, 0)
-		for rows.Next() {
-			res := make([]string, len(table.PrimaryKeys))
-			err = rows.ScanSlice(&res)
-			if err != nil {
-				return err
-			}
-			var pk schemas.PK = make([]interface{}, len(table.PrimaryKeys))
-			for i, col := range table.PKColumns() {
-				if col.SQLType.IsNumeric() {
-					n, err := strconv.ParseInt(res[i], 10, 64)
-					if err != nil {
-						return err
-					}
-					pk[i] = n
-				} else if col.SQLType.IsText() {
-					pk[i] = res[i]
-				} else {
-					return errors.New("not supported")
-				}
-			}
-
-			ids = append(ids, pk)
-		}
-		if rows.Err() != nil {
-			return rows.Err()
-		}
-		session.engine.logger.Debugf("[cache] find updated id: %v", ids)
-	} /*else {
-	    session.engine.LogDebug("[xorm:cacheUpdate] del cached sql:", tableName, newsql, args)
-	    cacher.DelIds(tableName, genSqlKey(newsql, args))
-	}*/
-
-	for _, id := range ids {
-		sid, err := id.ToString()
-		if err != nil {
-			return err
-		}
-		if bean := cacher.GetBean(tableName, sid); bean != nil {
-			sqls := utils.SplitNNoCase(sqlStr, "where", 2)
-			if len(sqls) == 0 || len(sqls) > 2 {
-				return ErrCacheFailed
-			}
-
-			sqls = utils.SplitNNoCase(sqls[0], "set", 2)
-			if len(sqls) != 2 {
-				return ErrCacheFailed
-			}
-			kvs := strings.Split(strings.TrimSpace(sqls[1]), ",")
-
-			for idx, kv := range kvs {
-				sps := strings.SplitN(kv, "=", 2)
-				sps2 := strings.Split(sps[0], ".")
-				colName := sps2[len(sps2)-1]
-				colName = session.engine.dialect.Quoter().Trim(colName)
-				colName = schemas.CommonQuoter.Trim(colName)
-
-				if col := table.GetColumn(colName); col != nil {
-					fieldValue, err := col.ValueOf(bean)
-					if err != nil {
-						session.engine.logger.Errorf("%v", err)
-					} else {
-						session.engine.logger.Debugf("[cache] set bean field: %v, %v, %v", bean, colName, fieldValue.Interface())
-						if col.IsVersion && session.statement.CheckVersion {
-							session.incrVersionFieldValue(fieldValue)
-						} else {
-							fieldValue.Set(reflect.ValueOf(args[idx]))
-						}
-					}
-				} else {
-					session.engine.logger.Errorf("[cache] ERROR: column %v is not table %v's",
-						colName, table.Name)
-				}
-			}
-
-			session.engine.logger.Debugf("[cache] update cache: %v, %v, %v", tableName, id, bean)
-			cacher.PutBean(tableName, sid, bean)
-		}
+		return nil, err
 	}
-	session.engine.logger.Debugf("[cache] clear cached table sql: %v", tableName)
-	cacher.ClearIds(tableName)
-	return nil
+	return session.statement.BuildConds(condTable, condiBean, true, true, false, true, false)
 }
 
 // Update records, bean's non-empty fields are updated contents,
 // condiBean' non-empty filds are conditions
 // CAUTION:
-//        1.bool will defaultly be updated content nor conditions
-//         You should call UseBool if you have bool to use.
-//        2.float32 & float64 may be not inexact as conditions
+//
+//	1.bool will defaultly be updated content nor conditions
+//	 You should call UseBool if you have bool to use.
+//	2.float32 & float64 may be not inexact as conditions
 func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int64, error) {
 	if session.isAutoClose {
 		defer session.Close()
@@ -162,9 +74,6 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 	v := utils.ReflectValue(bean)
 	t := v.Type()
 
-	var colNames []string
-	var args []interface{}
-
 	// handle before update processors
 	for _, closure := range session.beforeClosures {
 		closure(bean)
@@ -175,6 +84,8 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 	}
 	// --
 
+	var colNames []string
+	var args []interface{}
 	var err error
 	isMap := t.Kind() == reflect.Map
 	isStruct := t.Kind() == reflect.Struct
@@ -236,92 +147,27 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 		}
 	}
 
-	// for update action to like "column = column + ?"
-	incColumns := session.statement.IncrColumns
-	for _, expr := range incColumns {
-		colNames = append(colNames, session.engine.Quote(expr.ColName)+" = "+session.engine.Quote(expr.ColName)+" + ?")
-		args = append(args, expr.Arg)
-	}
-	// for update action to like "column = column - ?"
-	decColumns := session.statement.DecrColumns
-	for _, expr := range decColumns {
-		colNames = append(colNames, session.engine.Quote(expr.ColName)+" = "+session.engine.Quote(expr.ColName)+" - ?")
-		args = append(args, expr.Arg)
-	}
-	// for update action to like "column = expression"
-	exprColumns := session.statement.ExprColumns
-	for _, expr := range exprColumns {
-		switch tp := expr.Arg.(type) {
-		case string:
-			if len(tp) == 0 {
-				tp = "''"
-			}
-			colNames = append(colNames, session.engine.Quote(expr.ColName)+"="+tp)
-		case *builder.Builder:
-			subQuery, subArgs, err := builder.ToSQL(tp)
-			if err != nil {
-				return 0, err
-			}
-			subQuery = session.statement.ReplaceQuote(subQuery)
-			colNames = append(colNames, session.engine.Quote(expr.ColName)+"=("+subQuery+")")
-			args = append(args, subArgs...)
-		default:
-			colNames = append(colNames, session.engine.Quote(expr.ColName)+"=?")
-			args = append(args, expr.Arg)
-		}
-	}
-
 	if err = session.statement.ProcessIDParam(); err != nil {
 		return 0, err
 	}
 
 	var autoCond builder.Cond
-	if !session.statement.NoAutoCondition {
-		condBeanIsStruct := false
-		if len(condiBean) > 0 {
-			if c, ok := condiBean[0].(map[string]interface{}); ok {
-				eq := make(builder.Eq)
-				for k, v := range c {
-					eq[session.engine.Quote(k)] = v
-				}
-				autoCond = builder.Eq(eq)
-			} else {
-				ct := reflect.TypeOf(condiBean[0])
-				k := ct.Kind()
-				if k == reflect.Ptr {
-					k = ct.Elem().Kind()
-				}
-				if k == reflect.Struct {
-					condTable, err := session.engine.TableInfo(condiBean[0])
-					if err != nil {
-						return 0, err
-					}
-
-					autoCond, err = session.statement.BuildConds(condTable, condiBean[0], true, true, false, true, false)
-					if err != nil {
-						return 0, err
-					}
-					condBeanIsStruct = true
-				} else {
-					return 0, ErrConditionType
-				}
-			}
+	if len(condiBean) > 0 {
+		autoCond, err = session.genAutoCond(condiBean[0])
+		if err != nil {
+			return 0, err
 		}
+	} else if table != nil {
+		if col := table.DeletedColumn(); col != nil && !session.statement.GetUnscoped() { // tag "deleted" is enabled
+			autoCond1 := session.statement.CondDeleted(col)
 
-		if !condBeanIsStruct && table != nil {
-			if col := table.DeletedColumn(); col != nil && !session.statement.GetUnscoped() { // tag "deleted" is enabled
-				autoCond1 := session.statement.CondDeleted(col)
-
-				if autoCond == nil {
-					autoCond = autoCond1
-				} else {
-					autoCond = autoCond.And(autoCond1)
-				}
+			if autoCond == nil {
+				autoCond = autoCond1
+			} else {
+				autoCond = autoCond.And(autoCond1)
 			}
 		}
 	}
-
-	st := session.statement
 
 	var (
 		cond     = session.statement.Conds().And(autoCond)
@@ -329,104 +175,25 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 		verValue *reflect.Value
 	)
 	if doIncVer {
-		verValue, err = table.VersionColumn().ValueOf(bean)
+		verValue, err = table.VersionColumn().ValueOfV(&v)
 		if err != nil {
 			return 0, err
 		}
 
 		if verValue != nil {
 			cond = cond.And(builder.Eq{session.engine.Quote(table.Version): verValue.Interface()})
-			colNames = append(colNames, session.engine.Quote(table.Version)+" = "+session.engine.Quote(table.Version)+" + 1")
-		}
-	}
-
-	if len(colNames) == 0 {
-		return 0, ErrNoColumnsTobeUpdated
-	}
-
-	whereWriter := builder.NewWriter()
-	if cond.IsValid() {
-		fmt.Fprint(whereWriter, "WHERE ")
-	}
-	if err := cond.WriteTo(st.QuoteReplacer(whereWriter)); err != nil {
-		return 0, err
-	}
-	if err := st.WriteOrderBy(whereWriter); err != nil {
-		return 0, err
-	}
-
-	tableName := session.statement.TableName()
-	// TODO: Oracle support needed
-	var top string
-	if st.LimitN != nil {
-		limitValue := *st.LimitN
-		switch session.engine.dialect.URI().DBType {
-		case schemas.MYSQL:
-			fmt.Fprintf(whereWriter, " LIMIT %d", limitValue)
-		case schemas.SQLITE:
-			fmt.Fprintf(whereWriter, " LIMIT %d", limitValue)
-
-			cond = cond.And(builder.Expr(fmt.Sprintf("rowid IN (SELECT rowid FROM %v %v)",
-				session.engine.Quote(tableName), whereWriter.String()), whereWriter.Args()...))
-
-			whereWriter = builder.NewWriter()
-			fmt.Fprint(whereWriter, "WHERE ")
-			if err := cond.WriteTo(st.QuoteReplacer(whereWriter)); err != nil {
-				return 0, err
-			}
-		case schemas.POSTGRES:
-			fmt.Fprintf(whereWriter, " LIMIT %d", limitValue)
-
-			cond = cond.And(builder.Expr(fmt.Sprintf("CTID IN (SELECT CTID FROM %v %v)",
-				session.engine.Quote(tableName), whereWriter.String()), whereWriter.Args()...))
-
-			whereWriter = builder.NewWriter()
-			fmt.Fprint(whereWriter, "WHERE ")
-			if err := cond.WriteTo(st.QuoteReplacer(whereWriter)); err != nil {
-				return 0, err
-			}
-		case schemas.MSSQL:
-			if st.HasOrderBy() && table != nil && len(table.PrimaryKeys) == 1 {
-				cond = builder.Expr(fmt.Sprintf("%s IN (SELECT TOP (%d) %s FROM %v%v)",
-					table.PrimaryKeys[0], limitValue, table.PrimaryKeys[0],
-					session.engine.Quote(tableName), whereWriter.String()), whereWriter.Args()...)
-
-				whereWriter = builder.NewWriter()
-				fmt.Fprint(whereWriter, "WHERE ")
-				if err := cond.WriteTo(whereWriter); err != nil {
-					return 0, err
-				}
-			} else {
-				top = fmt.Sprintf("TOP (%d) ", limitValue)
-			}
-		}
-	}
-
-	tableAlias := session.engine.Quote(tableName)
-	var fromSQL string
-	if session.statement.TableAlias != "" {
-		switch session.engine.dialect.URI().DBType {
-		case schemas.MSSQL:
-			fromSQL = fmt.Sprintf("FROM %s %s ", tableAlias, session.statement.TableAlias)
-			tableAlias = session.statement.TableAlias
-		default:
-			tableAlias = fmt.Sprintf("%s AS %s", tableAlias, session.statement.TableAlias)
 		}
 	}
 
 	updateWriter := builder.NewWriter()
-	if _, err := fmt.Fprintf(updateWriter, "UPDATE %v%v SET %v %v",
-		top,
-		tableAlias,
-		strings.Join(colNames, ", "),
-		fromSQL); err != nil {
-		return 0, err
-	}
-	if err := utils.WriteBuilder(updateWriter, whereWriter); err != nil {
+	if err := session.statement.WriteUpdate(updateWriter, cond, v, colNames, args); err != nil {
 		return 0, err
 	}
 
-	res, err := session.exec(updateWriter.String(), append(args, updateWriter.Args()...)...)
+	tableName := session.statement.TableName() // table name must been get before exec because statement will be reset
+	useCache := session.statement.UseCache
+
+	res, err := session.exec(updateWriter.String(), updateWriter.Args()...)
 	if err != nil {
 		return 0, err
 	} else if doIncVer {
@@ -435,8 +202,7 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 		}
 	}
 
-	if cacher := session.engine.GetCacher(tableName); cacher != nil && session.statement.UseCache {
-		// session.cacheUpdate(table, tableName, sqlStr, args...)
+	if cacher := session.engine.GetCacher(tableName); cacher != nil && useCache {
 		session.engine.logger.Debugf("[cache] clear table: %v", tableName)
 		cacher.ClearIds(tableName)
 		cacher.ClearBeans(tableName)

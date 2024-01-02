@@ -139,9 +139,10 @@ var (
 	Money      = "MONEY"
 	SmallMoney = "SMALLMONEY"
 
-	Real   = "REAL"
-	Float  = "FLOAT"
-	Double = "DOUBLE"
+	Real          = "REAL"
+	Float         = "FLOAT"
+	UnsignedFloat = "UNSIGNED FLOAT"
+	Double        = "DOUBLE"
 
 	Binary     = "BINARY"
 	VarBinary  = "VARBINARY"
@@ -208,13 +209,14 @@ var (
 		SmallDateTime: TIME_TYPE,
 		Year:          TIME_TYPE,
 
-		Decimal:    NUMERIC_TYPE,
-		Numeric:    NUMERIC_TYPE,
-		Real:       NUMERIC_TYPE,
-		Float:      NUMERIC_TYPE,
-		Double:     NUMERIC_TYPE,
-		Money:      NUMERIC_TYPE,
-		SmallMoney: NUMERIC_TYPE,
+		Decimal:       NUMERIC_TYPE,
+		Numeric:       NUMERIC_TYPE,
+		Real:          NUMERIC_TYPE,
+		Float:         NUMERIC_TYPE,
+		UnsignedFloat: NUMERIC_TYPE,
+		Double:        NUMERIC_TYPE,
+		Money:         NUMERIC_TYPE,
+		SmallMoney:    NUMERIC_TYPE,
 
 		Binary:    BLOB_TYPE,
 		VarBinary: BLOB_TYPE,

@@ -164,7 +164,9 @@ func (session *Session) nocacheGet(beanKind reflect.Kind, table *schemas.Table, 
 		return true, err
 	}
 
-	if err := session.scan(rows, table, beanKind, beans, types, fields); err != nil {
+	columnsSchema := ParseColumnsSchema(fields, types, table)
+
+	if err := session.scan(rows, table, beanKind, beans, columnsSchema, types, fields); err != nil {
 		return true, err
 	}
 	rows.Close()
@@ -172,7 +174,7 @@ func (session *Session) nocacheGet(beanKind reflect.Kind, table *schemas.Table, 
 	return true, session.executeProcessors()
 }
 
-func (session *Session) scan(rows *core.Rows, table *schemas.Table, firstBeanKind reflect.Kind, beans []interface{}, types []*sql.ColumnType, fields []string) error {
+func (session *Session) scan(rows *core.Rows, table *schemas.Table, firstBeanKind reflect.Kind, beans []interface{}, columnsSchema *ColumnsSchema, types []*sql.ColumnType, fields []string) error {
 	if len(beans) == 1 {
 		bean := beans[0]
 		switch firstBeanKind {
@@ -186,7 +188,7 @@ func (session *Session) scan(rows *core.Rows, table *schemas.Table, firstBeanKin
 			}
 
 			dataStruct := utils.ReflectValue(bean)
-			_, err = session.slice2Bean(scanResults, fields, bean, &dataStruct, table)
+			_, err = session.slice2Bean(scanResults, columnsSchema, fields, bean, &dataStruct, table)
 			return err
 		case reflect.Slice:
 			return session.getSlice(rows, types, fields, bean)
@@ -278,7 +280,7 @@ func (session *Session) cacheGet(bean interface{}, sqlStr string, args ...interf
 	}
 
 	for _, filter := range session.engine.dialect.Filters() {
-		sqlStr = filter.Do(sqlStr)
+		sqlStr = filter.Do(session.ctx, sqlStr)
 	}
 	newsql := session.statement.ConvertIDSQL(sqlStr)
 	if newsql == "" {
