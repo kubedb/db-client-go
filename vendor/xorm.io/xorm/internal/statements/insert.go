@@ -43,8 +43,8 @@ func (statement *Statement) GenInsertSQL(colNames []string, args []interface{}) 
 		return "", nil, err
 	}
 
-	hasInsertColumns := len(colNames) > 0
-	needSeq := len(table.AutoIncrement) > 0 && (statement.dialect.URI().DBType == schemas.ORACLE || statement.dialect.URI().DBType == schemas.DAMENG)
+	var hasInsertColumns = len(colNames) > 0
+	var needSeq = len(table.AutoIncrement) > 0 && (statement.dialect.URI().DBType == schemas.ORACLE || statement.dialect.URI().DBType == schemas.DAMENG)
 	if needSeq {
 		for _, col := range colNames {
 			if strings.EqualFold(col, table.AutoIncrement) {
@@ -89,7 +89,7 @@ func (statement *Statement) GenInsertSQL(colNames []string, args []interface{}) 
 		}
 
 		if statement.Conds().IsValid() {
-			if err := statement.writeStrings(" SELECT ")(buf); err != nil {
+			if _, err := buf.WriteString(" SELECT "); err != nil {
 				return "", nil, err
 			}
 
@@ -124,7 +124,11 @@ func (statement *Statement) GenInsertSQL(colNames []string, args []interface{}) 
 				return "", nil, err
 			}
 
-			if err := statement.writeWhere(buf); err != nil {
+			if _, err := buf.WriteString(" WHERE "); err != nil {
+				return "", nil, err
+			}
+
+			if err := statement.Conds().WriteTo(buf); err != nil {
 				return "", nil, err
 			}
 		} else {
@@ -292,100 +296,4 @@ func (statement *Statement) GenInsertMultipleMapSQL(columns []string, argss [][]
 	}
 
 	return buf.String(), buf.Args(), nil
-}
-
-func (statement *Statement) writeColumns(w *builder.BytesWriter, slice []string) error {
-	for i, s := range slice {
-		if i > 0 {
-			if _, err := fmt.Fprint(w, ","); err != nil {
-				return err
-			}
-		}
-		if err := statement.dialect.Quoter().QuoteTo(w.Builder, s); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (statement *Statement) writeQuestions(w *builder.BytesWriter, length int) error {
-	for i := 0; i < length; i++ {
-		if i > 0 {
-			if _, err := fmt.Fprint(w, ","); err != nil {
-				return err
-			}
-		}
-		if _, err := fmt.Fprint(w, "?"); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (statement *Statement) oracleWriteInsertMultiple(w *builder.BytesWriter, tableName string, colNames []string, colMultiPlaces []string) error {
-	if _, err := fmt.Fprint(w, "INSERT ALL"); err != nil {
-		return err
-	}
-
-	for _, cols := range colMultiPlaces {
-		if _, err := fmt.Fprint(w, " INTO "); err != nil {
-			return err
-		}
-		if err := statement.dialect.Quoter().QuoteTo(w.Builder, tableName); err != nil {
-			return err
-		}
-		if _, err := fmt.Fprint(w, " ("); err != nil {
-			return err
-		}
-		if err := statement.writeColumns(w, colNames); err != nil {
-			return err
-		}
-		if _, err := fmt.Fprint(w, ") VALUES ("); err != nil {
-			return err
-		}
-		if _, err := fmt.Fprintf(w, cols, ")"); err != nil {
-			return err
-		}
-	}
-
-	if _, err := fmt.Fprint(w, " SELECT 1 FROM DUAL"); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (statement *Statement) WriteInsertMultiple(w *builder.BytesWriter, tableName string, colNames []string, colMultiPlaces []string) error {
-	if statement.dialect.URI().DBType == schemas.ORACLE {
-		return statement.oracleWriteInsertMultiple(w, tableName, colNames, colMultiPlaces)
-	}
-	return statement.plainWriteInsertMultiple(w, tableName, colNames, colMultiPlaces)
-}
-
-func (statement *Statement) plainWriteInsertMultiple(w *builder.BytesWriter, tableName string, colNames []string, colMultiPlaces []string) error {
-	if _, err := fmt.Fprint(w, "INSERT INTO "); err != nil {
-		return err
-	}
-	if err := statement.dialect.Quoter().QuoteTo(w.Builder, tableName); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprint(w, " ("); err != nil {
-		return err
-	}
-	if err := statement.writeColumns(w, colNames); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprint(w, ") VALUES ("); err != nil {
-		return err
-	}
-	for i, cols := range colMultiPlaces {
-		if _, err := fmt.Fprint(w, cols, ")"); err != nil {
-			return err
-		}
-		if i < len(colMultiPlaces)-1 {
-			if _, err := fmt.Fprint(w, ",("); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
 }

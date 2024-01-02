@@ -38,7 +38,6 @@ var (
 		"CALL":              true,
 		"CASCADE":           true,
 		"CASE":              true,
-		"CHAIN":             true,
 		"CHANGE":            true,
 		"CHAR":              true,
 		"CHARACTER":         true,
@@ -129,7 +128,6 @@ var (
 		"OUT": true, "OUTER": true, "OUTFILE": true,
 		"PRECISION": true, "PRIMARY": true, "PROCEDURE": true,
 		"PURGE": true, "RAID0": true, "RANGE": true,
-		"RANK": true,
 		"READ": true, "READS": true, "REAL": true,
 		"REFERENCES": true, "REGEXP": true, "RELEASE": true,
 		"RENAME": true, "REPEAT": true, "REPLACE": true,
@@ -319,9 +317,6 @@ func (db *mysql) SQLType(c *schemas.Column) string {
 	case schemas.UnsignedTinyInt:
 		res = schemas.TinyInt
 		isUnsigned = true
-	case schemas.UnsignedFloat:
-		res = schemas.Float
-		isUnsigned = true
 	default:
 		res = t
 	}
@@ -385,27 +380,12 @@ func (db *mysql) IsTableExist(queryer core.Queryer, ctx context.Context, tableNa
 
 func (db *mysql) AddColumnSQL(tableName string, col *schemas.Column) string {
 	quoter := db.dialect.Quoter()
-	s, _ := ColumnString(db, col, true, true)
-	var b strings.Builder
-	b.WriteString("ALTER TABLE ")
-	quoter.QuoteTo(&b, tableName)
-	b.WriteString(" ADD ")
-	b.WriteString(s)
+	s, _ := ColumnString(db, col, true)
+	sql := fmt.Sprintf("ALTER TABLE %v ADD %v", quoter.Quote(tableName), s)
 	if len(col.Comment) > 0 {
-		b.WriteString(" COMMENT '")
-		b.WriteString(col.Comment)
-		b.WriteString("'")
+		sql += " COMMENT '" + col.Comment + "'"
 	}
-	return b.String()
-}
-
-// ModifyColumnSQL returns a SQL to modify SQL
-func (db *mysql) ModifyColumnSQL(tableName string, col *schemas.Column) string {
-	s, _ := ColumnString(db.dialect, col, false, true)
-	if col.Comment != "" {
-		s += fmt.Sprintf(" COMMENT '%s'", col.Comment)
-	}
-	return fmt.Sprintf("ALTER TABLE %s MODIFY COLUMN %s", db.quoter.Quote(tableName), s)
+	return sql
 }
 
 func (db *mysql) GetColumns(queryer core.Queryer, ctx context.Context, tableName string) ([]string, map[string]*schemas.Column, error) {
@@ -418,7 +398,7 @@ func (db *mysql) GetColumns(queryer core.Queryer, ctx context.Context, tableName
 		"SUBSTRING_INDEX(SUBSTRING(VERSION(), 6), '-', 1) >= 7)))))"
 	s := "SELECT `COLUMN_NAME`, `IS_NULLABLE`, `COLUMN_DEFAULT`, `COLUMN_TYPE`," +
 		" `COLUMN_KEY`, `EXTRA`, `COLUMN_COMMENT`, `CHARACTER_MAXIMUM_LENGTH`, " +
-		alreadyQuoted + " AS NEEDS_QUOTE, `COLLATION_NAME` " +
+		alreadyQuoted + " AS NEEDS_QUOTE " +
 		"FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` = ?" +
 		" ORDER BY `COLUMNS`.ORDINAL_POSITION ASC"
 
@@ -436,8 +416,8 @@ func (db *mysql) GetColumns(queryer core.Queryer, ctx context.Context, tableName
 
 		var columnName, nullableStr, colType, colKey, extra, comment string
 		var alreadyQuoted, isUnsigned bool
-		var colDefault, maxLength, collation *string
-		err = rows.Scan(&columnName, &nullableStr, &colDefault, &colType, &colKey, &extra, &comment, &maxLength, &alreadyQuoted, &collation)
+		var colDefault, maxLength *string
+		err = rows.Scan(&columnName, &nullableStr, &colDefault, &colType, &colKey, &extra, &comment, &maxLength, &alreadyQuoted)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -452,9 +432,6 @@ func (db *mysql) GetColumns(queryer core.Queryer, ctx context.Context, tableName
 			col.DefaultIsEmpty = false
 		} else {
 			col.DefaultIsEmpty = true
-		}
-		if collation != nil {
-			col.Collation = *collation
 		}
 
 		fields := strings.Fields(colType)
@@ -513,10 +490,11 @@ func (db *mysql) GetColumns(queryer core.Queryer, ctx context.Context, tableName
 		}
 		col.Length = len1
 		col.Length2 = len2
-		if _, ok := schemas.SqlTypes[colType]; !ok {
+		if _, ok := schemas.SqlTypes[colType]; ok {
+			col.SQLType = schemas.SQLType{Name: colType, DefaultLength: len1, DefaultLength2: len2}
+		} else {
 			return nil, nil, fmt.Errorf("unknown colType %v", colType)
 		}
-		col.SQLType = schemas.SQLType{Name: colType, DefaultLength: len1, DefaultLength2: len2}
 
 		if colKey == "PRI" {
 			col.IsPrimaryKey = true
@@ -547,7 +525,7 @@ func (db *mysql) GetColumns(queryer core.Queryer, ctx context.Context, tableName
 
 func (db *mysql) GetTables(queryer core.Queryer, ctx context.Context) ([]*schemas.Table, error) {
 	args := []interface{}{db.uri.DBName}
-	s := "SELECT `TABLE_NAME`, `ENGINE`, `AUTO_INCREMENT`, `TABLE_COMMENT`, `TABLE_COLLATION` from " +
+	s := "SELECT `TABLE_NAME`, `ENGINE`, `AUTO_INCREMENT`, `TABLE_COMMENT` from " +
 		"`INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_SCHEMA`=? AND (`ENGINE`='MyISAM' OR `ENGINE` = 'InnoDB' OR `ENGINE` = 'TokuDB')"
 
 	rows, err := queryer.QueryContext(ctx, s, args...)
@@ -559,9 +537,9 @@ func (db *mysql) GetTables(queryer core.Queryer, ctx context.Context) ([]*schema
 	tables := make([]*schemas.Table, 0)
 	for rows.Next() {
 		table := schemas.NewEmptyTable()
-		var name, engine, collation string
+		var name, engine string
 		var autoIncr, comment *string
-		err = rows.Scan(&name, &engine, &autoIncr, &comment, &collation)
+		err = rows.Scan(&name, &engine, &autoIncr, &comment)
 		if err != nil {
 			return nil, err
 		}
@@ -571,7 +549,6 @@ func (db *mysql) GetTables(queryer core.Queryer, ctx context.Context) ([]*schema
 			table.Comment = *comment
 		}
 		table.StoreEngine = engine
-		table.Collation = collation
 		tables = append(tables, table)
 	}
 	if rows.Err() != nil {
@@ -663,7 +640,7 @@ func (db *mysql) CreateTableSQL(ctx context.Context, queryer core.Queryer, table
 
 	for i, colName := range table.ColumnsSeq() {
 		col := table.GetColumn(colName)
-		s, _ := ColumnString(db.dialect, col, col.IsPrimaryKey && len(table.PrimaryKeys) == 1, true)
+		s, _ := ColumnString(db.dialect, col, col.IsPrimaryKey && len(table.PrimaryKeys) == 1)
 		b.WriteString(s)
 
 		if len(col.Comment) > 0 {
@@ -761,9 +738,8 @@ func (p *mysqlDriver) Parse(driverName, dataSourceName string) (*URI, error) {
 }
 
 func (p *mysqlDriver) GenScanResult(colType string) (interface{}, error) {
-	colType = strings.Replace(colType, "UNSIGNED ", "", -1)
 	switch colType {
-	case "CHAR", "VARCHAR", "TINYTEXT", "TEXT", "MEDIUMTEXT", "LONGTEXT", "ENUM", "SET", "JSON":
+	case "CHAR", "VARCHAR", "TINYTEXT", "TEXT", "MEDIUMTEXT", "LONGTEXT", "ENUM", "SET":
 		var s sql.NullString
 		return &s, nil
 	case "BIGINT":

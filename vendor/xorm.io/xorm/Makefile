@@ -9,7 +9,7 @@ SED_INPLACE := sed -i
 GO_DIRS := caches contexts integrations core dialects internal log migrate names schemas tags
 GOFILES := $(wildcard *.go)
 GOFILES += $(shell find $(GO_DIRS) -name "*.go" -type f)
-INTEGRATION_PACKAGES := xorm.io/xorm/tests
+INTEGRATION_PACKAGES := xorm.io/xorm/integrations
 PACKAGES ?= $(filter-out $(INTEGRATION_PACKAGES),$(shell $(GO) list ./...))
 
 TEST_COCKROACH_HOST ?= cockroach:26257
@@ -60,7 +60,7 @@ build: go-check $(GO_SOURCES)
 .PHONY: clean
 clean:
 	$(GO) clean -i ./...
-	rm -rf *.sql *.log test.db cover.out cover.html *coverage.out coverage.all integrations/*.sql
+	rm -rf *.sql *.log test.db *coverage.out coverage.all integrations/*.sql
 
 .PHONY: coverage
 coverage:
@@ -132,8 +132,7 @@ golangci-lint-check:
 
 .PHONY: test
 test: go-check
-	$(GO) test -cover -coverprofile=cover.out $(PACKAGES)
-	$(GO) tool cover -html=cover.out -o cover.html
+	$(GO) test $(PACKAGES)
 
 .PNONY: test-cockroach
 test-cockroach: go-check

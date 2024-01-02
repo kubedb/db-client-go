@@ -5,138 +5,86 @@
 package statements
 
 import (
-	"errors"
 	"fmt"
+	"strings"
 
 	"xorm.io/builder"
 )
 
-type orderBy struct {
-	orderStr  interface{}
-	orderArgs []interface{}
-	direction string // ASC, DESC or "", "" means raw orderStr
-}
-
-func (ob orderBy) CheckValid() error {
-	if ob.orderStr == nil {
-		return fmt.Errorf("order by string is nil")
-	}
-	switch t := ob.orderStr.(type) {
-	case string:
-		if t == "" {
-			return fmt.Errorf("order by string is empty")
-		}
-		return nil
-	case *builder.Expression:
-		if t.Content() == "" {
-			return fmt.Errorf("order by string is empty")
-		}
-		return nil
-	default:
-		return fmt.Errorf("order by string is not string or builder.Expression")
-	}
-}
-
 func (statement *Statement) HasOrderBy() bool {
-	return len(statement.orderBy) > 0
+	return statement.orderStr != ""
 }
 
 // ResetOrderBy reset ordery conditions
 func (statement *Statement) ResetOrderBy() {
-	statement.orderBy = []orderBy{}
-}
-
-var ErrNoColumnName = errors.New("no column name")
-
-func (statement *Statement) writeOrderBy(w *builder.BytesWriter, orderBy orderBy) error {
-	switch t := orderBy.orderStr.(type) {
-	case (*builder.Expression):
-		if _, err := fmt.Fprint(w.Builder, statement.dialect.Quoter().Replace(t.Content())); err != nil {
-			return err
-		}
-		w.Append(t.Args()...)
-		return nil
-	case string:
-		if orderBy.direction == "" {
-			if _, err := fmt.Fprint(w.Builder, statement.dialect.Quoter().Replace(t)); err != nil {
-				return err
-			}
-			w.Append(orderBy.orderArgs...)
-			return nil
-		}
-		if err := statement.dialect.Quoter().QuoteTo(w.Builder, t); err != nil {
-			return err
-		}
-		_, err := fmt.Fprint(w, " ", orderBy.direction)
-		return err
-	default:
-		return ErrUnSupportedSQLType
-	}
+	statement.orderStr = ""
+	statement.orderArgs = nil
 }
 
 // WriteOrderBy write order by to writer
-func (statement *Statement) writeOrderBys(w *builder.BytesWriter) error {
-	if len(statement.orderBy) == 0 {
-		return nil
-	}
-
-	if _, err := fmt.Fprint(w, " ORDER BY "); err != nil {
-		return err
-	}
-	for i, ob := range statement.orderBy {
-		if err := statement.writeOrderBy(w, ob); err != nil {
+func (statement *Statement) WriteOrderBy(w builder.Writer) error {
+	if len(statement.orderStr) > 0 {
+		if _, err := fmt.Fprintf(w, " ORDER BY %s", statement.orderStr); err != nil {
 			return err
 		}
-		if i < len(statement.orderBy)-1 {
-			if _, err := fmt.Fprint(w, ", "); err != nil {
-				return err
-			}
-		}
+		w.Append(statement.orderArgs...)
 	}
 	return nil
 }
 
 // OrderBy generate "Order By order" statement
 func (statement *Statement) OrderBy(order interface{}, args ...interface{}) *Statement {
-	ob := orderBy{order, args, ""}
-	if err := ob.CheckValid(); err != nil {
-		statement.LastError = err
+	if len(statement.orderStr) > 0 {
+		statement.orderStr += ", "
+	}
+	var rawOrder string
+	switch t := order.(type) {
+	case (*builder.Expression):
+		rawOrder = t.Content()
+		args = t.Args()
+	case string:
+		rawOrder = t
+	default:
+		statement.LastError = ErrUnSupportedSQLType
 		return statement
 	}
-	statement.orderBy = append(statement.orderBy, ob)
+	statement.orderStr += statement.ReplaceQuote(rawOrder)
+	if len(args) > 0 {
+		statement.orderArgs = append(statement.orderArgs, args...)
+	}
 	return statement
 }
 
 // Desc generate `ORDER BY xx DESC`
 func (statement *Statement) Desc(colNames ...string) *Statement {
-	if len(colNames) == 0 {
-		statement.LastError = ErrNoColumnName
-		return statement
+	var buf strings.Builder
+	if len(statement.orderStr) > 0 {
+		fmt.Fprint(&buf, statement.orderStr, ", ")
 	}
-	for _, colName := range colNames {
-		ob := orderBy{colName, nil, "DESC"}
-		statement.orderBy = append(statement.orderBy, ob)
-		if err := ob.CheckValid(); err != nil {
-			statement.LastError = err
-			return statement
+	for i, col := range colNames {
+		if i > 0 {
+			fmt.Fprint(&buf, ", ")
 		}
+		_ = statement.dialect.Quoter().QuoteTo(&buf, col)
+		fmt.Fprint(&buf, " DESC")
 	}
+	statement.orderStr = buf.String()
 	return statement
 }
 
 // Asc provide asc order by query condition, the input parameters are columns.
 func (statement *Statement) Asc(colNames ...string) *Statement {
-	if len(colNames) == 0 {
-		statement.LastError = ErrNoColumnName
-		return statement
+	var buf strings.Builder
+	if len(statement.orderStr) > 0 {
+		fmt.Fprint(&buf, statement.orderStr, ", ")
 	}
-	for _, colName := range colNames {
-		ob := orderBy{colName, nil, "ASC"}
-		statement.orderBy = append(statement.orderBy, ob)
-		if err := ob.CheckValid(); err != nil {
-			statement.LastError = err
-			return statement
+	for i, col := range colNames {
+		if i > 0 {
+			fmt.Fprint(&buf, ", ")
 		}
+		_ = statement.dialect.Quoter().QuoteTo(&buf, col)
+		fmt.Fprint(&buf, " ASC")
 	}
+	statement.orderStr = buf.String()
 	return statement
 }

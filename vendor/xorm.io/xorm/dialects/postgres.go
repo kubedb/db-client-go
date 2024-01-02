@@ -821,8 +821,6 @@ func (db *postgres) Version(ctx context.Context, queryer core.Queryer) (*schemas
 	}
 
 	// Postgres: 9.5.22 on x86_64-pc-linux-gnu (Debian 9.5.22-1.pgdg90+1), compiled by gcc (Debian 6.3.0-18+deb9u1) 6.3.0 20170516, 64-bit
-	// Postgres: PostgreSQL 15.3, compiled by Visual C++ build 1914, 64-bit
-	// KingbaseES V008R006C008B0014 on x64, compiled by Visual C++ build 1800, 64-bit
 	// CockroachDB CCL v19.2.4 (x86_64-unknown-linux-gnu, built
 	if strings.HasPrefix(version, "CockroachDB") {
 		versions := strings.Split(strings.TrimPrefix(version, "CockroachDB CCL "), " ")
@@ -831,37 +829,12 @@ func (db *postgres) Version(ctx context.Context, queryer core.Queryer) (*schemas
 			Edition: "CockroachDB",
 		}, nil
 	} else if strings.HasPrefix(version, "PostgreSQL") {
-		if strings.Contains(version, " on ") {
-			versions := strings.Split(strings.TrimPrefix(version, "PostgreSQL "), " on ")
-			return &schemas.Version{
-				Number:  versions[0],
-				Level:   versions[1],
-				Edition: "PostgreSQL",
-			}, nil
-		} else {
-			versions := strings.Split(strings.TrimPrefix(version, "PostgreSQL "), ",")
-			return &schemas.Version{
-				Number:  versions[0],
-				Level:   versions[1],
-				Edition: "PostgreSQL",
-			}, nil
-		}
-	} else if strings.HasPrefix(version, "KingbaseES") {
-		if strings.Contains(version, " on ") {
-			versions := strings.Split(strings.TrimPrefix(version, "KingbaseES "), " on ")
-			return &schemas.Version{
-				Number:  versions[0],
-				Level:   versions[1],
-				Edition: "KingbaseES",
-			}, nil
-		} else {
-			versions := strings.Split(strings.TrimPrefix(version, "KingbaseES "), ",")
-			return &schemas.Version{
-				Number:  versions[0],
-				Level:   versions[1],
-				Edition: "KingbaseES",
-			}, nil
-		}
+		versions := strings.Split(strings.TrimPrefix(version, "PostgreSQL "), " on ")
+		return &schemas.Version{
+			Number:  versions[0],
+			Level:   versions[1],
+			Edition: "PostgreSQL",
+		}, nil
 	}
 
 	return nil, errors.New("unknow database version")
@@ -944,7 +917,7 @@ func (db *postgres) SQLType(c *schemas.Column) string {
 		return schemas.Uuid
 	case schemas.Blob, schemas.TinyBlob, schemas.MediumBlob, schemas.LongBlob:
 		return schemas.Bytea
-	case schemas.Double, schemas.UnsignedFloat:
+	case schemas.Double:
 		return "DOUBLE PRECISION"
 	default:
 		if c.IsAutoIncrement {
@@ -1019,7 +992,7 @@ func (db *postgres) IsTableExist(queryer core.Queryer, ctx context.Context, tabl
 }
 
 func (db *postgres) AddColumnSQL(tableName string, col *schemas.Column) string {
-	s, _ := ColumnString(db.dialect, col, true, false)
+	s, _ := ColumnString(db.dialect, col, true)
 
 	quoter := db.dialect.Quoter()
 	addColumnSQL := ""
@@ -1105,7 +1078,7 @@ FROM pg_attribute f
     LEFT JOIN pg_constraint p ON p.conrelid = c.oid AND f.attnum = ANY (p.conkey)
     LEFT JOIN pg_class AS g ON p.confrelid = g.oid
     LEFT JOIN INFORMATION_SCHEMA.COLUMNS s ON s.column_name=f.attname AND c.relname=s.table_name
-WHERE n.nspname= s.table_schema AND c.relkind = 'r' AND c.relname = $1%s AND f.attnum > 0 ORDER BY f.attnum;`
+WHERE n.nspname= s.table_schema AND c.relkind = 'r'::char AND c.relname = $1%s AND f.attnum > 0 ORDER BY f.attnum;`
 
 	schema := db.getSchema()
 	if schema != "" {
@@ -1370,14 +1343,14 @@ func (db *postgres) CreateTableSQL(ctx context.Context, queryer core.Queryer, ta
 	commentSQL := "; "
 	if table.Comment != "" {
 		// support schema.table -> "schema"."table"
-		commentSQL += fmt.Sprintf("COMMENT ON TABLE %s IS '%s'; ", quoter.Quote(tableName), table.Comment)
+		commentSQL += fmt.Sprintf("COMMENT ON TABLE %s IS '%s'", quoter.Quote(tableName), table.Comment)
 	}
 
 	for _, colName := range table.ColumnsSeq() {
 		col := table.GetColumn(colName)
 
 		if len(col.Comment) > 0 {
-			commentSQL += fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'; ", quoter.Quote(tableName), quoter.Quote(col.Name), col.Comment)
+			commentSQL += fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'", quoter.Quote(tableName), quoter.Quote(col.Name), col.Comment)
 		}
 	}
 
@@ -1385,7 +1358,7 @@ func (db *postgres) CreateTableSQL(ctx context.Context, queryer core.Queryer, ta
 }
 
 func (db *postgres) Filters() []Filter {
-	return []Filter{&postgresSeqFilter{Prefix: "$", Start: 1}}
+	return []Filter{&SeqFilter{Prefix: "$", Start: 1}}
 }
 
 type pqDriver struct {

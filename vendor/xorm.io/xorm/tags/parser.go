@@ -31,12 +31,6 @@ type TableIndices interface {
 
 var tpTableIndices = reflect.TypeOf((*TableIndices)(nil)).Elem()
 
-type TableCollations interface {
-	TableCollations() []*schemas.Collation
-}
-
-var tpTableCollations = reflect.TypeOf((*TableCollations)(nil)).Elem()
-
 // Parser represents a parser for xorm tag
 type Parser struct {
 	identifier   string
@@ -362,22 +356,6 @@ func (parser *Parser) Parse(v reflect.Value) (*schemas.Table, error) {
 		}
 	}
 
-	collations := tableCollations(v)
-	for _, collation := range collations {
-		if collation.Name == "" {
-			continue
-		}
-		if collation.Column == "" {
-			table.Collation = collation.Name
-		} else {
-			col := table.GetColumn(collation.Column)
-			if col == nil {
-				return nil, ErrUnsupportedType
-			}
-			col.Collation = collation.Name // this may override definition in struct tag
-		}
-	}
-
 	return table, nil
 }
 
@@ -395,25 +373,6 @@ func tableIndices(v reflect.Value) []*schemas.Index {
 		v1 := v.Addr()
 		if v1.Type().Implements(tpTableIndices) {
 			return v1.Interface().(TableIndices).TableIndices()
-		}
-	}
-	return nil
-}
-
-func tableCollations(v reflect.Value) []*schemas.Collation {
-	if v.Type().Implements(tpTableCollations) {
-		return v.Interface().(TableCollations).TableCollations()
-	}
-
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-		if v.Type().Implements(tpTableCollations) {
-			return v.Interface().(TableCollations).TableCollations()
-		}
-	} else if v.CanAddr() {
-		v1 := v.Addr()
-		if v1.Type().Implements(tpTableCollations) {
-			return v1.Interface().(TableCollations).TableCollations()
 		}
 	}
 	return nil

@@ -509,23 +509,11 @@ var (
 
 type oracle struct {
 	Base
-	useLegacy bool
 }
 
 func (db *oracle) Init(uri *URI) error {
 	db.quoter = oracleQuoter
 	return db.Base.Init(db, uri)
-}
-
-func (db *oracle) UseLegacyLimitOffset() bool { return db.useLegacy }
-
-func (db *oracle) SetParams(params map[string]string) {
-	useLegacy, ok := params["USE_LEGACY_LIMIT_OFFSET"]
-	if ok {
-		if b, _ := strconv.ParseBool(useLegacy); b {
-			db.useLegacy = true
-		}
-	}
 }
 
 func (db *oracle) Version(ctx context.Context, queryer core.Queryer) (*schemas.Version, error) {
@@ -560,14 +548,7 @@ func (db *oracle) Features() *DialectFeatures {
 func (db *oracle) SQLType(c *schemas.Column) string {
 	var res string
 	switch t := c.SQLType.Name; t {
-	case schemas.Bool:
-		if c.Default == "true" {
-			c.Default = "1"
-		} else if c.Default == "false" {
-			c.Default = "0"
-		}
-		res = "NUMBER(1,0)"
-	case schemas.Bit, schemas.TinyInt, schemas.SmallInt, schemas.MediumInt, schemas.Int, schemas.Integer, schemas.BigInt, schemas.Serial, schemas.BigSerial:
+	case schemas.Bit, schemas.TinyInt, schemas.SmallInt, schemas.MediumInt, schemas.Int, schemas.Integer, schemas.BigInt, schemas.Bool, schemas.Serial, schemas.BigSerial:
 		res = "NUMBER"
 	case schemas.Binary, schemas.VarBinary, schemas.Blob, schemas.TinyBlob, schemas.MediumBlob, schemas.LongBlob, schemas.Bytea:
 		return schemas.Blob
@@ -621,7 +602,7 @@ func (db *oracle) IsReserved(name string) bool {
 }
 
 func (db *oracle) DropTableSQL(tableName string) (string, bool) {
-	return fmt.Sprintf("DROP TABLE \"%s\"", tableName), false
+	return fmt.Sprintf("DROP TABLE `%s`", tableName), false
 }
 
 func (db *oracle) CreateTableSQL(ctx context.Context, queryer core.Queryer, table *schemas.Table, tableName string) (string, bool, error) {
@@ -640,7 +621,7 @@ func (db *oracle) CreateTableSQL(ctx context.Context, queryer core.Queryer, tabl
 		/*if col.IsPrimaryKey && len(pkList) == 1 {
 			sql += col.String(b.dialect)
 		} else {*/
-		s, _ := ColumnString(db, col, false, false)
+		s, _ := ColumnString(db, col, false)
 		sql += s
 		// }
 		sql = strings.TrimSpace(sql)
@@ -655,10 +636,6 @@ func (db *oracle) CreateTableSQL(ctx context.Context, queryer core.Queryer, tabl
 
 	sql = sql[:len(sql)-2] + ")"
 	return sql, false, nil
-}
-
-func (db *oracle) IsSequenceExist(ctx context.Context, queryer core.Queryer, seqName string) (bool, error) {
-	return db.HasRecords(queryer, ctx, `SELECT sequence_name FROM user_sequences WHERE sequence_name = :1`, seqName)
 }
 
 func (db *oracle) SetQuotePolicy(quotePolicy QuotePolicy) {
@@ -875,7 +852,7 @@ func (db *oracle) GetIndexes(queryer core.Queryer, ctx context.Context, tableNam
 
 func (db *oracle) Filters() []Filter {
 	return []Filter{
-		&oracleSeqFilter{Prefix: ":", Start: 1},
+		&SeqFilter{Prefix: ":", Start: 1},
 	}
 }
 
@@ -954,8 +931,4 @@ func (o *oci8Driver) Parse(driverName, dataSourceName string) (*URI, error) {
 		return nil, errors.New("dbname is empty")
 	}
 	return db, nil
-}
-
-type oracleDriver struct {
-	godrorDriver
 }

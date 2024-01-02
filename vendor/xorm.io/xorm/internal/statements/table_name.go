@@ -27,7 +27,7 @@ func (statement *Statement) Alias(alias string) *Statement {
 	return statement
 }
 
-func (statement *Statement) writeAlias(w *builder.BytesWriter) error {
+func (statement *Statement) writeAlias(w builder.Writer) error {
 	if statement.TableAlias != "" {
 		if statement.dialect.URI().DBType == schemas.ORACLE {
 			if _, err := fmt.Fprint(w, " ", statement.quote(statement.TableAlias)); err != nil {
@@ -42,7 +42,7 @@ func (statement *Statement) writeAlias(w *builder.BytesWriter) error {
 	return nil
 }
 
-func (statement *Statement) writeTableName(w *builder.BytesWriter) error {
+func (statement *Statement) writeTableName(w builder.Writer) error {
 	if statement.dialect.URI().DBType == schemas.MSSQL && strings.Contains(statement.TableName(), "..") {
 		if _, err := fmt.Fprint(w, statement.TableName()); err != nil {
 			return err

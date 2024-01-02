@@ -31,7 +31,6 @@ type Interface interface {
 	Decr(column string, arg ...interface{}) *Session
 	Desc(...string) *Session
 	Delete(...interface{}) (int64, error)
-	Truncate(...interface{}) (int64, error)
 	Distinct(columns ...string) *Session
 	DropIndexes(bean interface{}) error
 	Exec(sqlOrArgs ...interface{}) (sql.Result, error)
@@ -53,7 +52,7 @@ type Interface interface {
 	NoAutoCondition(...bool) *Session
 	NotIn(string, ...interface{}) *Session
 	Nullable(...string) *Session
-	Join(joinOperator string, tablename interface{}, condition interface{}, args ...interface{}) *Session
+	Join(joinOperator string, tablename interface{}, condition string, args ...interface{}) *Session
 	Omit(columns ...string) *Session
 	OrderBy(order interface{}, args ...interface{}) *Session
 	Ping() error
@@ -121,7 +120,6 @@ type EngineInterface interface {
 	ShowSQL(show ...bool)
 	Sync(...interface{}) error
 	Sync2(...interface{}) error
-	SyncWithOptions(SyncOptions, ...interface{}) (*SyncResult, error)
 	StoreEngine(storeEngine string) *Session
 	TableInfo(bean interface{}) (*schemas.Table, error)
 	TableName(interface{}, ...bool) string
