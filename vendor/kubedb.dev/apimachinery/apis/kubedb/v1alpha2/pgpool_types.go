@@ -1,5 +1,5 @@
 /*
-Copyright 2023.
+Copyright AppsCode Inc. and Contributors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	kmapi "kmodules.xyz/client-go/api/v1"
 	ofst "kmodules.xyz/offshoot-api/api/v2"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 )
 
 const (
@@ -55,6 +54,11 @@ type Pgpool struct {
 	Status          PgpoolStatus `json:"status,omitempty"`
 }
 
+func (in *Pgpool) DeepCopyObject() runtime.Object {
+	//TODO implement me
+	panic("implement me")
+}
+
 // PgpoolSpec defines the desired state of Pgpool
 type PgpoolSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -75,9 +79,9 @@ type PgpoolSpec struct {
 	// Backend refers to the AppBinding of the backend PostgreSQL server
 	Backend *core.LocalObjectReference `json:"backend,omitempty"`
 
-	// ProxySQL secret containing username and password for root user and pgpool user
+	// Pgpool secret containing username and password for pgpool pcp user
 	// +optional
-	AuthSecret *api.SecretReference `json:"authSecret,omitempty"`
+	AuthSecret *SecretReference `json:"authSecret,omitempty"`
 
 	// ConfigSecret is an optional field to provide custom configuration file for database (i.e pgpool.conf).
 	// If specified, this file will be used as configuration file otherwise default configuration file will be used.
@@ -93,7 +97,7 @@ type PgpoolSpec struct {
 
 	// ServiceTemplates is an optional configuration for services used to expose Pgpool
 	// +optional
-	ServiceTemplates []api.NamedServiceTemplateSpec `json:"serviceTemplates,omitempty"`
+	ServiceTemplates []NamedServiceTemplateSpec `json:"serviceTemplates,omitempty"`
 
 	// HealthChecker defines attributes of the health checker
 	// +optional
@@ -102,7 +106,7 @@ type PgpoolSpec struct {
 
 	// TerminationPolicy controls the delete operation for Pgpool
 	// +optional
-	TerminationPolicy api.TerminationPolicy `json:"terminationPolicy,omitempty"`
+	TerminationPolicy TerminationPolicy `json:"terminationPolicy,omitempty"`
 }
 
 // PgpoolStatus defines the observed state of Pgpool
@@ -112,7 +116,7 @@ type PgpoolStatus struct {
 
 	// Specifies the current phase of the database
 	// +optional
-	Phase api.DatabasePhase `json:"phase,omitempty"`
+	Phase DatabasePhase `json:"phase,omitempty"`
 
 	// observedGeneration is the most recent generation observed for this resource. It corresponds to the
 	// resource's generation, which is updated on mutation by the API Server.
@@ -139,6 +143,7 @@ type PgpoolList struct {
 	Items         []Pgpool `json:"items"`
 }
 
-func init() {
-	SchemeBuilder.Register(&Pgpool{}, &PgpoolList{})
+func (in *PgpoolList) DeepCopyObject() runtime.Object {
+	//TODO implement me
+	panic("implement me")
 }

@@ -3,10 +3,11 @@ package v1alpha2
 import (
 	"fmt"
 	"gomodules.xyz/pointer"
+	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	meta_util "kmodules.xyz/client-go/meta"
+	catalog "kubedb.dev/apimachinery/apis/catalog/v1alpha1"
 	"kubedb.dev/apimachinery/apis/kubedb"
-	apis "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 )
 
 func (p *Pgpool) ResourceFQN() string {
@@ -47,7 +48,7 @@ func (p *Pgpool) ServiceName() string {
 
 // Owner returns owner reference to resources
 func (p *Pgpool) Owner() *meta.OwnerReference {
-	return meta.NewControllerRef(p, apis.SchemeGroupVersion.WithKind(p.ResourceKind()))
+	return meta.NewControllerRef(p, SchemeGroupVersion.WithKind(p.ResourceKind()))
 }
 
 func (p *Pgpool) PodLabels(extraLabels ...map[string]string) map[string]string {
@@ -73,7 +74,7 @@ func (p *Pgpool) OffshootLabels() map[string]string {
 }
 
 func (p *Pgpool) offshootLabels(selector, override map[string]string) map[string]string {
-	selector[meta_util.ComponentLabelKey] = apis.ComponentConnectionPooler
+	selector[meta_util.ComponentLabelKey] = ComponentConnectionPooler
 	return meta_util.FilterKeys(kubedb.GroupName, selector, meta_util.OverwriteKeys(nil, p.Labels, override))
 }
 
@@ -120,4 +121,41 @@ func (p *Pgpool) PrimaryServiceDNS() string {
 
 func (p *Pgpool) GetNameSpacedName() string {
 	return p.Namespace + "/" + p.Name
+}
+
+func (p *Pgpool) SetSecurityContext(ppVersion *catalog.PgpoolVersion) {
+	if p.Spec.PodTemplate.Spec.SecurityContext == nil {
+		p.Spec.PodTemplate.Spec.SecurityContext = &core.PodSecurityContext{
+			RunAsUser:    ppVersion.Spec.SecurityContext.RunAsUser,
+			RunAsGroup:   ppVersion.Spec.SecurityContext.RunAsUser,
+			RunAsNonRoot: pointer.BoolP(true),
+		}
+	} else {
+		if p.Spec.PodTemplate.Spec.SecurityContext.RunAsUser == nil {
+			p.Spec.PodTemplate.Spec.SecurityContext.RunAsUser = ppVersion.Spec.SecurityContext.RunAsUser
+		}
+		if p.Spec.PodTemplate.Spec.SecurityContext.RunAsGroup == nil {
+			p.Spec.PodTemplate.Spec.SecurityContext.RunAsGroup = p.Spec.PodTemplate.Spec.SecurityContext.RunAsUser
+		}
+	}
+
+	// Need to set FSGroup equal to  p.Spec.PodTemplate.Spec.SecurityContext.RunAsGroup.
+	// So that /var/pv directory have the group permission for the RunAsGroup user GID.
+	// Otherwise, We will get write permission denied.
+	p.Spec.PodTemplate.Spec.SecurityContext.FSGroup = p.Spec.PodTemplate.Spec.SecurityContext.RunAsGroup
+}
+
+func (p *Pgpool) SetDefaults(ppVersion *catalog.PgpoolVersion) {
+	if p == nil {
+		return
+	}
+	if p.Spec.Replicas == nil {
+		p.Spec.Replicas = pointer.Int32P(1)
+	}
+	if p.Spec.TerminationPolicy == "" {
+		p.Spec.TerminationPolicy = TerminationPolicyDelete
+	}
+	if p.Spec.PodTemplate != nil {
+		p.SetSecurityContext(ppVersion)
+	}
 }

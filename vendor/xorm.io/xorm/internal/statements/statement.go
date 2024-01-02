@@ -34,13 +34,6 @@ var (
 	ErrTableNotFound = errors.New("Table not found")
 )
 
-type join struct {
-	op        string
-	table     interface{}
-	condition interface{}
-	args      []interface{}
-}
-
 // Statement save all the sql info for executing SQL
 type Statement struct {
 	RefTable        *schemas.Table
@@ -50,8 +43,10 @@ type Statement struct {
 	Start           int
 	LimitN          *int
 	idParam         schemas.PK
-	orderBy         []orderBy
-	joins           []join
+	orderStr        string
+	orderArgs       []interface{}
+	JoinStr         string
+	joinArgs        []interface{}
 	GroupByStr      string
 	HavingStr       string
 	SelectStr       string
@@ -128,7 +123,8 @@ func (statement *Statement) Reset() {
 	statement.LimitN = nil
 	statement.ResetOrderBy()
 	statement.UseCascade = true
-	statement.joins = nil
+	statement.JoinStr = ""
+	statement.joinArgs = make([]interface{}, 0)
 	statement.GroupByStr = ""
 	statement.HavingStr = ""
 	statement.ColumnMap = columnMap{}
@@ -162,15 +158,15 @@ func (statement *Statement) Reset() {
 
 // SQL adds raw sql statement
 func (statement *Statement) SQL(query interface{}, args ...interface{}) *Statement {
-	switch t := query.(type) {
+	switch query.(type) {
 	case (*builder.Builder):
 		var err error
-		statement.RawSQL, statement.RawParams, err = t.ToSQL()
+		statement.RawSQL, statement.RawParams, err = query.(*builder.Builder).ToSQL()
 		if err != nil {
 			statement.LastError = err
 		}
 	case string:
-		statement.RawSQL = t
+		statement.RawSQL = query.(string)
 		statement.RawParams = args
 	default:
 		statement.LastError = ErrUnSupportedSQLType
@@ -209,8 +205,8 @@ func (statement *Statement) SetRefBean(bean interface{}) error {
 	return nil
 }
 
-func (statement *Statement) NeedTableName() bool {
-	return len(statement.joins) > 0
+func (statement *Statement) needTableName() bool {
+	return len(statement.JoinStr) > 0
 }
 
 // Incr Generate  "Update ... Set column = column + arg" statement
@@ -294,25 +290,25 @@ func (statement *Statement) GroupBy(keys string) *Statement {
 	return statement
 }
 
-func (statement *Statement) writeGroupBy(w *builder.BytesWriter) error {
+func (statement *Statement) WriteGroupBy(w builder.Writer) error {
 	if statement.GroupByStr == "" {
 		return nil
 	}
-	_, err := fmt.Fprint(w, " GROUP BY ", statement.GroupByStr)
+	_, err := fmt.Fprintf(w, " GROUP BY %s", statement.GroupByStr)
 	return err
 }
 
 // Having generate "Having conditions" statement
 func (statement *Statement) Having(conditions string) *Statement {
-	statement.HavingStr = conditions
+	statement.HavingStr = fmt.Sprintf("HAVING %v", statement.ReplaceQuote(conditions))
 	return statement
 }
 
-func (statement *Statement) writeHaving(w *builder.BytesWriter) error {
+func (statement *Statement) writeHaving(w builder.Writer) error {
 	if statement.HavingStr == "" {
 		return nil
 	}
-	_, err := fmt.Fprint(w, " HAVING ", statement.ReplaceQuote(statement.HavingStr))
+	_, err := fmt.Fprint(w, " ", statement.HavingStr)
 	return err
 }
 
@@ -609,7 +605,7 @@ func (statement *Statement) BuildConds(table *schemas.Table, bean interface{}, i
 // MergeConds merge conditions from bean and id
 func (statement *Statement) MergeConds(bean interface{}) error {
 	if !statement.NoAutoCondition && statement.RefTable != nil {
-		addedTableName := (len(statement.joins) > 0)
+		addedTableName := (len(statement.JoinStr) > 0)
 		autoCond, err := statement.BuildConds(statement.RefTable, bean, true, true, false, true, addedTableName)
 		if err != nil {
 			return err
@@ -644,23 +640,6 @@ func (statement *Statement) convertSQLOrArgs(sqlOrArgs ...interface{}) (string, 
 					newArgs = append(newArgs, v.In(statement.defaultTimeZone).Format("2006-01-02 15:04:05"))
 				} else if v, ok := arg.(*time.Time); ok && v != nil {
 					newArgs = append(newArgs, v.In(statement.defaultTimeZone).Format("2006-01-02 15:04:05"))
-				} else if v, ok := arg.(convert.ConversionTo); ok {
-					r, err := v.ToDB()
-					if err != nil {
-						return "", nil, err
-					}
-					if r != nil {
-						// for nvarchar column on mssql, bytes have to be converted as ucs-2 external of driver
-						// for binary column, a string will be converted as bytes directly. So we have to
-						// convert bytes as string
-						if statement.dialect.URI().DBType == schemas.MSSQL {
-							newArgs = append(newArgs, string(r))
-						} else {
-							newArgs = append(newArgs, r)
-						}
-					} else {
-						newArgs = append(newArgs, nil)
-					}
 				} else {
 					newArgs = append(newArgs, arg)
 				}
@@ -694,7 +673,7 @@ func (statement *Statement) joinColumns(cols []*schemas.Column, includeTableName
 // CondDeleted returns the conditions whether a record is soft deleted.
 func (statement *Statement) CondDeleted(col *schemas.Column) builder.Cond {
 	colName := statement.quote(col.Name)
-	if len(statement.joins) > 0 {
+	if statement.JoinStr != "" {
 		var prefix string
 		if statement.TableAlias != "" {
 			prefix = statement.TableAlias

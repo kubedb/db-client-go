@@ -123,7 +123,6 @@ var defaultTagHandlers = map[string]Handler{
 	"COMMENT":  CommentTagHandler,
 	"EXTENDS":  ExtendsTagHandler,
 	"UNSIGNED": UnsignedTagHandler,
-	"COLLATE":  CollateTagHandler,
 }
 
 func init() {
@@ -283,20 +282,10 @@ func CommentTagHandler(ctx *Context) error {
 	return nil
 }
 
-func CollateTagHandler(ctx *Context) error {
-	if len(ctx.params) > 0 {
-		ctx.col.Collation = ctx.params[0]
-	} else {
-		ctx.col.Collation = ctx.nextTag
-		ctx.ignoreNext = true
-	}
-	return nil
-}
-
 // SQLTypeTagHandler describes SQL Type tag handler
 func SQLTypeTagHandler(ctx *Context) error {
 	ctx.col.SQLType = schemas.SQLType{Name: ctx.tagUname}
-	if ctx.tagUname == "JSON" || ctx.tagUname == "JSONB" {
+	if ctx.tagUname == "JSON" {
 		ctx.col.IsJSON = true
 	}
 	if len(ctx.params) == 0 {

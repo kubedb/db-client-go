@@ -85,6 +85,8 @@ type Dialect interface {
 	AddColumnSQL(tableName string, col *schemas.Column) string
 	ModifyColumnSQL(tableName string, col *schemas.Column) string
 
+	ForUpdateSQL(query string) string
+
 	Filters() []Filter
 	SetParams(params map[string]string)
 }
@@ -133,7 +135,7 @@ func (db *Base) CreateTableSQL(ctx context.Context, queryer core.Queryer, table 
 
 	for i, colName := range table.ColumnsSeq() {
 		col := table.GetColumn(colName)
-		s, _ := ColumnString(db.dialect, col, col.IsPrimaryKey && len(table.PrimaryKeys) == 1, false)
+		s, _ := ColumnString(db.dialect, col, col.IsPrimaryKey && len(table.PrimaryKeys) == 1)
 		b.WriteString(s)
 
 		if i != len(table.ColumnsSeq())-1 {
@@ -207,7 +209,7 @@ func (db *Base) IsColumnExist(queryer core.Queryer, ctx context.Context, tableNa
 
 // AddColumnSQL returns a SQL to add a column
 func (db *Base) AddColumnSQL(tableName string, col *schemas.Column) string {
-	s, _ := ColumnString(db.dialect, col, true, false)
+	s, _ := ColumnString(db.dialect, col, true)
 	return fmt.Sprintf("ALTER TABLE %s ADD %s", db.dialect.Quoter().Quote(tableName), s)
 }
 
@@ -239,15 +241,22 @@ func (db *Base) DropIndexSQL(tableName string, index *schemas.Index) string {
 
 // ModifyColumnSQL returns a SQL to modify SQL
 func (db *Base) ModifyColumnSQL(tableName string, col *schemas.Column) string {
-	s, _ := ColumnString(db.dialect, col, false, false)
+	s, _ := ColumnString(db.dialect, col, false)
 	return fmt.Sprintf("ALTER TABLE %s MODIFY COLUMN %s", db.quoter.Quote(tableName), s)
+}
+
+// ForUpdateSQL returns for updateSQL
+func (db *Base) ForUpdateSQL(query string) string {
+	return query + " FOR UPDATE"
 }
 
 // SetParams set params
 func (db *Base) SetParams(params map[string]string) {
 }
 
-var dialects = map[string]func() Dialect{}
+var (
+	dialects = map[string]func() Dialect{}
+)
 
 // RegisterDialect register database dialect
 func RegisterDialect(dbName schemas.DBType, dialectFunc func() Dialect) {
@@ -281,7 +290,6 @@ func regDrvsNDialects() bool {
 		"sqlite":   {"sqlite3", func() Driver { return &sqlite3Driver{} }, func() Dialect { return &sqlite3{} }},
 		"oci8":     {"oracle", func() Driver { return &oci8Driver{} }, func() Dialect { return &oracle{} }},
 		"godror":   {"oracle", func() Driver { return &godrorDriver{} }, func() Dialect { return &oracle{} }},
-		"oracle":   {"oracle", func() Driver { return &oracleDriver{} }, func() Dialect { return &oracle{} }},
 	}
 
 	for driverName, v := range providedDrvsNDialects {
@@ -298,7 +306,7 @@ func init() {
 }
 
 // ColumnString generate column description string according dialect
-func ColumnString(dialect Dialect, col *schemas.Column, includePrimaryKey, supportCollation bool) (string, error) {
+func ColumnString(dialect Dialect, col *schemas.Column, includePrimaryKey bool) (string, error) {
 	bd := strings.Builder{}
 
 	if err := dialect.Quoter().QuoteTo(&bd, col.Name); err != nil {
@@ -311,15 +319,6 @@ func ColumnString(dialect Dialect, col *schemas.Column, includePrimaryKey, suppo
 
 	if _, err := bd.WriteString(dialect.SQLType(col)); err != nil {
 		return "", err
-	}
-
-	if supportCollation && col.Collation != "" {
-		if _, err := bd.WriteString(" COLLATE "); err != nil {
-			return "", err
-		}
-		if _, err := bd.WriteString(col.Collation); err != nil {
-			return "", err
-		}
 	}
 
 	if includePrimaryKey && col.IsPrimaryKey {

@@ -193,11 +193,11 @@ func (db *sqlite3) Features() *DialectFeatures {
 func (db *sqlite3) SetQuotePolicy(quotePolicy QuotePolicy) {
 	switch quotePolicy {
 	case QuotePolicyNone:
-		q := sqlite3Quoter
+		var q = sqlite3Quoter
 		q.IsReserved = schemas.AlwaysNoReserve
 		db.quoter = q
 	case QuotePolicyReserved:
-		q := sqlite3Quoter
+		var q = sqlite3Quoter
 		q.IsReserved = db.IsReserved
 		db.quoter = q
 	case QuotePolicyAlways:
@@ -291,6 +291,10 @@ func (db *sqlite3) DropIndexSQL(tableName string, index *schemas.Index) string {
 	return fmt.Sprintf("DROP INDEX %v", db.Quoter().Quote(idxName))
 }
 
+func (db *sqlite3) ForUpdateSQL(query string) string {
+	return query
+}
+
 func (db *sqlite3) IsColumnExist(queryer core.Queryer, ctx context.Context, tableName, colName string) (bool, error) {
 	query := "SELECT * FROM " + tableName + " LIMIT 0"
 	rows, err := queryer.QueryContext(ctx, query)
@@ -316,7 +320,7 @@ func (db *sqlite3) IsColumnExist(queryer core.Queryer, ctx context.Context, tabl
 // splitColStr splits a sqlite col strings as fields
 func splitColStr(colStr string) []string {
 	colStr = strings.TrimSpace(colStr)
-	results := make([]string, 0, 10)
+	var results = make([]string, 0, 10)
 	var lastIdx int
 	var hasC, hasQuote bool
 	for i, c := range colStr {

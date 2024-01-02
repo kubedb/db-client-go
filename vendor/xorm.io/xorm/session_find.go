@@ -5,10 +5,8 @@
 package xorm
 
 import (
-	"database/sql"
 	"errors"
 	"reflect"
-	"strings"
 
 	"xorm.io/builder"
 	"xorm.io/xorm/caches"
@@ -116,7 +114,7 @@ func (session *Session) find(rowsSlicePtr interface{}, condiBean ...interface{})
 
 	var (
 		table          = session.statement.RefTable
-		addedTableName = session.statement.NeedTableName()
+		addedTableName = (len(session.statement.JoinStr) > 0)
 		autoCond       builder.Cond
 	)
 	if tp == tpStruct {
@@ -161,64 +159,6 @@ func (session *Session) find(rowsSlicePtr interface{}, condiBean ...interface{})
 	}
 
 	return session.noCacheFind(table, sliceValue, sqlStr, args...)
-}
-
-type QueryedField struct {
-	FieldName      string
-	LowerFieldName string
-	ColumnType     *sql.ColumnType
-	TempIndex      int
-	ColumnSchema   *schemas.Column
-}
-
-type ColumnsSchema struct {
-	Fields     []*QueryedField
-	FieldNames []string
-	Types      []*sql.ColumnType
-}
-
-func (columnsSchema *ColumnsSchema) ParseTableSchema(table *schemas.Table) {
-	for _, field := range columnsSchema.Fields {
-		field.ColumnSchema = table.GetColumnIdx(field.FieldName, field.TempIndex)
-	}
-}
-
-func ParseColumnsSchema(fieldNames []string, types []*sql.ColumnType, table *schemas.Table) *ColumnsSchema {
-	var columnsSchema ColumnsSchema
-
-	fields := make([]*QueryedField, 0, len(fieldNames))
-
-	for i, fieldName := range fieldNames {
-		field := &QueryedField{
-			FieldName:      fieldName,
-			LowerFieldName: strings.ToLower(fieldName),
-			ColumnType:     types[i],
-		}
-		fields = append(fields, field)
-	}
-
-	columnsSchema.Fields = fields
-
-	tempMap := make(map[string]int)
-	for _, field := range fields {
-		var idx int
-		var ok bool
-
-		if idx, ok = tempMap[field.LowerFieldName]; !ok {
-			idx = 0
-		} else {
-			idx++
-		}
-
-		tempMap[field.LowerFieldName] = idx
-		field.TempIndex = idx
-	}
-
-	if table != nil {
-		columnsSchema.ParseTableSchema(table)
-	}
-
-	return &columnsSchema
 }
 
 func (session *Session) noCacheFind(table *schemas.Table, containerValue reflect.Value, sqlStr string, args ...interface{}) error {
@@ -298,10 +238,7 @@ func (session *Session) noCacheFind(table *schemas.Table, containerValue reflect
 		if err != nil {
 			return err
 		}
-
-		columnsSchema := ParseColumnsSchema(fields, types, tb)
-
-		err = session.rows2Beans(rows, columnsSchema, fields, types, tb, newElemFunc, containerValueSetFunc)
+		err = session.rows2Beans(rows, fields, types, tb, newElemFunc, containerValueSetFunc)
 		rows.Close()
 		if err != nil {
 			return err
@@ -346,7 +283,7 @@ func (session *Session) cacheFind(t reflect.Type, sqlStr string, rowsSlicePtr in
 	}
 
 	for _, filter := range session.engine.dialect.Filters() {
-		sqlStr = filter.Do(session.ctx, sqlStr)
+		sqlStr = filter.Do(sqlStr)
 	}
 
 	newsql := session.statement.ConvertIDSQL(sqlStr)

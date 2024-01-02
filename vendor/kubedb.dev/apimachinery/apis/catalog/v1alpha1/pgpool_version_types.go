@@ -1,9 +1,12 @@
 /*
-Copyright 2023.
+Copyright AppsCode Inc. and Contributors
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
+
     http://www.apache.org/licenses/LICENSE-2.0
+
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -53,11 +56,23 @@ type PgpoolVersionSpec struct {
 	Pgpool PgpoolVersionDatabase `json:"pgpool"`
 	// +optional
 	Deprecated bool `json:"deprecated,omitempty"`
+	// SecurityContext is for the additional config for pgpool DB container
+	// +optional
+	SecurityContext PgpoolSecurityContext `json:"securityContext"`
 }
 
-// PgBouncerVersionDatabase is the PgBouncer Database image
+// PgpoolVersionDatabase is the Pgpool Database image
 type PgpoolVersionDatabase struct {
 	Image string `json:"image"`
+}
+
+// PgpoolSecurityContext is the additional features for the Pgpool
+type PgpoolSecurityContext struct {
+	// RunAsUser is default UID for the DB container. It is by default 70 for postgres user.
+	RunAsUser *int64 `json:"runAsUser,omitempty"`
+
+	// RunAsAnyNonRoot will be true if user can change the default db container user to other than postgres user.
+	RunAsAnyNonRoot bool `json:"runAsAnyNonRoot,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -68,8 +83,4 @@ type PgpoolVersionList struct {
 	meta.TypeMeta `json:",inline"`
 	meta.ListMeta `json:"metadata,omitempty"`
 	Items         []PgpoolVersion `json:"items"`
-}
-
-func init() {
-	SchemeBuilder.Register(&PgpoolVersion{}, &PgpoolVersionList{})
 }

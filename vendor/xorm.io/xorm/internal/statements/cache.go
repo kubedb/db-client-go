@@ -6,7 +6,6 @@ package statements
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"xorm.io/xorm/internal/utils"
@@ -27,19 +26,14 @@ func (statement *Statement) ConvertIDSQL(sqlStr string) string {
 			return ""
 		}
 
-		var b strings.Builder
-		b.WriteString("SELECT ")
+		var top string
 		pLimitN := statement.LimitN
 		if pLimitN != nil && statement.dialect.URI().DBType == schemas.MSSQL {
-			b.WriteString("TOP ")
-			b.WriteString(strconv.Itoa(*pLimitN))
-			b.WriteString(" ")
+			top = fmt.Sprintf("TOP %d ", *pLimitN)
 		}
-		b.WriteString(colstrs)
-		b.WriteString(" FROM ")
-		b.WriteString(sqls[1])
 
-		return b.String()
+		newsql := fmt.Sprintf("SELECT %s%s FROM %v", top, colstrs, sqls[1])
+		return newsql
 	}
 	return ""
 }
@@ -60,7 +54,7 @@ func (statement *Statement) ConvertUpdateSQL(sqlStr string) (string, string) {
 		return "", ""
 	}
 
-	whereStr := sqls[1]
+	var whereStr = sqls[1]
 
 	// TODO: for postgres only, if any other database?
 	var paraStr string

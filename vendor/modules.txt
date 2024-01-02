@@ -1317,7 +1317,8 @@ kmodules.xyz/monitoring-agent-api/api/v1
 # kmodules.xyz/offshoot-api v0.29.0
 ## explicit; go 1.21.5
 kmodules.xyz/offshoot-api/api/v1
-# kubedb.dev/apimachinery v0.40.1-0.20240101000103-032b27211164
+kmodules.xyz/offshoot-api/api/v2
+# kubedb.dev/apimachinery v0.40.1-0.20240101122935-e41a43218a9e
 ## explicit; go 1.21.5
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog

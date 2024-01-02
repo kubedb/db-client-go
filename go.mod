@@ -16,9 +16,11 @@ require (
 	github.com/redis/go-redis/v9 v9.0.5
 	go.mongodb.org/mongo-driver v1.10.2
 	k8s.io/api v0.29.0
+	k8s.io/apimachinery v0.29.0
 	k8s.io/klog/v2 v2.110.1
 	kmodules.xyz/client-go v0.29.4
-	kubedb.dev/apimachinery v0.40.1-0.20240101000103-032b27211164
+	kmodules.xyz/custom-resources v0.29.0
+	kubedb.dev/apimachinery v0.40.1-0.20240101122935-e41a43218a9e
 	sigs.k8s.io/controller-runtime v0.16.3
 	xorm.io/xorm v1.3.2
 )
@@ -95,13 +97,11 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiextensions-apiserver v0.29.0 // indirect
-	k8s.io/apimachinery v0.29.0 // indirect
 	k8s.io/client-go v0.29.0 // indirect
 	k8s.io/component-base v0.29.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20231129212854-f0671cc7e66a // indirect
 	k8s.io/utils v0.0.0-20231127182322-b307cd553661 // indirect
 	kmodules.xyz/apiversion v0.2.0 // indirect
-	kmodules.xyz/custom-resources v0.29.0 // indirect
 	kmodules.xyz/monitoring-agent-api v0.29.0 // indirect
 	kmodules.xyz/offshoot-api v0.29.0 // indirect
 	modernc.org/ccgo/v3 v3.16.13 // indirect
