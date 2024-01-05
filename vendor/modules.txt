@@ -1292,7 +1292,7 @@ k8s.io/utils/trace
 # kmodules.xyz/apiversion v0.2.0
 ## explicit; go 1.14
 kmodules.xyz/apiversion
-# kmodules.xyz/client-go v0.29.4
+# kmodules.xyz/client-go v0.29.6
 ## explicit; go 1.21.5
 kmodules.xyz/client-go
 kmodules.xyz/client-go/api/v1
@@ -1316,7 +1316,7 @@ kmodules.xyz/monitoring-agent-api/api/v1
 ## explicit; go 1.21.5
 kmodules.xyz/offshoot-api/api/v1
 kmodules.xyz/offshoot-api/api/v2
-# kubedb.dev/apimachinery v0.40.1-0.20240101000103-032b27211164
+# kubedb.dev/apimachinery v0.41.0-beta.0.0.20240115173822-556a36dfe734
 ## explicit; go 1.21.5
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog
@@ -1326,10 +1326,6 @@ kubedb.dev/apimachinery/apis/kubedb
 kubedb.dev/apimachinery/apis/kubedb/v1alpha2
 kubedb.dev/apimachinery/crds
 kubedb.dev/apimachinery/pkg/validator
-# kubedb.dev/singlestore v0.0.0-20231229114848-09611a2eb558
-## explicit; go 1.21
-kubedb.dev/singlestore/api/catalog/v1alpha1
-kubedb.dev/singlestore/api/v1alpha2
 # modernc.org/memory v1.5.0
 ## explicit; go 1.18
 # modernc.org/token v1.1.0

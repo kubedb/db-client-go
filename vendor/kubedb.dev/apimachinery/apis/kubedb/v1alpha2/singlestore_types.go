@@ -21,7 +21,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kmapi "kmodules.xyz/client-go/api/v1"
 	ofst "kmodules.xyz/offshoot-api/api/v2"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 )
 
 const (
@@ -30,6 +29,8 @@ const (
 	ResourceSingularSinglestore = "singlestore"
 	ResourcePluralSinglestore   = "singlestores"
 )
+
+// Singlestore is the Schema for the singlestores API
 
 // +genclient
 // +k8s:openapi-gen=true
@@ -42,8 +43,6 @@ const (
 // +kubebuilder:printcolumn:name="Version",type="string",JSONPath=".spec.version"
 // +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.phase"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
-
-// Singlestore is the Schema for the singlestores API
 type Singlestore struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -61,31 +60,34 @@ type SinglestoreSpec struct {
 	// +optional
 	Replicas *int32 `json:"replicas,omitempty"`
 
-	// StorageType can be durable (default) or ephemeral
-	StorageType api.StorageType `json:"storageType,omitempty"`
-
-	// Init is used to initialize database
-	// +optional
-	Init *api.InitSpec `json:"init,omitempty"`
-
-	// Storage to specify how storage shall be used.
-	Storage *core.PersistentVolumeClaimSpec `json:"storage,omitempty"`
-
 	// Singlestore topology for node specification
 	// +optional
 	Topology *SinglestoreTopology `json:"topology,omitempty"`
 
-	// Singlestore License secret
-	LicenseSecret *api.SecretReference `json:"licenseSecret"`
+	// StorageType can be durable (default) or ephemeral
+	StorageType StorageType `json:"storageType,omitempty"`
 
-	// Database authentication secret
-	// +optional
-	AuthSecret *api.SecretReference `json:"authSecret,omitempty"`
+	// Storage to specify how storage shall be used.
+	Storage *core.PersistentVolumeClaimSpec `json:"storage,omitempty"`
+
+	// To enable ssl for http layer
+	EnableSSL bool `json:"enableSSL,omitempty"`
 
 	// disable security. It disables authentication security of user.
 	// If unset, default is false
 	// +optional
 	DisableSecurity bool `json:"disableSecurity,omitempty"`
+
+	// Init is used to initialize database
+	// +optional
+	Init *InitSpec `json:"init,omitempty"`
+
+	// Singlestore License secret
+	LicenseSecret *SecretReference `json:"licenseSecret"`
+
+	// Database authentication secret
+	// +optional
+	AuthSecret *SecretReference `json:"authSecret,omitempty"`
 
 	// ConfigSecret is an optional field to provide custom configuration file for database (i.e config.properties).
 	// If specified, this file will be used as configuration file otherwise default configuration file will be used.
@@ -102,7 +104,7 @@ type SinglestoreSpec struct {
 
 	// ServiceTemplates is an optional configuration for services used to expose database
 	// +optional
-	ServiceTemplates []api.NamedServiceTemplateSpec `json:"serviceTemplates,omitempty"`
+	ServiceTemplates []NamedServiceTemplateSpec `json:"serviceTemplates,omitempty"`
 
 	// Indicates that the database is halted and all offshoot Kubernetes resources except PVCs are deleted.
 	// +optional
@@ -110,11 +112,7 @@ type SinglestoreSpec struct {
 
 	// TerminationPolicy controls the delete operation for database
 	// +optional
-	TerminationPolicy api.TerminationPolicy `json:"terminationPolicy,omitempty"`
-
-	// Coordinator defines attributes of the coordinator container
-	// +optional
-	Coordinator api.CoordinatorSpec `json:"coordinator,omitempty"`
+	TerminationPolicy TerminationPolicy `json:"terminationPolicy,omitempty"`
 
 	// HealthChecker defines attributes of the health checker
 	// +optional
@@ -144,22 +142,23 @@ type SinglestoreNode struct {
 	// PodTemplate is an optional configuration for pods used to expose database
 	// +optional
 	PodTemplate *ofst.PodTemplateSpec `json:"podTemplate,omitempty"`
+
+	// NodeSelector is a selector which must be true for the pod to fit on a node.
+	// Selector which must match a node's labels for the pod to be scheduled on that node.
+	// More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+	// +optional
+	// +mapType=atomic
+	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+	// If specified, the pod's tolerations.
+	// +optional
+	Tolerations []core.Toleration `json:"tolerations,omitempty"`
 }
-
-// +kubebuilder:validation:Enum=server;client;metrics-exporter
-type SinglestoreCertificateAlias string
-
-const (
-	SinglestoreServerCert          SinglestoreCertificateAlias = "server"
-	SinglestoreClientCert          SinglestoreCertificateAlias = "client"
-	SinglestoreMetricsExporterCert SinglestoreCertificateAlias = "metrics-exporter"
-)
 
 // SinglestoreStatus defines the observed state of Singlestore
 type SinglestoreStatus struct {
 	// Specifies the current phase of the database
 	// +optional
-	Phase api.DatabasePhase `json:"phase,omitempty"`
+	Phase DatabasePhase `json:"phase,omitempty"`
 	// observedGeneration is the most recent generation observed for this resource. It corresponds to the
 	// resource's generation, which is updated on mutation by the API Server.
 	// +optional
@@ -169,15 +168,19 @@ type SinglestoreStatus struct {
 	Conditions []kmapi.Condition `json:"conditions,omitempty"`
 }
 
-//+kubebuilder:object:root=true
+// +kubebuilder:validation:Enum=server;client;metrics-exporter
+type SinglestoreCertificateAlias string
+
+const (
+	SinglestoreServerCert SinglestoreCertificateAlias = "server"
+	SinglestoreClientCert SinglestoreCertificateAlias = "client"
+)
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // SinglestoreList contains a list of Singlestore
 type SinglestoreList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Singlestore `json:"items"`
-}
-
-func init() {
-	SchemeBuilder.Register(&Singlestore{}, &SinglestoreList{})
 }

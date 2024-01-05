@@ -19,7 +19,6 @@ package v1alpha1
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	appcat "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
-	catalog "kubedb.dev/apimachinery/apis/catalog/v1alpha1"
 )
 
 const (
@@ -53,11 +52,12 @@ type SinglestoreVersionSpec struct {
 	Version string `json:"version"`
 	// Database Image
 	DB SinglestoreVersionDatabase `json:"db"`
-	// Database Image
+	// +optional
+	Coordinator SinglestoreCoordinator `json:"coordinator,omitempty"`
+	// +optional
+	Standalone SinglestoreStandaloneVersionDatabase `json:"standalone,omitempty"`
 	// +optional
 	InitContainer SinglestoreInitContainer `json:"initContainer,omitempty"`
-	// +optional
-	CoordinatorContainer SinglestoreCoordinatorContainer `json:"coordinatorContainer,omitempty"`
 	// Deprecated versions usable but regarded as obsolete and best avoided, typically due to having been superseded.
 	// +optional
 	Deprecated bool `json:"deprecated,omitempty"`
@@ -68,20 +68,30 @@ type SinglestoreVersionSpec struct {
 	// +optional
 	Stash appcat.StashAddonSpec `json:"stash,omitempty"`
 	// update constraints
-	UpdateConstraints catalog.UpdateConstraints `json:"updateConstraints,omitempty"`
+	UpdateConstraints UpdateConstraints `json:"updateConstraints,omitempty"`
 	// SecurityContext is for the additional config for the DB container
 	// +optional
-	SecurityContext catalog.SecurityContext `json:"securityContext"`
+	SecurityContext SinglestoreSecurityContext `json:"securityContext"`
 }
 
-// SinglestoreVersionDatabase is the Singlestore Database image
+// SinglestoreSecurityContext is for the additional config for the DB container
+type SinglestoreSecurityContext struct {
+	RunAsUser  *int64 `json:"runAsUser,omitempty"`
+	RunAsGroup *int64 `json:"runAsGroup,omitempty"`
+}
+
+// SinglestoreVersionDatabase is the Singlestore Cluster Database image
 type SinglestoreVersionDatabase struct {
-	StandaloneImage string `json:"standalone_image"`
-	ClusterImage    string `json:"cluster_image"`
+	Image string `json:"image"`
 }
 
-// SinglestoreCoordinatorContainer is the Singlestore coordinator Container image
-type SinglestoreCoordinatorContainer struct {
+// SinglestoreVersionDatabase is the Singlestore Standalone Database image
+type SinglestoreStandaloneVersionDatabase struct {
+	Image string `json:"image"`
+}
+
+// SinglestoreCoordinator is the Singlestore coordinator Container image
+type SinglestoreCoordinator struct {
 	Image string `json:"image"`
 }
 
@@ -102,8 +112,4 @@ type SinglestoreVersionList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []SinglestoreVersion `json:"items"`
-}
-
-func init() {
-	SchemeBuilder.Register(&SinglestoreVersion{}, &SinglestoreVersionList{})
 }

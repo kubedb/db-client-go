@@ -1,29 +1,57 @@
+/*
+Copyright AppsCode Inc. and Contributors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package v1alpha2
 
 import (
+	"context"
 	"fmt"
+	"strings"
+
+	catalog "kubedb.dev/apimachinery/apis/catalog/v1alpha1"
+	"kubedb.dev/apimachinery/apis/kubedb"
+	"kubedb.dev/apimachinery/crds"
+
 	"gomodules.xyz/pointer"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog/v2"
 	kmapi "kmodules.xyz/client-go/api/v1"
+	"kmodules.xyz/client-go/apiextensions"
+	coreutil "kmodules.xyz/client-go/core/v1"
 	metautil "kmodules.xyz/client-go/meta"
+	"kmodules.xyz/client-go/policy/secomp"
 	appcat "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
 	ofst "kmodules.xyz/offshoot-api/api/v2"
-	"kubedb.dev/apimachinery/apis/kubedb"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
-	"kubedb.dev/singlestore/api/catalog/v1alpha1"
-	"strings"
 )
+
+func (s *Singlestore) CustomResourceDefinition() *apiextensions.CustomResourceDefinition {
+	return crds.MustCustomResourceDefinition(SchemeGroupVersion.WithResource(ResourcePluralSinglestore))
+}
 
 type singlestoreApp struct {
 	*Singlestore
 }
 
-func (s singlestoreApp) Name() string {
+func (s *singlestoreApp) Name() string {
 	return s.Singlestore.Name
 }
 
-func (s singlestoreApp) Type() appcat.AppType {
+func (s *singlestoreApp) Type() appcat.AppType {
 	return appcat.AppType(fmt.Sprintf("%s/%s", kubedb.GroupName, ResourceSingularSinglestore))
 }
 
@@ -41,7 +69,7 @@ func (s *Singlestore) ResourceFQN() string {
 
 // Owner returns owner reference to resources
 func (s *Singlestore) Owner() *meta.OwnerReference {
-	return meta.NewControllerRef(s, api.SchemeGroupVersion.WithKind(s.ResourceKind()))
+	return meta.NewControllerRef(s, SchemeGroupVersion.WithKind(s.ResourceKind()))
 }
 
 func (s *Singlestore) OffshootName() string {
@@ -77,8 +105,8 @@ func (s *Singlestore) offshootLabels(selector, override map[string]string) map[s
 	return metautil.FilterKeys(kubedb.GroupName, selector, metautil.OverwriteKeys(nil, s.Labels, override))
 }
 
-func (s *Singlestore) ServiceLabels(alias api.ServiceAlias, extraLabels ...map[string]string) map[string]string {
-	svcTemplate := api.GetServiceTemplate(s.Spec.ServiceTemplates, alias)
+func (s *Singlestore) ServiceLabels(alias ServiceAlias, extraLabels ...map[string]string) map[string]string {
+	svcTemplate := GetServiceTemplate(s.Spec.ServiceTemplates, alias)
 	return s.offshootLabels(metautil.OverwriteKeys(s.OffshootSelectors(), extraLabels...), svcTemplate.Labels)
 }
 
@@ -99,17 +127,6 @@ func (s *Singlestore) OffshootSelectors(extraSelectors ...map[string]string) map
 	return metautil.OverwriteKeys(selector, extraSelectors...)
 }
 
-func (s *Singlestore) GetSecurityContext(sdbVersion *v1alpha1.SinglestoreVersion) *core.PodSecurityContext {
-	runAsUser := sdbVersion.Spec.SecurityContext.RunAsUser
-	if runAsUser == nil {
-		runAsUser = pointer.Int64P(SinglestoreRunAsUser)
-	}
-	return &core.PodSecurityContext{
-		FSGroup: runAsUser,
-	}
-
-}
-
 func (s *Singlestore) IsClustering() bool {
 	return s.Spec.Topology != nil
 }
@@ -120,7 +137,7 @@ func (s *Singlestore) IsStandalone() bool {
 
 func (s *Singlestore) PVCName(alias string) string {
 	return metautil.NameWithSuffix(s.OffshootName(), alias)
-	//return s.OffshootName()
+	// return s.OffshootName()
 }
 
 func (s *Singlestore) AggregatorStatefulSet() string {
@@ -159,7 +176,7 @@ func (s *Singlestore) PodControllerLabels(extraLabels ...map[string]string) map[
 }
 
 func (s *Singlestore) PodControllerLabel(podTemplate *ofst.PodTemplateSpec) map[string]string {
-	if podTemplate != nil && &podTemplate.Controller != nil && podTemplate.Controller.Labels != nil {
+	if podTemplate != nil && podTemplate.Controller.Labels != nil {
 		return s.offshootLabels(s.OffshootSelectors(), podTemplate.Controller.Labels)
 	}
 	return s.offshootLabels(s.OffshootSelectors(), nil)
@@ -184,20 +201,31 @@ func (s *Singlestore) GetAuthSecretName() string {
 	return metautil.NameWithSuffix(s.OffshootName(), "auth")
 }
 
+func (s *Singlestore) GetPersistentSecrets() []string {
+	var secrets []string
+	if s.Spec.AuthSecret != nil {
+		secrets = append(secrets, s.Spec.AuthSecret.Name)
+	}
+	return secrets
+}
+
 func (s *Singlestore) SetDefaults() {
 	if s == nil {
 		return
 	}
 	if s.Spec.StorageType == "" {
-		s.Spec.StorageType = api.StorageTypeDurable
+		s.Spec.StorageType = StorageTypeDurable
 	}
 	if s.Spec.TerminationPolicy == "" {
-		s.Spec.TerminationPolicy = api.TerminationPolicyDelete
+		s.Spec.TerminationPolicy = TerminationPolicyDelete
 	}
 
 	if s.Spec.Topology == nil {
 		if s.Spec.Replicas == nil {
 			s.Spec.Replicas = pointer.Int32P(1)
+		}
+		if s.Spec.PodTemplate == nil {
+			s.Spec.PodTemplate = &ofst.PodTemplateSpec{}
 		}
 	} else {
 		if s.Spec.Topology.Aggregator.Replicas == nil {
@@ -207,10 +235,130 @@ func (s *Singlestore) SetDefaults() {
 		if s.Spec.Topology.Leaf.Replicas == nil {
 			s.Spec.Topology.Leaf.Replicas = pointer.Int32P(2)
 		}
+		if s.Spec.Topology.Aggregator.PodTemplate == nil {
+			s.Spec.Topology.Aggregator.PodTemplate = &ofst.PodTemplateSpec{}
+		}
+		if s.Spec.Topology.Leaf.PodTemplate == nil {
+			s.Spec.Topology.Leaf.PodTemplate = &ofst.PodTemplateSpec{}
+		}
 	}
 
-	s.SetTLSDefaults()
+	var sdbVersion catalog.SinglestoreVersion
+	err := DefaultClient.Get(context.TODO(), types.NamespacedName{
+		Name: s.Spec.Version,
+	}, &sdbVersion)
+	if err != nil {
+		klog.Errorf("can't get the singlestore version object %s for %s \n", err.Error(), s.Spec.Version)
+		return
+	}
+
+	if s.IsStandalone() {
+		s.setDefaultContainerSecurityContext(&sdbVersion, s.Spec.PodTemplate)
+	} else {
+		s.setDefaultContainerSecurityContext(&sdbVersion, s.Spec.Topology.Aggregator.PodTemplate)
+		s.setDefaultContainerSecurityContext(&sdbVersion, s.Spec.Topology.Leaf.PodTemplate)
+	}
+
+	if s.Spec.EnableSSL {
+		s.SetTLSDefaults()
+	}
 	s.SetHealthCheckerDefaults()
+}
+
+func (s *Singlestore) setDefaultContainerSecurityContext(sdbVersion *catalog.SinglestoreVersion, podTemplate *ofst.PodTemplateSpec) {
+	if podTemplate == nil {
+		return
+	}
+	if podTemplate.Spec.SecurityContext == nil {
+		podTemplate.Spec.SecurityContext = &core.PodSecurityContext{}
+	}
+	if podTemplate.Spec.SecurityContext.FSGroup == nil {
+		podTemplate.Spec.SecurityContext.FSGroup = sdbVersion.Spec.SecurityContext.RunAsUser
+	}
+
+	container := coreutil.GetContainerByName(podTemplate.Spec.Containers, SinglestoreContainerName)
+	if container == nil {
+		container = &core.Container{
+			Name: SinglestoreContainerName,
+		}
+		podTemplate.Spec.Containers = append(podTemplate.Spec.Containers, *container)
+	}
+	if container.SecurityContext == nil {
+		container.SecurityContext = &core.SecurityContext{}
+	}
+	s.assignDefaultContainerSecurityContext(sdbVersion, container.SecurityContext)
+
+	initContainer := coreutil.GetContainerByName(podTemplate.Spec.InitContainers, SinglestoreInitContainerName)
+	if initContainer == nil {
+		initContainer = &core.Container{
+			Name: SinglestoreInitContainerName,
+		}
+		podTemplate.Spec.InitContainers = append(podTemplate.Spec.InitContainers, *initContainer)
+	}
+	if initContainer.SecurityContext == nil {
+		initContainer.SecurityContext = &core.SecurityContext{}
+	}
+	s.assignDefaultInitContainerSecurityContext(sdbVersion, initContainer.SecurityContext)
+
+	if s.IsClustering() {
+		coordinatorContainer := coreutil.GetContainerByName(podTemplate.Spec.Containers, SinglestoreCoordinatorContainerName)
+		if coordinatorContainer == nil {
+			coordinatorContainer = &core.Container{
+				Name: SinglestoreCoordinatorContainerName,
+			}
+			podTemplate.Spec.Containers = append(podTemplate.Spec.Containers, *coordinatorContainer)
+		}
+		if coordinatorContainer.SecurityContext == nil {
+			coordinatorContainer.SecurityContext = &core.SecurityContext{}
+		}
+		s.assignDefaultContainerSecurityContext(sdbVersion, coordinatorContainer.SecurityContext)
+	}
+}
+
+func (s *Singlestore) assignDefaultInitContainerSecurityContext(sdbVersion *catalog.SinglestoreVersion, sc *core.SecurityContext) {
+	if sc.AllowPrivilegeEscalation == nil {
+		sc.AllowPrivilegeEscalation = pointer.BoolP(false)
+	}
+	if sc.Capabilities == nil {
+		sc.Capabilities = &core.Capabilities{
+			Drop: []core.Capability{"ALL"},
+		}
+	}
+	if sc.RunAsNonRoot == nil {
+		sc.RunAsNonRoot = pointer.BoolP(true)
+	}
+	if sc.RunAsUser == nil {
+		sc.RunAsUser = sdbVersion.Spec.SecurityContext.RunAsUser
+	}
+	if sc.RunAsGroup == nil {
+		sc.RunAsGroup = sdbVersion.Spec.SecurityContext.RunAsGroup
+	}
+	if sc.SeccompProfile == nil {
+		sc.SeccompProfile = secomp.DefaultSeccompProfile()
+	}
+}
+
+func (s *Singlestore) assignDefaultContainerSecurityContext(sdbVersion *catalog.SinglestoreVersion, sc *core.SecurityContext) {
+	if sc.AllowPrivilegeEscalation == nil {
+		sc.AllowPrivilegeEscalation = pointer.BoolP(false)
+	}
+	if sc.Capabilities == nil {
+		sc.Capabilities = &core.Capabilities{
+			Drop: []core.Capability{"ALL"},
+		}
+	}
+	if sc.RunAsNonRoot == nil {
+		sc.RunAsNonRoot = pointer.BoolP(true)
+	}
+	if sc.RunAsUser == nil {
+		sc.RunAsUser = sdbVersion.Spec.SecurityContext.RunAsUser
+	}
+	if sc.RunAsGroup == nil {
+		sc.RunAsGroup = sdbVersion.Spec.SecurityContext.RunAsGroup
+	}
+	if sc.SeccompProfile == nil {
+		sc.SeccompProfile = secomp.DefaultSeccompProfile()
+	}
 }
 
 func (s *Singlestore) SetTLSDefaults() {
@@ -219,7 +367,6 @@ func (s *Singlestore) SetTLSDefaults() {
 	}
 	s.Spec.TLS.Certificates = kmapi.SetMissingSecretNameForCertificate(s.Spec.TLS.Certificates, string(SinglestoreServerCert), s.CertificateName(SinglestoreServerCert))
 	s.Spec.TLS.Certificates = kmapi.SetMissingSecretNameForCertificate(s.Spec.TLS.Certificates, string(SinglestoreClientCert), s.CertificateName(SinglestoreClientCert))
-	s.Spec.TLS.Certificates = kmapi.SetMissingSecretNameForCertificate(s.Spec.TLS.Certificates, string(SinglestoreMetricsExporterCert), s.CertificateName(SinglestoreMetricsExporterCert))
 }
 
 // CertificateName returns the default certificate name and/or certificate secret name for a certificate alias

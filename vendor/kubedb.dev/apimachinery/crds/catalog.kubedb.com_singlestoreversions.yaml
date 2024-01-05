@@ -4,7 +4,7 @@ metadata:
   creationTimestamp: null
   labels:
     app.kubernetes.io/name: kubedb
-  name: mongodbversions.catalog.kubedb.com
+  name: singlestoreversions.catalog.kubedb.com
 spec:
   group: catalog.kubedb.com
   names:
@@ -12,20 +12,17 @@ spec:
     - datastore
     - kubedb
     - appscode
-    kind: MongoDBVersion
-    listKind: MongoDBVersionList
-    plural: mongodbversions
+    kind: SinglestoreVersion
+    listKind: SinglestoreVersionList
+    plural: singlestoreversions
     shortNames:
-    - mgversion
-    singular: mongodbversion
+    - sdbv
+    singular: singlestoreversion
   scope: Cluster
   versions:
   - additionalPrinterColumns:
     - jsonPath: .spec.version
       name: Version
-      type: string
-    - jsonPath: .spec.distribution
-      name: Distribution
       type: string
     - jsonPath: .spec.db.image
       name: DB_IMAGE
@@ -48,48 +45,12 @@ spec:
             type: object
           spec:
             properties:
-              archiver:
+              coordinator:
                 properties:
-                  addon:
-                    properties:
-                      name:
-                        enum:
-                        - mongodb-addon
-                        - postgres-addon
-                        - mysql-addon
-                        type: string
-                      tasks:
-                        properties:
-                          manifestBackup:
-                            properties:
-                              name:
-                                type: string
-                            required:
-                            - name
-                            type: object
-                          manifestRestore:
-                            properties:
-                              name:
-                                type: string
-                            required:
-                            - name
-                            type: object
-                          volumeSnapshot:
-                            properties:
-                              name:
-                                type: string
-                            required:
-                            - name
-                            type: object
-                        type: object
-                    type: object
-                  walg:
-                    properties:
-                      image:
-                        type: string
-                    required:
-                    - image
-                    type: object
+                  image:
+                    type: string
+                required:
+                - image
                 type: object
               db:
                 properties:
@@ -100,27 +61,6 @@ spec:
                 type: object
               deprecated:
                 type: boolean
-              distribution:
-                enum:
-                - Official
-                - Percona
-                - KubeDB
-                - MongoDB
-                type: string
-              exporter:
-                properties:
-                  image:
-                    type: string
-                required:
-                - image
-                type: object
-              gitSyncer:
-                properties:
-                  image:
-                    type: string
-                required:
-                - image
-                type: object
               initContainer:
                 properties:
                   image:
@@ -135,13 +75,6 @@ spec:
                 required:
                 - databasePolicyName
                 type: object
-              replicationModeDetector:
-                properties:
-                  image:
-                    type: string
-                required:
-                - image
-                type: object
               securityContext:
                 properties:
                   runAsGroup:
@@ -150,6 +83,13 @@ spec:
                   runAsUser:
                     format: int64
                     type: integer
+                type: object
+              standalone:
+                properties:
+                  image:
+                    type: string
+                required:
+                - image
                 type: object
               stash:
                 properties:
@@ -213,10 +153,6 @@ spec:
                 type: string
             required:
             - db
-            - exporter
-            - initContainer
-            - podSecurityPolicies
-            - replicationModeDetector
             - version
             type: object
         type: object
