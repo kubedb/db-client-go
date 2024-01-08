@@ -42,8 +42,8 @@ type Config struct {
 
 type Response struct {
 	Code   int
-	header http.Header
-	body   io.ReadCloser
+	Header http.Header
+	Body   io.ReadCloser
 }
 
 type ResponseBody struct {
@@ -61,8 +61,60 @@ func (cc *Client) GetConnectClusterStatus() (*Response, error) {
 	}
 	response := &Response{
 		Code:   res.StatusCode(),
-		header: res.Header(),
-		body:   res.RawBody(),
+		Header: res.Header(),
+		Body:   res.RawBody(),
+	}
+
+	return response, nil
+}
+
+func (cc *Client) GetConnector() (*Response, error) {
+	return cc.GetConnectClusterStatus()
+}
+
+func (cc *Client) DeleteConnector() (*Response, error) {
+	req := cc.Client.R().SetDoNotParseResponse(true)
+	res, err := req.Delete(cc.Config.api)
+	if err != nil {
+		klog.Error(err, "Failed to send http request")
+		return nil, err
+	}
+	response := &Response{
+		Code:   res.StatusCode(),
+		Header: res.Header(),
+		Body:   res.RawBody(),
+	}
+
+	return response, nil
+}
+
+func (cc *Client) PutConnector(jsonBody []byte) (*Response, error) {
+	req := cc.Client.R().SetDoNotParseResponse(true).SetHeader("Content-Type", "application/json").SetBody(jsonBody)
+	res, err := req.Put(cc.Config.api)
+	if err != nil {
+		klog.Error(err, "Failed to send http request")
+		return nil, err
+	}
+	response := &Response{
+		Code:   res.StatusCode(),
+		Header: res.Header(),
+		Body:   res.RawBody(),
+	}
+
+	return response, nil
+}
+
+func (cc *Client) PostConnector(jsonBody []byte) (*Response, error) {
+	req := cc.Client.R().SetDoNotParseResponse(true).SetHeader("Content-Type", "application/json").SetBody(jsonBody)
+	res, err := req.Post(cc.Config.api)
+	if err != nil {
+		klog.Error(err, "Failed to send http request")
+		return nil, err
+	}
+	response := &Response{
+		Code:   res.StatusCode(),
+		Header: res.Header(),
+		Body:   res.RawBody(),
 	}
 
 	return response, nil
@@ -80,10 +132,10 @@ func (cc *Client) IsConnectClusterActive(response *Response) (bool, error) {
 			}
 			return
 		}
-	}(response.body)
+	}(response.Body)
 
 	var responseBody ResponseBody
-	body, _ := io.ReadAll(response.body)
+	body, _ := io.ReadAll(response.Body)
 	err := json.Unmarshal(body, &responseBody)
 	if err != nil {
 		return false, errors.Wrap(err, "Failed to parse response body")

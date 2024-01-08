@@ -18,7 +18,11 @@ import (
 	"io"
 	"net/http"
 
+<<<<<<< HEAD
 	"github.com/matttproud/golang_protobuf_extensions/v2/pbutil"
+=======
+	"github.com/matttproud/golang_protobuf_extensions/pbutil"
+>>>>>>> 25a3834c (add get, put and post method)
 	"github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg"
 	"google.golang.org/protobuf/encoding/prototext"
 

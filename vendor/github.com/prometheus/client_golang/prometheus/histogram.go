@@ -475,9 +475,12 @@ type HistogramOpts struct {
 
 	// now is for testing purposes, by default it's time.Now.
 	now func() time.Time
+<<<<<<< HEAD
 
 	// afterFunc is for testing purposes, by default it's time.AfterFunc.
 	afterFunc func(time.Duration, func()) *time.Timer
+=======
+>>>>>>> 25a3834c (add get, put and post method)
 }
 
 // HistogramVecOpts bundles the options to create a HistogramVec metric.
@@ -528,9 +531,12 @@ func newHistogram(desc *Desc, opts HistogramOpts, labelValues ...string) Histogr
 
 	if opts.now == nil {
 		opts.now = time.Now
+<<<<<<< HEAD
 	}
 	if opts.afterFunc == nil {
 		opts.afterFunc = time.AfterFunc
+=======
+>>>>>>> 25a3834c (add get, put and post method)
 	}
 	h := &histogram{
 		desc:                            desc,
@@ -541,7 +547,10 @@ func newHistogram(desc *Desc, opts HistogramOpts, labelValues ...string) Histogr
 		nativeHistogramMinResetDuration: opts.NativeHistogramMinResetDuration,
 		lastResetTime:                   opts.now(),
 		now:                             opts.now,
+<<<<<<< HEAD
 		afterFunc:                       opts.afterFunc,
+=======
+>>>>>>> 25a3834c (add get, put and post method)
 	}
 	if len(h.upperBounds) == 0 && opts.NativeHistogramBucketFactor <= 1 {
 		h.upperBounds = DefBuckets
@@ -722,6 +731,7 @@ type histogram struct {
 	nativeHistogramMinResetDuration time.Duration
 	// lastResetTime is protected by mtx. It is also used as created timestamp.
 	lastResetTime time.Time
+<<<<<<< HEAD
 	// resetScheduled is protected by mtx. It is true if a reset is
 	// scheduled for a later time (when nativeHistogramMinResetDuration has
 	// passed).
@@ -732,6 +742,11 @@ type histogram struct {
 
 	// afterFunc is for testing purposes, by default it's time.AfterFunc.
 	afterFunc func(time.Duration, func()) *time.Timer
+=======
+
+	// now is for testing purposes, by default it's time.Now.
+	now func() time.Time
+>>>>>>> 25a3834c (add get, put and post method)
 }
 
 func (h *histogram) Desc() *Desc {
@@ -887,6 +902,7 @@ func (h *histogram) limitBuckets(counts *histogramCounts, value float64, bucket 
 	if h.maybeReset(hotCounts, coldCounts, coldIdx, value, bucket) {
 		return
 	}
+<<<<<<< HEAD
 	// One of the other strategies will happen. To undo what they will do as
 	// soon as enough time has passed to satisfy
 	// h.nativeHistogramMinResetDuration, schedule a reset at the right time
@@ -896,22 +912,34 @@ func (h *histogram) limitBuckets(counts *histogramCounts, value float64, bucket 
 		h.afterFunc(h.nativeHistogramMinResetDuration-h.now().Sub(h.lastResetTime), h.reset)
 	}
 
+=======
+>>>>>>> 25a3834c (add get, put and post method)
 	if h.maybeWidenZeroBucket(hotCounts, coldCounts) {
 		return
 	}
 	h.doubleBucketWidth(hotCounts, coldCounts)
 }
 
+<<<<<<< HEAD
 // maybeReset resets the whole histogram if at least
 // h.nativeHistogramMinResetDuration has been passed. It returns true if the
 // histogram has been reset. The caller must have locked h.mtx.
+=======
+// maybeReset resets the whole histogram if at least h.nativeHistogramMinResetDuration
+// has been passed. It returns true if the histogram has been reset. The caller
+// must have locked h.mtx.
+>>>>>>> 25a3834c (add get, put and post method)
 func (h *histogram) maybeReset(
 	hot, cold *histogramCounts, coldIdx uint64, value float64, bucket int,
 ) bool {
 	// We are using the possibly mocked h.now() rather than
 	// time.Since(h.lastResetTime) to enable testing.
+<<<<<<< HEAD
 	if h.nativeHistogramMinResetDuration == 0 || // No reset configured.
 		h.resetScheduled || // Do not interefere if a reset is already scheduled.
+=======
+	if h.nativeHistogramMinResetDuration == 0 ||
+>>>>>>> 25a3834c (add get, put and post method)
 		h.now().Sub(h.lastResetTime) < h.nativeHistogramMinResetDuration {
 		return false
 	}
@@ -929,6 +957,7 @@ func (h *histogram) maybeReset(
 	return true
 }
 
+<<<<<<< HEAD
 // reset resets the whole histogram. It locks h.mtx itself, i.e. it has to be
 // called without having locked h.mtx.
 func (h *histogram) reset() {
@@ -952,6 +981,8 @@ func (h *histogram) reset() {
 	h.resetScheduled = false
 }
 
+=======
+>>>>>>> 25a3834c (add get, put and post method)
 // maybeWidenZeroBucket widens the zero bucket until it includes the existing
 // buckets closest to the zero bucket (which could be two, if an equidistant
 // negative and a positive bucket exists, but usually it's only one bucket to be
