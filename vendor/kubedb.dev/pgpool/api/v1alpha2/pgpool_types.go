@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	kmapi "kmodules.xyz/client-go/api/v1"
 	ofst "kmodules.xyz/offshoot-api/api/v2"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 )
 
 const (
@@ -75,7 +76,7 @@ type PgpoolSpec struct {
 
 	// Pgpool secret containing username and password for pgpool pcp user
 	// +optional
-	AuthSecret *SecretReference `json:"authSecret,omitempty"`
+	AuthSecret *api.SecretReference `json:"authSecret,omitempty"`
 
 	// ConfigSecret is an optional field to provide custom configuration file for database (i.e pgpool.conf).
 	// If specified, this file will be used as configuration file otherwise default configuration file will be used.
@@ -91,7 +92,7 @@ type PgpoolSpec struct {
 
 	// ServiceTemplates is an optional configuration for services used to expose Pgpool
 	// +optional
-	ServiceTemplates []NamedServiceTemplateSpec `json:"serviceTemplates,omitempty"`
+	ServiceTemplates []api.NamedServiceTemplateSpec `json:"serviceTemplates,omitempty"`
 
 	// HealthChecker defines attributes of the health checker
 	// +optional
@@ -110,7 +111,7 @@ type PgpoolStatus struct {
 
 	// Specifies the current phase of the database
 	// +optional
-	Phase DatabasePhase `json:"phase,omitempty"`
+	Phase api.DatabasePhase `json:"phase,omitempty"`
 
 	// observedGeneration is the most recent generation observed for this resource. It corresponds to the
 	// resource's generation, which is updated on mutation by the API Server.
@@ -135,4 +136,8 @@ type PgpoolList struct {
 	meta.TypeMeta `json:",inline"`
 	meta.ListMeta `json:"metadata,omitempty"`
 	Items         []Pgpool `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&Pgpool{}, &PgpoolList{})
 }

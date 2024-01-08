@@ -45,6 +45,7 @@ type Column struct {
 	DisableTimeZone bool
 	TimeZone        *time.Location // column specified time zone
 	Comment         string
+	Collation       string
 }
 
 // NewColumn creates a new column
@@ -89,6 +90,8 @@ func (col *Column) ValueOfV(dataStruct *reflect.Value) (*reflect.Value, error) {
 				v.Set(reflect.New(v.Type().Elem()))
 			}
 			v = v.Elem()
+		} else if v.Kind() == reflect.Interface {
+			v = reflect.Indirect(v.Elem())
 		}
 		v = v.FieldByIndex([]int{i})
 	}

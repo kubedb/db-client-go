@@ -8,8 +8,8 @@ require (
 	github.com/elastic/go-elasticsearch/v6 v6.8.10
 	github.com/elastic/go-elasticsearch/v7 v7.15.1
 	github.com/elastic/go-elasticsearch/v8 v8.4.0
-	github.com/go-sql-driver/mysql v1.6.0
-	github.com/lib/pq v1.10.4
+	github.com/go-sql-driver/mysql v1.7.0
+	github.com/lib/pq v1.10.9
 	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/opensearch-project/opensearch-go/v2 v2.2.0
 	github.com/pkg/errors v0.9.1
@@ -18,11 +18,12 @@ require (
 	k8s.io/api v0.29.0
 	k8s.io/apimachinery v0.29.0
 	k8s.io/klog/v2 v2.110.1
-	kmodules.xyz/client-go v0.29.4
+	kmodules.xyz/client-go v0.29.6
 	kmodules.xyz/custom-resources v0.29.0
-	kubedb.dev/apimachinery v0.40.1-0.20240103064147-f3e654e792d1
+	kubedb.dev/apimachinery v0.41.0-beta.0
+	kubedb.dev/pgpool v0.0.0-20240108084440-126762d14e4c
 	sigs.k8s.io/controller-runtime v0.16.3
-	xorm.io/xorm v1.3.2
+	xorm.io/xorm v1.3.4
 )
 
 require (
@@ -55,7 +56,6 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.17.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/mattn/go-sqlite3 v1.14.15 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -104,10 +104,7 @@ require (
 	kmodules.xyz/apiversion v0.2.0 // indirect
 	kmodules.xyz/monitoring-agent-api v0.29.0 // indirect
 	kmodules.xyz/offshoot-api v0.29.0 // indirect
-	modernc.org/ccgo/v3 v3.16.13 // indirect
-	modernc.org/libc v1.22.2 // indirect
 	modernc.org/memory v1.5.0 // indirect
-	modernc.org/sqlite v1.18.2 // indirect
 	modernc.org/token v1.1.0 // indirect
 	sigs.k8s.io/gateway-api v0.8.0 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect

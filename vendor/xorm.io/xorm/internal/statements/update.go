@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"time"
 
+	"xorm.io/builder"
 	"xorm.io/xorm/convert"
 	"xorm.io/xorm/dialects"
 	"xorm.io/xorm/internal/json"
@@ -19,7 +20,8 @@ import (
 )
 
 func (statement *Statement) ifAddColUpdate(col *schemas.Column, includeVersion, includeUpdated, includeNil,
-	includeAutoIncr, update bool) (bool, error) {
+	includeAutoIncr, update bool,
+) (bool, error) {
 	columnMap := statement.ColumnMap
 	omitColumnMap := statement.OmitColumnMap
 	unscoped := statement.unscoped
@@ -64,15 +66,16 @@ func (statement *Statement) ifAddColUpdate(col *schemas.Column, includeVersion, 
 // BuildUpdates auto generating update columnes and values according a struct
 func (statement *Statement) BuildUpdates(tableValue reflect.Value,
 	includeVersion, includeUpdated, includeNil,
-	includeAutoIncr, update bool) ([]string, []interface{}, error) {
+	includeAutoIncr, update bool,
+) ([]string, []interface{}, error) {
 	table := statement.RefTable
 	allUseBool := statement.allUseBool
 	useAllCols := statement.useAllCols
 	mustColumnMap := statement.MustColumnMap
 	nullableMap := statement.NullableMap
 
-	var colNames = make([]string, 0)
-	var args = make([]interface{}, 0)
+	colNames := make([]string, 0)
+	args := make([]interface{}, 0)
 
 	for _, col := range table.Columns() {
 		ok, err := statement.ifAddColUpdate(col, includeVersion, includeUpdated, includeNil,
@@ -305,4 +308,330 @@ func (statement *Statement) BuildUpdates(tableValue reflect.Value,
 	}
 
 	return colNames, args, nil
+}
+
+func (statement *Statement) writeUpdateTop(updateWriter *builder.BytesWriter) error {
+	if statement.dialect.URI().DBType != schemas.MSSQL || statement.LimitN == nil {
+		return nil
+	}
+
+	table := statement.RefTable
+	if statement.HasOrderBy() && table != nil && len(table.PrimaryKeys) == 1 {
+		return nil
+	}
+
+	_, err := fmt.Fprintf(updateWriter, " TOP (%d)", *statement.LimitN)
+	return err
+}
+
+func (statement *Statement) writeUpdateTableName(updateWriter *builder.BytesWriter) error {
+	tableName := statement.quote(statement.TableName())
+	if statement.TableAlias == "" {
+		_, err := fmt.Fprint(updateWriter, " ", tableName)
+		return err
+	}
+
+	switch statement.dialect.URI().DBType {
+	case schemas.MSSQL:
+		_, err := fmt.Fprint(updateWriter, " ", statement.TableAlias)
+		return err
+	default:
+		_, err := fmt.Fprint(updateWriter, " ", tableName, " AS ", statement.TableAlias)
+		return err
+	}
+}
+
+func (statement *Statement) writeUpdateFrom(updateWriter *builder.BytesWriter) error {
+	if statement.dialect.URI().DBType != schemas.MSSQL || statement.TableAlias == "" {
+		return nil
+	}
+
+	_, err := fmt.Fprint(updateWriter, " FROM ", statement.quote(statement.TableName()), " ", statement.TableAlias)
+	return err
+}
+
+func (statement *Statement) writeUpdateLimit(updateWriter *builder.BytesWriter, cond builder.Cond) error {
+	if statement.LimitN == nil {
+		return nil
+	}
+
+	table := statement.RefTable
+	tableName := statement.TableName()
+
+	limitValue := *statement.LimitN
+	switch statement.dialect.URI().DBType {
+	case schemas.MYSQL:
+		_, err := fmt.Fprintf(updateWriter, " LIMIT %d", limitValue)
+		return err
+	case schemas.SQLITE:
+		if cond.IsValid() {
+			if _, err := fmt.Fprint(updateWriter, " AND "); err != nil {
+				return err
+			}
+		} else {
+			if _, err := fmt.Fprint(updateWriter, " WHERE "); err != nil {
+				return err
+			}
+		}
+		if _, err := fmt.Fprint(updateWriter, "rowid IN (SELECT rowid FROM ", statement.quote(tableName)); err != nil {
+			return err
+		}
+		if err := statement.writeWhereCond(updateWriter, cond); err != nil {
+			return err
+		}
+		if err := statement.writeOrderBys(updateWriter); err != nil {
+			return err
+		}
+		_, err := fmt.Fprintf(updateWriter, " LIMIT %d)", limitValue)
+		return err
+	case schemas.POSTGRES:
+		if cond.IsValid() {
+			if _, err := fmt.Fprint(updateWriter, " AND "); err != nil {
+				return err
+			}
+		} else {
+			if _, err := fmt.Fprint(updateWriter, " WHERE "); err != nil {
+				return err
+			}
+		}
+		if _, err := fmt.Fprint(updateWriter, "CTID IN (SELECT CTID FROM ", statement.quote(tableName)); err != nil {
+			return err
+		}
+		if err := statement.writeWhereCond(updateWriter, cond); err != nil {
+			return err
+		}
+		if err := statement.writeOrderBys(updateWriter); err != nil {
+			return err
+		}
+		_, err := fmt.Fprintf(updateWriter, " LIMIT %d)", limitValue)
+		return err
+	case schemas.MSSQL:
+		if statement.HasOrderBy() && table != nil && len(table.PrimaryKeys) == 1 {
+			if _, err := fmt.Fprintf(updateWriter, " WHERE %s IN (SELECT TOP (%d) %s FROM %v",
+				table.PrimaryKeys[0], limitValue, table.PrimaryKeys[0],
+				statement.quote(tableName)); err != nil {
+				return err
+			}
+			if err := statement.writeWhereCond(updateWriter, cond); err != nil {
+				return err
+			}
+			if err := statement.writeOrderBys(updateWriter); err != nil {
+				return err
+			}
+			_, err := fmt.Fprint(updateWriter, ")")
+			return err
+		}
+		return nil
+	default: // TODO: Oracle support needed
+		return fmt.Errorf("not implemented")
+	}
+}
+
+func (statement *Statement) GenConditionsFromMap(m interface{}) ([]builder.Cond, error) {
+	switch t := m.(type) {
+	case map[string]interface{}:
+		conds := []builder.Cond{}
+		for k, v := range t {
+			conds = append(conds, builder.Eq{k: v})
+		}
+		return conds, nil
+	case map[string]string:
+		conds := []builder.Cond{}
+		for k, v := range t {
+			conds = append(conds, builder.Eq{k: v})
+		}
+		return conds, nil
+	default:
+		return nil, fmt.Errorf("unsupported condition map type %v", t)
+	}
+}
+
+func (statement *Statement) writeVersionIncrSet(w builder.Writer, v reflect.Value, hasPreviousSet bool) error {
+	if v.Type().Kind() != reflect.Struct {
+		return nil
+	}
+
+	table := statement.RefTable
+	if !(statement.RefTable != nil && table.Version != "" && statement.CheckVersion) {
+		return nil
+	}
+
+	verValue, err := table.VersionColumn().ValueOfV(&v)
+	if err != nil {
+		return err
+	}
+
+	if verValue == nil {
+		return nil
+	}
+
+	if hasPreviousSet {
+		if _, err := fmt.Fprint(w, ", "); err != nil {
+			return err
+		}
+	}
+
+	if _, err := fmt.Fprint(w, statement.quote(table.Version), " = ", statement.quote(table.Version), " + 1"); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (statement *Statement) writeIncrSets(w builder.Writer, hasPreviousSet bool) error {
+	for i, expr := range statement.IncrColumns {
+		if i > 0 || hasPreviousSet {
+			if _, err := fmt.Fprint(w, ", "); err != nil {
+				return err
+			}
+		}
+		if _, err := fmt.Fprint(w, statement.quote(expr.ColName), " = ", statement.quote(expr.ColName), " + ?"); err != nil {
+			return err
+		}
+		w.Append(expr.Arg)
+	}
+	return nil
+}
+
+func (statement *Statement) writeDecrSets(w builder.Writer, hasPreviousSet bool) error {
+	// for update action to like "column = column - ?"
+	for i, expr := range statement.DecrColumns {
+		if i > 0 || hasPreviousSet {
+			if _, err := fmt.Fprint(w, ", "); err != nil {
+				return err
+			}
+		}
+		if _, err := fmt.Fprint(w, statement.quote(expr.ColName), " = ", statement.quote(expr.ColName), " - ?"); err != nil {
+			return err
+		}
+		w.Append(expr.Arg)
+	}
+	return nil
+}
+
+func (statement *Statement) writeExprSets(w *builder.BytesWriter, hasPreviousSet bool) error {
+	// for update action to like "column = expression"
+	for i, expr := range statement.ExprColumns {
+		if i > 0 || hasPreviousSet {
+			if _, err := fmt.Fprint(w, ", "); err != nil {
+				return err
+			}
+		}
+		switch tp := expr.Arg.(type) {
+		case string:
+			if len(tp) == 0 {
+				tp = "''"
+			}
+			if _, err := fmt.Fprint(w, statement.quote(expr.ColName), " = ", tp); err != nil {
+				return err
+			}
+		case *builder.Builder:
+			if _, err := fmt.Fprint(w, statement.quote(expr.ColName), " = ("); err != nil {
+				return err
+			}
+			if err := tp.WriteTo(statement.QuoteReplacer(w)); err != nil {
+				return err
+			}
+			if _, err := fmt.Fprint(w, ")"); err != nil {
+				return err
+			}
+		default:
+			if _, err := fmt.Fprint(w, statement.quote(expr.ColName), " = ?"); err != nil {
+				return err
+			}
+			w.Append(expr.Arg)
+		}
+	}
+	return nil
+}
+
+func (statement *Statement) writeUpdateSets(w *builder.BytesWriter, v reflect.Value, colNames []string, args []interface{}) error {
+	previousLen := w.Len()
+	for i, colName := range colNames {
+		if i > 0 {
+			if _, err := fmt.Fprint(w, ", "); err != nil {
+				return err
+			}
+		}
+		if _, err := fmt.Fprint(w, colName); err != nil {
+			return err
+		}
+	}
+	w.Append(args...)
+
+	if err := statement.writeIncrSets(w, w.Len() > previousLen); err != nil {
+		return err
+	}
+
+	if err := statement.writeDecrSets(w, w.Len() > previousLen); err != nil {
+		return err
+	}
+
+	if err := statement.writeExprSets(w, w.Len() > previousLen); err != nil {
+		return err
+	}
+
+	if err := statement.writeVersionIncrSet(w, v, w.Len() > previousLen); err != nil {
+		return err
+	}
+	return nil
+}
+
+var ErrNoColumnsTobeUpdated = errors.New("no columns found to be updated")
+
+func (statement *Statement) WriteUpdate(updateWriter *builder.BytesWriter, cond builder.Cond, v reflect.Value, colNames []string, args []interface{}) error {
+	if _, err := fmt.Fprintf(updateWriter, "UPDATE"); err != nil {
+		return err
+	}
+
+	if err := statement.writeUpdateTop(updateWriter); err != nil {
+		return err
+	}
+
+	if err := statement.writeUpdateTableName(updateWriter); err != nil {
+		return err
+	}
+
+	// write set
+	if _, err := fmt.Fprint(updateWriter, " SET "); err != nil {
+		return err
+	}
+	previousLen := updateWriter.Len()
+
+	if err := statement.writeUpdateSets(updateWriter, v, colNames, args); err != nil {
+		return err
+	}
+
+	// if no columns to be updated, return error
+	if previousLen == updateWriter.Len() {
+		return ErrNoColumnsTobeUpdated
+	}
+
+	// write from
+	if err := statement.writeUpdateFrom(updateWriter); err != nil {
+		return err
+	}
+
+	if statement.dialect.URI().DBType == schemas.MSSQL {
+		table := statement.RefTable
+		if statement.HasOrderBy() && table != nil && len(table.PrimaryKeys) == 1 {
+		} else {
+			// write where
+			if err := statement.writeWhereCond(updateWriter, cond); err != nil {
+				return err
+			}
+		}
+	} else {
+		// write where
+		if err := statement.writeWhereCond(updateWriter, cond); err != nil {
+			return err
+		}
+	}
+
+	if statement.dialect.URI().DBType == schemas.MYSQL {
+		if err := statement.writeOrderBys(updateWriter); err != nil {
+			return err
+		}
+	}
+
+	return statement.writeUpdateLimit(updateWriter, cond)
 }

@@ -16,11 +16,21 @@ import (
 	"time"
 )
 
+// ConversionFrom is an inteface to allow retrieve data from database
+type ConversionFrom interface {
+	FromDB([]byte) error
+}
+
+// ConversionTo is an interface to allow store data to database
+type ConversionTo interface {
+	ToDB() ([]byte, error)
+}
+
 // Conversion is an interface. A type implements Conversion will according
 // the custom method to fill into database and retrieve from database.
 type Conversion interface {
-	FromDB([]byte) error
-	ToDB() ([]byte, error)
+	ConversionFrom
+	ConversionTo
 }
 
 // ErrNilPtr represents an error

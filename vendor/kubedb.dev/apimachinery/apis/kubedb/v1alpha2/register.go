@@ -80,8 +80,6 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&RedisList{},
 		&RedisSentinel{},
 		&RedisSentinelList{},
-		&Pgpool{},
-		&PgpoolList{},
 	)
 
 	scheme.AddKnownTypes(SchemeGroupVersion,

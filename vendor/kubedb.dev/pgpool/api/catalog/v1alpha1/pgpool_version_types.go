@@ -83,3 +83,7 @@ type PgpoolVersionList struct {
 	meta.ListMeta `json:"metadata,omitempty"`
 	Items         []PgpoolVersion `json:"items"`
 }
+
+func init() {
+	SchemeBuilder.Register(&PgpoolVersion{}, &PgpoolVersionList{})
+}
