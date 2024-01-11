@@ -204,7 +204,6 @@ func calcCpusAllowedList(cpuString string) []uint64 {
 	sort.Slice(g, func(i, j int) bool { return g[i] < g[j] })
 	return g
 }
-<<<<<<< HEAD
 
 func calcNSPidsList(nspidsString string) []uint64 {
 	s := strings.Split(nspidsString, " ")
@@ -220,5 +219,3 @@ func calcNSPidsList(nspidsString string) []uint64 {
 
 	return nspids
 }
-=======
->>>>>>> 25a3834c (add get, put and post method)

@@ -11,13 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-<<<<<<< HEAD
 //go:build !freebsd && !linux
 // +build !freebsd,!linux
-=======
-//go:build netbsd || openbsd || solaris || windows || nostatfs
-// +build netbsd openbsd solaris windows nostatfs
->>>>>>> 25a3834c (add get, put and post method)
 
 package procfs
 

@@ -59,10 +59,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"k8s.io/api/apps/v1.StatefulSet":                                              schema_k8sio_api_apps_v1_StatefulSet(ref),
 		"k8s.io/api/apps/v1.StatefulSetCondition":                                     schema_k8sio_api_apps_v1_StatefulSetCondition(ref),
 		"k8s.io/api/apps/v1.StatefulSetList":                                          schema_k8sio_api_apps_v1_StatefulSetList(ref),
-<<<<<<< HEAD
 		"k8s.io/api/apps/v1.StatefulSetOrdinals":                                      schema_k8sio_api_apps_v1_StatefulSetOrdinals(ref),
-=======
->>>>>>> cd0d824e (Modify some functions)
 		"k8s.io/api/apps/v1.StatefulSetPersistentVolumeClaimRetentionPolicy":          schema_k8sio_api_apps_v1_StatefulSetPersistentVolumeClaimRetentionPolicy(ref),
 		"k8s.io/api/apps/v1.StatefulSetSpec":                                          schema_k8sio_api_apps_v1_StatefulSetSpec(ref),
 		"k8s.io/api/apps/v1.StatefulSetStatus":                                        schema_k8sio_api_apps_v1_StatefulSetStatus(ref),
@@ -106,13 +103,9 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"k8s.io/api/core/v1.CephFSVolumeSource":                                       schema_k8sio_api_core_v1_CephFSVolumeSource(ref),
 		"k8s.io/api/core/v1.CinderPersistentVolumeSource":                             schema_k8sio_api_core_v1_CinderPersistentVolumeSource(ref),
 		"k8s.io/api/core/v1.CinderVolumeSource":                                       schema_k8sio_api_core_v1_CinderVolumeSource(ref),
-<<<<<<< HEAD
 		"k8s.io/api/core/v1.ClaimSource":                                              schema_k8sio_api_core_v1_ClaimSource(ref),
 		"k8s.io/api/core/v1.ClientIPConfig":                                           schema_k8sio_api_core_v1_ClientIPConfig(ref),
 		"k8s.io/api/core/v1.ClusterTrustBundleProjection":                             schema_k8sio_api_core_v1_ClusterTrustBundleProjection(ref),
-=======
-		"k8s.io/api/core/v1.ClientIPConfig":                                           schema_k8sio_api_core_v1_ClientIPConfig(ref),
->>>>>>> cd0d824e (Modify some functions)
 		"k8s.io/api/core/v1.ComponentCondition":                                       schema_k8sio_api_core_v1_ComponentCondition(ref),
 		"k8s.io/api/core/v1.ComponentStatus":                                          schema_k8sio_api_core_v1_ComponentStatus(ref),
 		"k8s.io/api/core/v1.ComponentStatusList":                                      schema_k8sio_api_core_v1_ComponentStatusList(ref),
@@ -126,10 +119,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"k8s.io/api/core/v1.Container":                                                schema_k8sio_api_core_v1_Container(ref),
 		"k8s.io/api/core/v1.ContainerImage":                                           schema_k8sio_api_core_v1_ContainerImage(ref),
 		"k8s.io/api/core/v1.ContainerPort":                                            schema_k8sio_api_core_v1_ContainerPort(ref),
-<<<<<<< HEAD
 		"k8s.io/api/core/v1.ContainerResizePolicy":                                    schema_k8sio_api_core_v1_ContainerResizePolicy(ref),
-=======
->>>>>>> cd0d824e (Modify some functions)
 		"k8s.io/api/core/v1.ContainerState":                                           schema_k8sio_api_core_v1_ContainerState(ref),
 		"k8s.io/api/core/v1.ContainerStateRunning":                                    schema_k8sio_api_core_v1_ContainerStateRunning(ref),
 		"k8s.io/api/core/v1.ContainerStateTerminated":                                 schema_k8sio_api_core_v1_ContainerStateTerminated(ref),
@@ -168,10 +158,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"k8s.io/api/core/v1.HTTPGetAction":                                            schema_k8sio_api_core_v1_HTTPGetAction(ref),
 		"k8s.io/api/core/v1.HTTPHeader":                                               schema_k8sio_api_core_v1_HTTPHeader(ref),
 		"k8s.io/api/core/v1.HostAlias":                                                schema_k8sio_api_core_v1_HostAlias(ref),
-<<<<<<< HEAD
 		"k8s.io/api/core/v1.HostIP":                                                   schema_k8sio_api_core_v1_HostIP(ref),
-=======
->>>>>>> cd0d824e (Modify some functions)
 		"k8s.io/api/core/v1.HostPathVolumeSource":                                     schema_k8sio_api_core_v1_HostPathVolumeSource(ref),
 		"k8s.io/api/core/v1.ISCSIPersistentVolumeSource":                              schema_k8sio_api_core_v1_ISCSIPersistentVolumeSource(ref),
 		"k8s.io/api/core/v1.ISCSIVolumeSource":                                        schema_k8sio_api_core_v1_ISCSIVolumeSource(ref),
@@ -187,10 +174,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"k8s.io/api/core/v1.LoadBalancerStatus":                                       schema_k8sio_api_core_v1_LoadBalancerStatus(ref),
 		"k8s.io/api/core/v1.LocalObjectReference":                                     schema_k8sio_api_core_v1_LocalObjectReference(ref),
 		"k8s.io/api/core/v1.LocalVolumeSource":                                        schema_k8sio_api_core_v1_LocalVolumeSource(ref),
-<<<<<<< HEAD
 		"k8s.io/api/core/v1.ModifyVolumeStatus":                                       schema_k8sio_api_core_v1_ModifyVolumeStatus(ref),
-=======
->>>>>>> cd0d824e (Modify some functions)
 		"k8s.io/api/core/v1.NFSVolumeSource":                                          schema_k8sio_api_core_v1_NFSVolumeSource(ref),
 		"k8s.io/api/core/v1.Namespace":                                                schema_k8sio_api_core_v1_Namespace(ref),
 		"k8s.io/api/core/v1.NamespaceCondition":                                       schema_k8sio_api_core_v1_NamespaceCondition(ref),
@@ -244,12 +228,9 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"k8s.io/api/core/v1.PodPortForwardOptions":                                    schema_k8sio_api_core_v1_PodPortForwardOptions(ref),
 		"k8s.io/api/core/v1.PodProxyOptions":                                          schema_k8sio_api_core_v1_PodProxyOptions(ref),
 		"k8s.io/api/core/v1.PodReadinessGate":                                         schema_k8sio_api_core_v1_PodReadinessGate(ref),
-<<<<<<< HEAD
 		"k8s.io/api/core/v1.PodResourceClaim":                                         schema_k8sio_api_core_v1_PodResourceClaim(ref),
 		"k8s.io/api/core/v1.PodResourceClaimStatus":                                   schema_k8sio_api_core_v1_PodResourceClaimStatus(ref),
 		"k8s.io/api/core/v1.PodSchedulingGate":                                        schema_k8sio_api_core_v1_PodSchedulingGate(ref),
-=======
->>>>>>> cd0d824e (Modify some functions)
 		"k8s.io/api/core/v1.PodSecurityContext":                                       schema_k8sio_api_core_v1_PodSecurityContext(ref),
 		"k8s.io/api/core/v1.PodSignature":                                             schema_k8sio_api_core_v1_PodSignature(ref),
 		"k8s.io/api/core/v1.PodSpec":                                                  schema_k8sio_api_core_v1_PodSpec(ref),
@@ -274,10 +255,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"k8s.io/api/core/v1.ReplicationControllerList":                                schema_k8sio_api_core_v1_ReplicationControllerList(ref),
 		"k8s.io/api/core/v1.ReplicationControllerSpec":                                schema_k8sio_api_core_v1_ReplicationControllerSpec(ref),
 		"k8s.io/api/core/v1.ReplicationControllerStatus":                              schema_k8sio_api_core_v1_ReplicationControllerStatus(ref),
-<<<<<<< HEAD
 		"k8s.io/api/core/v1.ResourceClaim":                                            schema_k8sio_api_core_v1_ResourceClaim(ref),
-=======
->>>>>>> cd0d824e (Modify some functions)
 		"k8s.io/api/core/v1.ResourceFieldSelector":                                    schema_k8sio_api_core_v1_ResourceFieldSelector(ref),
 		"k8s.io/api/core/v1.ResourceQuota":                                            schema_k8sio_api_core_v1_ResourceQuota(ref),
 		"k8s.io/api/core/v1.ResourceQuotaList":                                        schema_k8sio_api_core_v1_ResourceQuotaList(ref),
@@ -309,10 +287,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"k8s.io/api/core/v1.ServiceSpec":                                              schema_k8sio_api_core_v1_ServiceSpec(ref),
 		"k8s.io/api/core/v1.ServiceStatus":                                            schema_k8sio_api_core_v1_ServiceStatus(ref),
 		"k8s.io/api/core/v1.SessionAffinityConfig":                                    schema_k8sio_api_core_v1_SessionAffinityConfig(ref),
-<<<<<<< HEAD
 		"k8s.io/api/core/v1.SleepAction":                                              schema_k8sio_api_core_v1_SleepAction(ref),
-=======
->>>>>>> cd0d824e (Modify some functions)
 		"k8s.io/api/core/v1.StorageOSPersistentVolumeSource":                          schema_k8sio_api_core_v1_StorageOSPersistentVolumeSource(ref),
 		"k8s.io/api/core/v1.StorageOSVolumeSource":                                    schema_k8sio_api_core_v1_StorageOSVolumeSource(ref),
 		"k8s.io/api/core/v1.Sysctl":                                                   schema_k8sio_api_core_v1_Sysctl(ref),
@@ -323,19 +298,13 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"k8s.io/api/core/v1.TopologySelectorTerm":                                     schema_k8sio_api_core_v1_TopologySelectorTerm(ref),
 		"k8s.io/api/core/v1.TopologySpreadConstraint":                                 schema_k8sio_api_core_v1_TopologySpreadConstraint(ref),
 		"k8s.io/api/core/v1.TypedLocalObjectReference":                                schema_k8sio_api_core_v1_TypedLocalObjectReference(ref),
-<<<<<<< HEAD
 		"k8s.io/api/core/v1.TypedObjectReference":                                     schema_k8sio_api_core_v1_TypedObjectReference(ref),
-=======
->>>>>>> cd0d824e (Modify some functions)
 		"k8s.io/api/core/v1.Volume":                                                   schema_k8sio_api_core_v1_Volume(ref),
 		"k8s.io/api/core/v1.VolumeDevice":                                             schema_k8sio_api_core_v1_VolumeDevice(ref),
 		"k8s.io/api/core/v1.VolumeMount":                                              schema_k8sio_api_core_v1_VolumeMount(ref),
 		"k8s.io/api/core/v1.VolumeNodeAffinity":                                       schema_k8sio_api_core_v1_VolumeNodeAffinity(ref),
 		"k8s.io/api/core/v1.VolumeProjection":                                         schema_k8sio_api_core_v1_VolumeProjection(ref),
-<<<<<<< HEAD
 		"k8s.io/api/core/v1.VolumeResourceRequirements":                               schema_k8sio_api_core_v1_VolumeResourceRequirements(ref),
-=======
->>>>>>> cd0d824e (Modify some functions)
 		"k8s.io/api/core/v1.VolumeSource":                                             schema_k8sio_api_core_v1_VolumeSource(ref),
 		"k8s.io/api/core/v1.VsphereVirtualDiskVolumeSource":                           schema_k8sio_api_core_v1_VsphereVirtualDiskVolumeSource(ref),
 		"k8s.io/api/core/v1.WeightedPodAffinityTerm":                                  schema_k8sio_api_core_v1_WeightedPodAffinityTerm(ref),

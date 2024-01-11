@@ -63,15 +63,9 @@ type ProcMap struct {
 // parseDevice parses the device token of a line and converts it to a dev_t
 // (mkdev) like structure.
 func parseDevice(s string) (uint64, error) {
-<<<<<<< HEAD
 	i := strings.Index(s, ":")
 	if i == -1 {
 		return 0, fmt.Errorf("%w: expected separator `:` in %s", ErrFileParse, s)
-=======
-	toks := strings.Split(s, ":")
-	if len(toks) < 2 {
-		return 0, fmt.Errorf("%w: unexpected number of fields, expected: 2, got: %q", ErrFileParse, len(toks))
->>>>>>> 25a3834c (add get, put and post method)
 	}
 
 	major, err := strconv.ParseUint(s[0:i], 16, 0)
@@ -99,15 +93,9 @@ func parseAddress(s string) (uintptr, error) {
 
 // parseAddresses parses the start-end address.
 func parseAddresses(s string) (uintptr, uintptr, error) {
-<<<<<<< HEAD
 	idx := strings.Index(s, "-")
 	if idx == -1 {
 		return 0, 0, fmt.Errorf("%w: expected separator `-` in %s", ErrFileParse, s)
-=======
-	toks := strings.Split(s, "-")
-	if len(toks) < 2 {
-		return 0, 0, fmt.Errorf("%w: invalid address", ErrFileParse)
->>>>>>> 25a3834c (add get, put and post method)
 	}
 
 	saddr, err := parseAddress(s[0:idx])
