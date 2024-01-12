@@ -76,6 +76,11 @@ func (o *KubeDBClientBuilder) WithDatabaseRef(db *v1alpha2.Elasticsearch) *KubeD
 	return o
 }
 
+func (o *KubeDBClientBuilder) WithDbVersion(version *catalog.ElasticsearchVersion) *KubeDBClientBuilder {
+	o.dbVersion = version
+	return o
+}
+
 func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
 	o.ctx = ctx
 	return o
