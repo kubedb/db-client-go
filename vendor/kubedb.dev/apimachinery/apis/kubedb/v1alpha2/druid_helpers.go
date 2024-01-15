@@ -25,18 +25,25 @@ import (
 	"kubedb.dev/apimachinery/apis"
 	catalog "kubedb.dev/apimachinery/apis/catalog/v1alpha1"
 	"kubedb.dev/apimachinery/apis/kubedb"
+	"kubedb.dev/apimachinery/crds"
 
 	"gomodules.xyz/pointer"
 	v1 "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+	appslister "k8s.io/client-go/listers/apps/v1"
 	"k8s.io/klog/v2"
+	"kmodules.xyz/client-go/apiextensions"
 	coreutil "kmodules.xyz/client-go/core/v1"
 	meta_util "kmodules.xyz/client-go/meta"
-	"kmodules.xyz/client-go/policy/secomp"
 	appcat "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
 	ofst "kmodules.xyz/offshoot-api/api/v2"
 )
+
+func (d *Druid) CustomResourceDefinition() *apiextensions.CustomResourceDefinition {
+	return crds.MustCustomResourceDefinition(SchemeGroupVersion.WithResource(ResourcePluralDruid))
+}
 
 func (d *Druid) Owner() *meta.OwnerReference {
 	return meta.NewControllerRef(d, SchemeGroupVersion.WithKind(d.ResourceKind()))
@@ -264,6 +271,15 @@ func (d *Druid) OffshootSelectors(extraSelectors ...map[string]string) map[strin
 	return meta_util.OverwriteKeys(selector, extraSelectors...)
 }
 
+func (d Druid) OffshootLabels() map[string]string {
+	return d.offshootLabels(d.OffshootSelectors(), nil)
+}
+
+func (e Druid) offshootLabels(selector, override map[string]string) map[string]string {
+	selector[meta_util.ComponentLabelKey] = ComponentDatabase
+	return meta_util.FilterKeys(kubedb.GroupName, selector, meta_util.OverwriteKeys(nil, e.Labels, override))
+}
+
 func (d *Druid) SetDefaults() {
 	if d.Spec.TerminationPolicy == "" {
 		d.Spec.TerminationPolicy = TerminationPolicyDelete
@@ -401,26 +417,23 @@ func (d *Druid) setDefaultContainerSecurityContext(druidVersion *catalog.DruidVe
 }
 
 func (d *Druid) assignDefaultContainerSecurityContext(druidVersion *catalog.DruidVersion, sc *v1.SecurityContext) {
-	if sc.AllowPrivilegeEscalation == nil {
-		sc.AllowPrivilegeEscalation = pointer.BoolP(false)
-	}
-	if sc.Capabilities == nil {
-		sc.Capabilities = &v1.Capabilities{
-			Drop: []v1.Capability{"ALL"},
-		}
-	}
-	if sc.RunAsNonRoot == nil {
-		sc.RunAsNonRoot = pointer.BoolP(true)
-	}
-	if sc.RunAsUser == nil {
-		sc.RunAsUser = druidVersion.Spec.SecurityContext.RunAsUser
-	}
-	if sc.RunAsGroup == nil {
-		sc.RunAsGroup = druidVersion.Spec.SecurityContext.RunAsGroup
-	}
-	if sc.SeccompProfile == nil {
-		sc.SeccompProfile = secomp.DefaultSeccompProfile()
-	}
+	//if sc.AllowPrivilegeEscalation == nil {
+	//	sc.AllowPrivilegeEscalation = pointer.BoolP(false)
+	//}
+	//if sc.Capabilities == nil {
+	//	sc.Capabilities = &v1.Capabilities{
+	//		Drop: []v1.Capability{"ALL"},
+	//	}
+	//}
+	//if sc.RunAsNonRoot == nil {
+	//	sc.RunAsNonRoot = pointer.BoolP(true)
+	//}
+	//if sc.RunAsUser == nil {
+	//	sc.RunAsUser = druidVersion.Spec.SecurityContext.RunAsUser
+	//}
+	//if sc.SeccompProfile == nil {
+	//	sc.SeccompProfile = secomp.DefaultSeccompProfile()
+	//}
 }
 
 func (d *Druid) GetPersistentSecrets() []string {
@@ -433,4 +446,19 @@ func (d *Druid) GetPersistentSecrets() []string {
 		secrets = append(secrets, d.Spec.AuthSecret.Name)
 	}
 	return secrets
+}
+
+func (d *Druid) ReplicasAreReady(lister appslister.StatefulSetLister) (bool, string, error) {
+	// Desire number of statefulSets
+	expectedItems := 1
+	if d.Spec.Topology != nil {
+		expectedItems = 4
+	}
+	if d.Spec.Topology.Routers != nil {
+		expectedItems++
+	}
+	if d.Spec.Topology.Overlords != nil {
+		expectedItems++
+	}
+	return checkReplicas(lister.StatefulSets(d.Namespace), labels.SelectorFromSet(d.OffshootLabels()), expectedItems)
 }

@@ -27,7 +27,9 @@ import (
 	"gomodules.xyz/pointer"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+	appslister "k8s.io/client-go/listers/apps/v1"
 	"k8s.io/klog/v2"
 	"kmodules.xyz/client-go/apiextensions"
 	meta_util "kmodules.xyz/client-go/meta"
@@ -189,16 +191,16 @@ func (p *Pgpool) SetDefaults() {
 	}
 	p.SetHealthCheckerDefaults()
 
-	ppVersion := &catalog.PgpoolVersion{}
+	ppVersion := catalog.PgpoolVersion{}
 	err := DefaultClient.Get(context.TODO(), types.NamespacedName{
 		Name: p.Spec.Version,
-	}, ppVersion)
+	}, &ppVersion)
 	if err != nil {
 		klog.Errorf("can't get the pgpool version object %s for %s \n", err.Error(), p.Spec.Version)
 		return
 	}
 	if p.Spec.PodTemplate != nil {
-		p.SetSecurityContext(ppVersion)
+		p.SetSecurityContext(&ppVersion)
 	}
 }
 
@@ -209,4 +211,10 @@ func (p *Pgpool) GetPersistentSecrets() []string {
 		secrets = append(secrets, p.ConfigSecretName())
 	}
 	return secrets
+}
+
+func (p *Pgpool) ReplicasAreReady(lister appslister.StatefulSetLister) (bool, string, error) {
+	// Desire number of statefulSets
+	expectedItems := 1
+	return checkReplicas(lister.StatefulSets(p.Namespace), labels.SelectorFromSet(p.OffshootLabels()), expectedItems)
 }
