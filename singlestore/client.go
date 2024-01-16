@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The logr Authors.
+Copyright AppsCode Inc. and Contributors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,20 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package logr
+package singlestore
 
-// contextKey is how we find Loggers in a context.Context. With Go < 1.21,
-// the value is always a Logger value. With Go >= 1.21, the value can be a
-// Logger value or a slog.Logger pointer.
-type contextKey struct{}
+import (
+	"database/sql"
 
-// notFoundError exists to carry an IsNotFound method.
-type notFoundError struct{}
+	"xorm.io/xorm"
+)
 
-func (notFoundError) Error() string {
-	return "no logr.Logger was present"
+type Client struct {
+	*sql.DB
 }
 
-func (notFoundError) IsNotFound() bool {
-	return true
+type XormClient struct {
+	*xorm.Engine
 }
