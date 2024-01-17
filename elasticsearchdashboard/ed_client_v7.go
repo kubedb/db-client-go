@@ -21,7 +21,7 @@ import (
 	"io"
 	"strings"
 
-	dapi "kubedb.dev/apimachinery/apis/dashboard/v1alpha1"
+	esapi "kubedb.dev/apimachinery/apis/elasticsearch/v1alpha1"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
@@ -57,7 +57,7 @@ func (h *EDClientV7) GetHealthStatus() (*Health, error) {
 
 // GetStateFromHealthResponse parse health response in json from server and
 // return overall status of the server
-func (h *EDClientV7) GetStateFromHealthResponse(health *Health) (dapi.DashboardServerState, error) {
+func (h *EDClientV7) GetStateFromHealthResponse(health *Health) (esapi.DashboardServerState, error) {
 	resStatus := health.ConnectionResponse
 
 	defer func(Body io.ReadCloser) {
@@ -93,7 +93,7 @@ func (h *EDClientV7) GetStateFromHealthResponse(health *Health) (dapi.DashboardS
 	if statuses, ok := responseBody.Status["statuses"].([]interface{}); ok {
 		for _, sts := range statuses {
 			if curr, ok := sts.(map[string]interface{}); ok {
-				if curr["state"].(string) != string(dapi.StateGreen) {
+				if curr["state"].(string) != string(esapi.StateGreen) {
 					health.StateFailedReason[curr["id"].(string)] = strings.Join([]string{curr["state"].(string), curr["message"].(string)}, ",")
 				}
 			} else {
@@ -104,5 +104,5 @@ func (h *EDClientV7) GetStateFromHealthResponse(health *Health) (dapi.DashboardS
 		return "", errors.New("Failed to convert statuses to []interface{}")
 	}
 
-	return dapi.DashboardServerState(health.OverallState), nil
+	return esapi.DashboardServerState(health.OverallState), nil
 }

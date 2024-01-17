@@ -26,7 +26,7 @@ import (
 	"time"
 
 	catalog "kubedb.dev/apimachinery/apis/catalog/v1alpha1"
-	dapi "kubedb.dev/apimachinery/apis/dashboard/v1alpha1"
+	esapi "kubedb.dev/apimachinery/apis/elasticsearch/v1alpha1"
 	"kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	"github.com/Masterminds/semver/v3"
@@ -40,7 +40,7 @@ import (
 
 type KubeDBClientBuilder struct {
 	kc         client.Client
-	dashboard  *dapi.ElasticsearchDashboard
+	dashboard  *esapi.ElasticsearchDashboard
 	db         *v1alpha2.Elasticsearch
 	dbVersion  *catalog.ElasticsearchVersion
 	authSecret *core.Secret
@@ -49,7 +49,7 @@ type KubeDBClientBuilder struct {
 	ctx        context.Context
 }
 
-func NewKubeDBClientBuilder(kc client.Client, db *dapi.ElasticsearchDashboard) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *esapi.ElasticsearchDashboard) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc:        kc,
 		dashboard: db,
@@ -89,7 +89,7 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 func (o *KubeDBClientBuilder) GetElasticsearchDashboardClient() (*Client, error) {
 	config := Config{
 		host: getHostPath(o.dashboard),
-		api:  dapi.KibanaStatusEndpoint,
+		api:  esapi.KibanaStatusEndpoint,
 		transport: &http.Transport{
 			IdleConnTimeout: time.Second * 3,
 			DialContext: (&net.Dialer{
@@ -104,7 +104,7 @@ func (o *KubeDBClientBuilder) GetElasticsearchDashboardClient() (*Client, error)
 		var certSecret core.Secret
 		err := o.kc.Get(o.ctx, types.NamespacedName{
 			Namespace: o.dashboard.Namespace,
-			Name:      o.dashboard.CertificateSecretName(dapi.ElasticsearchDashboardServerCert),
+			Name:      o.dashboard.CertificateSecretName(esapi.ElasticsearchDashboardServerCert),
 		}, &certSecret)
 		if err != nil {
 			klog.Error(err, "failed to get serverCert secret")
@@ -121,8 +121,8 @@ func (o *KubeDBClientBuilder) GetElasticsearchDashboardClient() (*Client, error)
 			klog.Error(err, "failed to create certificate for TLS config")
 			return nil, err
 		}
-		clientCA.AppendCertsFromPEM(certSecret.Data[dapi.CaCertKey])
-		rootCA.AppendCertsFromPEM(certSecret.Data[dapi.CaCertKey])
+		clientCA.AppendCertsFromPEM(certSecret.Data[esapi.CaCertKey])
+		rootCA.AppendCertsFromPEM(certSecret.Data[esapi.CaCertKey])
 
 		config.transport.TLSClientConfig = &tls.Config{
 			Certificates: []tls.Certificate{crt},
@@ -199,6 +199,6 @@ func (o *KubeDBClientBuilder) GetElasticsearchDashboardClient() (*Client, error)
 
 // return host path in
 // format https://svc_name.namespace.svc:5601/api/status
-func getHostPath(dashboard *dapi.ElasticsearchDashboard) string {
-	return fmt.Sprintf("%v://%s.%s.svc:%d", dashboard.GetConnectionScheme(), dashboard.ServiceName(), dashboard.GetNamespace(), dapi.ElasticsearchDashboardRESTPort)
+func getHostPath(dashboard *esapi.ElasticsearchDashboard) string {
+	return fmt.Sprintf("%v://%s.%s.svc:%d", dashboard.GetConnectionScheme(), dashboard.ServiceName(), dashboard.GetNamespace(), esapi.ElasticsearchDashboardRESTPort)
 }
