@@ -154,6 +154,7 @@ func (o *KubeDBClientBuilder) getPgpoolAuthCredentials() (string, string, error)
 		return "", "", fmt.Errorf("DB root user is not set")
 	}
 	pass, ok := secret.Data[core.BasicAuthPasswordKey]
+	fmt.Println("Here is the password used in pgpool: ", string(pass))
 	if !ok {
 		return "", "", fmt.Errorf("DB root password is not set")
 	}

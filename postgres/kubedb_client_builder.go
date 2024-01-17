@@ -105,6 +105,8 @@ func (o *KubeDBClientBuilder) getPostgresAuthCredentials() (string, string, erro
 	if err != nil {
 		return "", "", err
 	}
+	pass := string(secret.Data[core.BasicAuthPasswordKey])
+	fmt.Println("Here is the password used in postgres: ", pass)
 	return string(secret.Data[core.BasicAuthUsernameKey]), string(secret.Data[core.BasicAuthPasswordKey]), nil
 }
 
