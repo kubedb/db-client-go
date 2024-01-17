@@ -22,7 +22,7 @@ import (
 	"net/http"
 
 	catalog "kubedb.dev/apimachinery/apis/catalog/v1alpha1"
-	dapi "kubedb.dev/apimachinery/apis/dashboard/v1alpha1"
+	esapi "kubedb.dev/apimachinery/apis/elasticsearch/v1alpha1"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	core "k8s.io/api/core/v1"
@@ -35,7 +35,7 @@ type Client struct {
 
 type ClientOptions struct {
 	KClient   client.Client
-	Dashboard *dapi.ElasticsearchDashboard
+	Dashboard *esapi.ElasticsearchDashboard
 	ESVersion *catalog.ElasticsearchVersion
 	DB        *api.Elasticsearch
 	Ctx       context.Context

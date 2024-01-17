@@ -21,7 +21,7 @@ import (
 	"io"
 	"strings"
 
-	dapi "kubedb.dev/apimachinery/apis/dashboard/v1alpha1"
+	esapi "kubedb.dev/apimachinery/apis/elasticsearch/v1alpha1"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
@@ -57,7 +57,7 @@ func (h *EDClientV8) GetHealthStatus() (*Health, error) {
 
 // GetStateFromHealthResponse parse health response in json from server and
 // return overall status of the server
-func (h *EDClientV8) GetStateFromHealthResponse(health *Health) (dapi.DashboardServerState, error) {
+func (h *EDClientV8) GetStateFromHealthResponse(health *Health) (esapi.DashboardServerState, error) {
 	resStatus := health.ConnectionResponse
 
 	defer func(Body io.ReadCloser) {
@@ -91,7 +91,7 @@ func (h *EDClientV8) GetStateFromHealthResponse(health *Health) (dapi.DashboardS
 	if pluginsStatus, ok := responseBody.Status["plugins"].(map[string]interface{}); ok {
 		for plugin, pluginStatus := range pluginsStatus {
 			if pstatus, ok := pluginStatus.(map[string]interface{}); ok {
-				if pstatus["level"].(string) != string(dapi.StateAvailable) {
+				if pstatus["level"].(string) != string(esapi.StateAvailable) {
 					health.StateFailedReason[plugin] = strings.Join([]string{pstatus["level"].(string), pstatus["summary"].(string)}, ",")
 				}
 			} else {
@@ -102,5 +102,5 @@ func (h *EDClientV8) GetStateFromHealthResponse(health *Health) (dapi.DashboardS
 		return "", errors.New("Failed to parse overallStatus")
 	}
 
-	return dapi.DashboardServerState(health.OverallState), nil
+	return esapi.DashboardServerState(health.OverallState), nil
 }

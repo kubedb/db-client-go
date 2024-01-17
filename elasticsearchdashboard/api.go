@@ -17,10 +17,10 @@ limitations under the License.
 package elasticsearchdashboard
 
 import (
-	dapi "kubedb.dev/apimachinery/apis/dashboard/v1alpha1"
+	esapi "kubedb.dev/apimachinery/apis/elasticsearch/v1alpha1"
 )
 
 type EDClient interface {
 	GetHealthStatus() (*Health, error)
-	GetStateFromHealthResponse(health *Health) (dapi.DashboardServerState, error)
+	GetStateFromHealthResponse(health *Health) (esapi.DashboardServerState, error)
 }

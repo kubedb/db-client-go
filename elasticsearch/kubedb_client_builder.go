@@ -27,7 +27,7 @@ import (
 	"time"
 
 	catalog "kubedb.dev/apimachinery/apis/catalog/v1alpha1"
-	"kubedb.dev/apimachinery/apis/dashboard/v1alpha1"
+	"kubedb.dev/apimachinery/apis/elasticsearch/v1alpha1"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	"github.com/Masterminds/semver/v3"
