@@ -46,8 +46,8 @@ func newRows(session *Session, bean interface{}) (*Rows, error) {
 
 	if rows.session.statement.RawSQL == "" {
 		var autoCond builder.Cond
-		var addedTableName = (len(session.statement.JoinStr) > 0)
-		var table = rows.session.statement.RefTable
+		addedTableName := session.statement.NeedTableName()
+		table := rows.session.statement.RefTable
 
 		if !session.statement.NoAutoCondition {
 			var err error
@@ -103,12 +103,12 @@ func (rows *Rows) Scan(beans ...interface{}) error {
 		return rows.Err()
 	}
 
-	var bean = beans[0]
-	var tp = reflect.TypeOf(bean)
+	bean := beans[0]
+	tp := reflect.TypeOf(bean)
 	if tp.Kind() == reflect.Ptr {
 		tp = tp.Elem()
 	}
-	var beanKind = tp.Kind()
+	beanKind := tp.Kind()
 
 	if len(beans) == 1 {
 		if reflect.Indirect(reflect.ValueOf(bean)).Type() != rows.beanType {
@@ -129,7 +129,9 @@ func (rows *Rows) Scan(beans ...interface{}) error {
 		return err
 	}
 
-	if err := rows.session.scan(rows.rows, rows.session.statement.RefTable, beanKind, beans, types, fields); err != nil {
+	columnsSchema := ParseColumnsSchema(fields, types, rows.session.statement.RefTable)
+
+	if err := rows.session.scan(rows.rows, rows.session.statement.RefTable, beanKind, beans, columnsSchema, types, fields); err != nil {
 		return err
 	}
 
@@ -141,6 +143,8 @@ func (rows *Rows) Close() error {
 	if rows.session.isAutoClose {
 		defer rows.session.Close()
 	}
+
+	defer rows.session.resetStatement()
 
 	if rows.rows != nil {
 		return rows.rows.Close()
