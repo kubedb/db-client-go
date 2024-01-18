@@ -18,13 +18,11 @@ package pgpool
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
 	_ "github.com/lib/pq"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/klog/v2"
 	appbinding "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -32,22 +30,24 @@ import (
 )
 
 const (
-	DefaultPgpoolDB = "postgres"
+	DefaultBackendDBName = "postgres"
+	DefaultPgpoolPort    = 9999
+	TLSModeDisable       = "disable"
 )
 
 type KubeDBClientBuilder struct {
-	kc       client.Client
-	db       *api.Pgpool
-	url      string
-	podName  string
-	pgpoolDB string
-	ctx      context.Context
+	kc            client.Client
+	pgpool        *api.Pgpool
+	url           string
+	podName       string
+	backendDBName string
+	ctx           context.Context
 }
 
-func NewKubeDBClientBuilder(kc client.Client, db *api.Pgpool) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, pp *api.Pgpool) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
-		kc: kc,
-		db: db,
+		kc:     kc,
+		pgpool: pp,
 	}
 }
 
@@ -62,7 +62,7 @@ func (o *KubeDBClientBuilder) WithPod(podName string) *KubeDBClientBuilder {
 }
 
 func (o *KubeDBClientBuilder) WithPgpoolDB(pgDB string) *KubeDBClientBuilder {
-	o.pgpoolDB = pgDB
+	o.backendDBName = pgDB
 	return o
 }
 
@@ -87,6 +87,10 @@ func (o *KubeDBClientBuilder) GetPgpoolXormClient() (*XormClient, error) {
 	}
 	_, err = engine.Query("SELECT 1")
 	if err != nil {
+		err = engine.Close()
+		if err != nil {
+			return nil, err
+		}
 		return nil, err
 	}
 
@@ -96,73 +100,45 @@ func (o *KubeDBClientBuilder) GetPgpoolXormClient() (*XormClient, error) {
 	}, nil
 }
 
-func (o *KubeDBClientBuilder) GetPgpoolClient() (*Client, error) {
-	if o.ctx == nil {
-		o.ctx = context.Background()
-	}
-
-	connector, err := o.getConnectionString()
-	if err != nil {
-		return nil, err
-	}
-
-	// connect to database
-	db, err := sql.Open("postgres", connector)
-	if err != nil {
-		return nil, err
-	}
-
-	// ping to database to check the connection
-	if err := db.PingContext(o.ctx); err != nil {
-		closeErr := db.Close()
-		if closeErr != nil {
-			klog.Errorf("Failed to close client. error: %v", closeErr)
-		}
-		return nil, err
-	}
-
-	return &Client{db}, nil
-}
-
 func (o *KubeDBClientBuilder) getURL() string {
-	return fmt.Sprintf("%s.%s.%s.svc", o.podName, o.db.GoverningServiceName(), o.db.Namespace)
+	return fmt.Sprintf("%s.%s.%s.svc", o.podName, o.pgpool.GoverningServiceName(), o.pgpool.Namespace)
 }
 
-func (o *KubeDBClientBuilder) getPgpoolAuthCredentials() (string, string, error) {
-	db := o.db
+func (o *KubeDBClientBuilder) getBackendAuth() (string, string, error) {
+	pp := o.pgpool
 	var secretName string
-	if db.Spec.Backend != nil {
+	if pp.Spec.Backend != nil {
 		apb := &appbinding.AppBinding{}
 		err := o.kc.Get(o.ctx, types.NamespacedName{
-			Name:      db.Spec.Backend.Name,
-			Namespace: db.Namespace,
+			Name:      pp.Spec.Backend.Name,
+			Namespace: pp.Namespace,
 		}, apb)
 		if err != nil {
 			return "", "", err
 		}
 		if apb.Spec.Secret == nil {
-			return "", "", fmt.Errorf("No database secret")
+			return "", "", fmt.Errorf("backend database auth secret not found")
 		}
 		secretName = apb.Spec.Secret.Name
 	}
 	var secret core.Secret
-	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: db.Namespace, Name: secretName}, &secret)
+	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: pp.Namespace, Name: secretName}, &secret)
 	if err != nil {
 		return "", "", err
 	}
 	user, ok := secret.Data[core.BasicAuthUsernameKey]
 	if !ok {
-		return "", "", fmt.Errorf("DB root user is not set")
+		return "", "", fmt.Errorf("error getting backend username")
 	}
 	pass, ok := secret.Data[core.BasicAuthPasswordKey]
 	if !ok {
-		return "", "", fmt.Errorf("DB root password is not set")
+		return "", "", fmt.Errorf("error getting backend password")
 	}
 	return string(user), string(pass), nil
 }
 
 func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
-	user, pass, err := o.getPgpoolAuthCredentials()
+	user, pass, err := o.getBackendAuth()
 	if err != nil {
 		return "", err
 	}
@@ -171,10 +147,10 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		o.url = o.getURL()
 	}
 
-	if o.pgpoolDB == "" {
-		o.pgpoolDB = DefaultPgpoolDB
+	if o.backendDBName == "" {
+		o.backendDBName = DefaultBackendDBName
 	}
 	//TODO ssl mode is disable now need to work on this after adding tls support
-	connector := fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s", user, pass, o.url, 9999, o.pgpoolDB, "disable")
+	connector := fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s", user, pass, o.url, DefaultPgpoolPort, o.backendDBName, TLSModeDisable)
 	return connector, nil
 }
