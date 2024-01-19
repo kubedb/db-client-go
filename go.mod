@@ -21,7 +21,8 @@ require (
 	k8s.io/apimachinery v0.29.0
 	k8s.io/klog/v2 v2.110.1
 	kmodules.xyz/client-go v0.29.6
-	kubedb.dev/apimachinery v0.41.0-beta.0.0.20240117131030-72d44aef7411
+	kmodules.xyz/custom-resources v0.29.0
+	kubedb.dev/apimachinery v0.41.0-beta.0.0.20240118063916-9d6870498d68
 	sigs.k8s.io/controller-runtime v0.16.3
 	xorm.io/xorm v1.3.6
 )
@@ -115,7 +116,6 @@ require (
 	k8s.io/kube-openapi v0.0.0-20231129212854-f0671cc7e66a // indirect
 	k8s.io/utils v0.0.0-20231127182322-b307cd553661 // indirect
 	kmodules.xyz/apiversion v0.2.0 // indirect
-	kmodules.xyz/custom-resources v0.29.0 // indirect
 	kmodules.xyz/monitoring-agent-api v0.29.0 // indirect
 	kmodules.xyz/offshoot-api v0.29.0 // indirect
 	modernc.org/memory v1.5.0 // indirect
