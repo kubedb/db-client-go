@@ -95,6 +95,9 @@ func (o *KubeDBClientBuilder) GetPgpoolXormClient() (*XormClient, error) {
 	}
 
 	engine.SetDefaultContext(o.ctx)
+	if engine == nil {
+		return nil, fmt.Errorf("Hey no xorm client for now!")
+	}
 	return &XormClient{
 		engine,
 	}, nil
@@ -108,11 +111,11 @@ func (o *KubeDBClientBuilder) getBackendAuth() (string, string, error) {
 	pp := o.pgpool
 	var secretName string
 	if pp.Spec.Backend != nil {
-		apb := &appbinding.AppBinding{}
+		var apb appbinding.AppBinding
 		err := o.kc.Get(o.ctx, types.NamespacedName{
 			Name:      pp.Spec.Backend.Name,
 			Namespace: pp.Namespace,
-		}, apb)
+		}, &apb)
 		if err != nil {
 			return "", "", err
 		}
