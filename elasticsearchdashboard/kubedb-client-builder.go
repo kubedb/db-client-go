@@ -39,14 +39,15 @@ import (
 )
 
 type KubeDBClientBuilder struct {
-	kc         client.Client
-	dashboard  *esapi.ElasticsearchDashboard
-	db         *v1alpha2.Elasticsearch
-	dbVersion  *catalog.ElasticsearchVersion
-	authSecret *core.Secret
-	url        string
-	podName    string
-	ctx        context.Context
+	kc            client.Client
+	dashboard     *esapi.ElasticsearchDashboard
+	db            *v1alpha2.Elasticsearch
+	dbVersion     *catalog.ElasticsearchVersion
+	dbVersionInfo *DbVersionInfo
+	authSecret    *core.Secret
+	url           string
+	podName       string
+	ctx           context.Context
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *esapi.ElasticsearchDashboard) *KubeDBClientBuilder {
@@ -81,6 +82,11 @@ func (o *KubeDBClientBuilder) WithDbVersion(version *catalog.ElasticsearchVersio
 	return o
 }
 
+func (o *KubeDBClientBuilder) WithDbVersionInfo(versionInfo *DbVersionInfo) *KubeDBClientBuilder {
+	o.dbVersionInfo = versionInfo
+	return o
+}
+
 func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
 	o.ctx = ctx
 	return o
@@ -97,6 +103,7 @@ func (o *KubeDBClientBuilder) GetElasticsearchDashboardClient() (*Client, error)
 			}).DialContext,
 		},
 		connectionScheme: o.dashboard.GetConnectionScheme(),
+		dbVersionInfo:    o.getDbVersionInfo(),
 	}
 	// If EnableSSL is true set tls config,
 	// provide client certs and root CA
@@ -157,15 +164,15 @@ func (o *KubeDBClientBuilder) GetElasticsearchDashboardClient() (*Client, error)
 	}
 
 	// parse version
-	version, err := semver.NewVersion(o.dbVersion.Spec.Version)
+	version, err := semver.NewVersion(config.dbVersionInfo.Version)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse version")
 	}
 
 	switch {
 	// for Elasticsearch 7.x.x and OpenSearch 1.x.x
-	case (o.dbVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginXpack && version.Major() <= 7) ||
-		(o.dbVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginOpenSearch && (version.Major() == 1 || version.Major() == 2)):
+	case (config.dbVersionInfo.AuthPlugin == catalog.ElasticsearchAuthPluginXpack && version.Major() <= 7) ||
+		(config.dbVersionInfo.AuthPlugin == catalog.ElasticsearchAuthPluginOpenSearch && (version.Major() == 1 || version.Major() == 2)):
 		newClient := resty.New()
 		newClient.SetTransport(config.transport).SetScheme(config.connectionScheme).SetBaseURL(config.host)
 		newClient.SetHeader("Accept", "application/json")
@@ -179,7 +186,7 @@ func (o *KubeDBClientBuilder) GetElasticsearchDashboardClient() (*Client, error)
 			},
 		}, nil
 
-	case o.dbVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginXpack && version.Major() == 8:
+	case config.dbVersionInfo.AuthPlugin == catalog.ElasticsearchAuthPluginXpack && version.Major() == 8:
 		newClient := resty.New()
 		newClient.SetTransport(config.transport).SetScheme(config.connectionScheme).SetBaseURL(config.host)
 		newClient.SetHeader("Accept", "application/json")
@@ -194,7 +201,19 @@ func (o *KubeDBClientBuilder) GetElasticsearchDashboardClient() (*Client, error)
 		}, nil
 	}
 
-	return nil, fmt.Errorf("unknown version: %s", o.dbVersion.Name)
+	return nil, fmt.Errorf("unknown version: %s", config.dbVersionInfo.Name)
+}
+
+func (o *KubeDBClientBuilder) getDbVersionInfo() *DbVersionInfo {
+	if o.dbVersionInfo == nil {
+		return &DbVersionInfo{
+			Name:       o.dbVersion.Name,
+			Version:    o.dbVersion.Spec.Version,
+			AuthPlugin: o.dbVersion.Spec.AuthPlugin,
+		}
+	}
+
+	return o.dbVersionInfo
 }
 
 // return host path in

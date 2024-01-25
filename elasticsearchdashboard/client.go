@@ -29,6 +29,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	SavedObjectsReqBody = `{"type": ["dashboard", "config", "index-pattern", "url", "query", "tag", "canvas-element", "canvas-workpad", "action", "alert", "visualization",
+"graph-workspace", "map", "lens", "cases", "search", "osquery-saved-query", "osquery-pack", "uptime-dynamic-settings", "infrastructure-ui-source", "metrics-explorer-view",
+"inventory-view", "apm-indices"]}`
+	SavedObjectsExportURL = "/api/saved_objects/_export"
+	SavedObjectsImportURL = "/api/saved_objects/_import"
+)
+
 type Client struct {
 	EDClient
 }
@@ -42,6 +50,12 @@ type ClientOptions struct {
 	Secret    *core.Secret
 }
 
+type DbVersionInfo struct {
+	Name       string
+	Version    string
+	AuthPlugin catalog.ElasticsearchAuthPlugin
+}
+
 type Config struct {
 	host             string
 	api              string
@@ -49,6 +63,7 @@ type Config struct {
 	password         string
 	connectionScheme string
 	transport        *http.Transport
+	dbVersionInfo    *DbVersionInfo
 }
 
 type Health struct {
@@ -60,7 +75,7 @@ type Health struct {
 type Response struct {
 	Code   int
 	header http.Header
-	body   io.ReadCloser
+	Body   io.ReadCloser
 }
 
 type ResponseBody struct {

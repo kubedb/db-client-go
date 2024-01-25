@@ -47,7 +47,7 @@ func (h *EDClientV7) GetHealthStatus() (*Health, error) {
 		ConnectionResponse: Response{
 			Code:   res.StatusCode(),
 			header: res.Header(),
-			body:   res.RawBody(),
+			Body:   res.RawBody(),
 		},
 		StateFailedReason: statesList,
 	}
@@ -69,10 +69,10 @@ func (h *EDClientV7) GetStateFromHealthResponse(health *Health) (esapi.Dashboard
 			}
 			return
 		}
-	}(resStatus.body)
+	}(resStatus.Body)
 
 	var responseBody ResponseBody
-	body, _ := io.ReadAll(resStatus.body)
+	body, _ := io.ReadAll(resStatus.Body)
 	err := json.Unmarshal(body, &responseBody)
 	if err != nil {
 		return "", errors.Wrap(err, "Failed to parse response body")
@@ -105,4 +105,42 @@ func (h *EDClientV7) GetStateFromHealthResponse(health *Health) (esapi.Dashboard
 	}
 
 	return esapi.DashboardServerState(health.OverallState), nil
+}
+
+func (h *EDClientV7) ExportSavedObjects() (*Response, error) {
+	req := h.Client.R().
+		SetDoNotParseResponse(true).
+		SetHeaders(map[string]string{
+			"Content-Type": "application/json",
+			"kbn-xsrf":     "true",
+		}).
+		SetBody([]byte(SavedObjectsReqBody))
+	res, err := req.Post(SavedObjectsExportURL)
+	if err != nil {
+		klog.Error(err, "Failed to send http request")
+		return nil, err
+	}
+
+	return &Response{
+		Code: res.StatusCode(),
+		Body: res.RawBody(),
+	}, nil
+}
+
+func (h *EDClientV7) ImportSavedObjects(filepath string) (*Response, error) {
+	req := h.Client.R().
+		SetDoNotParseResponse(true).
+		SetHeader("kbn-xsrf", "true").
+		SetFile("file", filepath).
+		SetQueryParam("overwrite", "true")
+	res, err := req.Post(SavedObjectsImportURL)
+	if err != nil {
+		klog.Error(err, "Failed to send http request")
+		return nil, err
+	}
+
+	return &Response{
+		Code: res.StatusCode(),
+		Body: res.RawBody(),
+	}, nil
 }
