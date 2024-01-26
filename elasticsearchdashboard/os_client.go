@@ -114,7 +114,7 @@ func (h *OSClient) ExportSavedObjects() (*Response, error) {
 			"Content-Type": "application/json",
 			"osd-xsrf":     "true",
 		}).
-		SetBody([]byte(SavedObjectsReqBody))
+		SetBody([]byte(SavedObjectsReqBodyOS))
 	res, err := req.Post(SavedObjectsExportURL)
 	if err != nil {
 		klog.Error(err, "Failed to send http request")
