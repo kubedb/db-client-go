@@ -10,7 +10,7 @@ require (
 	github.com/elastic/go-elasticsearch/v7 v7.15.1
 	github.com/elastic/go-elasticsearch/v8 v8.4.0
 	github.com/go-resty/resty/v2 v2.11.0
-	github.com/go-sql-driver/mysql v1.7.0
+	github.com/go-sql-driver/mysql v1.7.1
 	github.com/lib/pq v1.10.7
 	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/opensearch-project/opensearch-go/v2 v2.2.0
@@ -21,8 +21,8 @@ require (
 	k8s.io/apimachinery v0.29.0
 	k8s.io/klog/v2 v2.110.1
 	kmodules.xyz/client-go v0.29.6
-	kmodules.xyz/custom-resources v0.29.0
-	kubedb.dev/apimachinery v0.41.0-beta.1.0.20240124061503-ce4799bb0e5c
+	kmodules.xyz/custom-resources v0.29.1
+	kubedb.dev/apimachinery v0.41.0-rc.0
 	sigs.k8s.io/controller-runtime v0.16.3
 	xorm.io/xorm v1.3.6
 )
