@@ -91,6 +91,8 @@ func (o *KubeDBClientBuilder) GetMsSQLXormClient() (*XormClient, error) {
 		o.ctx = context.Background()
 	}
 	connector, err := o.getConnectionString()
+	klog.Infof("Connector : %v\n", connector)
+
 	if err != nil {
 		return nil, err
 	}
@@ -98,6 +100,9 @@ func (o *KubeDBClientBuilder) GetMsSQLXormClient() (*XormClient, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	klog.Infof(err.Error())
+
 	_, err = engine.Query("SELECT 1")
 	if err != nil {
 		return nil, err
