@@ -126,11 +126,11 @@ func (o *KubeDBClientBuilder) getMsSQLSACredentials() (string, string, error) {
 	}
 	user, ok := secret.Data[core.BasicAuthUsernameKey]
 	if !ok {
-		return "", "", fmt.Errorf("DB sa user is not found in secret")
+		return "", "", fmt.Errorf("DB SA user is not found in secret")
 	}
 	pass, ok := secret.Data[core.BasicAuthPasswordKey]
 	if !ok {
-		return "", "", fmt.Errorf("DB SA password is not set in secret")
+		return "", "", fmt.Errorf("DB  password is not set in secret")
 	}
 	return string(user), string(pass), nil
 }
