@@ -144,8 +144,8 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	if o.podName != "" {
 		o.url = o.getURL()
 	}
-
-	tlsConfig := ""
+	//TODO: TLS
+	//tlsConfig := ""
 	//if o.db.Spec.RequireSSL && o.db.Spec.TLS != nil {
 	//	// get client-secret
 	//	var clientSecret core.Secret
@@ -178,6 +178,8 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	//	}
 	//}
 
-	connector := fmt.Sprintf("sqlserver://%s:%s@%s:%d?%s", user, pass, o.url, 1433, tlsConfig)
+	// sqlserver://username:password@host:port?param1=value&param2=value
+	// connector := fmt.Sprintf("sqlserver://%s:%s@%s:%d?%s", user, pass, o.url, 1433, tlsConfig)
+	connector := fmt.Sprintf("sqlserver://%s:%s@%s:%d?database=master", user, pass, o.url, 1433)
 	return connector, nil
 }
