@@ -152,3 +152,10 @@ func (m MsSQL) SetHealthCheckerDefaults() {
 		m.Spec.HealthChecker.FailureThreshold = pointer.Int32P(1)
 	}
 }
+
+func (m MsSQL) GetAuthSecretName() string {
+	if m.Spec.AuthSecret != nil && m.Spec.AuthSecret.Name != "" {
+		return m.Spec.AuthSecret.Name
+	}
+	return m.DefaultUserCredSecretName(MsSQLSAUser)
+}
