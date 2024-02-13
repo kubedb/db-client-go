@@ -20,6 +20,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+
 	_ "github.com/microsoft/go-mssqldb"
 	core "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
