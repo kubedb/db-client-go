@@ -91,26 +91,17 @@ func (o *KubeDBClientBuilder) GetMsSQLXormClient() (*XormClient, error) {
 		o.ctx = context.Background()
 	}
 	connector, err := o.getConnectionString()
-	klog.Infof("Connector : %v\n", connector)
-
 	if err != nil {
 		return nil, err
 	}
+
 	engine, err := xorm.NewEngine(mapi.ResourceSingularMsSQL, connector)
 	if err != nil {
-		klog.Errorf("engine error: %v\n", err)
 		return nil, err
-	}
-
-	if engine == nil {
-		klog.Infoln("Engine is nil")
-	} else {
-		klog.Infoln("Engine %v\n", engine)
 	}
 
 	_, err = engine.Query("SELECT 1")
 	if err != nil {
-		klog.Errorf("engine query error: %v\n", err)
 		return nil, err
 	}
 
@@ -155,7 +146,8 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	if o.podName != "" {
 		o.url = o.getURL()
 	}
-	//TODO: TLS
+
+	// TODO: Add tlsConfig
 	tlsConfig := ""
 	//if o.db.Spec.RequireSSL && o.db.Spec.TLS != nil {
 	//	// get client-secret
@@ -188,11 +180,6 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	//		tlsConfig = fmt.Sprintf("tls=%s", api.MsSQLTLSConfigSkipVerify)
 	//	}
 	//}
-
-	// sqlserver://username:password@host:port?param1=value&param2=value
-	// connector := fmt.Sprintf("sqlserver://%s:%s@%s:%d?%s", user, pass, o.url, 1433, tlsConfig)
-	//connector := fmt.Sprintf("sqlserver://%s:%s@%s:%d?database=master", user, pass, o.url, 1433)
-	//return connector, nil
 
 	connectionString := fmt.Sprintf("server=%s;user id=%s;password=%s;database=%s;%s", o.url, user, pass, "master", tlsConfig)
 	return connectionString, nil
