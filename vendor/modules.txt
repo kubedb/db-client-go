@@ -808,6 +808,9 @@ github.com/klauspost/compress/internal/cpuinfo
 github.com/klauspost/compress/internal/snapref
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
+# github.com/klauspost/cpuid/v2 v2.0.9
+## explicit; go 1.13
+github.com/klauspost/cpuid/v2
 # github.com/lib/pq v1.10.7
 ## explicit; go 1.13
 github.com/lib/pq
@@ -937,6 +940,9 @@ github.com/yudai/gojsondiff/formatter
 # github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82
 ## explicit
 github.com/yudai/golcs
+# github.com/zeebo/xxh3 v1.0.2
+## explicit; go 1.17
+github.com/zeebo/xxh3
 # go.mongodb.org/mongo-driver v1.10.2
 ## explicit; go 1.10
 go.mongodb.org/mongo-driver/bson
@@ -1379,7 +1385,7 @@ k8s.io/utils/trace
 # kmodules.xyz/apiversion v0.2.0
 ## explicit; go 1.14
 kmodules.xyz/apiversion
-# kmodules.xyz/client-go v0.29.6
+# kmodules.xyz/client-go v0.29.8
 ## explicit; go 1.21.5
 kmodules.xyz/client-go
 kmodules.xyz/client-go/api/v1
@@ -1403,7 +1409,7 @@ kmodules.xyz/monitoring-agent-api/api/v1
 ## explicit; go 1.21.5
 kmodules.xyz/offshoot-api/api/v1
 kmodules.xyz/offshoot-api/api/v2
-# kubedb.dev/apimachinery v0.41.0
+# kubedb.dev/apimachinery v0.42.0
 ## explicit; go 1.21.5
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog
