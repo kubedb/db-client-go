@@ -1068,6 +1068,8 @@ golang.org/x/text/unicode/norm
 # golang.org/x/time v0.5.0
 ## explicit; go 1.18
 golang.org/x/time/rate
+# golang.org/x/tools v0.18.0
+## explicit; go 1.18
 # gomodules.xyz/jsonpatch/v2 v2.4.0
 ## explicit; go 1.20
 gomodules.xyz/jsonpatch/v2
@@ -1487,6 +1489,9 @@ kubeops.dev/petset/client/clientset/versioned/typed/apps/v1
 kubeops.dev/petset/client/listers/apps/v1
 kubeops.dev/petset/crds
 kubeops.dev/petset/pkg/features
+# kubedb.dev/mssql v0.0.0-00010101000000-000000000000 => ../mssql
+## explicit; go 1.21.7
+kubedb.dev/mssql/api/v1alpha2
 # modernc.org/memory v1.5.0
 ## explicit; go 1.18
 # modernc.org/token v1.1.0

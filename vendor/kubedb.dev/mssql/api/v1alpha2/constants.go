@@ -8,8 +8,9 @@ const (
 const (
 	// =========================== MsSQL Constants ============================
 
-	MsSQLDatabasePodPrimary   = "primary"
-	MsSQLDatabasePodSecondary = "secondary"
+	MsSQLDatabasePodPrimary    = "primary"
+	MsSQLDatabasePodSecondary  = "secondary"
+	MsSQLSecondaryServiceAlias = "secondary"
 
 	MsSQLDatabasePortName         = "db"
 	MsSQLPrimaryServicePortName   = "primary"
