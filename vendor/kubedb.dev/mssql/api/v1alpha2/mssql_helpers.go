@@ -159,3 +159,11 @@ func (m MsSQL) GetAuthSecretName() string {
 	}
 	return m.DefaultUserCredSecretName(MsSQLSAUser)
 }
+
+func (m *MsSQL) GetNameSpacedName() string {
+	return m.Namespace + "/" + m.Name
+}
+
+func (m *MsSQL) PrimaryServiceDNS() string {
+	return fmt.Sprintf("%s.%s.svc", m.ServiceName(), m.Namespace)
+}
