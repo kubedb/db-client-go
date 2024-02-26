@@ -107,6 +107,9 @@ func (o *KubeDBClientBuilder) getURL() string {
 func (o *KubeDBClientBuilder) getBackendAuth() (string, string, error) {
 	pp := o.pgpool
 	var secretName string
+	if pp.Spec.PostgresRef == nil {
+		return "", "", fmt.Errorf("there is no postgresRef found for pgpool %s/%s", pp.Namespace, pp.Name)
+	}
 	if pp.Spec.PostgresRef != nil {
 		apb := &appbinding.AppBinding{}
 		err := o.kc.Get(o.ctx, types.NamespacedName{
