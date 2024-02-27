@@ -587,8 +587,8 @@ kmodules.xyz/monitoring-agent-api v0.29.0 h1:gpFl6OZrlMLb/ySMHdREI9EwGtnJ91oZBn9
 kmodules.xyz/monitoring-agent-api v0.29.0/go.mod h1:iNbvaMTgVFOI5q2LJtGK91j4Dmjv4ZRiRdasGmWLKQI=
 kmodules.xyz/offshoot-api v0.29.0 h1:GHLhxxT9jU1N8+FvOCCeJNyU5g0duYS46UGrs6AHNLY=
 kmodules.xyz/offshoot-api v0.29.0/go.mod h1:5NxhBblXoDHWStx9HCDJR2KFTwYjEZ7i1Id3jelIunw=
-kubedb.dev/apimachinery v0.42.2-0.20240226123708-9992b30a58bf h1:VxgWj3NqYK0ocpa23noF/73WFfF7seVqlpGkCYCTlEw=
-kubedb.dev/apimachinery v0.42.2-0.20240226123708-9992b30a58bf/go.mod h1:snGyLCdf0EDRjEMVxAtbObhL8lyFG/y/hNNVprYu1yE=
+kubedb.dev/apimachinery v0.42.2-0.20240227074455-429a2b10fe50 h1:cyVDIRYXLBss+GjVBNwh7qaWZaCn10BxRw7SUnGbcJs=
+kubedb.dev/apimachinery v0.42.2-0.20240227074455-429a2b10fe50/go.mod h1:snGyLCdf0EDRjEMVxAtbObhL8lyFG/y/hNNVprYu1yE=
 lukechampine.com/uint128 v1.1.1/go.mod h1:c4eWIwlEGaxC/+H1VguhU4PHXNWDCDMUlWdIWl2j1gk=
 lukechampine.com/uint128 v1.2.0 h1:mBi/5l91vocEN8otkC5bDLhi2KdCticRiwbdB0O+rjI=
 lukechampine.com/uint128 v1.2.0/go.mod h1:c4eWIwlEGaxC/+H1VguhU4PHXNWDCDMUlWdIWl2j1gk=

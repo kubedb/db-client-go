@@ -26068,20 +26068,6 @@ func schema_apimachinery_apis_kubedb_v1alpha2_MetadataStorage(ref common.Referen
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Name of the appbinding of metadata storage",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"namespace": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Namespace of the appbinding of metadata storage",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
 					"type": {
 						SchemaProps: spec.SchemaProps{
 							Description: "If not KubeDB managed, then specify type of the metadata storage",
@@ -30800,6 +30786,16 @@ func schema_apimachinery_apis_kubedb_v1alpha2_SolrSpec(ref common.ReferenceCallb
 							Ref: ref("k8s.io/api/core/v1.LocalObjectReference"),
 						},
 					},
+					"zookeeperDigestSecret": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/api/core/v1.LocalObjectReference"),
+						},
+					},
+					"zookeeperDigestReadonlySecret": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/api/core/v1.LocalObjectReference"),
+						},
+					},
 					"authConfigSecret": {
 						SchemaProps: spec.SchemaProps{
 							Ref: ref("k8s.io/api/core/v1.LocalObjectReference"),
@@ -31217,12 +31213,6 @@ func schema_apimachinery_apis_kubedb_v1alpha2_ZookeeperRef(ref common.ReferenceC
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
-					"omitempty": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Name of the appbinding of zookeeper",
-							Ref:         ref("kmodules.xyz/client-go/api/v1.ObjectReference"),
-						},
-					},
 					"pathsBase": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Base ZooKeeperSpec path",
@@ -31233,8 +31223,6 @@ func schema_apimachinery_apis_kubedb_v1alpha2_ZookeeperRef(ref common.ReferenceC
 				},
 			},
 		},
-		Dependencies: []string{
-			"kmodules.xyz/client-go/api/v1.ObjectReference"},
 	}
 }
 
