@@ -106,26 +106,23 @@ func (o *KubeDBClientBuilder) getURL() string {
 
 func (o *KubeDBClientBuilder) getBackendAuth() (string, string, error) {
 	pp := o.pgpool
-	var secretName string
 	if pp.Spec.PostgresRef == nil {
 		return "", "", fmt.Errorf("there is no postgresRef found for pgpool %s/%s", pp.Namespace, pp.Name)
 	}
-	if pp.Spec.PostgresRef != nil {
-		apb := &appbinding.AppBinding{}
-		err := o.kc.Get(o.ctx, types.NamespacedName{
-			Name:      pp.Spec.PostgresRef.Name,
-			Namespace: pp.Spec.PostgresRef.Namespace,
-		}, apb)
-		if err != nil {
-			return "", "", err
-		}
-		if apb.Spec.Secret == nil {
-			return "", "", fmt.Errorf("backend postgres database auth secret not found for pgpool %s/%s", pp.Namespace, pp.Name)
-		}
-		secretName = apb.Spec.Secret.Name
+	apb := &appbinding.AppBinding{}
+	err := o.kc.Get(o.ctx, types.NamespacedName{
+		Name:      pp.Spec.PostgresRef.Name,
+		Namespace: pp.Spec.PostgresRef.Namespace,
+	}, apb)
+	if err != nil {
+		return "", "", err
 	}
+	if apb.Spec.Secret == nil {
+		return "", "", fmt.Errorf("backend postgres auth secret unspecified for pgpool %s/%s", pp.Namespace, pp.Name)
+	}
+
 	var secret core.Secret
-	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: pp.Spec.PostgresRef.Namespace, Name: secretName}, &secret)
+	err = o.kc.Get(o.ctx, client.ObjectKey{Namespace: pp.Spec.PostgresRef.Namespace, Name: apb.Spec.Secret.Name}, &secret)
 	if err != nil {
 		return "", "", err
 	}
