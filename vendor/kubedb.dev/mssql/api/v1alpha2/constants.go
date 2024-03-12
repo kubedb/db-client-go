@@ -18,11 +18,9 @@ const (
 
 	MsSQLDatabasePort                  = 1433
 	MsSQLDatabaseMirroringEndpointPort = 5022
+	MsSQLCoordinatorPort               = 2381
 
-	MsSQLUser          = "mssql"
-	MsSQLUsernameKey   = "username"
-	MsSQLSAUser        = "sa"
-	MsSQLSAPasswordKey = "password"
+	MsSQLSAUser = "sa"
 
 	// --- Environment Variables
 	EnvAcceptEula        = "ACCEPT_EULA"
@@ -40,7 +38,7 @@ const (
 	MsSQLVolumeMountPathInitScript = "/scripts"
 
 	MsSQLImage            = "neajmorshad/sql22:tools-0.1"
-	MsSQLCoordinatorImage = "neajmorshad/mssql-coordinator:mssql-coordinator_linux_amd64"
+	MsSQLCoordinatorImage = "neajmorshad/mssql-coordinator:coordntr_linux_amd64" // "neajmorshad/mssql-coordinator:mssql-coordinator_linux_amd64"
 	MsSQLInitImage        = "neajmorshad/mssql-init-docker:0.1"
 
 	ComponentDatabase = "database"
