@@ -18,12 +18,10 @@ package mssql
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
 	_ "github.com/microsoft/go-mssqldb"
 	core "k8s.io/api/core/v1"
-	"k8s.io/klog/v2"
 	mapi "kubedb.dev/mssql/api/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"xorm.io/xorm"
@@ -57,34 +55,6 @@ func (o *KubeDBClientBuilder) WithPod(podName string) *KubeDBClientBuilder {
 func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
 	o.ctx = ctx
 	return o
-}
-
-func (o *KubeDBClientBuilder) GetMsSQLClient() (*Client, error) {
-	if o.ctx == nil {
-		o.ctx = context.Background()
-	}
-
-	connector, err := o.getConnectionString()
-	if err != nil {
-		return nil, err
-	}
-
-	// connect to database
-	db, err := sql.Open("mssql", connector)
-	if err != nil {
-		return nil, err
-	}
-
-	// ping to database to check the connection
-	if err := db.PingContext(o.ctx); err != nil {
-		closeErr := db.Close()
-		if closeErr != nil {
-			klog.Errorf("Failed to close client. error: %v", closeErr)
-		}
-		return nil, err
-	}
-
-	return &Client{db}, nil
 }
 
 func (o *KubeDBClientBuilder) GetMsSQLXormClient() (*XormClient, error) {
