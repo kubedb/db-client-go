@@ -3,11 +3,11 @@ package v1alpha2
 import (
 	"context"
 	"fmt"
-	"kubedb.dev/apimachinery/apis"
-	"kubedb.dev/apimachinery/apis/kubedb"
 	"strings"
 
+	"kubedb.dev/apimachinery/apis"
 	catalog "kubedb.dev/apimachinery/apis/catalog/v1alpha1"
+	"kubedb.dev/apimachinery/apis/kubedb"
 
 	"gomodules.xyz/pointer"
 	core "k8s.io/api/core/v1"
