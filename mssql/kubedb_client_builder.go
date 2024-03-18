@@ -20,22 +20,23 @@ import (
 	"context"
 	"fmt"
 
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+
 	_ "github.com/microsoft/go-mssqldb"
 	core "k8s.io/api/core/v1"
-	mapi "kubedb.dev/mssql/api/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"xorm.io/xorm"
 )
 
 type KubeDBClientBuilder struct {
 	kc      client.Client
-	db      *mapi.MsSQL
+	db      *api.MsSQL
 	url     string
 	podName string
 	ctx     context.Context
 }
 
-func NewKubeDBClientBuilder(kc client.Client, db *mapi.MsSQL) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *api.MsSQL) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc: kc,
 		db: db,
@@ -66,7 +67,7 @@ func (o *KubeDBClientBuilder) GetMsSQLXormClient() (*XormClient, error) {
 		return nil, err
 	}
 
-	engine, err := xorm.NewEngine(mapi.ResourceSingularMsSQL, connector)
+	engine, err := xorm.NewEngine(api.ResourceSingularMsSQL, connector)
 	if err != nil {
 		return nil, err
 	}
