@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 
-	api "kubedb.dev/apimachinery/apis/autoscaling/v1alpha1"
 	catalog "kubedb.dev/apimachinery/apis/catalog/v1alpha1"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -188,7 +187,7 @@ var mssqlReservedVolumesMountPaths = []string{
 
 func mssqlValidateVersion(m *MsSQL) error {
 	var mssqlVersion catalog.MsSQLVersion
-	err := api.DefaultClient.Get(context.TODO(), types.NamespacedName{
+	err := DefaultClient.Get(context.TODO(), types.NamespacedName{
 		Name: m.Spec.Version,
 	}, &mssqlVersion)
 	if err != nil {

@@ -529,6 +529,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MongoDBStatus":                  schema_apimachinery_apis_kubedb_v1alpha2_MongoDBStatus(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MongoHiddenNode":                schema_apimachinery_apis_kubedb_v1alpha2_MongoHiddenNode(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MsSQL":                          schema_apimachinery_apis_kubedb_v1alpha2_MsSQL(ref),
+		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MsSQLApp":                       schema_apimachinery_apis_kubedb_v1alpha2_MsSQLApp(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MsSQLAvailabilityGroupSpec":     schema_apimachinery_apis_kubedb_v1alpha2_MsSQLAvailabilityGroupSpec(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MsSQLList":                      schema_apimachinery_apis_kubedb_v1alpha2_MsSQLList(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MsSQLSpec":                      schema_apimachinery_apis_kubedb_v1alpha2_MsSQLSpec(ref),
@@ -26967,6 +26968,26 @@ func schema_apimachinery_apis_kubedb_v1alpha2_MsSQL(ref common.ReferenceCallback
 		},
 		Dependencies: []string{
 			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MsSQLSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MsSQLStatus"},
+	}
+}
+
+func schema_apimachinery_apis_kubedb_v1alpha2_MsSQLApp(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"MsSQL": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MsSQL"),
+						},
+					},
+				},
+				Required: []string{"MsSQL"},
+			},
+		},
+		Dependencies: []string{
+			"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MsSQL"},
 	}
 }
 
