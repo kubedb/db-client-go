@@ -20,6 +20,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -470,15 +471,28 @@ func (o *KubeDBClientBuilder) GetElasticRestyClient() (*ESRestyClient, error) {
 	}, nil
 }
 
-func (client *ESRestyClient) Ping() (int, error) {
+func (client *ESRestyClient) Ping() (string, error) {
 	req := client.Client.R().SetDoNotParseResponse(true)
 	res, err := req.Get(client.Config.api)
-	if err != nil {
+	if err != nil || res.StatusCode() != 200 {
 		klog.Error(err, "Failed to send http request")
-		return res.StatusCode(), err
+		return "", err
 	}
+
+	body := res.RawBody()
+	responseBody := make(map[string]interface{})
+	if err := json.NewDecoder(body).Decode(&responseBody); err != nil {
+		return "", fmt.Errorf("failed to deserialize the response: %v", err)
+	}
+	if val, ok := responseBody["status"]; ok {
+		if strValue, ok := val.(string); ok {
+			return strValue, nil
+		}
+		return "", errors.New("failed to convert response to string")
+	}
+
 	klog.Info("status code here", res.StatusCode(), string(res.Body()))
-	return res.StatusCode(), nil
+	return "", errors.New("status is missing")
 }
 
 func (o *KubeDBClientBuilder) getDefaultTLSConfig() (*tls.Config, error) {
