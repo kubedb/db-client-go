@@ -477,7 +477,7 @@ func (client *ESRestyClient) Ping() (int, error) {
 		klog.Error(err, "Failed to send http request")
 		return res.StatusCode(), err
 	}
-	klog.Info("status code here", res.StatusCode())
+	klog.Info("status code here", res.StatusCode(), string(res.Body()))
 	return res.StatusCode(), nil
 }
 
