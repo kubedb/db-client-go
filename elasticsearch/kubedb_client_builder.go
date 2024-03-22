@@ -36,6 +36,7 @@ import (
 	esv7 "github.com/elastic/go-elasticsearch/v7"
 	esv8 "github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
+	"github.com/go-resty/resty/v2"
 	osv1 "github.com/opensearch-project/opensearch-go"
 	osapiv1 "github.com/opensearch-project/opensearch-go/opensearchapi"
 	osv2 "github.com/opensearch-project/opensearch-go/v2"
@@ -410,6 +411,74 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 	}
 
 	return nil, fmt.Errorf("unknown database version: %s", o.db.Spec.Version)
+}
+
+type Config struct {
+	host      string
+	api       string
+	transport *http.Transport
+}
+
+func (o *KubeDBClientBuilder) GetElasticRestyClient() (*ESRestyClient, error) {
+	config := Config{
+		host: o.ServiceURL(),
+		api:  "/_cluster/health?pretty",
+		transport: &http.Transport{
+			IdleConnTimeout: time.Second * 3,
+			DialContext: (&net.Dialer{
+				Timeout: time.Second * 30,
+			}).DialContext,
+		},
+	}
+
+	var authSecret core.Secret
+	var username, password string
+	if !o.db.Spec.DisableSecurity && o.db.Spec.AuthSecret != nil {
+		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.AuthSecret.Name}, &authSecret)
+		if err != nil {
+			return nil, errors.Errorf("Failed to get auth secret with %s", err)
+		}
+
+		if value, ok := authSecret.Data[core.BasicAuthUsernameKey]; ok {
+			username = string(value)
+		} else {
+			klog.Errorf("Failed for secret: %s/%s, username is missing", authSecret.Namespace, authSecret.Name)
+			return nil, errors.New("username is missing")
+		}
+
+		if value, ok := authSecret.Data[core.BasicAuthPasswordKey]; ok {
+			password = string(value)
+		} else {
+			klog.Errorf("Failed for secret: %s/%s, password is missing", authSecret.Namespace, authSecret.Name)
+			return nil, errors.New("password is missing")
+		}
+	}
+
+	defaultTlsConfig, err := o.getDefaultTLSConfig()
+	if err != nil {
+		klog.Errorf("Failed to get default tls config: %v", err)
+	}
+	config.transport.TLSClientConfig = defaultTlsConfig
+	newClient := resty.New()
+	newClient.SetTransport(config.transport).SetScheme(o.db.GetConnectionScheme()).SetBaseURL(config.host)
+	newClient.SetHeader("Accept", "application/json")
+	newClient.SetBasicAuth(username, password)
+	newClient.SetTimeout(time.Second * 30)
+	return &ESRestyClient{
+		Client: newClient,
+		Config: &config,
+	}, nil
+}
+
+func (client *ESRestyClient) Ping() (int, error) {
+	req := client.Client.R().SetDoNotParseResponse(true)
+	res, err := req.Get(client.Config.api)
+	if err != nil {
+		klog.Error(err, "Failed to send http request")
+		return res.StatusCode(), err
+	}
+	klog.Info("status code here", res.StatusCode())
+	return res.StatusCode(), nil
 }
 
 func (o *KubeDBClientBuilder) getDefaultTLSConfig() (*tls.Config, error) {
