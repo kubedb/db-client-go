@@ -478,7 +478,6 @@ func (client *ESRestyClient) Ping() (string, error) {
 		klog.Error(err, "Failed to send http request")
 		return "", err
 	}
-
 	body := res.RawBody()
 	responseBody := make(map[string]interface{})
 	if err := json.NewDecoder(body).Decode(&responseBody); err != nil {
@@ -490,8 +489,6 @@ func (client *ESRestyClient) Ping() (string, error) {
 		}
 		return "", errors.New("failed to convert response to string")
 	}
-
-	klog.Info("status code here", res.StatusCode(), string(res.Body()))
 	return "", errors.New("status is missing")
 }
 
