@@ -474,8 +474,16 @@ func (o *KubeDBClientBuilder) GetElasticRestyClient() (*ESRestyClient, error) {
 func (client *ESRestyClient) Ping() (string, error) {
 	req := client.Client.R().SetDoNotParseResponse(true)
 	res, err := req.Get(client.Config.api)
-	if err != nil || res.StatusCode() != 200 {
-		klog.Error(err, "Failed to send http request")
+	if res != nil {
+		if res.StatusCode() != 200 {
+			klog.Error("stauscode is not 200")
+			return "", errors.New("statuscode is not 200")
+		}
+	} else if res == nil {
+		return "", errors.New("response can not be nil")
+	}
+	if err != nil {
+		klog.Error(err, res.StatusCode(), "Failed to send http request")
 		return "", err
 	}
 	body := res.RawBody()
