@@ -848,7 +848,7 @@ github.com/opensearch-project/opensearch-go/internal/version
 github.com/opensearch-project/opensearch-go/opensearchapi
 github.com/opensearch-project/opensearch-go/opensearchtransport
 github.com/opensearch-project/opensearch-go/signer
-# github.com/opensearch-project/opensearch-go/v2 v2.2.0
+# github.com/opensearch-project/opensearch-go/v2 v2.3.0
 ## explicit; go 1.15
 github.com/opensearch-project/opensearch-go/v2
 github.com/opensearch-project/opensearch-go/v2/internal/version
@@ -891,7 +891,7 @@ github.com/prometheus/procfs/internal/util
 # github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
 ## explicit
 github.com/rcrowley/go-metrics
-# github.com/redis/go-redis/v9 v9.0.5
+# github.com/redis/go-redis/v9 v9.5.1
 ## explicit; go 1.18
 github.com/redis/go-redis/v9
 github.com/redis/go-redis/v9/internal
@@ -945,8 +945,8 @@ github.com/yudai/golcs
 # github.com/zeebo/xxh3 v1.0.2
 ## explicit; go 1.17
 github.com/zeebo/xxh3
-# go.mongodb.org/mongo-driver v1.10.2
-## explicit; go 1.10
+# go.mongodb.org/mongo-driver v1.14.0
+## explicit; go 1.18
 go.mongodb.org/mongo-driver/bson
 go.mongodb.org/mongo-driver/bson/bsoncodec
 go.mongodb.org/mongo-driver/bson/bsonoptions
@@ -954,9 +954,22 @@ go.mongodb.org/mongo-driver/bson/bsonrw
 go.mongodb.org/mongo-driver/bson/bsontype
 go.mongodb.org/mongo-driver/bson/primitive
 go.mongodb.org/mongo-driver/event
-go.mongodb.org/mongo-driver/internal
+go.mongodb.org/mongo-driver/internal/aws
+go.mongodb.org/mongo-driver/internal/aws/awserr
+go.mongodb.org/mongo-driver/internal/aws/credentials
+go.mongodb.org/mongo-driver/internal/aws/signer/v4
+go.mongodb.org/mongo-driver/internal/bsonutil
+go.mongodb.org/mongo-driver/internal/codecutil
+go.mongodb.org/mongo-driver/internal/credproviders
+go.mongodb.org/mongo-driver/internal/csfle
+go.mongodb.org/mongo-driver/internal/csot
+go.mongodb.org/mongo-driver/internal/driverutil
+go.mongodb.org/mongo-driver/internal/handshake
+go.mongodb.org/mongo-driver/internal/httputil
+go.mongodb.org/mongo-driver/internal/logger
+go.mongodb.org/mongo-driver/internal/ptrutil
+go.mongodb.org/mongo-driver/internal/rand
 go.mongodb.org/mongo-driver/internal/randutil
-go.mongodb.org/mongo-driver/internal/randutil/rand
 go.mongodb.org/mongo-driver/internal/uuid
 go.mongodb.org/mongo-driver/mongo
 go.mongodb.org/mongo-driver/mongo/address
@@ -967,11 +980,10 @@ go.mongodb.org/mongo-driver/mongo/readpref
 go.mongodb.org/mongo-driver/mongo/writeconcern
 go.mongodb.org/mongo-driver/tag
 go.mongodb.org/mongo-driver/version
-go.mongodb.org/mongo-driver/x/bsonx
 go.mongodb.org/mongo-driver/x/bsonx/bsoncore
 go.mongodb.org/mongo-driver/x/mongo/driver
 go.mongodb.org/mongo-driver/x/mongo/driver/auth
-go.mongodb.org/mongo-driver/x/mongo/driver/auth/internal/awsv4
+go.mongodb.org/mongo-driver/x/mongo/driver/auth/creds
 go.mongodb.org/mongo-driver/x/mongo/driver/auth/internal/gssapi
 go.mongodb.org/mongo-driver/x/mongo/driver/connstring
 go.mongodb.org/mongo-driver/x/mongo/driver/dns
@@ -982,7 +994,7 @@ go.mongodb.org/mongo-driver/x/mongo/driver/operation
 go.mongodb.org/mongo-driver/x/mongo/driver/session
 go.mongodb.org/mongo-driver/x/mongo/driver/topology
 go.mongodb.org/mongo-driver/x/mongo/driver/wiremessage
-# golang.org/x/crypto v0.19.0
+# golang.org/x/crypto v0.21.0
 ## explicit; go 1.18
 golang.org/x/crypto/md4
 golang.org/x/crypto/ocsp
@@ -991,7 +1003,7 @@ golang.org/x/crypto/scrypt
 # golang.org/x/exp v0.0.0-20230905200255-921286631fa9
 ## explicit; go 1.20
 golang.org/x/exp/maps
-# golang.org/x/net v0.21.0
+# golang.org/x/net v0.23.0
 ## explicit; go 1.18
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
@@ -1007,12 +1019,13 @@ golang.org/x/oauth2/internal
 # golang.org/x/sync v0.5.0
 ## explicit; go 1.18
 golang.org/x/sync/errgroup
-# golang.org/x/sys v0.17.0
+golang.org/x/sync/singleflight
+# golang.org/x/sys v0.18.0
 ## explicit; go 1.18
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/term v0.17.0
+# golang.org/x/term v0.18.0
 ## explicit; go 1.18
 golang.org/x/term
 # golang.org/x/text v0.14.0
