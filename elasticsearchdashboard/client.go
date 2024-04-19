@@ -40,6 +40,11 @@ const (
 	SpacesURL             = "/api/spaces/space"
 )
 
+var jsonHeaderForKibanaAPI = map[string]string{
+	"Content-Type": "application/json",
+	"kbn-xsrf":     "true",
+}
+
 type Client struct {
 	EDClient
 }
