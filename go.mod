@@ -17,6 +17,7 @@ require (
 	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/pkg/errors v0.9.1
+	github.com/rabbitmq/amqp091-go v1.9.0
 	github.com/redis/go-redis/v9 v9.5.1
 	go.mongodb.org/mongo-driver v1.14.0
 	k8s.io/api v0.29.2
