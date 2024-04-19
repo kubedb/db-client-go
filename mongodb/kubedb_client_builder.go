@@ -42,6 +42,7 @@ type KubeDBClientBuilder struct {
 	direct     bool
 	certs      *certholder.ResourceCerts
 	ctx        context.Context
+	cred       string
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *api.MongoDB) *KubeDBClientBuilder {
@@ -50,6 +51,13 @@ func NewKubeDBClientBuilder(kc client.Client, db *api.MongoDB) *KubeDBClientBuil
 		db:     db,
 		direct: false,
 	}
+}
+
+// To connect with a specific user.
+// cred formet: "username:password"
+func (o *KubeDBClientBuilder) WithCred(cred string) *KubeDBClientBuilder {
+	o.cred = cred
+	return o
 }
 
 func (o *KubeDBClientBuilder) WithURL(url string) *KubeDBClientBuilder {
@@ -145,17 +153,25 @@ func (o *KubeDBClientBuilder) getMongoDBClientOpts() (*mgoptions.ClientOptions, 
 		repSetConfig = "replicaSet=" + o.repSetName + "&"
 	}
 
-	user, pass, err := o.getMongoDBRootCredentials()
-	if err != nil {
-		return nil, err
+	cred := o.cred
+	if cred == "" {
+		user, pass, err := o.getMongoDBRootCredentials()
+		if err != nil {
+			return nil, err
+		}
+		cred = fmt.Sprintf("%s:%s", user, pass)
 	}
+
 	var clientOpts *mgoptions.ClientOptions
 	if db.Spec.TLS != nil {
 		secretName := db.GetCertSecretName(api.MongoDBClientCert, "")
-		var paths *certholder.Paths
+		var (
+			paths *certholder.Paths
+			err   error
+		)
 		if o.certs == nil {
 			var certSecret core.Secret
-			err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: db.Namespace, Name: secretName}, &certSecret)
+			err = o.kc.Get(o.ctx, client.ObjectKey{Namespace: db.Namespace, Name: secretName}, &certSecret)
 			if err != nil {
 				klog.Error(err, "failed to get certificate secret. ", secretName)
 				return nil, err
@@ -180,10 +196,10 @@ func (o *KubeDBClientBuilder) getMongoDBClientOpts() (*mgoptions.ClientOptions, 
 			}
 		}
 
-		uri := fmt.Sprintf("mongodb://%s:%s@%s/admin?%vtls=true&tlsCAFile=%v&tlsCertificateKeyFile=%v", user, pass, o.url, repSetConfig, paths.CACert, paths.Pem)
+		uri := fmt.Sprintf("mongodb://%s@%s/admin?%vtls=true&tlsCAFile=%v&tlsCertificateKeyFile=%v", cred, o.url, repSetConfig, paths.CACert, paths.Pem)
 		clientOpts = mgoptions.Client().ApplyURI(uri)
 	} else {
-		clientOpts = mgoptions.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s@%s/admin?%v", user, pass, o.url, repSetConfig))
+		clientOpts = mgoptions.Client().ApplyURI(fmt.Sprintf("mongodb://%s@%s/admin?%v", cred, o.url, repSetConfig))
 	}
 
 	clientOpts.SetDirect(o.direct)
