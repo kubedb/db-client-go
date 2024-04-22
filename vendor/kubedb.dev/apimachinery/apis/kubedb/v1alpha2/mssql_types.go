@@ -24,25 +24,24 @@ import (
 )
 
 const (
-	ResourceCodeMsSQL     = "ms"
-	ResourceKindMsSQL     = "MsSQL"
-	ResourceSingularMsSQL = "mssql"
-	ResourcePluralMsSQL   = "mssqls"
+	ResourceCodeMSSQL     = "ms"
+	ResourceKindMSSQL     = "MSSQL"
+	ResourceSingularMSSQL = "mssql"
+	ResourcePluralMSSQL   = "mssqls"
 )
 
-// +kubebuilder:validation:Enum=Standalone;AvailabilityGroup
-type MsSQLMode string
+// +kubebuilder:validation:Enum=AvailabilityGroup;RemoteReplica
+type MSSQLMode string
 
 const (
-	MsSQLModeStandalone        MsSQLMode = "Standalone"
-	MsSQLModeAvailabilityGroup MsSQLMode = "AvailabilityGroup"
-	MsSQLModeRemoteReplica     MsSQLMode = "RemoteReplica"
+	MSSQLModeAvailabilityGroup MSSQLMode = "AvailabilityGroup"
+	MSSQLModeRemoteReplica     MSSQLMode = "RemoteReplica"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// MsSQL defines a MsSQL database.
+// MSSQL defines a MSSQL database.
 
 // +genclient
 // +k8s:openapi-gen=true
@@ -54,24 +53,24 @@ const (
 // +kubebuilder:printcolumn:name="Version",type="string",JSONPath=".spec.version"
 // +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.phase"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
-type MsSQL struct {
+type MSSQL struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   MsSQLSpec   `json:"spec,omitempty"`
-	Status MsSQLStatus `json:"status,omitempty"`
+	Spec   MSSQLSpec   `json:"spec,omitempty"`
+	Status MSSQLStatus `json:"status,omitempty"`
 }
 
-// MsSQLSpec defines the desired state of MsSQL
-type MsSQLSpec struct {
-	// Version of MsSQL to be deployed.
+// MSSQLSpec defines the desired state of MSSQL
+type MSSQLSpec struct {
+	// Version of MSSQL to be deployed.
 	Version string `json:"version"`
 
-	// Number of instances to deploy for a MsSQL database. In case of MsSQL Availability Group (default 3).
+	// Number of instances to deploy for a MSSQL database. In case of MSSQL Availability Group (default 3).
 	Replicas *int32 `json:"replicas,omitempty"`
 
-	// MsSQL cluster topology
-	Topology *MsSQLTopology `json:"topology,omitempty"` // ag or standalone
+	// MSSQL cluster topology
+	Topology *MSSQLTopology `json:"topology,omitempty"` // ag or standalone
 
 	// StorageType can be durable (default) or ephemeral
 	StorageType StorageType `json:"storageType,omitempty"`
@@ -82,6 +81,11 @@ type MsSQLSpec struct {
 	// Database authentication secret
 	// +optional
 	AuthSecret *SecretReference `json:"authSecret,omitempty"`
+
+	// InternalAuth is used to authenticate endpoint
+	// +optional
+	// +nullable
+	InternalAuth *InternalAuthentication `json:"internalAuth,omitempty"`
 
 	// Init is used to initialize database
 	// +optional
@@ -107,30 +111,45 @@ type MsSQLSpec struct {
 	// +optional
 	Coordinator CoordinatorSpec `json:"coordinator,omitempty"`
 
+	// Leader election configuration
+	// +optional
+	LeaderElection *MSSQLLeaderElectionConfig `json:"leaderElection,omitempty"`
+
 	// HealthChecker defines attributes of the health checker
 	// +optional
 	// +kubebuilder:default={periodSeconds: 10, timeoutSeconds: 10, failureThreshold: 1}
 	HealthChecker kmapi.HealthCheckSpec `json:"healthChecker"`
-}
 
-type MsSQLTopology struct {
-	// If set to -
-	// "AvailabilityGroup", MsSQLAvailabilityGroupSpec is required and MsSQL servers will start an Availability Group
-	Mode *MsSQLMode `json:"mode,omitempty"`
-
-	// AvailabilityGroup info for MsSQL
+	// PodPlacementPolicy is the reference of the podPlacementPolicy
+	// +kubebuilder:default={name: "default"}
 	// +optional
-	AvailabilityGroup *MsSQLAvailabilityGroupSpec `json:"availabilityGroup,omitempty"`
+	PodPlacementPolicy *core.LocalObjectReference `json:"podPlacementPolicy,omitempty"`
 }
 
-// MsSQLAvailabilityGroupSpec defines the availability group spec for MsSQL
-type MsSQLAvailabilityGroupSpec struct {
+// InternalAuthentication provides different way of endpoint authentication
+type InternalAuthentication struct {
+	// EndpointCert is used for endpoint authentication of MSSql Server
+	EndpointCert *kmapi.TLSConfig `json:"endpointCert"`
+}
+
+type MSSQLTopology struct {
+	// If set to -
+	// "AvailabilityGroup", MSSQLAvailabilityGroupSpec is required and MSSQL servers will start an Availability Group
+	Mode *MSSQLMode `json:"mode,omitempty"`
+
+	// AvailabilityGroup info for MSSQL
+	// +optional
+	AvailabilityGroup *MSSQLAvailabilityGroupSpec `json:"availabilityGroup,omitempty"`
+}
+
+// MSSQLAvailabilityGroupSpec defines the availability group spec for MSSQL
+type MSSQLAvailabilityGroupSpec struct {
 	// AvailabilityDatabases is an array of databases to be included in the availability group
 	AvailabilityDatabases []string `json:"databases"`
 }
 
-// MsSQLStatus defines the observed state of MsSQL
-type MsSQLStatus struct {
+// MSSQLStatus defines the observed state of MSSQL
+type MSSQLStatus struct {
 	// Specifies the current phase of the database
 	// +optional
 	Phase DatabasePhase `json:"phase,omitempty"`
@@ -143,11 +162,50 @@ type MsSQLStatus struct {
 	Conditions []kmapi.Condition `json:"conditions,omitempty"`
 }
 
+// MSSQLLeaderElectionConfig contains essential attributes of leader election.
+type MSSQLLeaderElectionConfig struct {
+	// Period between Node.Tick invocations
+	// +kubebuilder:default="100ms"
+	// +optional
+	Period metav1.Duration `json:"period,omitempty"`
+
+	// ElectionTick is the number of Node.Tick invocations that must pass between
+	//	elections. That is, if a follower does not receive any message from the
+	//  leader of current term before ElectionTick has elapsed, it will become
+	//	candidate and start an election. ElectionTick must be greater than
+	//  HeartbeatTick. We suggest ElectionTick = 10 * HeartbeatTick to avoid
+	//  unnecessary leader switching. default value is 10.
+	// +default=10
+	// +kubebuilder:default=10
+	// +optional
+	ElectionTick int32 `json:"electionTick,omitempty"`
+
+	// HeartbeatTick is the number of Node.Tick invocations that must pass between
+	// heartbeats. That is, a leader sends heartbeat messages to maintain its
+	// leadership every HeartbeatTick ticks. default value is 1.
+	// +default=1
+	// +kubebuilder:default=1
+	// +optional
+	HeartbeatTick int32 `json:"heartbeatTick,omitempty"`
+
+	// TransferLeadershipInterval retry interval for transfer leadership
+	// to the healthiest node
+	// +kubebuilder:default="1s"
+	// +optional
+	TransferLeadershipInterval *metav1.Duration `json:"transferLeadershipInterval,omitempty"`
+
+	// TransferLeadershipTimeout retry timeout for transfer leadership
+	// to the healthiest node
+	// +kubebuilder:default="60s"
+	// +optional
+	TransferLeadershipTimeout *metav1.Duration `json:"transferLeadershipTimeout,omitempty"`
+}
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// MsSQLList contains a list of MsSQL
-type MsSQLList struct {
+// MSSQLList contains a list of MSSQL
+type MSSQLList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []MsSQL `json:"items"`
+	Items           []MSSQL `json:"items"`
 }

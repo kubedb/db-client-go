@@ -352,32 +352,44 @@ const (
 	SinglestoreVolumeNameData                = "data"
 	SinglestoreVolumeMountPathData           = "/var/lib/memsql"
 
-	// =========================== MsSQL Constants ============================
-	MsSQLDatabasePodPrimary            = "primary"
-	MsSQLDatabasePodSecondary          = "secondary"
-	MsSQLSecondaryServiceAlias         = "secondary"
-	MsSQLDatabasePortName              = "db"
-	MsSQLPrimaryServicePortName        = "primary"
-	MsSQLSecondaryServicePortName      = "secondary"
-	MsSQLDatabasePort                  = 1433
-	MsSQLDatabaseMirroringEndpointPort = 5022
-	MsSQLCoordinatorPort               = 2381
-	MsSQLSAUser                        = "sa"
+	// =========================== MSSQL Constants ============================
+	MSSQLSAUser                  = "sa"
+	MSSQLEndpointCertsSecretName = "endpoint-cert"
+	MSSQLDbmLoginSecretName      = "dbm-login-secret"
+	MSSQLMasterKeySecretName     = "master-key-secret"
+
+	MSSQLDatabasePodPrimary       = "primary"
+	MSSQLDatabasePodSecondary     = "secondary"
+	MSSQLSecondaryServiceAlias    = "secondary"
+	MSSQLSecondaryServicePortName = "secondary"
+	// port related
+	MSSQLDatabasePortName              = "db"
+	MSSQLPrimaryServicePortName        = "primary"
+	MSSQLDatabasePort                  = 1433
+	MSSQLDatabaseMirroringEndpointPort = 5022
+	MSSQLCoordinatorPort               = 2381
 	// environment variables
 	EnvAcceptEula        = "ACCEPT_EULA"
-	EnvMsSQLEnableHADR   = "MSSQL_ENABLE_HADR"
-	EnvMsSQLAgentEnabled = "MSSQL_AGENT_ENABLED"
-	EnvMsSQLSAUsername   = "MSSQL_SA_USERNAME"
-	EnvMsSQLSAPassword   = "MSSQL_SA_PASSWORD"
+	EnvMSSQLEnableHADR   = "MSSQL_ENABLE_HADR"
+	EnvMSSQLAgentEnabled = "MSSQL_AGENT_ENABLED"
+	EnvMSSQLSAUsername   = "MSSQL_SA_USERNAME"
+	EnvMSSQLSAPassword   = "MSSQL_SA_PASSWORD"
 	// container related
-	MsSQLContainerName             = "mssql"
-	MsSQLCoordinatorContainerName  = "mssql-coordinator"
-	MsSQLInitContainerName         = "mssql-init"
-	MsSQLVolumeNameInitScript      = "init-scripts"
-	MsSQLVolumeMountPathInitScript = "/scripts"
+	MSSQLContainerName            = "mssql"
+	MSSQLCoordinatorContainerName = "mssql-coordinator"
+	MSSQLInitContainerName        = "mssql-init"
 	// volume related
-	MsSQLVolumeNameData      = "data"
-	MsSQLVolumeMountPathData = "/var/opt/mssql"
+	MSSQLVolumeNameData              = "data"
+	MSSQLVolumeMountPathData         = "/var/opt/mssql"
+	MSSQLVolumeNameInitScript        = "init-scripts"
+	MSSQLVolumeMountPathInitScript   = "/scripts"
+	MSSQLVolumeNameEndpointCert      = "endpoint-cert"
+	MSSQLVolumeMountPathEndpointCert = "/var/opt/mssql/endpoint-cert"
+	MSSQLVolumeNameCerts             = "certs"
+	MSSQLVolumeMountPathCerts        = "/var/opt/mssql/certs"
+	// tls related
+	MSSQLInternalTLSCrt = "tls.crt"
+	MSSQLInternalTLSKey = "tls.key"
 
 	// =========================== PostgreSQL Constants ============================
 	PostgresDatabasePortName          = "db"
@@ -794,6 +806,7 @@ const (
 	ResourcePluralSolr    = "solrs"
 	SolrPortName          = "http"
 	SolrRestPort          = 8983
+	SolrExporterPort      = 9854
 	SolrSecretKey         = "solr.xml"
 	SolrContainerName     = "solr"
 	SolrInitContainerName = "init-solr"
@@ -1096,43 +1109,48 @@ const (
 	RabbitMQPluginsVolName    = "rabbitmq-plugins"
 	RabbitMQTempConfigVolName = "temp-config"
 
-	RabbitMQContainerName          = "rabbitmq"
-	RabbitMQInitContainerName      = "rabbitmq-init"
-	RabbitMQManagementPlugin       = "rabbitmq_management"
-	RabbitMQPeerdiscoveryPlugin    = "rabbitmq_peer_discovery_k8s"
-	RabbitMQLoopBackUserKey        = "loopback_users"
-	RabbitMQLoopBackUserVal        = "none"
-	RabbitMQDefaultTCPListenerKey  = "listeners.tcp.default"
-	RabbitMQDefaultTCPListenerVal  = "5672"
-	RabbitMQQueueMasterLocatorKey  = "queue_master_locator"
-	RabbitMQQueueMasterLocatorVal  = "min-masters"
-	RabbitMQDiskFreeLimitKey       = "disk_free_limit.absolute"
-	RabbitMQDiskFreeLimitVal       = "2GB"
-	RabbitMQPartitionHandingKey    = "cluster_partition_handling"
-	RabbitMQPartitionHandingVal    = "pause_minority"
-	RabbitMQPeerDiscoveryKey       = "cluster_formation.peer_discovery_backend"
-	RabbitMQPeerDiscoveryVal       = "rabbit_peer_discovery_k8s"
-	RabbitMQK8sHostKey             = "cluster_formation.k8s.host"
-	RabbitMQK8sHostVal             = "kubernetes.default.svc.cluster.local"
-	RabbitMQK8sAddressTypeKey      = "cluster_formation.k8s.address_type"
-	RabbitMQK8sAddressTypeVal      = "hostname"
-	RabbitMQNodeCleanupWarningKey  = "cluster_formation.node_cleanup.only_log_warning"
-	RabbitMQNodeCleanupWarningVal  = "true"
-	RabbitMQLogFileLevelKey        = "log.file.level"
-	RabbitMQLogFileLevelVal        = "info"
-	RabbitMQLogConsoleKey          = "log.console"
-	RabbitMQLogConsoleVal          = "true"
-	RabbitMQLogConsoleLevelKey     = "log.console.level"
-	RabbitMQLogConsoleLevelVal     = "info"
-	RabbitMQDefaultUserKey         = "default_user"
-	RabbitMQDefaultUserVal         = "$(RABBITMQ_DEFAULT_USER)"
-	RabbitMQDefaultPasswordKey     = "default_pass"
-	RabbitMQDefaultPasswordVal     = "$(RABBITMQ_DEFAULT_PASS)"
-	RabbitMQClusterNameKey         = "cluster_name"
-	RabbitMQK8sSvcNameKey          = "cluster_formation.k8s.service_name"
-	RabbitMQConfigFileName         = "rabbitmq.conf"
-	RabbitMQEnabledPluginsFileName = "enabled_plugins"
-	RabbitMQHealthCheckerQueueName = "kubedb-system"
+	RabbitMQContainerName              = "rabbitmq"
+	RabbitMQInitContainerName          = "rabbitmq-init"
+	RabbitMQManagementPlugin           = "rabbitmq_management"
+	RabbitMQPeerdiscoveryPlugin        = "rabbitmq_peer_discovery_k8s"
+	RabbitMQFederationPlugin           = "rabbitmq_federation"
+	RabbitMQFederationManagementPlugin = "rabbitmq_federation_management"
+	RabbitMQShovelPlugin               = "rabbitmq_shovel"
+	RabbitMQShovelManagementPlugin     = "rabbitmq_shovel_management"
+	RabbitMQWebDispatchPlugin          = "rabbitmq_web_dispatch"
+	RabbitMQLoopBackUserKey            = "loopback_users"
+	RabbitMQLoopBackUserVal            = "none"
+	RabbitMQDefaultTCPListenerKey      = "listeners.tcp.default"
+	RabbitMQDefaultTCPListenerVal      = "5672"
+	RabbitMQQueueMasterLocatorKey      = "queue_master_locator"
+	RabbitMQQueueMasterLocatorVal      = "min-masters"
+	RabbitMQDiskFreeLimitKey           = "disk_free_limit.absolute"
+	RabbitMQDiskFreeLimitVal           = "2GB"
+	RabbitMQPartitionHandingKey        = "cluster_partition_handling"
+	RabbitMQPartitionHandingVal        = "pause_minority"
+	RabbitMQPeerDiscoveryKey           = "cluster_formation.peer_discovery_backend"
+	RabbitMQPeerDiscoveryVal           = "rabbit_peer_discovery_k8s"
+	RabbitMQK8sHostKey                 = "cluster_formation.k8s.host"
+	RabbitMQK8sHostVal                 = "kubernetes.default.svc.cluster.local"
+	RabbitMQK8sAddressTypeKey          = "cluster_formation.k8s.address_type"
+	RabbitMQK8sAddressTypeVal          = "hostname"
+	RabbitMQNodeCleanupWarningKey      = "cluster_formation.node_cleanup.only_log_warning"
+	RabbitMQNodeCleanupWarningVal      = "true"
+	RabbitMQLogFileLevelKey            = "log.file.level"
+	RabbitMQLogFileLevelVal            = "info"
+	RabbitMQLogConsoleKey              = "log.console"
+	RabbitMQLogConsoleVal              = "true"
+	RabbitMQLogConsoleLevelKey         = "log.console.level"
+	RabbitMQLogConsoleLevelVal         = "info"
+	RabbitMQDefaultUserKey             = "default_user"
+	RabbitMQDefaultUserVal             = "$(RABBITMQ_DEFAULT_USER)"
+	RabbitMQDefaultPasswordKey         = "default_pass"
+	RabbitMQDefaultPasswordVal         = "$(RABBITMQ_DEFAULT_PASS)"
+	RabbitMQClusterNameKey             = "cluster_name"
+	RabbitMQK8sSvcNameKey              = "cluster_formation.k8s.service_name"
+	RabbitMQConfigFileName             = "rabbitmq.conf"
+	RabbitMQEnabledPluginsFileName     = "enabled_plugins"
+	RabbitMQHealthCheckerQueueName     = "kubedb-system"
 )
 
 // =========================== FerretDB Constants ============================
@@ -1250,6 +1268,17 @@ var (
 		},
 		Limits: core.ResourceList{
 			core.ResourceMemory: resource.MustParse("2Gi"),
+		},
+	}
+
+	// DefaultResourcesMemoryIntensive must be used for Druid MiddleManagers
+	DefaultResourcesMemoryIntensiveDruid = core.ResourceRequirements{
+		Requests: core.ResourceList{
+			core.ResourceCPU:    resource.MustParse(".500"),
+			core.ResourceMemory: resource.MustParse("2.5Gi"),
+		},
+		Limits: core.ResourceList{
+			core.ResourceMemory: resource.MustParse("2.5Gi"),
 		},
 	}
 )
