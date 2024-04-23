@@ -17,6 +17,7 @@ require (
 	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/pkg/errors v0.9.1
+	github.com/rabbitmq/amqp091-go v1.9.0
 	github.com/redis/go-redis/v9 v9.5.1
 	go.mongodb.org/mongo-driver v1.14.0
 	k8s.io/api v0.29.2
@@ -24,7 +25,7 @@ require (
 	k8s.io/klog/v2 v2.120.1
 	kmodules.xyz/client-go v0.29.13
 	kmodules.xyz/custom-resources v0.29.1
-	kubedb.dev/apimachinery v0.44.0
+	kubedb.dev/apimachinery v0.44.1-0.20240418111017-ee6ba81797f6
 	sigs.k8s.io/controller-runtime v0.17.2
 	xorm.io/xorm v1.3.6
 )

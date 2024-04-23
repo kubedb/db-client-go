@@ -888,6 +888,9 @@ github.com/prometheus/common/model
 github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
+# github.com/rabbitmq/amqp091-go v1.9.0
+## explicit; go 1.16
+github.com/rabbitmq/amqp091-go
 # github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
 ## explicit
 github.com/rcrowley/go-metrics
@@ -1436,7 +1439,7 @@ kmodules.xyz/monitoring-agent-api/api/v1
 ## explicit; go 1.21.5
 kmodules.xyz/offshoot-api/api/v1
 kmodules.xyz/offshoot-api/api/v2
-# kubedb.dev/apimachinery v0.44.0
+# kubedb.dev/apimachinery v0.44.1-0.20240418111017-ee6ba81797f6
 ## explicit; go 1.22.0
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog
