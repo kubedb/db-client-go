@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	amqp "github.com/rabbitmq/amqp091-go"
 	core "k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
