@@ -20,11 +20,14 @@ import (
 	"context"
 	"fmt"
 
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+
 	_ "github.com/lib/pq"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog/v2"
+	"kmodules.xyz/client-go/tools/certholder"
 	appbinding "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"xorm.io/xorm"
 )
@@ -32,7 +35,6 @@ import (
 const (
 	DefaultBackendDBName = "postgres"
 	DefaultPgpoolPort    = 9999
-	TLSModeDisable       = "disable"
 )
 
 type KubeDBClientBuilder struct {
@@ -138,19 +140,51 @@ func (o *KubeDBClientBuilder) getBackendAuth() (string, string, error) {
 }
 
 func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
-	user, pass, err := o.getBackendAuth()
-	if err != nil {
-		return "", err
-	}
-
 	if o.podName != "" {
 		o.url = o.getURL()
 	}
+	dnsName := o.url
 
 	if o.backendDBName == "" {
 		o.backendDBName = DefaultBackendDBName
 	}
-	//TODO ssl mode is disable now need to work on this after adding tls support
-	connector := fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s", user, pass, o.url, DefaultPgpoolPort, o.backendDBName, TLSModeDisable)
-	return connector, nil
+
+	user, pass, err := o.getBackendAuth()
+	if err != nil {
+		return "", fmt.Errorf("DB basic auth is not found for backend PostgreSQL %v/%v", o.pgpool.Namespace, o.pgpool.Name)
+	}
+	cnnstr := ""
+	sslMode := o.pgpool.Spec.SSLMode
+
+	//  sslMode == "prefer" and sslMode == "allow"  don't have support for github.com/lib/pq postgres client. as we are using
+	// github.com/lib/pq postgres client utils for connecting our server we need to access with  any of require , verify-ca, verify-full or disable.
+	// here we have chosen "require" sslmode to connect postgres as a client
+	if sslMode == api.PgpoolSSLModePrefer || sslMode == api.PgpoolSSLModeAllow {
+		sslMode = api.PgpoolSSLModeRequire
+	}
+	if o.pgpool.Spec.TLS != nil {
+		secretName := o.pgpool.GetCertSecretName(api.PgpoolClientCert)
+
+		var certSecret core.Secret
+		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.pgpool.Namespace, Name: secretName}, &certSecret)
+		if err != nil {
+			klog.Error(err, "failed to get certificate secret.", secretName)
+			return "", err
+		}
+
+		certs, _ := certholder.DefaultHolder.ForResource(api.SchemeGroupVersion.WithResource(api.ResourcePluralPgpool), o.pgpool.ObjectMeta)
+		paths, err := certs.Save(&certSecret)
+		if err != nil {
+			klog.Error(err, "failed to save certificate")
+			return "", err
+		}
+		if o.pgpool.Spec.ClientAuthMode == api.PgpoolClientAuthModeCert {
+			cnnstr = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s sslrootcert=%s sslcert=%s sslkey=%s", user, pass, dnsName, DefaultPgpoolPort, o.backendDBName, sslMode, paths.CACert, paths.Cert, paths.Key)
+		} else {
+			cnnstr = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s sslrootcert=%s", user, pass, dnsName, DefaultPgpoolPort, o.backendDBName, sslMode, paths.CACert)
+		}
+	} else {
+		cnnstr = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s", user, pass, dnsName, DefaultPgpoolPort, o.backendDBName, sslMode)
+	}
+	return cnnstr, nil
 }
