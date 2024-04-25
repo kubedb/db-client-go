@@ -23,3 +23,10 @@ import (
 type XormClient struct {
 	*xorm.Engine
 }
+
+func (xc *XormClient) Close() error {
+	if xc.Engine != nil {
+		return xc.Engine.Close()
+	}
+	return nil
+}

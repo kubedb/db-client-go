@@ -153,6 +153,6 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	//	}
 	//}
 
-	connectionString := fmt.Sprintf("server=%s;user id=%s;password=%s;database=%s;%s", o.url, user, pass, "master", tlsConfig)
+	connectionString := fmt.Sprintf("server=%s;user id=%s;password=%s;database=master;%s", o.url, user, pass, tlsConfig)
 	return connectionString, nil
 }

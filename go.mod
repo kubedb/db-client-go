@@ -14,6 +14,7 @@ require (
 	github.com/go-resty/resty/v2 v2.11.0
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/lib/pq v1.10.7
+	github.com/microsoft/go-mssqldb v1.6.0
 	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/pkg/errors v0.9.1
@@ -29,8 +30,6 @@ require (
 	sigs.k8s.io/controller-runtime v0.17.2
 	xorm.io/xorm v1.3.6
 )
-
-require github.com/microsoft/go-mssqldb v1.6.0
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
