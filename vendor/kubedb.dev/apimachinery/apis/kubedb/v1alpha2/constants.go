@@ -231,9 +231,10 @@ const (
 	MySQLRouterTLSDirectoryPath        = "/etc/mysql/certs"
 	MySQLReplicationUser               = "repl"
 
-	MySQLComponentKey    = MySQLKey + "/component"
-	MySQLComponentDB     = "database"
-	MySQLComponentRouter = "router"
+	MySQLComponentKey     = MySQLKey + "/component"
+	MySQLComponentDB      = "database"
+	MySQLComponentRouter  = "router"
+	MySQLCustomConfigFile = "my-inline.cnf"
 
 	// mysql volume and volume Mounts
 
@@ -358,10 +359,13 @@ const (
 	MSSQLDbmLoginSecretName      = "dbm-login-secret"
 	MSSQLMasterKeySecretName     = "master-key-secret"
 
+	AGPrimaryReplicaReadyCondition = "AGPrimaryReplicaReady"
+
 	MSSQLDatabasePodPrimary       = "primary"
 	MSSQLDatabasePodSecondary     = "secondary"
 	MSSQLSecondaryServiceAlias    = "secondary"
 	MSSQLSecondaryServicePortName = "secondary"
+
 	// port related
 	MSSQLDatabasePortName              = "db"
 	MSSQLPrimaryServicePortName        = "primary"
@@ -428,6 +432,7 @@ const (
 	PostgresSharedScriptsDir         = "/scripts"
 	PostgresSharedTlsVolumeName      = "certs"
 	PostgresSharedTlsVolumeMountPath = "/tls/certs"
+	PostgresCustomConfigFile         = "user.conf"
 
 	PostgresKeyFileSecretSuffix = "key"
 	PostgresPEMSecretSuffix     = "pem"
@@ -920,6 +925,7 @@ const (
 	DruidPortMiddleManagers = 8091
 	DruidPortBrokers        = 8082
 	DruidPortRouters        = 8888
+	DruidExporterPort       = 9104
 
 	// Common Runtime Configurations Properties
 	// ZooKeeperSpec
@@ -999,7 +1005,7 @@ const (
 	DruidEmitter                                = "druid.emitter"
 	DruidEmitterPrometheus                      = "prometheus"
 	DruidEmitterPrometheusPortKey               = "druid.emitter.prometheus.port"
-	DruidEmitterPrometheusPortVal               = 8080
+	DruidEmitterPrometheusPortVal               = 9104
 	DruidMonitoringMonitorsKey                  = "druid.monitoring.monitors"
 	DruidEmitterPrometheusDimensionMapPath      = "druid.emitter.prometheus.dimensionMapPath"
 	DruidEmitterPrometheusStrategy              = "druid.emitter.prometheus.strategy"

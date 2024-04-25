@@ -25,15 +25,12 @@ require (
 	k8s.io/klog/v2 v2.120.1
 	kmodules.xyz/client-go v0.29.13
 	kmodules.xyz/custom-resources v0.29.1
-	kubedb.dev/apimachinery v0.44.1-0.20240418111017-ee6ba81797f6
+	kubedb.dev/apimachinery v0.44.1-0.20240425042236-6efef42b8792
 	sigs.k8s.io/controller-runtime v0.17.2
 	xorm.io/xorm v1.3.6
 )
 
-require (
-	github.com/microsoft/go-mssqldb v1.6.0
-	kubedb.dev/mssql v0.0.0-00010101000000-000000000000
-)
+require github.com/microsoft/go-mssqldb v1.6.0
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -106,15 +103,13 @@ require (
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
-	golang.org/x/mod v0.15.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/oauth2 v0.15.0 // indirect
-	golang.org/x/sys v0.17.0 // indirect
-	golang.org/x/term v0.17.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
+	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/term v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	golang.org/x/tools v0.18.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	gomodules.xyz/mergo v0.3.13 // indirect
 	gomodules.xyz/pointer v0.1.0 // indirect
@@ -132,7 +127,7 @@ require (
 	k8s.io/utils v0.0.0-20240102154912-e7106e64919e // indirect
 	kmodules.xyz/apiversion v0.2.0 // indirect
 	kmodules.xyz/monitoring-agent-api v0.29.0 // indirect
-	kmodules.xyz/offshoot-api v0.29.0 // indirect
+	kmodules.xyz/offshoot-api v0.29.1 // indirect
 	kubeops.dev/petset v0.0.5 // indirect
 	modernc.org/memory v1.5.0 // indirect
 	modernc.org/token v1.1.0 // indirect

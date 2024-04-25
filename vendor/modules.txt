@@ -1041,7 +1041,7 @@ golang.org/x/net/publicsuffix
 ## explicit; go 1.18
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
-# golang.org/x/sync v0.5.0
+# golang.org/x/sync v0.6.0
 ## explicit; go 1.18
 golang.org/x/sync/errgroup
 golang.org/x/sync/singleflight
@@ -1068,8 +1068,6 @@ golang.org/x/text/unicode/norm
 # golang.org/x/time v0.5.0
 ## explicit; go 1.18
 golang.org/x/time/rate
-# golang.org/x/tools v0.18.0
-## explicit; go 1.18
 # gomodules.xyz/jsonpatch/v2 v2.4.0
 ## explicit; go 1.20
 gomodules.xyz/jsonpatch/v2
@@ -1465,11 +1463,11 @@ kmodules.xyz/custom-resources/crds
 # kmodules.xyz/monitoring-agent-api v0.29.0
 ## explicit; go 1.21.5
 kmodules.xyz/monitoring-agent-api/api/v1
-# kmodules.xyz/offshoot-api v0.29.0
-## explicit; go 1.21.5
+# kmodules.xyz/offshoot-api v0.29.1
+## explicit; go 1.22.0
 kmodules.xyz/offshoot-api/api/v1
 kmodules.xyz/offshoot-api/api/v2
-# kubedb.dev/apimachinery v0.44.1-0.20240418111017-ee6ba81797f6
+# kubedb.dev/apimachinery v0.44.1-0.20240425042236-6efef42b8792
 ## explicit; go 1.22.0
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog
@@ -1489,9 +1487,6 @@ kubeops.dev/petset/client/clientset/versioned/typed/apps/v1
 kubeops.dev/petset/client/listers/apps/v1
 kubeops.dev/petset/crds
 kubeops.dev/petset/pkg/features
-# kubedb.dev/mssql v0.0.0-00010101000000-000000000000 => ../mssql
-## explicit; go 1.21.7
-kubedb.dev/mssql/api/v1alpha2
 # modernc.org/memory v1.5.0
 ## explicit; go 1.18
 # modernc.org/token v1.1.0
