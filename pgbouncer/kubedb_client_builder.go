@@ -31,7 +31,7 @@ import (
 
 const (
 	DefaultBackendDBName = "postgres"
-	DefaultPgBouncerPort = 5432
+	DefaultPgBouncerPort = api.PgBouncerDatabasePort
 	TLSModeDisable       = "disable"
 )
 
