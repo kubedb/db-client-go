@@ -1463,11 +1463,11 @@ kmodules.xyz/custom-resources/crds
 # kmodules.xyz/monitoring-agent-api v0.29.0
 ## explicit; go 1.21.5
 kmodules.xyz/monitoring-agent-api/api/v1
-# kmodules.xyz/offshoot-api v0.29.1
+# kmodules.xyz/offshoot-api v0.29.2
 ## explicit; go 1.22.0
 kmodules.xyz/offshoot-api/api/v1
 kmodules.xyz/offshoot-api/api/v2
-# kubedb.dev/apimachinery v0.44.1-0.20240426055822-7fb3d5619cd2
+# kubedb.dev/apimachinery v0.44.1-0.20240426133114-c659e5cc168e
 ## explicit; go 1.22.0
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog
