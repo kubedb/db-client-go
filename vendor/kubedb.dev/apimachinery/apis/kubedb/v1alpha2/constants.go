@@ -127,7 +127,7 @@ const (
 	MemcachedDatabasePortName       = "db"
 	MemcachedPrimaryServicePortName = "primary"
 	MemcachedDatabasePort           = 11211
-
+	MemcachedShardKey               = MemcachedKey + "/shard"
 	// =========================== MongoDB Constants ============================
 
 	MongoDBDatabasePortName       = "db"
@@ -364,7 +364,7 @@ const (
 	SinglestoreTLSConfigFalse      = "false"
 	SinglestoreTLSConfigPreferred  = "preferred"
 
-	// =========================== MSSQL Constants ============================
+	// =========================== MSSQLServer Constants ============================
 	MSSQLSAUser                  = "sa"
 	MSSQLEndpointCertsSecretName = "endpoint-cert"
 	MSSQLDbmLoginSecretName      = "dbm-login-secret"
