@@ -19,7 +19,9 @@ package pgbouncer
 import (
 	"context"
 	"fmt"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog/v2"
 	appbinding "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
@@ -169,4 +171,38 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	//TODO ssl mode is disable now need to work on this after adding tls support
 	connector := fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s", user, pass, o.url, listeningPort, o.backendDBName, TLSModeDisable)
 	return connector, nil
+}
+
+func GetXormClientList(kc client.Client, pb *api.PgBouncer, ctx context.Context) (*XormClientList, error) {
+	Clientlist := &XormClientList{
+		list: []XormClient{},
+	}
+
+	podList := &corev1.PodList{}
+	err := kc.List(context.Background(), podList, client.MatchingLabels(pb.PodLabels()))
+
+	for _, postgresRef := range pb.Spec.Databases {
+		for _, pods := range podList.Items {
+
+		}
+
+	}
+	return Clientlist, nil
+}
+func (l *XormClientList) getXormClient(kc client.Client, pb *api.PgBouncer, ctx context.Context, podName string, postgresRef *api.Databases) {
+	NewKubeDBClientBuilder(kc, pb).WithContext(ctx).WithDatabaseRef(postgresRef).WithPod(podName).GetPgBouncerXormClient()
+	if err != nil {
+		klog.V(5).ErrorS(err, fmt.Sprintf("failed to create xorm client for pgbouncer %v to make pool with postgres pod %s/%s", key, postgresRef.DatabaseRef.Namespace, postgresRef.DatabaseRef.Name))
+		if hcs.HasFailed(health.HealthCheckClientFailure, err) {
+			// Since the client was unable to connect the database,
+			// update "AcceptingConnection" to "false".
+			// update "Ready" to "false"
+			if err := c.updateConditionsForUnhealthy(ctx, db, err); err != nil {
+				return
+			}
+		}
+		klog.Error(err)
+		return
+	}
+	dbXormClient = append(dbXormClient, *XormClient)
 }
