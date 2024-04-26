@@ -34,16 +34,16 @@ import (
 )
 
 type KubeDBClientBuilder struct {
-	kc           client.Client
-	db           *api.MongoDB
-	url          string
-	podName      string
-	repSetName   string
-	direct       bool
-	certs        *certholder.ResourceCerts
-	ctx          context.Context
-	cred         string
-	authDatabase string
+	kc         client.Client
+	db         *api.MongoDB
+	url        string
+	podName    string
+	repSetName string
+	direct     bool
+	certs      *certholder.ResourceCerts
+	ctx        context.Context
+	cred       string
+	authDB     string
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *api.MongoDB) *KubeDBClientBuilder {
@@ -61,8 +61,8 @@ func (o *KubeDBClientBuilder) WithCred(cred string) *KubeDBClientBuilder {
 	return o
 }
 
-func (o *KubeDBClientBuilder) WithAuthDatabase(authDatabase string) *KubeDBClientBuilder {
-	o.authDatabase = authDatabase
+func (o *KubeDBClientBuilder) WithAuthDatabase(authDB string) *KubeDBClientBuilder {
+	o.authDB = authDB
 	return o
 }
 
@@ -158,9 +158,9 @@ func (o *KubeDBClientBuilder) getMongoDBClientOpts() (*mgoptions.ClientOptions, 
 	if o.repSetName != "" {
 		repSetConfig = "replicaSet=" + o.repSetName + "&"
 	}
-	authDatabaseConfig := ""
-	if o.authDatabase != "" {
-		authDatabaseConfig = "authSource=" + o.authDatabase
+	authDatabase := ""
+	if o.authDB != "" {
+		authDatabase = "authSource=" + o.authDB
 	}
 
 	cred := o.cred
@@ -174,8 +174,8 @@ func (o *KubeDBClientBuilder) getMongoDBClientOpts() (*mgoptions.ClientOptions, 
 
 	var clientOpts *mgoptions.ClientOptions
 	if db.Spec.TLS != nil {
-		if o.authDatabase != "" {
-			authDatabaseConfig = "&" + authDatabaseConfig
+		if o.authDB != "" {
+			authDatabase = "&" + authDatabase
 		}
 		secretName := db.GetCertSecretName(api.MongoDBClientCert, "")
 		var (
@@ -209,10 +209,10 @@ func (o *KubeDBClientBuilder) getMongoDBClientOpts() (*mgoptions.ClientOptions, 
 			}
 		}
 
-		uri := fmt.Sprintf("mongodb://%s@%s/admin?%vtls=true&tlsCAFile=%v&tlsCertificateKeyFile=%v%v", cred, o.url, repSetConfig, paths.CACert, paths.Pem, authDatabaseConfig)
+		uri := fmt.Sprintf("mongodb://%s@%s/admin?%vtls=true&tlsCAFile=%v&tlsCertificateKeyFile=%v%v", cred, o.url, repSetConfig, paths.CACert, paths.Pem, authDatabase)
 		clientOpts = mgoptions.Client().ApplyURI(uri)
 	} else {
-		clientOpts = mgoptions.Client().ApplyURI(fmt.Sprintf("mongodb://%s@%s/admin?%vauthSource=%v", cred, o.url, repSetConfig, authDatabaseConfig))
+		clientOpts = mgoptions.Client().ApplyURI(fmt.Sprintf("mongodb://%s@%s/admin?%v%v", cred, o.url, repSetConfig, authDatabase))
 	}
 
 	clientOpts.SetDirect(o.direct)
