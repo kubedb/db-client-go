@@ -45,10 +45,10 @@ type KubeDBClientBuilder struct {
 	databaseRef   *api.Databases
 }
 
-func NewKubeDBClientBuilder(kc client.Client, pp *api.PgBouncer) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, pb *api.PgBouncer) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc:        kc,
-		pgbouncer: pp,
+		pgbouncer: pb,
 	}
 }
 
@@ -162,7 +162,11 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	if o.backendDBName == "" {
 		o.backendDBName = DefaultBackendDBName
 	}
+	var listeningPort int = DefaultPgBouncerPort
+	if o.pgbouncer.Spec.ConnectionPool.Port != nil {
+		listeningPort = int(*o.pgbouncer.Spec.ConnectionPool.Port)
+	}
 	//TODO ssl mode is disable now need to work on this after adding tls support
-	connector := fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s", user, pass, o.url, DefaultPgBouncerPort, o.backendDBName, TLSModeDisable)
+	connector := fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s", user, pass, o.url, listeningPort, o.backendDBName, TLSModeDisable)
 	return connector, nil
 }
