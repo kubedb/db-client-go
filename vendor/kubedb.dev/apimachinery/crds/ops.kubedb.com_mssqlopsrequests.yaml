@@ -4,7 +4,7 @@ metadata:
   creationTimestamp: null
   labels:
     app.kubernetes.io/name: kubedb
-  name: rabbitmqopsrequests.ops.kubedb.com
+  name: mssqlopsrequests.ops.kubedb.com
 spec:
   group: ops.kubedb.com
   names:
@@ -12,12 +12,12 @@ spec:
     - datastore
     - kubedb
     - appscode
-    kind: RabbitMQOpsRequest
-    listKind: RabbitMQOpsRequestList
-    plural: rabbitmqopsrequests
+    kind: MSSQLOpsRequest
+    listKind: MSSQLOpsRequestList
+    plural: mssqlopsrequests
     shortNames:
-    - kfops
-    singular: rabbitmqopsrequest
+    - msops
+    singular: mssqlopsrequest
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
@@ -49,19 +49,6 @@ spec:
                 - Always
                 type: string
               configuration:
-                properties:
-                  applyConfig:
-                    additionalProperties:
-                      type: string
-                    type: object
-                  configSecret:
-                    properties:
-                      name:
-                        type: string
-                    type: object
-                    x-kubernetes-map-type: atomic
-                  removeCustomConfig:
-                    type: boolean
                 type: object
               databaseRef:
                 properties:
@@ -70,10 +57,6 @@ spec:
                 type: object
                 x-kubernetes-map-type: atomic
               horizontalScaling:
-                properties:
-                  node:
-                    format: int32
-                    type: integer
                 type: object
               restart:
                 type: object
@@ -200,72 +183,8 @@ spec:
                     type: string
                 type: object
               verticalScaling:
-                properties:
-                  node:
-                    properties:
-                      nodeSelectionPolicy:
-                        enum:
-                        - LabelSelector
-                        - Taint
-                        type: string
-                      resources:
-                        properties:
-                          claims:
-                            items:
-                              properties:
-                                name:
-                                  type: string
-                              required:
-                              - name
-                              type: object
-                            type: array
-                            x-kubernetes-list-map-keys:
-                            - name
-                            x-kubernetes-list-type: map
-                          limits:
-                            additionalProperties:
-                              anyOf:
-                              - type: integer
-                              - type: string
-                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                              x-kubernetes-int-or-string: true
-                            type: object
-                          requests:
-                            additionalProperties:
-                              anyOf:
-                              - type: integer
-                              - type: string
-                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                              x-kubernetes-int-or-string: true
-                            type: object
-                        type: object
-                      topology:
-                        properties:
-                          key:
-                            type: string
-                          value:
-                            type: string
-                        required:
-                        - key
-                        - value
-                        type: object
-                    type: object
                 type: object
               volumeExpansion:
-                properties:
-                  mode:
-                    enum:
-                    - Offline
-                    - Online
-                    type: string
-                  node:
-                    anyOf:
-                    - type: integer
-                    - type: string
-                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                    x-kubernetes-int-or-string: true
-                required:
-                - mode
                 type: object
             required:
             - databaseRef
