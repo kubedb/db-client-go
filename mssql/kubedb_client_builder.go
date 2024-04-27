@@ -67,7 +67,7 @@ func (o *KubeDBClientBuilder) GetMSSQLXormClient() (*XormClient, error) {
 		return nil, err
 	}
 
-	engine, err := xorm.NewEngine(api.ResourceSingularMSSQLServer, connector)
+	engine, err := xorm.NewEngine("mssql", connector)
 	if err != nil {
 		return nil, err
 	}
