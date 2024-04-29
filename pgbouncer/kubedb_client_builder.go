@@ -95,9 +95,9 @@ func (o *KubeDBClientBuilder) GetPgBouncerXormClient() (*XormClient, error) {
 	}
 	_, err = engine.Query("SELECT 1")
 	if err != nil {
-		err = engine.Close()
-		if err != nil {
-			return nil, err
+		err2 := engine.Close()
+		if err2 != nil {
+			return nil, err2
 		}
 		return nil, err
 	}
@@ -174,35 +174,47 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 }
 
 func GetXormClientList(kc client.Client, pb *api.PgBouncer, ctx context.Context) (*XormClientList, error) {
-	Clientlist := &XormClientList{
-		list: []XormClient{},
+	clientlist := &XormClientList{
+		list: []*XormClient{},
 	}
 
 	podList := &corev1.PodList{}
 	err := kc.List(context.Background(), podList, client.MatchingLabels(pb.PodLabels()))
 
-	for _, postgresRef := range pb.Spec.Databases {
-		for _, pods := range podList.Items {
-
-		}
-
-	}
-	return Clientlist, nil
-}
-func (l *XormClientList) getXormClient(kc client.Client, pb *api.PgBouncer, ctx context.Context, podName string, postgresRef *api.Databases) {
-	NewKubeDBClientBuilder(kc, pb).WithContext(ctx).WithDatabaseRef(postgresRef).WithPod(podName).GetPgBouncerXormClient()
 	if err != nil {
-		klog.V(5).ErrorS(err, fmt.Sprintf("failed to create xorm client for pgbouncer %v to make pool with postgres pod %s/%s", key, postgresRef.DatabaseRef.Namespace, postgresRef.DatabaseRef.Name))
-		if hcs.HasFailed(health.HealthCheckClientFailure, err) {
-			// Since the client was unable to connect the database,
-			// update "AcceptingConnection" to "false".
-			// update "Ready" to "false"
-			if err := c.updateConditionsForUnhealthy(ctx, db, err); err != nil {
-				return
-			}
-		}
-		klog.Error(err)
-		return
+		return nil, fmt.Errorf("failed get pod list for XormClientList")
 	}
-	dbXormClient = append(dbXormClient, *XormClient)
+	ch := make(chan string)
+	for _, postgresRef := range pb.Spec.Databases {
+		for _, pod := range podList.Items {
+			go clientlist.addXormClient(kc, pb, ctx, pod.Name, &postgresRef, ch, len(podList.Items))
+		}
+
+	}
+	message := <-ch
+	if message == "" {
+		return clientlist, nil
+	}
+	return nil, fmt.Errorf(message)
+}
+func (l *XormClientList) addXormClient(kc client.Client, pb *api.PgBouncer, ctx context.Context, podName string, postgresRef *api.Databases, c chan string, pgReplica int) {
+	xormClient, err := NewKubeDBClientBuilder(kc, pb).WithContext(ctx).WithDatabaseRef(postgresRef).WithPod(podName).GetPgBouncerXormClient()
+
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+
+	if err != nil {
+		klog.V(5).ErrorS(err, fmt.Sprintf("failed to create xorm client for pgbouncer %s/%s to make pool with postgres pod %s/%s", pb.Namespace, pb.Name, postgresRef.DatabaseRef.Namespace, postgresRef.DatabaseRef.Name))
+		l.list = append(l.list, nil)
+		if l.message == "" {
+			l.message = fmt.Sprintf("failed to create xorm client for: pgbouncer %s/%s to make pool with postgres pod %s/%s;", pb.Namespace, pb.Name, postgresRef.DatabaseRef.Namespace, postgresRef.DatabaseRef.Name)
+		} else {
+			l.message = fmt.Sprintf("%s pgbouncer %s/%s to make pool with postgres pod %s/%s;", l.message, pb.Namespace, pb.Name, postgresRef.DatabaseRef.Namespace, postgresRef.DatabaseRef.Name)
+		}
+	} else {
+		l.list = append(l.list, xormClient)
+	}
+	if (pgReplica * len(pb.Spec.Databases)) <= len(l.list) {
+		c <- l.message
+	}
 }
