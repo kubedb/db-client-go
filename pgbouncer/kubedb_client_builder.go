@@ -175,7 +175,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 
 func GetXormClientList(kc client.Client, pb *api.PgBouncer, ctx context.Context) (*XormClientList, error) {
 	clientlist := &XormClientList{
-		list: []*XormClient{},
+		List: []*XormClient{},
 	}
 
 	podList := &corev1.PodList{}
@@ -203,16 +203,16 @@ func (l *XormClientList) addXormClient(kc client.Client, pb *api.PgBouncer, ctx 
 	defer l.mutex.Unlock()
 	if err != nil {
 		klog.V(5).ErrorS(err, fmt.Sprintf("failed to create xorm client for pgbouncer %s/%s to make pool with postgres pod %s/%s", pb.Namespace, pb.Name, postgresRef.DatabaseRef.Namespace, postgresRef.DatabaseRef.Name))
-		l.list = append(l.list, nil)
+		l.List = append(l.List, nil)
 		if l.message == "" {
 			l.message = fmt.Sprintf("failed to create xorm client for: pgbouncer %s/%s make pool with postgres pod %s/%s;", pb.Namespace, pb.Name, postgresRef.DatabaseRef.Namespace, postgresRef.DatabaseRef.Name)
 		} else {
 			l.message = fmt.Sprintf("%s pgbouncer %s/%s make pool with postgres pod %s/%s;", l.message, pb.Namespace, pb.Name, postgresRef.DatabaseRef.Namespace, postgresRef.DatabaseRef.Name)
 		}
 	} else {
-		l.list = append(l.list, xormClient)
+		l.List = append(l.List, xormClient)
 	}
-	if (pgReplica * len(pb.Spec.Databases)) <= len(l.list) {
+	if (pgReplica * len(pb.Spec.Databases)) <= len(l.List) {
 		c <- l.message
 	}
 }
