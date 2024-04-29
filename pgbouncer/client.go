@@ -32,7 +32,7 @@ type XormClient struct {
 }
 
 type XormClientList struct {
-	list    []*XormClient
+	List    []*XormClient
 	mutex   sync.Mutex
 	message string
 }
