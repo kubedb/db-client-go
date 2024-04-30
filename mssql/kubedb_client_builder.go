@@ -30,13 +30,13 @@ import (
 
 type KubeDBClientBuilder struct {
 	kc      client.Client
-	db      *api.MSSQL
+	db      *api.MSSQLServer
 	url     string
 	podName string
 	ctx     context.Context
 }
 
-func NewKubeDBClientBuilder(kc client.Client, db *api.MSSQL) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *api.MSSQLServer) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc: kc,
 		db: db,
@@ -67,7 +67,7 @@ func (o *KubeDBClientBuilder) GetMSSQLXormClient() (*XormClient, error) {
 		return nil, err
 	}
 
-	engine, err := xorm.NewEngine(api.ResourceSingularMSSQL, connector)
+	engine, err := xorm.NewEngine("mssql", connector)
 	if err != nil {
 		return nil, err
 	}

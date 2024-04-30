@@ -18,10 +18,12 @@ package singlestore
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"database/sql"
 	"fmt"
 
-	_ "github.com/go-sql-driver/mysql"
+	sql_driver "github.com/go-sql-driver/mysql"
 	core "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
@@ -147,10 +149,10 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	}
 
 	tlsConfig := ""
-	/*if o.db.Spec.RequireSSL && o.db.Spec.TLS != nil {
+	if o.db.Spec.TLS != nil {
 		// get client-secret
 		var clientSecret core.Secret
-		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.GetNamespace(), Name: o.db.GetCertSecretName(api.MySQLClientCert)}, &clientSecret)
+		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.GetNamespace(), Name: o.db.GetCertSecretName(api.SinglestoreClientCert)}, &clientSecret)
 		if err != nil {
 			return "", err
 		}
@@ -168,19 +170,15 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		clientCert = append(clientCert, cert)
 
 		// tls custom setup
-		if o.db.Spec.RequireSSL {
-			err = sql_driver.RegisterTLSConfig(api.MySQLTLSConfigCustom, &tls.Config{
-				RootCAs:      certPool,
-				Certificates: clientCert,
-			})
-			if err != nil {
-				return "", err
-			}
-			tlsConfig = fmt.Sprintf("tls=%s", api.MySQLTLSConfigCustom)
-		} else {
-			tlsConfig = fmt.Sprintf("tls=%s", api.MySQLTLSConfigSkipVerify)
+		err = sql_driver.RegisterTLSConfig(api.SinglestoreTLSConfigCustom, &tls.Config{
+			RootCAs:      certPool,
+			Certificates: clientCert,
+		})
+		if err != nil {
+			return "", err
 		}
-	}*/
+		tlsConfig = fmt.Sprintf("tls=%s", api.SinglestoreTLSConfigCustom)
+	}
 
 	connector := fmt.Sprintf("%v:%v@tcp(%s:%d)/%s?%s", user, pass, o.url, 3306, "memsql", tlsConfig)
 	return connector, nil

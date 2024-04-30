@@ -127,7 +127,7 @@ const (
 	MemcachedDatabasePortName       = "db"
 	MemcachedPrimaryServicePortName = "primary"
 	MemcachedDatabasePort           = 11211
-
+	MemcachedShardKey               = MemcachedKey + "/shard"
 	// =========================== MongoDB Constants ============================
 
 	MongoDBDatabasePortName       = "db"
@@ -326,19 +326,22 @@ const (
 	SinglestoreDatabasePortName       = "db"
 	SinglestorePrimaryServicePortName = "primary"
 	SinglestoreStudioPortName         = "studio"
-	SinglestoreDatabasePort           = 3306
-	SinglestoreStudioPort             = 8081
-	SinglestoreExporterPort           = 9104
-	SinglestoreRootUserName           = "ROOT_USERNAME"
-	SinglestoreRootPassword           = "ROOT_PASSWORD"
-	SinglestoreRootUser               = "root"
-	DatabasePodMaster                 = "Master"
-	DatabasePodAggregator             = "Aggregator"
-	DatabasePodLeaf                   = "Leaf"
-	PetSetTypeAggregator              = "aggregator"
-	PetSetTypeLeaf                    = "leaf"
-	SinglestoreDatabaseHealth         = "singlestore_health"
-	SinglestoreTableHealth            = "singlestore_health_table"
+
+	SinglestoreDatabasePort = 3306
+	SinglestoreStudioPort   = 8081
+	SinglestoreExporterPort = 9104
+
+	SinglestoreRootUserName = "ROOT_USERNAME"
+	SinglestoreRootPassword = "ROOT_PASSWORD"
+	SinglestoreRootUser     = "root"
+	DatabasePodMaster       = "Master"
+	DatabasePodAggregator   = "Aggregator"
+	DatabasePodLeaf         = "Leaf"
+	PetSetTypeAggregator    = "aggregator"
+	PetSetTypeLeaf          = "leaf"
+
+	SinglestoreDatabaseHealth = "singlestore_health"
+	SinglestoreTableHealth    = "singlestore_health_table"
 
 	SinglestoreCoordinatorContainerName = "singlestore-coordinator"
 	SinglestoreContainerName            = "singlestore"
@@ -352,8 +355,16 @@ const (
 	SinglestoreVolumeMountPathInitScript     = "/scripts"
 	SinglestoreVolumeNameData                = "data"
 	SinglestoreVolumeMountPathData           = "/var/lib/memsql"
+	SinglestoreVolumeNameTLS                 = "tls-volume"
+	SinglestoreVolumeMountPathTLS            = "/etc/memsql/certs"
 
-	// =========================== MSSQL Constants ============================
+	SinglestoreTLSConfigCustom     = "custom"
+	SinglestoreTLSConfigSkipVerify = "skip-verify"
+	SinglestoreTLSConfigTrue       = "true"
+	SinglestoreTLSConfigFalse      = "false"
+	SinglestoreTLSConfigPreferred  = "preferred"
+
+	// =========================== MSSQLServer Constants ============================
 	MSSQLSAUser                  = "sa"
 	MSSQLEndpointCertsSecretName = "endpoint-cert"
 	MSSQLDbmLoginSecretName      = "dbm-login-secret"
@@ -560,10 +571,16 @@ const (
 	EnvPgpoolService                   = "PGPOOL_SERVICE"
 	EnvPgpoolServicePort               = "PGPOOL_SERVICE_PORT"
 	EnvPgpoolSSLMode                   = "SSLMODE"
+	EnvPgpoolExporterConnectionString  = "DATA_SOURCE_NAME"
 	PgpoolDefaultSSLMode               = "disable"
 	PgpoolExporterContainerName        = "exporter"
 	PgpoolAuthUsername                 = "pcp"
 	SyncPeriod                         = 10
+	PgpoolTlsVolumeName                = "certs"
+	PgpoolTlsVolumeMountPath           = "/config/tls"
+	PgpoolExporterTlsVolumeName        = "exporter-certs"
+	PgpoolExporterTlsVolumeMountPath   = "/tls/certs"
+	PgpoolRootUser                     = "postgres"
 	// ========================================== ZooKeeper Constants =================================================//
 
 	KubeDBZooKeeperRoleName         = "kubedb:zookeeper-version-reader"
