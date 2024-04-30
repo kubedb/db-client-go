@@ -19,10 +19,8 @@ package mssql
 import (
 	"context"
 	"fmt"
-	"strings"
-	"time"
-
 	"k8s.io/klog/v2"
+	"strings"
 	"xorm.io/xorm"
 )
 
@@ -31,11 +29,7 @@ var (
 	diskUsageDefaultMi    = 1024 // 1024 Mi
 )
 
-func (xc *XormClient) GetEstimateDatabaseDiskUsage(dbName string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-
-	// Create a session from the mssqlClient
+func (xc *XormClient) GetEstimateDatabaseDiskUsage(ctx context.Context, dbName string) (string, error) {
 	session := xc.NewSession().Context(ctx)
 	defer func(session *xorm.Session) {
 		err := session.Close()
@@ -66,4 +60,27 @@ func (xc *XormClient) GetEstimateDatabaseDiskUsage(dbName string) (string, error
 
 func quoteName(name string) string {
 	return "[" + strings.ReplaceAll(name, "]", "]]") + "]"
+}
+
+func (xc *XormClient) FetchNonSystemDatabases(ctx context.Context) ([]string, error) {
+	// Create a session from the mssqlClient
+	session := xc.NewSession().Context(ctx)
+	defer func(session *xorm.Session) {
+		err := session.Close()
+		if err != nil {
+			klog.Error(err)
+		}
+	}(session)
+
+	query := "SELECT name FROM sys.databases WHERE name NOT IN ('master', 'tempdb', 'model', 'msdb','kubedb_system')"
+	rows, err := session.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute query: %v", err)
+	}
+
+	var databases []string
+	for _, row := range rows {
+		databases = append(databases, string(row["name"]))
+	}
+	return databases, nil
 }
