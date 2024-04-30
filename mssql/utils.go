@@ -19,8 +19,9 @@ package mssql
 import (
 	"context"
 	"fmt"
-	"k8s.io/klog/v2"
 	"strings"
+
+	"k8s.io/klog/v2"
 	"xorm.io/xorm"
 )
 
