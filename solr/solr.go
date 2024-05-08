@@ -120,11 +120,11 @@ func (sc *SLClient) ReadCollection() (*Response, error) {
 	return writeResponse, nil
 }
 
-func (sc *SLClient) BackupCollection(collection string, backupName string, location string, repository string) (*Response, error) {
+func (sc *SLClient) BackupRestoreCollection(action string, collection string, backupName string, location string, repository string) (*Response, error) {
 	sc.Config.log.V(5).Info(fmt.Sprintf("BACKUP COLLECTION: %s", collection))
 	req := sc.Client.R().SetDoNotParseResponse(true)
 	params := map[string]string{
-		"action":     "BACKUP",
+		"action":     action,
 		"collection": collection,
 		"name":       backupName,
 		"location":   location,
