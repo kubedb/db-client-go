@@ -43,7 +43,7 @@ func (sc *SLClient) GetStateFromClusterResponse(responseStatus *Response) (int, 
 		return -1, fmt.Errorf("failed to deserialize the response: %v", err)
 	}
 
-	status, err := sc.getResponseStatus(responseBody)
+	status, err := sc.GetResponseStatus(responseBody)
 	if err != nil {
 		return status, err
 	}
@@ -104,7 +104,7 @@ func (sc *SLClient) DecodeListCollectionResponse(response *Response) ([]string, 
 		return []string{}, fmt.Errorf("failed to deserialize the response: %v", err)
 	}
 
-	status, errr := sc.getResponseStatus(responseBody)
+	status, errr := sc.GetResponseStatus(responseBody)
 	if errr != nil {
 		return []string{}, errr
 	}
@@ -225,7 +225,7 @@ func (sc *SLClient) DecodeReadWriteResponse(response *Response) (int, error) {
 		return -1, fmt.Errorf("failed to deserialize the response: %v", err)
 	}
 
-	status, err := sc.getResponseStatus(responseBody)
+	status, err := sc.GetResponseStatus(responseBody)
 
 	return status, err
 }
