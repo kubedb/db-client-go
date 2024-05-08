@@ -2,10 +2,9 @@ package huff0
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"sync"
-
-	"fmt"
 
 	"github.com/klauspost/compress/fse"
 )

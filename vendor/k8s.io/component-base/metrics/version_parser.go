@@ -17,9 +17,8 @@ limitations under the License.
 package metrics
 
 import (
-	"regexp"
-
 	"fmt"
+	"regexp"
 
 	"github.com/blang/semver/v4"
 

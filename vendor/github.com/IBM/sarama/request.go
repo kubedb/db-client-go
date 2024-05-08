@@ -2,9 +2,8 @@ package sarama
 
 import (
 	"encoding/binary"
-	"io"
-
 	"fmt"
+	"io"
 )
 
 type protocolBody interface {

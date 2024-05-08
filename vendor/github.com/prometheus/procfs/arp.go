@@ -14,12 +14,11 @@
 package procfs
 
 import (
+	"fmt"
 	"net"
 	"os"
 	"strconv"
 	"strings"
-
-	"fmt"
 )
 
 // Learned from include/uapi/linux/if_arp.h.

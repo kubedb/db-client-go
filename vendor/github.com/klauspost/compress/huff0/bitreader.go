@@ -8,9 +8,8 @@ package huff0
 import (
 	"encoding/binary"
 	"errors"
-	"io"
-
 	"fmt"
+	"io"
 )
 
 // bitReader reads a bitstream in reverse.

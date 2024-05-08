@@ -19,13 +19,12 @@ package yaml
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"reflect"
 	"strconv"
 
-	"fmt"
-
-	yaml "sigs.k8s.io/yaml/goyaml.v2"
+	"sigs.k8s.io/yaml/goyaml.v2"
 )
 
 // Marshal marshals obj into JSON using stdlib json.Marshal, and then converts JSON to YAML using JSONToYAML (see that method for more reference)

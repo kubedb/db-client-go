@@ -18,10 +18,9 @@ limitations under the License.
 package meta
 
 import (
+	"fmt"
 	"sort"
 	"strings"
-
-	"fmt"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"

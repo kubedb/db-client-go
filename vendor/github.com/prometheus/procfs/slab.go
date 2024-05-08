@@ -16,11 +16,10 @@ package procfs
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
-
-	"fmt"
 
 	"github.com/prometheus/procfs/internal/util"
 )

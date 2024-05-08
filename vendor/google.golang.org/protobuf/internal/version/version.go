@@ -6,9 +6,8 @@
 package version
 
 import (
-	"strings"
-
 	"fmt"
+	"strings"
 )
 
 // These constants determine the current version of this module.

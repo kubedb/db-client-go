@@ -17,10 +17,9 @@ limitations under the License.
 package net
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
-
-	"fmt"
 )
 
 // PortRange represents a range of TCP/UDP ports.  To represent a single port,

@@ -17,9 +17,8 @@ limitations under the License.
 package internal
 
 import (
-	"sort"
-
 	"fmt"
+	"sort"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"

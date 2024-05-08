@@ -3,7 +3,6 @@ package pac
 import (
 	"bytes"
 	"errors"
-
 	"fmt"
 
 	"github.com/jcmturner/gokrb5/v8/crypto"

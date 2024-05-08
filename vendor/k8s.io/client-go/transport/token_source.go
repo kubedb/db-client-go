@@ -17,13 +17,12 @@ limitations under the License.
 package transport
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
 	"sync"
 	"time"
-
-	"fmt"
 
 	"golang.org/x/oauth2"
 

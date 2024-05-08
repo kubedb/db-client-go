@@ -1,15 +1,13 @@
 package jsoniter
 
 import (
+	"fmt"
+	"github.com/modern-go/reflect2"
 	"reflect"
 	"sort"
 	"strings"
 	"unicode"
 	"unsafe"
-
-	"github.com/modern-go/reflect2"
-
-	"fmt"
 )
 
 var typeDecoders = map[string]ValDecoder{}

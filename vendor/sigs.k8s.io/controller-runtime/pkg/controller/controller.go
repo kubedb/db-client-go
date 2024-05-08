@@ -18,9 +18,8 @@ package controller
 
 import (
 	"context"
-	"time"
-
 	"fmt"
+	"time"
 
 	"github.com/go-logr/logr"
 	"k8s.io/client-go/util/workqueue"

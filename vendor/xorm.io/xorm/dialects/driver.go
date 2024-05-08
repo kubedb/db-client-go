@@ -6,9 +6,8 @@ package dialects
 
 import (
 	"database/sql"
-	"time"
-
 	"fmt"
+	"time"
 
 	"xorm.io/xorm/core"
 )

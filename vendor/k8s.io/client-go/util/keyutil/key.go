@@ -25,10 +25,9 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"os"
 	"path/filepath"
-
-	"fmt"
 )
 
 const (

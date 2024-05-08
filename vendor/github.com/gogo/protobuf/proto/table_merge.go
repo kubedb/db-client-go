@@ -32,12 +32,11 @@
 package proto
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"sync"
 	"sync/atomic"
-
-	"fmt"
 )
 
 // Merge merges the src message into dst.

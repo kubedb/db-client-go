@@ -9,11 +9,10 @@ package bsonrw
 import (
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"math"
 	"strconv"
 	"time"
-
-	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson/bsontype"
 	"go.mongodb.org/mongo-driver/bson/primitive"

@@ -7,11 +7,10 @@ import (
 	"context"
 	"database/sql/driver"
 	"errors"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"fmt"
 )
 
 // Notification represents a single notification from the database.

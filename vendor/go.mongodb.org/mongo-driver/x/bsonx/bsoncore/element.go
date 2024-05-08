@@ -8,7 +8,6 @@ package bsoncore
 
 import (
 	"bytes"
-
 	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson/bsontype"

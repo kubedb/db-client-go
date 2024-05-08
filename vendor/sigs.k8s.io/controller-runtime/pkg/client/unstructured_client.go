@@ -18,9 +18,8 @@ package client
 
 import (
 	"context"
-	"strings"
-
 	"fmt"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime"
 )

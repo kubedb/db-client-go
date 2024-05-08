@@ -15,10 +15,9 @@ package model
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
-
-	"fmt"
 )
 
 type FloatString float64

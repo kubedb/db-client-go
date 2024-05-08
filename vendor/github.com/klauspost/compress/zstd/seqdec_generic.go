@@ -4,9 +4,8 @@
 package zstd
 
 import (
-	"io"
-
 	"fmt"
+	"io"
 )
 
 // decode sequences from the stream with the provided history but without dictionary.

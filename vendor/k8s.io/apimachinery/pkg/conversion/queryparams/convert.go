@@ -17,11 +17,10 @@ limitations under the License.
 package queryparams
 
 import (
+	"fmt"
 	"net/url"
 	"reflect"
 	"strings"
-
-	"fmt"
 )
 
 // Marshaler converts an object to a query parameter string representation

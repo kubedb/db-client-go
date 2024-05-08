@@ -15,6 +15,7 @@
 package swag
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -24,8 +25,6 @@ import (
 	"runtime"
 	"strings"
 	"time"
-
-	"fmt"
 )
 
 // LoadHTTPTimeout the default timeout for load requests

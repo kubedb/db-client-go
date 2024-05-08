@@ -6,12 +6,11 @@ package cmp
 
 import (
 	"bytes"
+	"fmt"
 	"math/rand"
 	"strings"
 	"time"
 	"unicode/utf8"
-
-	"fmt"
 
 	"github.com/google/go-cmp/cmp/internal/flags"
 )

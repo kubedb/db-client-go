@@ -15,8 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
+
 // Code generated from the elasticsearch-specification DO NOT EDIT.
 // https://github.com/elastic/elasticsearch-specification/tree/4316fc1aa18bb04678b156f23b22c9d3f996f9c9
+
 
 // Updates an alias to point to a new index when the existing index
 // is considered to be too large or too old.
@@ -27,12 +29,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
-
-	"fmt"
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 )

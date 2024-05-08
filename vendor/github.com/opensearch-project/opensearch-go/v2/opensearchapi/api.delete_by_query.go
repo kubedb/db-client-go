@@ -28,13 +28,12 @@ package opensearchapi
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
-
-	"fmt"
 )
 
 func newDeleteByQueryFunc(t Transport) DeleteByQuery {

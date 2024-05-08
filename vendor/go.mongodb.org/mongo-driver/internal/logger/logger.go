@@ -9,11 +9,10 @@
 package logger
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
-
-	"fmt"
 )
 
 // DefaultMaxDocumentLength is the default maximum number of bytes that can be

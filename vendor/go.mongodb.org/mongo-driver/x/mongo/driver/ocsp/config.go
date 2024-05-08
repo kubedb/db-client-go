@@ -9,9 +9,8 @@ package ocsp
 import (
 	"crypto/x509"
 	"errors"
-	"net/http"
-
 	"fmt"
+	"net/http"
 
 	"go.mongodb.org/mongo-driver/internal/httputil"
 	"golang.org/x/crypto/ocsp"

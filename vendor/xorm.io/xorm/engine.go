@@ -7,6 +7,7 @@ package xorm
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"io"
 	"os"
 	"reflect"
@@ -15,8 +16,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"fmt"
 
 	"xorm.io/xorm/caches"
 	"xorm.io/xorm/contexts"

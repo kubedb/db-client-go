@@ -33,6 +33,7 @@ package proto
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"math"
 	"reflect"
@@ -41,8 +42,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"unicode/utf8"
-
-	"fmt"
 )
 
 // Unmarshal is the entry point from the generated .pb.go files.

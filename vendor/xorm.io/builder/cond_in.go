@@ -5,10 +5,9 @@
 package builder
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
-
-	"fmt"
 )
 
 type condIn struct {

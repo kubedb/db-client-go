@@ -8,9 +8,8 @@ package bsonrw
 
 import (
 	"errors"
-	"io"
-
 	"fmt"
+	"io"
 
 	"go.mongodb.org/mongo-driver/bson/bsontype"
 	"go.mongodb.org/mongo-driver/bson/primitive"

@@ -9,9 +9,8 @@ import (
 	"crypto/md5"
 	"encoding/gob"
 	"encoding/json"
-	"io"
-
 	"fmt"
+	"io"
 )
 
 // Md5 return md5 hash string

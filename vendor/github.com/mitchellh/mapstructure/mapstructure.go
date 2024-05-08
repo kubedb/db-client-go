@@ -161,12 +161,11 @@ package mapstructure
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
-
-	"fmt"
 )
 
 // DecodeHookFunc is the callback function that can be used for

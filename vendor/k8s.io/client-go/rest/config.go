@@ -19,6 +19,7 @@ package rest
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"net/url"
@@ -27,8 +28,6 @@ import (
 	gruntime "runtime"
 	"strings"
 	"time"
-
-	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"

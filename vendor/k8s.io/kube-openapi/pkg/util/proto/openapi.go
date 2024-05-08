@@ -17,10 +17,9 @@ limitations under the License.
 package proto
 
 import (
+	"fmt"
 	"sort"
 	"strings"
-
-	"fmt"
 )
 
 // Defines openapi types.

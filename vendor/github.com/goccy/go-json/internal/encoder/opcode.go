@@ -1,10 +1,9 @@
 package encoder
 
 import (
+	"fmt"
 	"strings"
 	"unsafe"
-
-	"fmt"
 
 	"github.com/goccy/go-json/internal/runtime"
 )

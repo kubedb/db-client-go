@@ -18,11 +18,10 @@ package clientcmd
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"reflect"
 	"strings"
-
-	"fmt"
 
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/validation"

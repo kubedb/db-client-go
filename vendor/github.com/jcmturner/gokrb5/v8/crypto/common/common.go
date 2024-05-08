@@ -7,7 +7,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
-
 	"fmt"
 
 	"github.com/jcmturner/gokrb5/v8/crypto/etype"

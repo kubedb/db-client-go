@@ -28,6 +28,7 @@ package opensearchtransport
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -35,8 +36,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"fmt"
 )
 
 // Discoverable defines the interface for transports supporting node discovery.

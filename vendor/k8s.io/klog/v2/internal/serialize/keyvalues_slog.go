@@ -21,10 +21,9 @@ package serialize
 
 import (
 	"bytes"
+	"fmt"
 	"log/slog"
 	"strconv"
-
-	"fmt"
 
 	"github.com/go-logr/logr"
 )

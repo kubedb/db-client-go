@@ -5,9 +5,8 @@
 package protoreflect
 
 import (
-	"math"
-
 	"fmt"
+	"math"
 )
 
 // Value is a union where only one Go type may be set at a time.

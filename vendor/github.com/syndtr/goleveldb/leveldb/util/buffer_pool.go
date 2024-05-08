@@ -7,11 +7,10 @@
 package util
 
 import (
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"fmt"
 )
 
 type buffer struct {

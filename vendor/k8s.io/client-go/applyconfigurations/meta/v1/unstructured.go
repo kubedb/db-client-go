@@ -17,10 +17,9 @@ limitations under the License.
 package v1
 
 import (
+	"fmt"
 	"sync"
 	"time"
-
-	"fmt"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"

@@ -17,10 +17,9 @@ limitations under the License.
 package rest
 
 import (
+	"fmt"
 	"net/url"
 	"path"
-
-	"fmt"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )

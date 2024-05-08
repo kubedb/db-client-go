@@ -19,11 +19,10 @@ package trace
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"math/rand"
 	"sync"
 	"time"
-
-	"fmt"
 
 	"k8s.io/klog/v2"
 )

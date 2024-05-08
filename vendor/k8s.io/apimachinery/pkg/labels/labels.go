@@ -17,10 +17,9 @@ limitations under the License.
 package labels
 
 import (
+	"fmt"
 	"sort"
 	"strings"
-
-	"fmt"
 
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )

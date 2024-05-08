@@ -15,11 +15,10 @@ package prometheus
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 	"time"
 	"unicode/utf8"
-
-	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus/internal"
 

@@ -15,10 +15,9 @@ package prometheus
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"unicode/utf8"
-
-	"fmt"
 
 	"github.com/prometheus/common/model"
 )

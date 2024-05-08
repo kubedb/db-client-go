@@ -22,12 +22,11 @@ package procfs
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
 	"time"
-
-	"fmt"
 )
 
 // Constants shared between multiple functions.

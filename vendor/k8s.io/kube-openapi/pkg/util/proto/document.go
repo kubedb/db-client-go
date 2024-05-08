@@ -17,10 +17,9 @@ limitations under the License.
 package proto
 
 import (
+	"fmt"
 	"sort"
 	"strings"
-
-	"fmt"
 
 	openapi_v2 "github.com/google/gnostic-models/openapiv2"
 	"gopkg.in/yaml.v2"

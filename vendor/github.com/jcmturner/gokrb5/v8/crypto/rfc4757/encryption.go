@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"crypto/rc4"
 	"errors"
-
 	"fmt"
 
 	"github.com/jcmturner/gokrb5/v8/crypto/etype"

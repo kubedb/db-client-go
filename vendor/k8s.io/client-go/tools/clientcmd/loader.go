@@ -17,13 +17,12 @@ limitations under the License.
 package clientcmd
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
 	goruntime "runtime"
 	"strings"
-
-	"fmt"
 
 	"github.com/imdario/mergo"
 	"k8s.io/klog/v2"

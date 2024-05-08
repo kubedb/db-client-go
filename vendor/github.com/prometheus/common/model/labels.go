@@ -15,11 +15,10 @@ package model
 
 import (
 	"encoding/json"
+	"fmt"
 	"regexp"
 	"strings"
 	"unicode/utf8"
-
-	"fmt"
 )
 
 const (

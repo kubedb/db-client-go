@@ -18,10 +18,9 @@ package recorder
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"sync"
-
-	"fmt"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"

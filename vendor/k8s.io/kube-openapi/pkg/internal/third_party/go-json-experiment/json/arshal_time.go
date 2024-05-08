@@ -6,11 +6,10 @@ package json
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 	"time"
-
-	"fmt"
 )
 
 var (

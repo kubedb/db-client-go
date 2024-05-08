@@ -2,10 +2,9 @@ package semver
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
-
-	"fmt"
 )
 
 const (

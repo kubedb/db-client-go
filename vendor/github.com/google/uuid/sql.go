@@ -6,7 +6,6 @@ package uuid
 
 import (
 	"database/sql/driver"
-
 	"fmt"
 )
 

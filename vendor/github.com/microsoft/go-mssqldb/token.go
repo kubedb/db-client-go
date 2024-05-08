@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
 	"strconv"
-
-	"fmt"
 
 	"github.com/golang-sql/sqlexp"
 	"github.com/microsoft/go-mssqldb/internal/github.com/swisscom/mssql-always-encrypted/pkg/algorithms"

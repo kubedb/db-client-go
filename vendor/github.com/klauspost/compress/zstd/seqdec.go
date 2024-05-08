@@ -6,9 +6,8 @@ package zstd
 
 import (
 	"errors"
-	"io"
-
 	"fmt"
+	"io"
 )
 
 type seq struct {

@@ -7,9 +7,8 @@
 package term
 
 import (
-	"runtime"
-
 	"fmt"
+	"runtime"
 )
 
 type state struct{}

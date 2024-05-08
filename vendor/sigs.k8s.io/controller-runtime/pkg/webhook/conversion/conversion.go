@@ -23,9 +23,8 @@ package conversion
 
 import (
 	"encoding/json"
-	"net/http"
-
 	"fmt"
+	"net/http"
 
 	apix "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/meta"

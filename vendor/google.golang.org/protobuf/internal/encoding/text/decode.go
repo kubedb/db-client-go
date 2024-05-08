@@ -6,11 +6,10 @@ package text
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"strconv"
 	"unicode/utf8"
-
-	"fmt"
 
 	"google.golang.org/protobuf/internal/errors"
 )

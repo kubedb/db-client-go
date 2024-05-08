@@ -6,13 +6,12 @@ package esapi
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
-
-	"fmt"
 )
 
 // Response represents the API response.

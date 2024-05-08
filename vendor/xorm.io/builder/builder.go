@@ -6,7 +6,6 @@ package builder
 
 import (
 	sql2 "database/sql"
-
 	"fmt"
 )
 

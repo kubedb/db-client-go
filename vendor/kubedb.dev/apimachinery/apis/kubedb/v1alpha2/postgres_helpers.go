@@ -17,10 +17,9 @@ limitations under the License.
 package v1alpha2
 
 import (
+	"fmt"
 	"strconv"
 	"time"
-
-	"fmt"
 
 	"kubedb.dev/apimachinery/apis"
 	catalog "kubedb.dev/apimachinery/apis/catalog/v1alpha1"

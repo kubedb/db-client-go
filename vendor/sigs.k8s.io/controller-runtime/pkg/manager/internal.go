@@ -19,14 +19,13 @@ package manager
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/pprof"
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"fmt"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/meta"

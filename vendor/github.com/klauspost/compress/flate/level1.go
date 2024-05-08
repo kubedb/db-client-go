@@ -2,9 +2,8 @@ package flate
 
 import (
 	"encoding/binary"
-	"math/bits"
-
 	"fmt"
+	"math/bits"
 )
 
 // fastGen maintains the table for matches,

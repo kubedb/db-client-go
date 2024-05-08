@@ -18,9 +18,8 @@ package internal
 
 import (
 	"context"
-	"reflect"
-
 	"fmt"
+	"reflect"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"

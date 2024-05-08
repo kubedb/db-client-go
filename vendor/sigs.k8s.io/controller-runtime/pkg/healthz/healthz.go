@@ -17,12 +17,11 @@ limitations under the License.
 package healthz
 
 import (
+	"fmt"
 	"net/http"
 	"path"
 	"sort"
 	"strings"
-
-	"fmt"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 )

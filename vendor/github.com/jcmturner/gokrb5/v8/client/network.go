@@ -2,12 +2,11 @@ package client
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 	"net"
 	"strings"
 	"time"
-
-	"fmt"
 
 	"github.com/jcmturner/gokrb5/v8/iana/errorcode"
 	"github.com/jcmturner/gokrb5/v8/messages"

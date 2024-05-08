@@ -17,10 +17,9 @@ limitations under the License.
 package discovery
 
 import (
+	"fmt"
 	"strings"
 	"sync"
-
-	"fmt"
 
 	kmapi "kmodules.xyz/client-go/api/v1"
 

@@ -15,8 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
+
 // Code generated from the elasticsearch-specification DO NOT EDIT.
 // https://github.com/elastic/elasticsearch-specification/tree/4316fc1aa18bb04678b156f23b22c9d3f996f9c9
+
 
 // Changes the number of requests per second for a particular Delete By Query
 // operation.
@@ -26,13 +28,12 @@ import (
 	gobytes "bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
-
-	"fmt"
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 )

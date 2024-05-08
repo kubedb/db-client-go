@@ -4,11 +4,10 @@
 package mssql
 
 import (
+	"fmt"
 	"reflect"
 	"unicode/utf16"
 	"unsafe"
-
-	"fmt"
 )
 
 func ucs22str(s []byte) (string, error) {

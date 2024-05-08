@@ -6,10 +6,9 @@
 package amqp091
 
 import (
+	"fmt"
 	"io"
 	"time"
-
-	"fmt"
 )
 
 // DefaultExchange is the default direct exchange that binds every queue by its

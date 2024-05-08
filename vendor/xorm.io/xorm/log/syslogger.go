@@ -8,9 +8,8 @@
 package log
 
 import (
-	"log/syslog"
-
 	"fmt"
+	"log/syslog"
 )
 
 var _ Logger = &SyslogLogger{}

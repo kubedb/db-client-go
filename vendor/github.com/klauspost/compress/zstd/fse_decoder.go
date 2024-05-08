@@ -7,9 +7,8 @@ package zstd
 import (
 	"encoding/binary"
 	"errors"
-	"io"
-
 	"fmt"
+	"io"
 )
 
 const (

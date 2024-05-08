@@ -7,9 +7,8 @@
 package leveldb
 
 import (
-	"sync/atomic"
-
 	"fmt"
+	"sync/atomic"
 
 	"github.com/syndtr/goleveldb/leveldb/journal"
 	"github.com/syndtr/goleveldb/leveldb/storage"

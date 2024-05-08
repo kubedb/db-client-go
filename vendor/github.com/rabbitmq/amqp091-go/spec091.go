@@ -10,9 +10,8 @@ package amqp091
 
 import (
 	"encoding/binary"
-	"io"
-
 	"fmt"
+	"io"
 )
 
 // Error codes that can be sent from the server during a connection or

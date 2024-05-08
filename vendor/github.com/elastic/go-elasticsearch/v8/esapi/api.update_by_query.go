@@ -22,13 +22,12 @@ package esapi
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
-
-	"fmt"
 )
 
 func newUpdateByQueryFunc(t Transport) UpdateByQuery {

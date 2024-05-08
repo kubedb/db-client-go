@@ -31,13 +31,12 @@ package proto
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"reflect"
 	"sort"
 	"strings"
 	"sync"
-
-	"fmt"
 )
 
 type extensionsBytes interface {

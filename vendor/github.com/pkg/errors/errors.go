@@ -93,9 +93,8 @@
 package errors
 
 import (
-	"io"
-
 	"fmt"
+	"io"
 )
 
 // New returns an error with the supplied message.

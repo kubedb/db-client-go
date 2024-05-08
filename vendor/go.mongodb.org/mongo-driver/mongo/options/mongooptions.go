@@ -7,10 +7,9 @@
 package options
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
-
-	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsoncodec"

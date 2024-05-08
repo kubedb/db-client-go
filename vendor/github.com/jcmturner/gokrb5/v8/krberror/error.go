@@ -2,9 +2,8 @@
 package krberror
 
 import (
-	"strings"
-
 	"fmt"
+	"strings"
 )
 
 // Error type descriptions.

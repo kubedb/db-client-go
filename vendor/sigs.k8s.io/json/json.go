@@ -18,9 +18,8 @@ package json
 
 import (
 	gojson "encoding/json"
-	"io"
-
 	"fmt"
+	"io"
 
 	internaljson "sigs.k8s.io/json/internal/golang/encoding/json"
 )

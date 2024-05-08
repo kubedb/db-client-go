@@ -9,10 +9,9 @@ package scram
 import (
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
-
-	"fmt"
 )
 
 type c1Msg struct {

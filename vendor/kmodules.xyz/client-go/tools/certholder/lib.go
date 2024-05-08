@@ -17,10 +17,9 @@ limitations under the License.
 package certholder
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
-
-	"fmt"
 
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

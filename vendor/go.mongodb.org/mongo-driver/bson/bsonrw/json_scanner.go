@@ -9,13 +9,12 @@ package bsonrw
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"math"
 	"strconv"
 	"unicode"
 	"unicode/utf16"
-
-	"fmt"
 )
 
 type jsonTokenType byte

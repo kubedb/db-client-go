@@ -14,11 +14,10 @@
 package model
 
 import (
+	"fmt"
 	"regexp"
 	"sort"
 	"strings"
-
-	"fmt"
 )
 
 var (

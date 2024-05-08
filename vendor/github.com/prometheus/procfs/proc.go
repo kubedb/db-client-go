@@ -16,12 +16,11 @@ package procfs
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strconv"
 	"strings"
-
-	"fmt"
 
 	"github.com/prometheus/procfs/internal/util"
 )

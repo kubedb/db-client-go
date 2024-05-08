@@ -3,10 +3,9 @@ package gojsondiff
 import (
 	"encoding/json"
 	"errors"
+	dmp "github.com/sergi/go-diff/diffmatchpatch"
 	"io"
 	"strconv"
-
-	dmp "github.com/sergi/go-diff/diffmatchpatch"
 )
 
 type Unmarshaller struct {

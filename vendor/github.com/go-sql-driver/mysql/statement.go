@@ -11,10 +11,9 @@ package mysql
 import (
 	"database/sql/driver"
 	"encoding/json"
+	"fmt"
 	"io"
 	"reflect"
-
-	"fmt"
 )
 
 type mysqlStmt struct {

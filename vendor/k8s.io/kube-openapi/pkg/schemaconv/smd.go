@@ -17,9 +17,8 @@ limitations under the License.
 package schemaconv
 
 import (
-	"sort"
-
 	"fmt"
+	"sort"
 
 	"sigs.k8s.io/structured-merge-diff/v4/schema"
 )

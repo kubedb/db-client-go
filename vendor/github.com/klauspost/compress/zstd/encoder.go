@@ -6,12 +6,11 @@ package zstd
 
 import (
 	"crypto/rand"
+	"fmt"
 	"io"
 	"math"
 	rdebug "runtime/debug"
 	"sync"
-
-	"fmt"
 
 	"github.com/klauspost/compress/zstd/internal/xxhash"
 )

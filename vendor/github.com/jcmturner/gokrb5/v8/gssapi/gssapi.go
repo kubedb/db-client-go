@@ -3,7 +3,6 @@ package gssapi
 
 import (
 	"context"
-
 	"fmt"
 
 	"github.com/jcmturner/gofork/encoding/asn1"

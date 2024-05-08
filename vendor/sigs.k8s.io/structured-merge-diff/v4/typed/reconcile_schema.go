@@ -17,9 +17,8 @@ limitations under the License.
 package typed
 
 import (
-	"sync"
-
 	"fmt"
+	"sync"
 
 	"sigs.k8s.io/structured-merge-diff/v4/fieldpath"
 	"sigs.k8s.io/structured-merge-diff/v4/schema"

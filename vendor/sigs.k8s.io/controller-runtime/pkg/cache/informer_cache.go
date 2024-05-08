@@ -18,9 +18,8 @@ package cache
 
 import (
 	"context"
-	"strings"
-
 	"fmt"
+	"strings"
 
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -18,9 +18,8 @@ package cache
 
 import (
 	"context"
-	"time"
-
 	"fmt"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"

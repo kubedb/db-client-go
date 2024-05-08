@@ -6,9 +6,8 @@ package proto
 
 import (
 	"errors"
-	"reflect"
-
 	"fmt"
+	"reflect"
 
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/proto"

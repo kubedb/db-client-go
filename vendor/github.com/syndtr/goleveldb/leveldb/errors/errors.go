@@ -9,7 +9,6 @@ package errors
 
 import (
 	"errors"
-
 	"fmt"
 
 	"github.com/syndtr/goleveldb/leveldb/storage"

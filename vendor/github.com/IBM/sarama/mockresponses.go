@@ -1,10 +1,9 @@
 package sarama
 
 import (
+	"fmt"
 	"strings"
 	"sync"
-
-	"fmt"
 )
 
 // TestReporter has methods matching go's testing.T to avoid importing

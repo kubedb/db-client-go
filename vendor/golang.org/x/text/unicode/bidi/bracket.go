@@ -6,9 +6,8 @@ package bidi
 
 import (
 	"container/list"
-	"sort"
-
 	"fmt"
+	"sort"
 )
 
 // This file contains a port of the reference implementation of the

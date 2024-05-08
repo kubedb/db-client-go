@@ -9,11 +9,10 @@
 package mergo
 
 import (
+	"fmt"
 	"reflect"
 	"unicode"
 	"unicode/utf8"
-
-	"fmt"
 )
 
 func changeInitialCase(s string, mapper func(rune) rune) string {

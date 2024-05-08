@@ -18,9 +18,8 @@ package klog
 
 import (
 	"encoding/json"
-	"strings"
-
 	"fmt"
+	"strings"
 
 	"github.com/go-logr/logr"
 )

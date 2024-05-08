@@ -6,9 +6,8 @@ package zstd
 
 import (
 	"errors"
-	"math"
-
 	"fmt"
+	"math"
 )
 
 const (

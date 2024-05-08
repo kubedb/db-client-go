@@ -5,11 +5,10 @@
 package impl
 
 import (
+	"fmt"
 	"math"
 	"reflect"
 	"sync"
-
-	"fmt"
 
 	"google.golang.org/protobuf/internal/flags"
 	"google.golang.org/protobuf/reflect/protoreflect"

@@ -16,9 +16,8 @@ package procfs
 import (
 	"bufio"
 	"bytes"
-	"regexp"
-
 	"fmt"
+	"regexp"
 
 	"github.com/prometheus/procfs/internal/util"
 )

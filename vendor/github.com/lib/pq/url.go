@@ -1,12 +1,11 @@
 package pq
 
 import (
+	"fmt"
 	"net"
 	nurl "net/url"
 	"sort"
 	"strings"
-
-	"fmt"
 )
 
 // ParseURL no longer needs to be used by clients of this library since supplying a URL as a

@@ -14,10 +14,9 @@
 package expfmt
 
 import (
+	"fmt"
 	"io"
 	"net/http"
-
-	"fmt"
 
 	"github.com/matttproud/golang_protobuf_extensions/v2/pbutil"
 	"github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg"

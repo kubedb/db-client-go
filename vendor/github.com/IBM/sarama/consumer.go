@@ -2,12 +2,11 @@ package sarama
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"fmt"
 
 	"github.com/rcrowley/go-metrics"
 )

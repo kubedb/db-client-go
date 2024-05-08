@@ -5,9 +5,8 @@
 package protodesc
 
 import (
-	"strings"
-
 	"fmt"
+	"strings"
 
 	"google.golang.org/protobuf/internal/encoding/defval"
 	"google.golang.org/protobuf/internal/strs"

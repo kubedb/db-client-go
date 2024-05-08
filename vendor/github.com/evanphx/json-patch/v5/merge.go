@@ -3,10 +3,9 @@ package jsonpatch
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"reflect"
-
-	"fmt"
 
 	"github.com/evanphx/json-patch/v5/internal/json"
 )

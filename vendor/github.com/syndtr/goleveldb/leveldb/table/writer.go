@@ -9,9 +9,8 @@ package table
 import (
 	"encoding/binary"
 	"errors"
-	"io"
-
 	"fmt"
+	"io"
 
 	"github.com/golang/snappy"
 

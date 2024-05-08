@@ -6,7 +6,6 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"errors"
-
 	"fmt"
 
 	"github.com/jcmturner/aescts/v2"

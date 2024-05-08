@@ -2,7 +2,6 @@ package multierror
 
 import (
 	"errors"
-
 	"fmt"
 )
 

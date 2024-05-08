@@ -8,7 +8,6 @@ package auth
 
 import (
 	"context"
-
 	"fmt"
 )
 

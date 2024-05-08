@@ -8,14 +8,13 @@ package windows
 
 import (
 	errorspkg "errors"
+	"fmt"
 	"runtime"
 	"sync"
 	"syscall"
 	"time"
 	"unicode/utf16"
 	"unsafe"
-
-	"fmt"
 )
 
 type Handle uintptr

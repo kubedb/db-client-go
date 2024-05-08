@@ -3,10 +3,9 @@ package jsonpatch
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
-
-	"fmt"
 )
 
 var errBadJSONDoc = fmt.Errorf("invalid JSON Document")

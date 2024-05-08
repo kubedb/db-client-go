@@ -21,9 +21,8 @@ package v1
 import (
 	"context"
 	json "encoding/json"
-	"time"
-
 	"fmt"
+	"time"
 
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/api/core/v1"

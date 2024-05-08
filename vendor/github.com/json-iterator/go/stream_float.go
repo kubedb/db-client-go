@@ -1,10 +1,9 @@
 package jsoniter
 
 import (
+	"fmt"
 	"math"
 	"strconv"
-
-	"fmt"
 )
 
 var pow10 []uint64

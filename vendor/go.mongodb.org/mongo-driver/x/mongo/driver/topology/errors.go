@@ -9,9 +9,8 @@ package topology
 import (
 	"context"
 	"errors"
-	"time"
-
 	"fmt"
+	"time"
 
 	"go.mongodb.org/mongo-driver/mongo/description"
 )

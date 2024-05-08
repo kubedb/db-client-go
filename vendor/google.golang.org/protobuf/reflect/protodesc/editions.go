@@ -5,10 +5,9 @@
 package protodesc
 
 import (
+	"fmt"
 	"os"
 	"sync"
-
-	"fmt"
 
 	"google.golang.org/protobuf/internal/editiondefaults"
 	"google.golang.org/protobuf/internal/filedesc"

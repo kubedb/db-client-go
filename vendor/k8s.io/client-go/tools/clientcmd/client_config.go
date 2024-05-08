@@ -17,14 +17,13 @@ limitations under the License.
 package clientcmd
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"unicode"
-
-	"fmt"
 
 	restclient "k8s.io/client-go/rest"
 	clientauth "k8s.io/client-go/tools/auth"

@@ -10,7 +10,6 @@ import (
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"errors"
-
 	"fmt"
 )
 

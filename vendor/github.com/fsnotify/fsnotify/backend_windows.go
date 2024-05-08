@@ -12,6 +12,7 @@ package fsnotify
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -19,8 +20,6 @@ import (
 	"strings"
 	"sync"
 	"unsafe"
-
-	"fmt"
 
 	"golang.org/x/sys/windows"
 )

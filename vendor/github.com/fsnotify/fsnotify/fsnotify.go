@@ -11,10 +11,9 @@ package fsnotify
 
 import (
 	"errors"
+	"fmt"
 	"path/filepath"
 	"strings"
-
-	"fmt"
 )
 
 // Event represents a file system notification.

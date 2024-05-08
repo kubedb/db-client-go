@@ -18,10 +18,9 @@ package fields
 
 import (
 	"bytes"
+	"fmt"
 	"sort"
 	"strings"
-
-	"fmt"
 
 	"k8s.io/apimachinery/pkg/selection"
 )

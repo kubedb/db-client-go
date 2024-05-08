@@ -20,13 +20,12 @@ limitations under the License.
 package v1
 
 import (
+	fmt "fmt"
 	io "io"
 	math "math"
 	math_bits "math/bits"
 	reflect "reflect"
 	strings "strings"
-
-	fmt "fmt"
 
 	proto "github.com/gogo/protobuf/proto"
 	v1 "k8s.io/api/core/v1"

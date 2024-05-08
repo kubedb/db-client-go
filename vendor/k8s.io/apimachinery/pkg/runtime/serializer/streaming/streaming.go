@@ -20,9 +20,8 @@ package streaming
 
 import (
 	"bytes"
-	"io"
-
 	"fmt"
+	"io"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"

@@ -27,9 +27,8 @@ limitations under the License.
 package v1
 
 import (
-	"strings"
-
 	"fmt"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"

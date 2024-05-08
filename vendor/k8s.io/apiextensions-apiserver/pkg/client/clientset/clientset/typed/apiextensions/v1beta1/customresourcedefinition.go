@@ -21,9 +21,8 @@ package v1beta1
 import (
 	"context"
 	json "encoding/json"
-	"time"
-
 	"fmt"
+	"time"
 
 	v1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/client/applyconfiguration/apiextensions/v1beta1"

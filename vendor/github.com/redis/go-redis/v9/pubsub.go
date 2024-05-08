@@ -2,11 +2,10 @@ package redis
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
-
-	"fmt"
 
 	"github.com/redis/go-redis/v9/internal"
 	"github.com/redis/go-redis/v9/internal/pool"

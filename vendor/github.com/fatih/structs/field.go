@@ -2,9 +2,8 @@ package structs
 
 import (
 	"errors"
-	"reflect"
-
 	"fmt"
+	"reflect"
 )
 
 var (

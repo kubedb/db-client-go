@@ -19,10 +19,9 @@ package metadata
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
-
-	"fmt"
 
 	"k8s.io/klog/v2"
 

@@ -9,6 +9,7 @@ import (
 	"database/sql/driver"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"os"
@@ -20,8 +21,6 @@ import (
 	"sync"
 	"time"
 	"unicode"
-
-	"fmt"
 
 	"github.com/lib/pq/oid"
 	"github.com/lib/pq/scram"

@@ -11,7 +11,6 @@ package hpack
 import (
 	"bytes"
 	"errors"
-
 	"fmt"
 )
 

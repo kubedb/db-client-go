@@ -8,11 +8,10 @@
 package diff
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 	"time"
-
-	"fmt"
 )
 
 // The algorithm can be seen running in real-time by enabling debugging:

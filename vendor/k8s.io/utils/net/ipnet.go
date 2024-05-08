@@ -17,10 +17,9 @@ limitations under the License.
 package net
 
 import (
+	"fmt"
 	"net"
 	"strings"
-
-	"fmt"
 )
 
 // IPNetSet maps string to net.IPNet.

@@ -17,9 +17,8 @@ limitations under the License.
 package conversion
 
 import (
-	"reflect"
-
 	"fmt"
+	"reflect"
 )
 
 type typePair struct {

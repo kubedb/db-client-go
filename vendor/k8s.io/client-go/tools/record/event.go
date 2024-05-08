@@ -18,10 +18,9 @@ package record
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"time"
-
-	"fmt"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"

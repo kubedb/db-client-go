@@ -9,12 +9,11 @@ package credproviders
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
-
-	"fmt"
 
 	"go.mongodb.org/mongo-driver/internal/aws/credentials"
 )

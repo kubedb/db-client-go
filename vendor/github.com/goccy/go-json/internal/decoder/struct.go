@@ -1,6 +1,7 @@
 package decoder
 
 import (
+	"fmt"
 	"math"
 	"math/bits"
 	"sort"
@@ -8,8 +9,6 @@ import (
 	"unicode"
 	"unicode/utf16"
 	"unsafe"
-
-	"fmt"
 
 	"github.com/goccy/go-json/internal/errors"
 )

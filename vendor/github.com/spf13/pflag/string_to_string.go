@@ -3,9 +3,8 @@ package pflag
 import (
 	"bytes"
 	"encoding/csv"
-	"strings"
-
 	"fmt"
+	"strings"
 )
 
 // -- stringToString Value

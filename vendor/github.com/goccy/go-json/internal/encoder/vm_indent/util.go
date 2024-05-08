@@ -2,9 +2,8 @@ package vm_indent
 
 import (
 	"encoding/json"
-	"unsafe"
-
 	"fmt"
+	"unsafe"
 
 	"github.com/goccy/go-json/internal/encoder"
 	"github.com/goccy/go-json/internal/runtime"

@@ -5,11 +5,10 @@
 package cmp
 
 import (
+	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
-
-	"fmt"
 
 	"github.com/google/go-cmp/cmp/internal/function"
 )

@@ -10,14 +10,13 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"fmt"
 
 	"go.mongodb.org/mongo-driver/mongo/address"
 	"go.mongodb.org/mongo-driver/mongo/description"

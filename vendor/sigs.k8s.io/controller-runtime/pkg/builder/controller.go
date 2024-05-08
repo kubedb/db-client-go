@@ -18,9 +18,8 @@ package builder
 
 import (
 	"errors"
-	"strings"
-
 	"fmt"
+	"strings"
 
 	"github.com/go-logr/logr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

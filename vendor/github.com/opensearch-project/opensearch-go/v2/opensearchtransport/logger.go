@@ -30,6 +30,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -37,8 +38,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"fmt"
 )
 
 var debugLogger DebuggingLogger

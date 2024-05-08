@@ -6,10 +6,9 @@ package caches
 
 import (
 	"container/list"
+	"fmt"
 	"sync"
 	"time"
-
-	"fmt"
 )
 
 // LRUCacher implments cache object facilities

@@ -18,10 +18,9 @@ limitations under the License.
 package v1
 
 import (
+	"fmt"
 	"strings"
 	"unicode"
-
-	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"

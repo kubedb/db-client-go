@@ -17,9 +17,8 @@ limitations under the License.
 package runtime
 
 import (
-	"reflect"
-
 	"fmt"
+	"reflect"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/json"

@@ -1,11 +1,10 @@
 package huff0
 
 import (
+	"fmt"
 	"math"
 	"runtime"
 	"sync"
-
-	"fmt"
 )
 
 // Compress1X will compress the input.

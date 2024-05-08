@@ -5,9 +5,8 @@
 package statements
 
 import (
-	"strings"
-
 	"fmt"
+	"strings"
 
 	"xorm.io/xorm/schemas"
 )

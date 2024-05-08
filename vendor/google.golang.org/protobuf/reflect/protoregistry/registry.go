@@ -16,11 +16,10 @@
 package protoregistry
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"sync"
-
-	"fmt"
 
 	"google.golang.org/protobuf/internal/encoding/messageset"
 	"google.golang.org/protobuf/internal/errors"

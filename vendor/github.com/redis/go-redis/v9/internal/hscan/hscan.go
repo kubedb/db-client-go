@@ -2,10 +2,9 @@ package hscan
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"strconv"
-
-	"fmt"
 )
 
 // decoderFunc represents decoding functions for default built-in types.

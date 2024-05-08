@@ -5,11 +5,10 @@
 package filedesc
 
 import (
+	"fmt"
 	"math"
 	"sort"
 	"sync"
-
-	"fmt"
 
 	"google.golang.org/protobuf/internal/genid"
 

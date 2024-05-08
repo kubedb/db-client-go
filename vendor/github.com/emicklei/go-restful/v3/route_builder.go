@@ -5,14 +5,13 @@ package restful
 // that can be found in the LICENSE file.
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"reflect"
 	"runtime"
 	"strings"
 	"sync/atomic"
-
-	"fmt"
 
 	"github.com/emicklei/go-restful/v3/log"
 )

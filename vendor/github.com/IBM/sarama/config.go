@@ -2,12 +2,11 @@ package sarama
 
 import (
 	"crypto/tls"
+	"fmt"
 	"io"
 	"net"
 	"regexp"
 	"time"
-
-	"fmt"
 
 	"github.com/klauspost/compress/gzip"
 	"github.com/rcrowley/go-metrics"

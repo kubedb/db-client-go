@@ -5,9 +5,8 @@
 package ptypes
 
 import (
-	"strings"
-
 	"fmt"
+	"strings"
 
 	"github.com/golang/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"

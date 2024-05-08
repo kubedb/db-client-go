@@ -2,10 +2,9 @@ package internal
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
-
-	"fmt"
 )
 
 type Logging interface {

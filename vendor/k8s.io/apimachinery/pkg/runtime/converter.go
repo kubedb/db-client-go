@@ -18,6 +18,7 @@ package runtime
 
 import (
 	encodingjson "encoding/json"
+	"fmt"
 	"math"
 	"os"
 	"reflect"
@@ -27,8 +28,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"fmt"
 
 	"k8s.io/apimachinery/pkg/conversion"
 	"k8s.io/apimachinery/pkg/util/json"

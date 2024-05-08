@@ -2,10 +2,9 @@ package sarama
 
 import (
 	"encoding/binary"
+	"fmt"
 	"hash/crc32"
 	"sync"
-
-	"fmt"
 )
 
 type crcPolynomial int8

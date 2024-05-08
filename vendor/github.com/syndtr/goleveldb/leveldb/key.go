@@ -8,7 +8,6 @@ package leveldb
 
 import (
 	"encoding/binary"
-
 	"fmt"
 
 	"github.com/syndtr/goleveldb/leveldb/errors"

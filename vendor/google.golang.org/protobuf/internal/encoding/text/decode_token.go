@@ -6,11 +6,10 @@ package text
 
 import (
 	"bytes"
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
-
-	"fmt"
 
 	"google.golang.org/protobuf/internal/flags"
 )

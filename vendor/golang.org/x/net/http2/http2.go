@@ -18,6 +18,7 @@ package http2 // import "golang.org/x/net/http2"
 import (
 	"bufio"
 	"crypto/tls"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -25,8 +26,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
-	"fmt"
 
 	"golang.org/x/net/http/httpguts"
 )

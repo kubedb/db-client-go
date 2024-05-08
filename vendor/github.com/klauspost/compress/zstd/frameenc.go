@@ -6,11 +6,10 @@ package zstd
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 	"math"
 	"math/bits"
-
-	"fmt"
 )
 
 type frameHeader struct {

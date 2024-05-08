@@ -4,11 +4,10 @@ package esapi
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
-
-	"fmt"
 )
 
 func newIndicesShardStoresFunc(t Transport) IndicesShardStores {

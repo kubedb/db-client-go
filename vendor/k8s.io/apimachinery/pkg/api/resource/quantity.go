@@ -19,12 +19,11 @@ package resource
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"math"
 	"math/big"
 	"strconv"
 	"strings"
-
-	"fmt"
 
 	inf "gopkg.in/inf.v0"
 )

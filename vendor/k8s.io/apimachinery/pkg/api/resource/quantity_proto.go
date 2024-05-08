@@ -17,10 +17,9 @@ limitations under the License.
 package resource
 
 import (
+	"fmt"
 	"io"
 	"math/bits"
-
-	"fmt"
 
 	"github.com/gogo/protobuf/proto"
 )

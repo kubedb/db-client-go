@@ -18,6 +18,7 @@ package runtime
 
 import (
 	"bytes"
+	"fmt"
 	"go/ast"
 	"go/doc"
 	"go/parser"
@@ -25,8 +26,6 @@ import (
 	"io"
 	"reflect"
 	"strings"
-
-	"fmt"
 )
 
 // Pair of strings. We keed the name of fields and the doc

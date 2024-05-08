@@ -2,11 +2,10 @@ package sarama
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
-
-	"fmt"
 )
 
 // ProducerTxnStatusFlag mark current transaction status.

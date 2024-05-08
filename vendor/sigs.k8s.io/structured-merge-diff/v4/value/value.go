@@ -18,10 +18,9 @@ package value
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"strings"
-
-	"fmt"
 
 	jsoniter "github.com/json-iterator/go"
 	"gopkg.in/yaml.v2"

@@ -17,11 +17,10 @@ limitations under the License.
 package labels
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
-
-	"fmt"
 
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/util/sets"

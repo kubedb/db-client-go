@@ -14,12 +14,11 @@ import (
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"math/big"
 	"net/http"
 	"time"
-
-	"fmt"
 
 	"golang.org/x/crypto/ocsp"
 	"golang.org/x/sync/errgroup"

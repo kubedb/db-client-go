@@ -17,9 +17,8 @@ limitations under the License.
 package cache
 
 import (
-	"sync"
-
 	"fmt"
+	"sync"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 )

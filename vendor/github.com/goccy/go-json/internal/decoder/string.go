@@ -2,13 +2,12 @@ package decoder
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 	"unicode"
 	"unicode/utf16"
 	"unicode/utf8"
 	"unsafe"
-
-	"fmt"
 
 	"github.com/goccy/go-json/internal/errors"
 )

@@ -1,12 +1,10 @@
 package jsoniter
 
 import (
+	"fmt"
+	"github.com/modern-go/reflect2"
 	"io"
 	"unsafe"
-
-	"github.com/modern-go/reflect2"
-
-	"fmt"
 )
 
 func decoderOfSlice(ctx *ctx, typ reflect2.Type) ValDecoder {

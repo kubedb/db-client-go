@@ -8,9 +8,8 @@ package options
 
 import (
 	"crypto/tls"
-	"net/http"
-
 	"fmt"
+	"net/http"
 
 	"go.mongodb.org/mongo-driver/internal/httputil"
 )

@@ -133,9 +133,8 @@
 package protoreflect
 
 import (
-	"strings"
-
 	"fmt"
+	"strings"
 
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/internal/pragma"

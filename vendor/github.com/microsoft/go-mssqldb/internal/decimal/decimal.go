@@ -3,11 +3,10 @@ package decimal
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"math"
 	"math/big"
 	"strings"
-
-	"fmt"
 )
 
 // Decimal represents decimal type in the Microsoft Open Specifications: http://msdn.microsoft.com/en-us/library/ee780893.aspx

@@ -5,9 +5,8 @@
 package cmp
 
 import (
-	"reflect"
-
 	"fmt"
+	"reflect"
 )
 
 // numContextRecords is the number of surrounding equal records to print.

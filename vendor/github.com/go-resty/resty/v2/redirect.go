@@ -6,11 +6,10 @@ package resty
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"strings"
-
-	"fmt"
 )
 
 var (

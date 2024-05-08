@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
@@ -23,8 +24,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"fmt"
 
 	"github.com/golang/protobuf/proto"
 

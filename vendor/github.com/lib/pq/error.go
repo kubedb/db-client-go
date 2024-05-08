@@ -2,11 +2,10 @@ package pq
 
 import (
 	"database/sql/driver"
+	"fmt"
 	"io"
 	"net"
 	"runtime"
-
-	"fmt"
 )
 
 // Error severities

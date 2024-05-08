@@ -21,13 +21,12 @@ package asn1
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
 	"reflect"
 	"strconv"
 	"time"
 	"unicode/utf8"
-
-	"fmt"
 )
 
 // A StructuralError suggests that the ASN.1 data is valid, but the Go type

@@ -10,10 +10,9 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
-
-	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson/bsontype"
 )

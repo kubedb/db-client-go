@@ -54,8 +54,8 @@ type Delete func(index string, id string, o ...func(*DeleteRequest)) (*Response,
 // DeleteRequest configures the Delete API request.
 //
 type DeleteRequest struct {
-	Index      string
-	DocumentID string
+	Index        string
+	DocumentID   string
 
 	IfPrimaryTerm       *int
 	IfSeqNo             *int

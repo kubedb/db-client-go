@@ -49,10 +49,9 @@ package publicsuffix // import "golang.org/x/net/publicsuffix"
 // func PublicSuffix and func EffectiveTLDPlusOne.
 
 import (
+	"fmt"
 	"net/http/cookiejar"
 	"strings"
-
-	"fmt"
 )
 
 // List implements the cookiejar.PublicSuffixList interface by calling the

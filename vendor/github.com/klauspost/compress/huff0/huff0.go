@@ -5,11 +5,10 @@ package huff0
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"math/bits"
 	"sync"
-
-	"fmt"
 
 	"github.com/klauspost/compress/fse"
 )

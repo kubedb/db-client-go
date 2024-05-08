@@ -18,11 +18,10 @@ package record
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
-
-	"fmt"
 
 	"github.com/golang/groupcache/lru"
 

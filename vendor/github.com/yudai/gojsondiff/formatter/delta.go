@@ -3,7 +3,6 @@ package formatter
 import (
 	"encoding/json"
 	"errors"
-
 	"fmt"
 
 	diff "github.com/yudai/gojsondiff"

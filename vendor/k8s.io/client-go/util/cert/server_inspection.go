@@ -19,10 +19,9 @@ package cert
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"net/url"
 	"strings"
-
-	"fmt"
 )
 
 // GetClientCANames gets the CA names for client certs that a server accepts.  This is useful when inspecting the

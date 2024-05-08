@@ -12,12 +12,11 @@ package cpuid
 
 import (
 	"flag"
+	"fmt"
 	"math"
 	"os"
 	"runtime"
 	"strings"
-
-	"fmt"
 )
 
 // AMD refererence: https://www.amd.com/system/files/TechDocs/25481.pdf

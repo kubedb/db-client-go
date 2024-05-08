@@ -9,9 +9,8 @@ package auth
 import (
 	"context"
 	"errors"
-	"net/http"
-
 	"fmt"
+	"net/http"
 
 	"go.mongodb.org/mongo-driver/mongo/address"
 	"go.mongodb.org/mongo-driver/mongo/description"

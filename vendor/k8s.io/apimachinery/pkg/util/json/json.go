@@ -18,9 +18,8 @@ package json
 
 import (
 	"encoding/json"
-	"io"
-
 	"fmt"
+	"io"
 
 	kjson "sigs.k8s.io/json"
 )

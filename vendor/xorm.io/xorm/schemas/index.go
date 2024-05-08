@@ -5,9 +5,8 @@
 package schemas
 
 import (
-	"strings"
-
 	"fmt"
+	"strings"
 )
 
 // enumerate all index types

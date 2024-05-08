@@ -6,10 +6,9 @@ package zstd
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"math/bits"
-
-	"fmt"
 
 	"github.com/klauspost/compress/huff0"
 )

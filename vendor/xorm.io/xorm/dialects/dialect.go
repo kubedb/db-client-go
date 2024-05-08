@@ -6,10 +6,9 @@ package dialects
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
-
-	"fmt"
 
 	"xorm.io/xorm/core"
 	"xorm.io/xorm/schemas"

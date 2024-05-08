@@ -3,10 +3,9 @@ package lz4stream
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 	"io/ioutil"
-
-	"fmt"
 
 	"github.com/pierrec/lz4/v4/internal/lz4block"
 	"github.com/pierrec/lz4/v4/internal/lz4errors"

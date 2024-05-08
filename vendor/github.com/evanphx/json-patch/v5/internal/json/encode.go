@@ -14,6 +14,7 @@ import (
 	"bytes"
 	"encoding"
 	"encoding/base64"
+	"fmt"
 	"math"
 	"reflect"
 	"sort"
@@ -22,8 +23,6 @@ import (
 	"sync"
 	"unicode"
 	"unicode/utf8"
-
-	"fmt"
 )
 
 // Marshal returns the JSON encoding of v.

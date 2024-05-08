@@ -4,14 +4,13 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"reflect"
 	"strconv"
 	"sync"
 	"time"
-
-	"fmt"
 
 	"github.com/davecgh/go-spew/spew"
 )

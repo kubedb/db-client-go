@@ -1,13 +1,11 @@
-//go:build !windows
 // +build !windows
 
 package metrics
 
 import (
+	"fmt"
 	"log/syslog"
 	"time"
-
-	"fmt"
 )
 
 // Output each metric in the given registry to syslog periodically using

@@ -6,7 +6,6 @@ package zstd
 
 import (
 	"bytes"
-
 	"fmt"
 
 	"github.com/klauspost/compress"

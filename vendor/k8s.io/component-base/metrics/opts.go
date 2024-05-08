@@ -17,13 +17,12 @@ limitations under the License.
 package metrics
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
-
-	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"gopkg.in/yaml.v2"

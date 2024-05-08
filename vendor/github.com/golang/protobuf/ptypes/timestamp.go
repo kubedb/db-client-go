@@ -6,9 +6,8 @@ package ptypes
 
 import (
 	"errors"
-	"time"
-
 	"fmt"
+	"time"
 
 	timestamppb "github.com/golang/protobuf/ptypes/timestamp"
 )

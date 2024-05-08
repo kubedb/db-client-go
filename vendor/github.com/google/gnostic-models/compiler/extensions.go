@@ -16,10 +16,9 @@ package compiler
 
 import (
 	"bytes"
+	"fmt"
 	"os/exec"
 	"strings"
-
-	"fmt"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"

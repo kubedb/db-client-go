@@ -6,10 +6,9 @@ package protoreflect
 
 import (
 	"bytes"
+	"fmt"
 	"math"
 	"reflect"
-
-	"fmt"
 
 	"google.golang.org/protobuf/encoding/protowire"
 )

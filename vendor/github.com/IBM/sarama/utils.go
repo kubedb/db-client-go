@@ -2,10 +2,9 @@ package sarama
 
 import (
 	"bufio"
+	"fmt"
 	"net"
 	"regexp"
-
-	"fmt"
 )
 
 type none struct{}

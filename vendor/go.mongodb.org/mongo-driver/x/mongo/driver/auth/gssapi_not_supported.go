@@ -10,9 +10,8 @@
 package auth
 
 import (
-	"runtime"
-
 	"fmt"
+	"runtime"
 )
 
 // GSSAPI is the mechanism name for GSSAPI.

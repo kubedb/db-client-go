@@ -3,13 +3,12 @@ package mapstructure
 import (
 	"encoding"
 	"errors"
+	"fmt"
 	"net"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
-
-	"fmt"
 )
 
 // typedDecodeHook takes a raw DecodeHookFunc (an interface{}) and turns

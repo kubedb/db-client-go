@@ -18,13 +18,12 @@ package transport
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
-
-	"fmt"
 
 	utilnet "k8s.io/apimachinery/pkg/util/net"
 	"k8s.io/apimachinery/pkg/util/wait"

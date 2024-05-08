@@ -18,9 +18,8 @@ package v1
 
 import (
 	"encoding/json"
-	"strings"
-
 	"fmt"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )

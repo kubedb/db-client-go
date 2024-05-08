@@ -2,7 +2,6 @@ package integratedauth
 
 import (
 	"errors"
-
 	"fmt"
 
 	"github.com/microsoft/go-mssqldb/msdsn"

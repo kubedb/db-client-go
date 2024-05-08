@@ -9,11 +9,10 @@ package singleflight // import "golang.org/x/sync/singleflight"
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"runtime"
 	"runtime/debug"
 	"sync"
-
-	"fmt"
 )
 
 // errGoexit indicates the runtime.Goexit was called in

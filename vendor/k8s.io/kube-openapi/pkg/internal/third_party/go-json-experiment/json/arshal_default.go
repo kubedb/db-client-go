@@ -10,13 +10,12 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"math"
 	"reflect"
 	"sort"
 	"strconv"
 	"sync"
-
-	"fmt"
 )
 
 // optimizeCommon specifies whether to use optimizations targeted for certain

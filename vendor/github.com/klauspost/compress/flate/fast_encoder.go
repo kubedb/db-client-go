@@ -7,7 +7,6 @@ package flate
 
 import (
 	"encoding/binary"
-
 	"fmt"
 )
 

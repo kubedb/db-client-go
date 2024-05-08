@@ -1,10 +1,9 @@
 package ndr
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
-
-	"fmt"
 )
 
 const ndrNameSpace = "ndr"

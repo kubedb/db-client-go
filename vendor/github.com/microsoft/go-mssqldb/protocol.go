@@ -2,12 +2,11 @@ package mssql
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"os"
 	"strconv"
 	"strings"
-
-	"fmt"
 
 	"github.com/microsoft/go-mssqldb/msdsn"
 )

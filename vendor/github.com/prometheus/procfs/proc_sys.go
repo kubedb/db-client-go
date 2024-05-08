@@ -14,9 +14,8 @@
 package procfs
 
 import (
-	"strings"
-
 	"fmt"
+	"strings"
 
 	"github.com/prometheus/procfs/internal/util"
 )

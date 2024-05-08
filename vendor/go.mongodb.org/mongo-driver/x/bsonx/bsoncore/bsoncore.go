@@ -8,12 +8,11 @@ package bsoncore // import "go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
 
 import (
 	"bytes"
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
 	"time"
-
-	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson/bsontype"
 	"go.mongodb.org/mongo-driver/bson/primitive"

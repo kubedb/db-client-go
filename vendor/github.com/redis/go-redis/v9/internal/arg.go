@@ -1,10 +1,9 @@
 package internal
 
 import (
+	"fmt"
 	"strconv"
 	"time"
-
-	"fmt"
 
 	"github.com/redis/go-redis/v9/internal/util"
 )

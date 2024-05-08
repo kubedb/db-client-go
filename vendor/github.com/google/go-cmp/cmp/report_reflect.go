@@ -6,13 +6,12 @@ package cmp
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
 	"unicode"
 	"unicode/utf8"
-
-	"fmt"
 
 	"github.com/google/go-cmp/cmp/internal/value"
 )

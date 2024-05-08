@@ -18,10 +18,9 @@ package cert
 
 import (
 	"crypto/x509"
+	"fmt"
 	"os"
 	"path/filepath"
-
-	"fmt"
 )
 
 // CanReadCertAndKey returns true if the certificate and key files already exists,

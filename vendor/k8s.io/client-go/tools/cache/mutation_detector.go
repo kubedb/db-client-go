@@ -17,13 +17,12 @@ limitations under the License.
 package cache
 
 import (
+	"fmt"
 	"os"
 	"reflect"
 	"strconv"
 	"sync"
 	"time"
-
-	"fmt"
 
 	"k8s.io/klog/v2"
 

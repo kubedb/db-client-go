@@ -19,13 +19,12 @@ package elastictransport
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"net/url"
 	"sort"
 	"sync"
 	"time"
-
-	"fmt"
 )
 
 var (

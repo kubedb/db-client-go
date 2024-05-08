@@ -1,9 +1,8 @@
 package sarama
 
 import (
-	"time"
-
 	"fmt"
+	"time"
 )
 
 type ConfigSource int8

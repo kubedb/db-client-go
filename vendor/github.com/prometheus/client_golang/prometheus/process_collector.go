@@ -15,11 +15,10 @@ package prometheus
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
-
-	"fmt"
 )
 
 type processCollector struct {

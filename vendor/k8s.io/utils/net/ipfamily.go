@@ -17,9 +17,8 @@ limitations under the License.
 package net
 
 import (
-	"net"
-
 	"fmt"
+	"net"
 )
 
 // IPFamily refers to a specific family if not empty, i.e. "4" or "6".

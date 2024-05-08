@@ -18,11 +18,10 @@ package protobuf
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"net/http"
 	"reflect"
-
-	"fmt"
 
 	"github.com/gogo/protobuf/proto"
 

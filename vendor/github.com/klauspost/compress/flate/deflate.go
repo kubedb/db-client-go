@@ -8,10 +8,9 @@ package flate
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"math"
-
-	"fmt"
 )
 
 const (

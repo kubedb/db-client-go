@@ -1,10 +1,9 @@
 package mssql
 
 import (
+	"fmt"
 	"net"
 	"time"
-
-	"fmt"
 )
 
 type timeoutConn struct {

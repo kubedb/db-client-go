@@ -19,9 +19,8 @@ limitations under the License.
 package meta
 
 import (
-	"strings"
-
 	"fmt"
+	"strings"
 
 	"k8s.io/klog/v2"
 )

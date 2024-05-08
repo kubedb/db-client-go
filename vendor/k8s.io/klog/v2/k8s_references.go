@@ -18,10 +18,9 @@ package klog
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 	"strings"
-
-	"fmt"
 
 	"github.com/go-logr/logr"
 )

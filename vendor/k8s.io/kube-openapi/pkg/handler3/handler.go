@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"crypto/sha512"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"path"
@@ -27,8 +28,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"fmt"
 
 	"github.com/golang/protobuf/proto"
 	openapi_v3 "github.com/google/gnostic-models/openapiv3"

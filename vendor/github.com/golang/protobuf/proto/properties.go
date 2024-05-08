@@ -5,12 +5,11 @@
 package proto
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
 	"sync"
-
-	"fmt"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/runtime/protoimpl"

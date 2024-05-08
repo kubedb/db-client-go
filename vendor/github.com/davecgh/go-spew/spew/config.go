@@ -18,10 +18,9 @@ package spew
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
-
-	"fmt"
 )
 
 // ConfigState houses the configuration options used by spew to format and

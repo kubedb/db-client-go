@@ -21,7 +21,6 @@ package serialize
 
 import (
 	"bytes"
-
 	"fmt"
 
 	"github.com/go-logr/logr"

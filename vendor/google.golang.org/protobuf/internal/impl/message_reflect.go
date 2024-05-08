@@ -5,9 +5,8 @@
 package impl
 
 import (
-	"reflect"
-
 	"fmt"
+	"reflect"
 
 	"google.golang.org/protobuf/internal/detrand"
 	"google.golang.org/protobuf/internal/pragma"

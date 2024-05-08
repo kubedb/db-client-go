@@ -265,13 +265,12 @@ package proto
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"reflect"
 	"sort"
 	"strconv"
 	"sync"
-
-	"fmt"
 )
 
 // RequiredNotSetError is an error type returned by either Marshal or Unmarshal.

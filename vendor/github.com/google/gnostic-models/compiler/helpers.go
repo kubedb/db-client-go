@@ -15,11 +15,10 @@
 package compiler
 
 import (
+	"fmt"
 	"regexp"
 	"sort"
 	"strconv"
-
-	"fmt"
 
 	"gopkg.in/yaml.v3"
 

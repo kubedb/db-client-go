@@ -18,9 +18,8 @@ package spec3
 
 import (
 	"encoding/json"
-	"strconv"
-
 	"fmt"
+	"strconv"
 
 	"github.com/go-openapi/swag"
 	"k8s.io/kube-openapi/pkg/internal"

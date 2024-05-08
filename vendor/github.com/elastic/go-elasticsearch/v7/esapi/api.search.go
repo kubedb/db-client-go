@@ -21,13 +21,12 @@ package esapi
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
-
-	"fmt"
 )
 
 func newSearchFunc(t Transport) Search {

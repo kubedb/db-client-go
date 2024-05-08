@@ -18,9 +18,8 @@ package leaderelection
 
 import (
 	"errors"
-	"os"
-
 	"fmt"
+	"os"
 
 	"k8s.io/apimachinery/pkg/util/uuid"
 	coordinationv1client "k8s.io/client-go/kubernetes/typed/coordination/v1"

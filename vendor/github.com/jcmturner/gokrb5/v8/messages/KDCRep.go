@@ -4,9 +4,8 @@ package messages
 // Section: 5.4.2
 
 import (
-	"time"
-
 	"fmt"
+	"time"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
 	"github.com/jcmturner/gokrb5/v8/asn1tools"

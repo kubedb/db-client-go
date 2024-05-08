@@ -13,6 +13,7 @@ import (
 	"crypto/rsa"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"math/big"
 	"net"
 	"net/url"
@@ -20,8 +21,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"fmt"
 )
 
 var (

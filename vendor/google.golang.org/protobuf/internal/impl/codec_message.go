@@ -5,10 +5,9 @@
 package impl
 
 import (
+	"fmt"
 	"reflect"
 	"sort"
-
-	"fmt"
 
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/internal/encoding/messageset"

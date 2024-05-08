@@ -6,9 +6,8 @@ package core
 
 import (
 	"database/sql/driver"
-	"time"
-
 	"fmt"
+	"time"
 )
 
 // NullTime defines a customize type NullTime

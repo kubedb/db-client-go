@@ -15,11 +15,10 @@ package procfs
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"regexp"
 	"strconv"
-
-	"fmt"
 )
 
 // ProcLimits represents the soft limits for each of the process's resource

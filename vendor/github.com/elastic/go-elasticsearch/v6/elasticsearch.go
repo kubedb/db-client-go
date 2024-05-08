@@ -7,13 +7,12 @@ package elasticsearch
 import (
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"time"
-
-	"fmt"
 
 	"github.com/elastic/go-elasticsearch/v6/esapi"
 	"github.com/elastic/go-elasticsearch/v6/estransport"

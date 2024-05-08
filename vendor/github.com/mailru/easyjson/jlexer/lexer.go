@@ -9,13 +9,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 	"unicode"
 	"unicode/utf16"
 	"unicode/utf8"
-
-	"fmt"
 
 	"github.com/josharian/intern"
 )

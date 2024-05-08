@@ -6,6 +6,7 @@ package json
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"reflect"
 	"sort"
@@ -13,8 +14,6 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf8"
-
-	"fmt"
 )
 
 var errIgnoredField = errors.New("ignored field")

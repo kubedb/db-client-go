@@ -10,9 +10,8 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
-	"hash"
-
 	"fmt"
+	"hash"
 
 	"github.com/xdg-go/stringprep"
 )

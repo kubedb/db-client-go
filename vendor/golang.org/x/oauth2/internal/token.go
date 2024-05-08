@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"math"
@@ -19,8 +20,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"fmt"
 )
 
 // Token represents the credentials used to authorize

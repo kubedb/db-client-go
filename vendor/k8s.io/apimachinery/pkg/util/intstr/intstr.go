@@ -19,12 +19,11 @@ package intstr
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math"
 	"runtime/debug"
 	"strconv"
 	"strings"
-
-	"fmt"
 
 	"k8s.io/klog/v2"
 )

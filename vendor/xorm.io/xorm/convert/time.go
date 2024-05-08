@@ -6,11 +6,10 @@ package convert
 
 import (
 	"database/sql"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
-
-	"fmt"
 
 	"xorm.io/xorm/internal/utils"
 )

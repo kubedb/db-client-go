@@ -6,14 +6,13 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"math"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-
-	"fmt"
 
 	"github.com/lib/pq/oid"
 )

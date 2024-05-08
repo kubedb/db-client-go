@@ -18,13 +18,12 @@ package transport
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net/http"
 	"net/http/httptrace"
 	"strings"
 	"sync"
 	"time"
-
-	"fmt"
 
 	"golang.org/x/oauth2"
 

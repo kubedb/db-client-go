@@ -1,10 +1,9 @@
 package pflag
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
-
-	"fmt"
 )
 
 // -- int64Slice Value

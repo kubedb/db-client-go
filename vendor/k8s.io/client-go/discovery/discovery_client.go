@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	goerrors "errors"
+	"fmt"
 	"mime"
 	"net/http"
 	"net/url"
@@ -27,8 +28,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"fmt"
 
 	//nolint:staticcheck // SA1019 Keep using module since it's still being maintained and the api of google.golang.org/protobuf/proto differs
 	"github.com/golang/protobuf/proto"

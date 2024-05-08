@@ -17,9 +17,8 @@ limitations under the License.
 package meta
 
 import (
-	"strings"
-
 	"fmt"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"

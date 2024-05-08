@@ -8,11 +8,10 @@ import (
 	"bufio"
 	"context"
 	"database/sql"
+	"fmt"
 	"io"
 	"os"
 	"strings"
-
-	"fmt"
 
 	"xorm.io/xorm/dialects"
 	"xorm.io/xorm/internal/utils"

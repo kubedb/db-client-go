@@ -15,9 +15,8 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/pem"
-	"sync"
-
 	"fmt"
+	"sync"
 )
 
 // server pub keys registry

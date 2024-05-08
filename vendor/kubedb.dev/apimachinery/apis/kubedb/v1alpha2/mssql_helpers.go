@@ -18,10 +18,9 @@ package v1alpha2
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
-
-	"fmt"
 
 	"kubedb.dev/apimachinery/apis"
 	catalog "kubedb.dev/apimachinery/apis/catalog/v1alpha1"

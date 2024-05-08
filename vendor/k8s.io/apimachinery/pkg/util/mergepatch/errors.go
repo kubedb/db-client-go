@@ -18,9 +18,8 @@ package mergepatch
 
 import (
 	"errors"
-	"reflect"
-
 	"fmt"
+	"reflect"
 )
 
 var (

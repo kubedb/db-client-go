@@ -4,9 +4,8 @@ import (
 	"database/sql/driver"
 	"encoding/hex"
 	"errors"
-	"strings"
-
 	"fmt"
+	"strings"
 )
 
 type UniqueIdentifier [16]byte

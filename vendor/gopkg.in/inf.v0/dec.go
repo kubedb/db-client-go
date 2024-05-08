@@ -26,11 +26,10 @@ package inf // import "gopkg.in/inf.v0"
 //  - avoid excessive deep copying (quo and rounders)
 
 import (
+	"fmt"
 	"io"
 	"math/big"
 	"strings"
-
-	"fmt"
 )
 
 // A Dec represents a signed arbitrary-precision decimal.

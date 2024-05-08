@@ -5,9 +5,8 @@
 package builder
 
 import (
-	"sort"
-
 	"fmt"
+	"sort"
 )
 
 // Incr implements a type used by Eq

@@ -5,9 +5,8 @@
 package norm
 
 import (
-	"unicode/utf8"
-
 	"fmt"
+	"unicode/utf8"
 )
 
 // MaxSegmentSize is the maximum size of a byte buffer needed to consider any

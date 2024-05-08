@@ -2,12 +2,11 @@ package sarama
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 	"strconv"
 	"sync"
 	"time"
-
-	"fmt"
 )
 
 // ClusterAdmin is the administrative client for Kafka, which supports managing and inspecting topics,

@@ -1,9 +1,8 @@
 package ndr
 
 import (
-	"reflect"
-
 	"fmt"
+	"reflect"
 )
 
 func (dec *Decoder) fillPipe(v reflect.Value, tag reflect.StructTag) error {

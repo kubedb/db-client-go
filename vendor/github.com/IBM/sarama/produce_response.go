@@ -1,9 +1,8 @@
 package sarama
 
 import (
-	"time"
-
 	"fmt"
+	"time"
 )
 
 // Protocol, http://kafka.apache.org/protocol.html

@@ -10,6 +10,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"os"
@@ -19,8 +20,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"fmt"
 )
 
 const (

@@ -19,11 +19,10 @@ package procfs
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
-
-	"fmt"
 
 	"golang.org/x/sys/unix"
 )

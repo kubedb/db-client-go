@@ -8,11 +8,10 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
-
-	"fmt"
 
 	"xorm.io/xorm/convert"
 	"xorm.io/xorm/core"

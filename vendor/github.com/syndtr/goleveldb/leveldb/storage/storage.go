@@ -9,9 +9,8 @@ package storage
 
 import (
 	"errors"
-	"io"
-
 	"fmt"
+	"io"
 )
 
 // FileType represent a file type.

@@ -13,13 +13,12 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"strings"
 	"time"
-
-	"fmt"
 
 	"github.com/youmark/pkcs8"
 	"go.mongodb.org/mongo-driver/bson/bsoncodec"

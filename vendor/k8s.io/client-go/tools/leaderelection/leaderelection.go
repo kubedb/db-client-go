@@ -55,10 +55,9 @@ package leaderelection
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"sync"
 	"time"
-
-	"fmt"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

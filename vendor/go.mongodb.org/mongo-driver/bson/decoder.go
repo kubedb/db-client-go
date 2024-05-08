@@ -8,10 +8,9 @@ package bson
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"sync"
-
-	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson/bsoncodec"
 	"go.mongodb.org/mongo-driver/bson/bsonrw"

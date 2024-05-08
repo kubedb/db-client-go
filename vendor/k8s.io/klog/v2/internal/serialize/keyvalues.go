@@ -19,9 +19,8 @@ package serialize
 import (
 	"bytes"
 	"encoding/json"
-	"strconv"
-
 	"fmt"
+	"strconv"
 
 	"github.com/go-logr/logr"
 )

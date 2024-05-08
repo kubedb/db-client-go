@@ -18,7 +18,6 @@ package v1alpha2
 
 import (
 	"context"
-
 	"fmt"
 
 	cm_api "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"

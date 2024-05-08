@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"math"
 	"sort"
-
-	"fmt"
 
 	"github.com/klauspost/compress/huff0"
 )

@@ -21,6 +21,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -30,8 +31,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"fmt"
 
 	"golang.org/x/term"
 

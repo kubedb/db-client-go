@@ -17,10 +17,9 @@ limitations under the License.
 package config
 
 import (
+	"fmt"
 	"os"
 	"sync"
-
-	"fmt"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"

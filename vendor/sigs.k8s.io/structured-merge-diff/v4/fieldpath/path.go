@@ -17,9 +17,8 @@ limitations under the License.
 package fieldpath
 
 import (
-	"strings"
-
 	"fmt"
+	"strings"
 
 	"sigs.k8s.io/structured-merge-diff/v4/value"
 )

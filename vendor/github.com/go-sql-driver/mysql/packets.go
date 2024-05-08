@@ -15,11 +15,10 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"math"
 	"time"
-
-	"fmt"
 )
 
 // Packets documentation:

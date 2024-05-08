@@ -2,11 +2,10 @@ package hscan
 
 import (
 	"encoding"
+	"fmt"
 	"reflect"
 	"strings"
 	"sync"
-
-	"fmt"
 
 	"github.com/redis/go-redis/v9/internal/util"
 )

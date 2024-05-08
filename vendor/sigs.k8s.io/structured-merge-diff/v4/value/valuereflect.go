@@ -18,9 +18,8 @@ package value
 
 import (
 	"encoding/base64"
-	"reflect"
-
 	"fmt"
+	"reflect"
 )
 
 // NewValueReflect creates a Value backed by an "interface{}" type,

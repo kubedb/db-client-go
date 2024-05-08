@@ -6,11 +6,10 @@ package restful
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"sort"
 	"strings"
-
-	"fmt"
 )
 
 // RouterJSR311 implements the flow for matching Requests to Routes (and consequently Resource Functions)

@@ -3,11 +3,10 @@ package ndr
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"reflect"
 	"strings"
-
-	"fmt"
 )
 
 // Struct tag values

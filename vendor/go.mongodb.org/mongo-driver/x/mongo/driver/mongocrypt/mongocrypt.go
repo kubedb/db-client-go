@@ -18,10 +18,9 @@ import "C"
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"unsafe"
-
-	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/internal/httputil"

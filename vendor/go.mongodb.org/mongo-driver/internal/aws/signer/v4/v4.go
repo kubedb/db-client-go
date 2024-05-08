@@ -14,6 +14,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -21,8 +22,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-
-	"fmt"
 
 	"go.mongodb.org/mongo-driver/internal/aws"
 	"go.mongodb.org/mongo-driver/internal/aws/credentials"

@@ -6,10 +6,9 @@ package convert
 
 import (
 	"database/sql"
+	"fmt"
 	"reflect"
 	"strconv"
-
-	"fmt"
 )
 
 // AsString converts interface as string

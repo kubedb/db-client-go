@@ -32,12 +32,11 @@
 package proto
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"sync"
 	"sync/atomic"
-
-	"fmt"
 )
 
 type generatedDiscarder interface {

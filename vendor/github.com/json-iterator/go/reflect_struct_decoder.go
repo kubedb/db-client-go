@@ -1,11 +1,10 @@
 package jsoniter
 
 import (
+	"fmt"
 	"io"
 	"strings"
 	"unsafe"
-
-	"fmt"
 
 	"github.com/modern-go/reflect2"
 )

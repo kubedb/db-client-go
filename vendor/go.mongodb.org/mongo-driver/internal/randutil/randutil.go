@@ -9,9 +9,8 @@ package randutil
 
 import (
 	crand "crypto/rand"
-	"io"
-
 	"fmt"
+	"io"
 
 	xrand "go.mongodb.org/mongo-driver/internal/rand"
 )

@@ -8,13 +8,12 @@ package connstring // import "go.mongodb.org/mongo-driver/x/mongo/driver/connstr
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
-
-	"fmt"
 
 	"go.mongodb.org/mongo-driver/internal/randutil"
 	"go.mongodb.org/mongo-driver/mongo/writeconcern"

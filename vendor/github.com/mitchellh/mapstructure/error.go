@@ -2,10 +2,9 @@ package mapstructure
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 	"strings"
-
-	"fmt"
 )
 
 // Error implements the error interface and can represents multiple

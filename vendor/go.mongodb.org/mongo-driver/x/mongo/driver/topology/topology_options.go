@@ -8,11 +8,10 @@ package topology
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
-
-	"fmt"
 
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/internal/logger"

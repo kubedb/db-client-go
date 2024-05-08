@@ -5,13 +5,12 @@
 package impl
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
-
-	"fmt"
 
 	"google.golang.org/protobuf/internal/genid"
 	"google.golang.org/protobuf/reflect/protoreflect"

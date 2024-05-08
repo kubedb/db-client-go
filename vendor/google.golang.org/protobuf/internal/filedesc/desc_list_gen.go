@@ -7,9 +7,8 @@
 package filedesc
 
 import (
-	"sync"
-
 	"fmt"
+	"sync"
 
 	"google.golang.org/protobuf/internal/descfmt"
 	"google.golang.org/protobuf/internal/pragma"

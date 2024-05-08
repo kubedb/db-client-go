@@ -17,11 +17,10 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
-
-	"fmt"
 
 	"github.com/prometheus/procfs/internal/util"
 )

@@ -53,7 +53,7 @@ type IndicesGetFieldMapping func(fields []string, o ...func(*IndicesGetFieldMapp
 // IndicesGetFieldMappingRequest configures the Indices Get Field Mapping API request.
 //
 type IndicesGetFieldMappingRequest struct {
-	Index []string
+	Index        []string
 
 	Fields []string
 

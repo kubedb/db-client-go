@@ -18,9 +18,8 @@ package apiextensions
 
 import (
 	"context"
-	"time"
-
 	"fmt"
+	"time"
 
 	v1 "kmodules.xyz/client-go/apiextensions/v1"
 	meta_util "kmodules.xyz/client-go/meta"

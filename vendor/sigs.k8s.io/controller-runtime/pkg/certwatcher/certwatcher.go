@@ -19,10 +19,9 @@ package certwatcher
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"sync"
 	"time"
-
-	"fmt"
 
 	"github.com/fsnotify/fsnotify"
 	kerrors "k8s.io/apimachinery/pkg/util/errors"

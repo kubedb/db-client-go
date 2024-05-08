@@ -21,12 +21,11 @@ package esapi
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
-
-	"fmt"
 )
 
 func newMLGetRecordsFunc(t Transport) MLGetRecords {

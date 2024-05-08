@@ -10,14 +10,13 @@ package json
 import (
 	"encoding"
 	"encoding/base64"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
 	"unicode"
 	"unicode/utf16"
 	"unicode/utf8"
-
-	"fmt"
 )
 
 // Unmarshal parses the JSON-encoded data and stores the result

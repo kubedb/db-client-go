@@ -7,9 +7,8 @@
 package leveldb
 
 import (
-	"sort"
-
 	"fmt"
+	"sort"
 
 	"github.com/syndtr/goleveldb/leveldb/storage"
 )

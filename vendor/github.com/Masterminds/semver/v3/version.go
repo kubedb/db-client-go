@@ -5,11 +5,10 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
-
-	"fmt"
 )
 
 // The compiled version of the regex created at init() is cached here so it

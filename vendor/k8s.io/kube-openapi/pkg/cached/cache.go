@@ -51,10 +51,9 @@ limitations under the License.
 package cached
 
 import (
+	"fmt"
 	"sync"
 	"sync/atomic"
-
-	"fmt"
 )
 
 // Value is wrapping a value behind a getter for lazy evaluation.

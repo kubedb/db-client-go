@@ -17,13 +17,12 @@ limitations under the License.
 package validation
 
 import (
+	"fmt"
 	"math"
 	"net"
 	"regexp"
 	"strconv"
 	"strings"
-
-	"fmt"
 
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	netutils "k8s.io/utils/net"

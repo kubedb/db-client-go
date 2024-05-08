@@ -102,12 +102,11 @@ import (
 	"bytes"
 	"errors"
 	goflag "flag"
+	"fmt"
 	"io"
 	"os"
 	"sort"
 	"strings"
-
-	"fmt"
 )
 
 // ErrHelp is the error returned if the flag -help is invoked but no such flag is defined.

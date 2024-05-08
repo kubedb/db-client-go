@@ -1,11 +1,9 @@
-//go:build !go1.9
 // +build !go1.9
 
 package mssql
 
 import (
 	"database/sql/driver"
-
 	"fmt"
 )
 

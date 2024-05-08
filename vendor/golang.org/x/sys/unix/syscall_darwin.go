@@ -13,10 +13,9 @@
 package unix
 
 import (
+	"fmt"
 	"syscall"
 	"unsafe"
-
-	"fmt"
 )
 
 //sys	closedir(dir uintptr) (err error)

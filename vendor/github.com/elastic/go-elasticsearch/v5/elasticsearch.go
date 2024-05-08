@@ -2,12 +2,11 @@ package elasticsearch
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
-
-	"fmt"
 
 	"github.com/elastic/go-elasticsearch/v5/esapi"
 	"github.com/elastic/go-elasticsearch/v5/estransport"

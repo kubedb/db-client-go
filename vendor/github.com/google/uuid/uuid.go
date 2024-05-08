@@ -9,11 +9,10 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 	"sync"
-
-	"fmt"
 )
 
 // A UUID is a 128 bit (16 byte) Universal Unique IDentifier as defined in RFC

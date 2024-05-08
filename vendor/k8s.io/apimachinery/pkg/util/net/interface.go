@@ -19,11 +19,10 @@ package net
 import (
 	"bufio"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"net"
 	"os"
-
-	"fmt"
 
 	"strings"
 

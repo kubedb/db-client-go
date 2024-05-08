@@ -18,9 +18,8 @@ package v1alpha1
 
 import (
 	"errors"
-	"path/filepath"
-
 	"fmt"
+	"path/filepath"
 
 	"kubedb.dev/apimachinery/apis"
 	"kubedb.dev/apimachinery/apis/kubedb"

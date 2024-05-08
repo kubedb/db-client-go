@@ -5,10 +5,9 @@
 package log
 
 import (
+	"fmt"
 	"io"
 	"log"
-
-	"fmt"
 )
 
 // LogLevel defines a log level

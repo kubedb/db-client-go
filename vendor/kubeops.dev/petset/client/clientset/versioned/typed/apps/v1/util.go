@@ -18,7 +18,6 @@ package v1
 
 import (
 	"context"
-
 	"fmt"
 
 	jsoniter "github.com/json-iterator/go"
@@ -33,7 +32,7 @@ import (
 	"k8s.io/klog/v2"
 	kutil "kmodules.xyz/client-go"
 	core_util "kmodules.xyz/client-go/core/v1"
-	v1 "kubeops.dev/petset/apis/apps/v1"
+	"kubeops.dev/petset/apis/apps/v1"
 )
 
 var json = jsoniter.ConfigFastest

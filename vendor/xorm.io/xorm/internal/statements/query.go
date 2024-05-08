@@ -6,10 +6,9 @@ package statements
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
-
-	"fmt"
 
 	"xorm.io/builder"
 	"xorm.io/xorm/schemas"

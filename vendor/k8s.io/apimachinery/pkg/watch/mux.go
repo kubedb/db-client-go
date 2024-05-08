@@ -17,9 +17,8 @@ limitations under the License.
 package watch
 
 import (
-	"sync"
-
 	"fmt"
+	"sync"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"

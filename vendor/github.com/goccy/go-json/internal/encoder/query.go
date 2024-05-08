@@ -2,9 +2,8 @@ package encoder
 
 import (
 	"context"
-	"reflect"
-
 	"fmt"
+	"reflect"
 )
 
 var (

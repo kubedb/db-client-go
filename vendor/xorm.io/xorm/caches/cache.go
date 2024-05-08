@@ -8,10 +8,9 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
-
-	"fmt"
 
 	"xorm.io/xorm/schemas"
 )

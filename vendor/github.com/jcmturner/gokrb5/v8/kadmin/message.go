@@ -4,9 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"math"
-
 	"fmt"
+	"math"
 
 	"github.com/jcmturner/gokrb5/v8/messages"
 	"github.com/jcmturner/gokrb5/v8/types"

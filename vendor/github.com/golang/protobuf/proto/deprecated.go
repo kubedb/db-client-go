@@ -7,9 +7,8 @@ package proto
 import (
 	"encoding/json"
 	"errors"
-	"strconv"
-
 	"fmt"
+	"strconv"
 
 	protoV2 "google.golang.org/protobuf/proto"
 )

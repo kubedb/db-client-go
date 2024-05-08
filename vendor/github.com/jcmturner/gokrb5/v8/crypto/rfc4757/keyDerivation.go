@@ -4,9 +4,8 @@ import (
 	"bytes"
 	"encoding/hex"
 	"errors"
-	"io"
-
 	"fmt"
+	"io"
 
 	"golang.org/x/crypto/md4"
 )

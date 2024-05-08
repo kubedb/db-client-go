@@ -12,13 +12,12 @@ package gssapi
 // #include "sspi_wrapper.h"
 import "C"
 import (
+	"fmt"
 	"net"
 	"strconv"
 	"strings"
 	"sync"
 	"unsafe"
-
-	"fmt"
 )
 
 // New creates a new SaslClient. The target parameter should be a hostname with no port.

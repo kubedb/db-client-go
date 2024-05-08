@@ -18,9 +18,8 @@ package validator
 
 import (
 	"context"
-	"strings"
-
 	"fmt"
+	"strings"
 
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 

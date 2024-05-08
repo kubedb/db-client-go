@@ -17,9 +17,8 @@ limitations under the License.
 package v1
 
 import (
-	"sort"
-
 	"fmt"
+	"sort"
 
 	"k8s.io/apimachinery/pkg/conversion"
 	"k8s.io/apimachinery/pkg/runtime"

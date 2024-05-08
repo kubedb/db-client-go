@@ -5,9 +5,8 @@ import (
 	"database/sql/driver"
 	"encoding/binary"
 	"errors"
-	"sync"
-
 	"fmt"
+	"sync"
 )
 
 var (

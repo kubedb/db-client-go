@@ -5,9 +5,8 @@
 package builder
 
 import (
-	"sort"
-
 	"fmt"
+	"sort"
 )
 
 // Neq defines not equal conditions

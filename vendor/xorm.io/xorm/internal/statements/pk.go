@@ -5,9 +5,8 @@
 package statements
 
 import (
-	"reflect"
-
 	"fmt"
+	"reflect"
 
 	"xorm.io/builder"
 	"xorm.io/xorm/schemas"

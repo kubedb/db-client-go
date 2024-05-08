@@ -2,6 +2,7 @@ package yaml
 
 import (
 	"encoding"
+	"fmt"
 	"io"
 	"reflect"
 	"regexp"
@@ -10,8 +11,6 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
-
-	"fmt"
 )
 
 // jsonNumber is the interface of the encoding/json.Number datatype.

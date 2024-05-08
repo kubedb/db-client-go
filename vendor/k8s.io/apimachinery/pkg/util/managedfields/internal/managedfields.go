@@ -18,9 +18,8 @@ package internal
 
 import (
 	"encoding/json"
-	"sort"
-
 	"fmt"
+	"sort"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

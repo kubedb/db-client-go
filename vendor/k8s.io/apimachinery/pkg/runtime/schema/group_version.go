@@ -17,9 +17,8 @@ limitations under the License.
 package schema
 
 import (
-	"strings"
-
 	"fmt"
+	"strings"
 )
 
 // ParseResourceArg takes the common style of string which may be either `resource.group.com` or `resource.version.group.com`

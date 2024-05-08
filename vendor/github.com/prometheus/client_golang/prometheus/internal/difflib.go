@@ -20,10 +20,9 @@ package internal
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 	"strings"
-
-	"fmt"
 )
 
 func min(a, b int) int {

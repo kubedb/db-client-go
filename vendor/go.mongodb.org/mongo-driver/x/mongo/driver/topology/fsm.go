@@ -8,9 +8,8 @@ package topology
 
 import (
 	"bytes"
-	"sync/atomic"
-
 	"fmt"
+	"sync/atomic"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/internal/ptrutil"

@@ -2,7 +2,6 @@ package mssql
 
 import (
 	"database/sql/driver"
-
 	"fmt"
 )
 

@@ -6,12 +6,11 @@ package xorm
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"sort"
 	"strings"
 	"time"
-
-	"fmt"
 
 	"xorm.io/builder"
 	"xorm.io/xorm/convert"

@@ -17,10 +17,9 @@
 package openapi_v2
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
-
-	"fmt"
 
 	"gopkg.in/yaml.v3"
 

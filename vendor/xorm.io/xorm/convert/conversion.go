@@ -9,12 +9,11 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math/big"
 	"reflect"
 	"strconv"
 	"time"
-
-	"fmt"
 )
 
 // ConversionFrom is an inteface to allow retrieve data from database

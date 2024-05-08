@@ -6,12 +6,11 @@
 package descfmt
 
 import (
+	"fmt"
 	"io"
 	"reflect"
 	"strconv"
 	"strings"
-
-	"fmt"
 
 	"google.golang.org/protobuf/internal/detrand"
 	"google.golang.org/protobuf/internal/pragma"

@@ -18,10 +18,9 @@ package cache
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
-
-	"fmt"
 
 	"golang.org/x/exp/maps"
 	corev1 "k8s.io/api/core/v1"

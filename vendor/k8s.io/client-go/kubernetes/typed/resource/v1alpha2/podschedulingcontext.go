@@ -21,9 +21,8 @@ package v1alpha2
 import (
 	"context"
 	json "encoding/json"
-	"time"
-
 	"fmt"
+	"time"
 
 	v1alpha2 "k8s.io/api/resource/v1alpha2"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

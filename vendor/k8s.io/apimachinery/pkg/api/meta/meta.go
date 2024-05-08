@@ -17,9 +17,8 @@ limitations under the License.
 package meta
 
 import (
-	"reflect"
-
 	"fmt"
+	"reflect"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/conversion"

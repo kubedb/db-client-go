@@ -2,13 +2,12 @@ package decoder
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
 	"sync/atomic"
 	"unicode"
 	"unsafe"
-
-	"fmt"
 
 	"github.com/goccy/go-json/internal/runtime"
 )

@@ -9,6 +9,7 @@ package urlfetch // import "google.golang.org/appengine/urlfetch"
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -16,8 +17,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"fmt"
 
 	"github.com/golang/protobuf/proto"
 

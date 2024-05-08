@@ -10,10 +10,9 @@ package internal
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
-
-	"fmt"
 
 	"appengine"
 	"appengine_internal"

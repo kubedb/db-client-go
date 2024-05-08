@@ -1,10 +1,9 @@
 package pflag
 
 import (
+	"fmt"
 	"net"
 	"strings"
-
-	"fmt"
 )
 
 // IPNet adapts net.IPNet for use as a flag.

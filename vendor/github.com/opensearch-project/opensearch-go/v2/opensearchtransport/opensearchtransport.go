@@ -31,6 +31,7 @@ import (
 	"compress/gzip"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -43,8 +44,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"fmt"
 
 	"github.com/opensearch-project/opensearch-go/v2/signer"
 

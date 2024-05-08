@@ -28,11 +28,10 @@ package jsonpointer
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
-
-	"fmt"
 
 	"github.com/go-openapi/swag"
 )

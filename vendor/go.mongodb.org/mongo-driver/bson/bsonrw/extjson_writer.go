@@ -9,6 +9,7 @@ package bsonrw
 import (
 	"bytes"
 	"encoding/base64"
+	"fmt"
 	"io"
 	"math"
 	"sort"
@@ -17,8 +18,6 @@ import (
 	"sync"
 	"time"
 	"unicode/utf8"
-
-	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )

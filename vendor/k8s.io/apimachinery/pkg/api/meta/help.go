@@ -18,10 +18,9 @@ package meta
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"sync"
-
-	"fmt"
 
 	"k8s.io/apimachinery/pkg/conversion"
 	"k8s.io/apimachinery/pkg/runtime"

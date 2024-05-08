@@ -9,10 +9,9 @@ package bsoncodec
 import (
 	"encoding"
 	"errors"
+	"fmt"
 	"reflect"
 	"strconv"
-
-	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson/bsonoptions"
 	"go.mongodb.org/mongo-driver/bson/bsonrw"

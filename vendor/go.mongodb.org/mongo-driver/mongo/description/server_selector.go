@@ -8,10 +8,9 @@ package description
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"time"
-
-	"fmt"
 
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"go.mongodb.org/mongo-driver/tag"

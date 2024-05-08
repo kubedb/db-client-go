@@ -19,9 +19,8 @@ limitations under the License.
 package internal
 
 import (
-	"sync"
-
 	"fmt"
+	"sync"
 
 	typed "sigs.k8s.io/structured-merge-diff/v4/typed"
 )

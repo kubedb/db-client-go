@@ -1,11 +1,10 @@
 package pflag
 
 import (
+	"fmt"
 	"io"
 	"net"
 	"strings"
-
-	"fmt"
 )
 
 // -- ipSlice Value

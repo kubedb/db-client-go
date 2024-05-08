@@ -10,12 +10,11 @@ package http2
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"os"
 	"runtime"
 	"strconv"
 	"sync"
-
-	"fmt"
 )
 
 var DebugGoroutines = os.Getenv("DEBUG_HTTP2_GOROUTINES") == "1"

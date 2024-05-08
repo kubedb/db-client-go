@@ -10,11 +10,10 @@ package flate
 import (
 	"bufio"
 	"compress/flate"
+	"fmt"
 	"io"
 	"math/bits"
 	"sync"
-
-	"fmt"
 )
 
 const (

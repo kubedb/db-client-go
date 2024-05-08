@@ -54,7 +54,7 @@ type MsearchTemplate func(body io.Reader, o ...func(*MsearchTemplateRequest)) (*
 // MsearchTemplateRequest configures the Msearch Template API request.
 //
 type MsearchTemplateRequest struct {
-	Index []string
+	Index        []string
 
 	Body io.Reader
 

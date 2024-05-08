@@ -5,11 +5,10 @@
 package impl
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"sync"
-
-	"fmt"
 
 	"google.golang.org/protobuf/internal/filedesc"
 	"google.golang.org/protobuf/internal/strs"

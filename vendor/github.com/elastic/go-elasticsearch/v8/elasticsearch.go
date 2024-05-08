@@ -20,6 +20,8 @@ package elasticsearch
 import (
 	"encoding/base64"
 	"errors"
+	"fmt"
+	"github.com/elastic/go-elasticsearch/v8/typedapi"
 	"net/http"
 	"net/url"
 	"os"
@@ -29,10 +31,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/elastic/go-elasticsearch/v8/typedapi"
-
-	"fmt"
 
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/elastic/go-elasticsearch/v8/internal/version"

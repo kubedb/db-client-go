@@ -6,11 +6,10 @@ package xorm
 
 import (
 	"database/sql"
+	"fmt"
 	"math/big"
 	"reflect"
 	"time"
-
-	"fmt"
 
 	"xorm.io/xorm/convert"
 	"xorm.io/xorm/core"

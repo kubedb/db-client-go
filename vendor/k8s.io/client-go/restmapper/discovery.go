@@ -17,10 +17,9 @@ limitations under the License.
 package restmapper
 
 import (
+	"fmt"
 	"strings"
 	"sync"
-
-	"fmt"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

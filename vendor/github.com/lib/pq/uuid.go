@@ -2,7 +2,6 @@ package pq
 
 import (
 	"encoding/hex"
-
 	"fmt"
 )
 

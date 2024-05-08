@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"io"
 	"math"
 	"net/http"
@@ -22,8 +23,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"fmt"
 )
 
 const (

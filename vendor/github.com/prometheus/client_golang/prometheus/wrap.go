@@ -14,9 +14,8 @@
 package prometheus
 
 import (
-	"sort"
-
 	"fmt"
+	"sort"
 
 	"github.com/prometheus/client_golang/prometheus/internal"
 

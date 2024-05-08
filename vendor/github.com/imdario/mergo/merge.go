@@ -9,9 +9,8 @@
 package mergo
 
 import (
-	"reflect"
-
 	"fmt"
+	"reflect"
 )
 
 func hasExportedField(dst reflect.Value) (exported bool) {

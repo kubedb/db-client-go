@@ -1,12 +1,10 @@
-//go:build !jsoniter_sloppy
-// +build !jsoniter_sloppy
+//+build !jsoniter_sloppy
 
 package jsoniter
 
 import (
-	"io"
-
 	"fmt"
+	"io"
 )
 
 func (iter *Iterator) skipNumber() {

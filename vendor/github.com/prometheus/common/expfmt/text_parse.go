@@ -16,12 +16,11 @@ package expfmt
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 	"math"
 	"strconv"
 	"strings"
-
-	"fmt"
 
 	dto "github.com/prometheus/client_model/go"
 

@@ -5,10 +5,9 @@
 package impl
 
 import (
+	"fmt"
 	"reflect"
 	"sync"
-
-	"fmt"
 
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/internal/errors"

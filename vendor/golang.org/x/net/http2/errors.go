@@ -6,7 +6,6 @@ package http2
 
 import (
 	"errors"
-
 	"fmt"
 )
 

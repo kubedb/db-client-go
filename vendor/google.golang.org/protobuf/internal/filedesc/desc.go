@@ -6,10 +6,9 @@ package filedesc
 
 import (
 	"bytes"
+	"fmt"
 	"sync"
 	"sync/atomic"
-
-	"fmt"
 
 	"google.golang.org/protobuf/internal/descfmt"
 	"google.golang.org/protobuf/internal/descopts"

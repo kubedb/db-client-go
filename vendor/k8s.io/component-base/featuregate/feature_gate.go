@@ -18,13 +18,12 @@ package featuregate
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
-
-	"fmt"
 
 	"github.com/spf13/pflag"
 

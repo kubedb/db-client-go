@@ -5,11 +5,10 @@
 package impl
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"sync"
-
-	"fmt"
 
 	"google.golang.org/protobuf/internal/descopts"
 	ptag "google.golang.org/protobuf/internal/encoding/tag"

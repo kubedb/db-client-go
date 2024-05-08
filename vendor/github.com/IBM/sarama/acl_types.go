@@ -1,9 +1,8 @@
 package sarama
 
 import (
-	"strings"
-
 	"fmt"
+	"strings"
 )
 
 type (

@@ -9,14 +9,13 @@ package bsoncore
 import (
 	"bytes"
 	"encoding/base64"
+	"fmt"
 	"math"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
-
-	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson/bsontype"
 	"go.mongodb.org/mongo-driver/bson/primitive"

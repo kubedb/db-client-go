@@ -5,10 +5,9 @@
 package dialects
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
-
-	"fmt"
 
 	"xorm.io/xorm/internal/utils"
 	"xorm.io/xorm/names"

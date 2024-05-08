@@ -8,11 +8,10 @@ package bsoncore
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
-
-	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson/bsontype"
 )

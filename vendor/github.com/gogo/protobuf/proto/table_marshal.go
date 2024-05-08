@@ -33,6 +33,7 @@ package proto
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"reflect"
 	"sort"
@@ -41,8 +42,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"unicode/utf8"
-
-	"fmt"
 )
 
 // a sizer takes a pointer to a field and the size of its tag, computes the size of

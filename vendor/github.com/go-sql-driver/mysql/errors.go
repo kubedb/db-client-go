@@ -10,10 +10,9 @@ package mysql
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"os"
-
-	"fmt"
 )
 
 // Various errors the driver might return. Can change between driver versions.

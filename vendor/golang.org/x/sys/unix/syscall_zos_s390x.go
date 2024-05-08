@@ -8,14 +8,13 @@ package unix
 
 import (
 	"bytes"
+	"fmt"
 	"runtime"
 	"sort"
 	"strings"
 	"sync"
 	"syscall"
 	"unsafe"
-
-	"fmt"
 )
 
 const (

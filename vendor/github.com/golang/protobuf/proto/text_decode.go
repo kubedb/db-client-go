@@ -7,12 +7,11 @@ package proto
 import (
 	"encoding"
 	"errors"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
 	"unicode/utf8"
-
-	"fmt"
 
 	"google.golang.org/protobuf/encoding/prototext"
 	protoV2 "google.golang.org/protobuf/proto"

@@ -8,11 +8,10 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"regexp"
 	"strings"
 	"unicode"
-
-	"fmt"
 
 	"xorm.io/xorm/core"
 	"xorm.io/xorm/schemas"

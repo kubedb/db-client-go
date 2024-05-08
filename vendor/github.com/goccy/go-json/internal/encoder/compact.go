@@ -2,10 +2,9 @@ package encoder
 
 import (
 	"bytes"
+	"fmt"
 	"strconv"
 	"unsafe"
-
-	"fmt"
 
 	"github.com/goccy/go-json/internal/errors"
 )

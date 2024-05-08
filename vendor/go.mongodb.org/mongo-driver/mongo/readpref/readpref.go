@@ -10,9 +10,8 @@ package readpref // import "go.mongodb.org/mongo-driver/mongo/readpref"
 import (
 	"bytes"
 	"errors"
-	"time"
-
 	"fmt"
+	"time"
 
 	"go.mongodb.org/mongo-driver/tag"
 )

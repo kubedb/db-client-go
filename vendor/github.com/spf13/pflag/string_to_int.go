@@ -2,10 +2,9 @@ package pflag
 
 import (
 	"bytes"
+	"fmt"
 	"strconv"
 	"strings"
-
-	"fmt"
 )
 
 // -- stringToInt Value

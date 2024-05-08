@@ -6,10 +6,9 @@ package gzip
 
 import (
 	"errors"
+	"fmt"
 	"hash/crc32"
 	"io"
-
-	"fmt"
 
 	"github.com/klauspost/compress/flate"
 )

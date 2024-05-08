@@ -7,11 +7,10 @@ package statements
 import (
 	"database/sql"
 	"database/sql/driver"
+	"fmt"
 	"math/big"
 	"reflect"
 	"time"
-
-	"fmt"
 
 	"xorm.io/xorm/convert"
 	"xorm.io/xorm/dialects"

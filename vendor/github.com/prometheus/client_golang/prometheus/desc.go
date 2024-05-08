@@ -14,10 +14,9 @@
 package prometheus
 
 import (
+	"fmt"
 	"sort"
 	"strings"
-
-	"fmt"
 
 	"github.com/cespare/xxhash/v2"
 	dto "github.com/prometheus/client_model/go"

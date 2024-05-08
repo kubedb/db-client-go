@@ -15,9 +15,8 @@ package procfs
 
 import (
 	"bytes"
-	"os"
-
 	"fmt"
+	"os"
 
 	"github.com/prometheus/procfs/internal/util"
 )

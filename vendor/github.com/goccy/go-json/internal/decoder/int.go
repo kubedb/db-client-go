@@ -1,10 +1,9 @@
 package decoder
 
 import (
+	"fmt"
 	"reflect"
 	"unsafe"
-
-	"fmt"
 
 	"github.com/goccy/go-json/internal/errors"
 	"github.com/goccy/go-json/internal/runtime"

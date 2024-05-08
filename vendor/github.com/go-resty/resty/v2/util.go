@@ -7,6 +7,7 @@ package resty
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"mime/multipart"
@@ -19,8 +20,6 @@ import (
 	"sort"
 	"strings"
 	"sync"
-
-	"fmt"
 )
 
 //‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
