@@ -27,7 +27,7 @@ func (sc *SLClient) DecodeResponse(response *Response) (map[string]interface{}, 
 	return responseBody, nil
 }
 
-func (sc *SLClient) getResponseStatus(responseBody map[string]interface{}) (int, error) {
+func (sc *SLClient) GetResponseStatus(responseBody map[string]interface{}) (int, error) {
 	err, ok := responseBody["error"].(map[string]interface{})
 	if ok {
 		msg, ok := err["msg"].(string)
@@ -86,7 +86,7 @@ func (sc *SLClient) DecodeCollectionHealth(responseBody map[string]interface{}) 
 	return nil
 }
 
-func (sc *SLClient) getCollectionList(responseBody map[string]interface{}) ([]string, error) {
+func (sc *SLClient) GetCollectionList(responseBody map[string]interface{}) ([]string, error) {
 	collectionList, ok := responseBody["collections"].([]interface{})
 	if !ok {
 		return []string{}, errors.New("didn't find collection list")
