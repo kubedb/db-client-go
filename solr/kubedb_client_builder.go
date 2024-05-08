@@ -21,6 +21,7 @@ type KubeDBClientBuilder struct {
 	url     string
 	podName string
 	ctx     context.Context
+	log     logr.Logger
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *api.Solr) *KubeDBClientBuilder {
@@ -40,12 +41,17 @@ func (o *KubeDBClientBuilder) WithURL(url string) *KubeDBClientBuilder {
 	return o
 }
 
+func (o *KubeDBClientBuilder) WithLog(log logr.Logger) *KubeDBClientBuilder {
+	o.log = log
+	return o
+}
+
 func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
 	o.ctx = ctx
 	return o
 }
 
-func (o *KubeDBClientBuilder) GetSolrClient(log logr.Logger) (SLClient, error) {
+func (o *KubeDBClientBuilder) GetSolrClient() (SLClient, error) {
 	config := Config{
 		host: getHostPath(o.db),
 		transport: &http.Transport{
@@ -55,9 +61,8 @@ func (o *KubeDBClientBuilder) GetSolrClient(log logr.Logger) (SLClient, error) {
 			}).DialContext,
 		},
 		connectionScheme: o.db.GetConnectionScheme(),
+		log:              o.log,
 	}
-
-	config.log = log
 
 	newClient := resty.New()
 	newClient.SetScheme(config.connectionScheme).SetBaseURL(config.host).SetTransport(config.transport)
