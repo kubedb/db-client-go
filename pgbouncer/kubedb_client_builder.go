@@ -19,14 +19,15 @@ package pgbouncer
 import (
 	"context"
 	"fmt"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/klog/v2"
-	appbinding "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
+
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	_ "github.com/lib/pq"
 	core "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog/v2"
+	appbinding "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"xorm.io/xorm"
 )
@@ -137,13 +138,13 @@ func (o *KubeDBClientBuilder) getBackendAuth() (string, string, error) {
 		return "", "", err
 	}
 
-	user, ok := secret.Data[core.BasicAuthUsernameKey]
-	if !ok {
+	user, present := secret.Data[core.BasicAuthUsernameKey]
+	if !present {
 		return "", "", fmt.Errorf("error getting backend username")
 	}
 
-	pass, ok := secret.Data[core.BasicAuthPasswordKey]
-	if !ok {
+	pass, present := secret.Data[core.BasicAuthPasswordKey]
+	if !present {
 		return "", "", fmt.Errorf("error getting backend password")
 	}
 
@@ -152,7 +153,7 @@ func (o *KubeDBClientBuilder) getBackendAuth() (string, string, error) {
 }
 
 func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
-	user, pass, err := o.getBackendAuth()
+	_, pass, err := o.getBackendAuth()
 	if err != nil {
 		return "", err
 	}
@@ -169,7 +170,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		listeningPort = int(*o.pgbouncer.Spec.ConnectionPool.Port)
 	}
 	//TODO ssl mode is disable now need to work on this after adding tls support
-	connector := fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s", user, pass, o.url, listeningPort, o.backendDBName, TLSModeDisable)
+	connector := fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s", o.databaseRef.Alias, pass, o.url, listeningPort, o.databaseRef.Alias, TLSModeDisable)
 	return connector, nil
 }
 
@@ -202,12 +203,12 @@ func (l *XormClientList) addXormClient(kc client.Client, pb *api.PgBouncer, ctx 
 	l.Mutex.Lock()
 	defer l.Mutex.Unlock()
 	if err != nil {
-		klog.V(5).ErrorS(err, fmt.Sprintf("failed to create xorm client for pgbouncer %s/%s to make pool with postgres pod %s/%s", pb.Namespace, pb.Name, postgresRef.DatabaseRef.Namespace, postgresRef.DatabaseRef.Name))
+		klog.V(5).ErrorS(err, fmt.Sprintf("failed to create xorm client for pgbouncer %s/%s to make pool with database %s", pb.Namespace, pb.Name, postgresRef.Alias))
 		l.List = append(l.List, nil)
 		if l.message == "" {
-			l.message = fmt.Sprintf("failed to create xorm client for: pgbouncer %s/%s make pool with postgres pod %s/%s;", pb.Namespace, pb.Name, postgresRef.DatabaseRef.Namespace, postgresRef.DatabaseRef.Name)
+			l.message = fmt.Sprintf("failed to create xorm client for: pgbouncer %s/%s to make pool with database %s", pb.Namespace, pb.Name, postgresRef.Alias)
 		} else {
-			l.message = fmt.Sprintf("%s pgbouncer %s/%s make pool with postgres pod %s/%s;", l.message, pb.Namespace, pb.Name, postgresRef.DatabaseRef.Namespace, postgresRef.DatabaseRef.Name)
+			l.message = fmt.Sprintf("%s pgbouncer %s/%s to make pool with database %s", l.message, pb.Namespace, pb.Name, postgresRef.Alias)
 		}
 	} else {
 		l.List = append(l.List, xormClient)
