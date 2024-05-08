@@ -17,11 +17,12 @@ limitations under the License.
 package runtime
 
 import (
-	"fmt"
 	"net/http"
 	"runtime"
 	"sync"
 	"time"
+
+	"fmt"
 
 	"k8s.io/klog/v2"
 )

@@ -16,9 +16,10 @@ package swag
 
 import (
 	"encoding/json"
-	"fmt"
 	"path/filepath"
 	"strconv"
+
+	"fmt"
 
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"

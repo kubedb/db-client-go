@@ -7,12 +7,13 @@ package asn1
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"math/big"
 	"reflect"
 	"time"
 	"unicode/utf8"
+
+	"fmt"
 )
 
 // A forkableWriter is an in-memory buffer that can be

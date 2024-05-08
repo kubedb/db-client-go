@@ -1,9 +1,10 @@
 package apiversion
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
+
+	"fmt"
 )
 
 type Version struct {

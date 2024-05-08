@@ -6,8 +6,9 @@ package statements
 
 import (
 	"errors"
-	"fmt"
 	"strings"
+
+	"fmt"
 
 	"xorm.io/builder"
 	"xorm.io/xorm/internal/utils"

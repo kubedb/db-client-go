@@ -15,7 +15,6 @@
 package compiler
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -23,6 +22,8 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"fmt"
 
 	yaml "gopkg.in/yaml.v3"
 )

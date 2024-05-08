@@ -5,8 +5,9 @@ package restful
 // that can be found in the LICENSE file.
 
 import (
-	"fmt"
 	"net/http"
+
+	"fmt"
 )
 
 // ServiceError is a transport object to pass information about a non-Http error occurred in a WebService while processing a request.

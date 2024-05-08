@@ -18,9 +18,10 @@
 package klog
 
 import (
-	"fmt"
 	"os"
 	"time"
+
+	"fmt"
 )
 
 var (

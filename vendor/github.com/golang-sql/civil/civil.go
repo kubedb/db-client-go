@@ -22,8 +22,9 @@
 package civil
 
 import (
-	"fmt"
 	"time"
+
+	"fmt"
 )
 
 // A Date represents a date (year, month, day).

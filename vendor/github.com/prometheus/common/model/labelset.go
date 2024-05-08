@@ -15,9 +15,10 @@ package model
 
 import (
 	"encoding/json"
-	"fmt"
 	"sort"
 	"strings"
+
+	"fmt"
 )
 
 // A LabelSet is a collection of LabelName and LabelValue pairs.  The LabelSet

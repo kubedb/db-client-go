@@ -19,12 +19,13 @@ package meta
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"fmt"
 	"net"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"fmt"
 
 	core "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"

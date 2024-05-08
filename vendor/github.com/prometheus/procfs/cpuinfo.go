@@ -20,10 +20,11 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"fmt"
 
 	"github.com/prometheus/procfs/internal/util"
 )

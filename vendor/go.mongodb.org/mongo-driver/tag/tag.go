@@ -12,6 +12,7 @@ package tag // import "go.mongodb.org/mongo-driver/tag"
 
 import (
 	"bytes"
+
 	"fmt"
 )
 

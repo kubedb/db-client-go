@@ -17,10 +17,11 @@ limitations under the License.
 package field
 
 import (
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"fmt"
 
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/sets"

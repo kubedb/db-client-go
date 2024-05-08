@@ -19,13 +19,14 @@ package server
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
+
+	"fmt"
 
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus/promhttp"

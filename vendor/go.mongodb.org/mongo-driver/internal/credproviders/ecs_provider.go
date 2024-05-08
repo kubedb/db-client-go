@@ -10,9 +10,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
+
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/internal/aws/credentials"
 )

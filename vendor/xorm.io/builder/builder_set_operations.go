@@ -5,8 +5,9 @@
 package builder
 
 import (
-	"fmt"
 	"strings"
+
+	"fmt"
 )
 
 func (b *Builder) setOpWriteTo(w Writer) error {

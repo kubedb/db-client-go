@@ -1,9 +1,10 @@
 package pflag
 
 import (
-	"fmt"
 	"strings"
 	"time"
+
+	"fmt"
 )
 
 // -- durationSlice Value

@@ -1,12 +1,14 @@
+//go:build windows
 // +build windows
 
 package winsspi
 
 import (
-	"fmt"
 	"strings"
 	"syscall"
 	"unsafe"
+
+	"fmt"
 
 	"github.com/microsoft/go-mssqldb/integratedauth"
 	"github.com/microsoft/go-mssqldb/msdsn"

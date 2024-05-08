@@ -9,12 +9,13 @@ package bsoncodec
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math"
 	"net/url"
 	"reflect"
 	"sync"
 	"time"
+
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson/bsonrw"
 	"go.mongodb.org/mongo-driver/bson/bsontype"

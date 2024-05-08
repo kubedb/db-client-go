@@ -19,8 +19,9 @@ limitations under the License.
 package kubernetes
 
 import (
-	"fmt"
 	"net/http"
+
+	"fmt"
 
 	discovery "k8s.io/client-go/discovery"
 	admissionregistrationv1 "k8s.io/client-go/kubernetes/typed/admissionregistration/v1"

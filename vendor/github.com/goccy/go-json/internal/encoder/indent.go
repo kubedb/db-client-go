@@ -2,6 +2,7 @@ package encoder
 
 import (
 	"bytes"
+
 	"fmt"
 
 	"github.com/goccy/go-json/internal/errors"

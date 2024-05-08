@@ -12,8 +12,9 @@ package writeconcern // import "go.mongodb.org/mongo-driver/mongo/writeconcern"
 
 import (
 	"errors"
-	"fmt"
 	"time"
+
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsontype"

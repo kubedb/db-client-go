@@ -6,12 +6,13 @@ package oauth2
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"fmt"
 
 	"golang.org/x/oauth2/internal"
 )

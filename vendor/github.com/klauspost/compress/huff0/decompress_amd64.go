@@ -7,6 +7,7 @@ package huff0
 
 import (
 	"errors"
+
 	"fmt"
 
 	"github.com/klauspost/compress/internal/cpuinfo"

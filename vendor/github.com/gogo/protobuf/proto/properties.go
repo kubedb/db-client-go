@@ -41,13 +41,14 @@ package proto
  */
 
 import (
-	"fmt"
 	"log"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
+
+	"fmt"
 )
 
 const debug bool = false

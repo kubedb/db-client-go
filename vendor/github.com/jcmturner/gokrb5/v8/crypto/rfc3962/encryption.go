@@ -4,6 +4,7 @@ package rfc3962
 import (
 	"crypto/rand"
 	"errors"
+
 	"fmt"
 
 	"github.com/jcmturner/aescts/v2"

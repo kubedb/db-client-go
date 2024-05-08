@@ -4,10 +4,11 @@ package esapi
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 func newIndicesForcemergeFunc(t Transport) IndicesForcemerge {

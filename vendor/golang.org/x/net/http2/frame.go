@@ -8,11 +8,12 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"strings"
 	"sync"
+
+	"fmt"
 
 	"golang.org/x/net/http/httpguts"
 	"golang.org/x/net/http2/hpack"

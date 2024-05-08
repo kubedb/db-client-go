@@ -18,9 +18,10 @@ package discovery
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"strings"
+
+	"fmt"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/pkg/errors"

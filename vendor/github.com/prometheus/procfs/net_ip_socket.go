@@ -16,12 +16,13 @@ package procfs
 import (
 	"bufio"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"net"
 	"os"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 const (

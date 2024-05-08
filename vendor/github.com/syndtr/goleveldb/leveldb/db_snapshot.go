@@ -8,10 +8,11 @@ package leveldb
 
 import (
 	"container/list"
-	"fmt"
 	"runtime"
 	"sync"
 	"sync/atomic"
+
+	"fmt"
 
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/opt"

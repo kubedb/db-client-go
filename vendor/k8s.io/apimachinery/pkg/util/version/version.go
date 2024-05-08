@@ -19,10 +19,11 @@ package version
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 // Version is an opaque representation of a version number

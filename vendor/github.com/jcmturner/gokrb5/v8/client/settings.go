@@ -2,8 +2,9 @@ package client
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
+
+	"fmt"
 )
 
 // Settings holds optional client settings.

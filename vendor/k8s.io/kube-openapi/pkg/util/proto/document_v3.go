@@ -17,9 +17,10 @@ limitations under the License.
 package proto
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
+
+	"fmt"
 
 	openapi_v3 "github.com/google/gnostic-models/openapiv3"
 	"gopkg.in/yaml.v3"

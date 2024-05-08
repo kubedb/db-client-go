@@ -11,7 +11,6 @@ package diffmatchpatch
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"html"
 	"math"
 	"net/url"
@@ -20,6 +19,8 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
+
+	"fmt"
 )
 
 // Operation defines the operation of a diff item.

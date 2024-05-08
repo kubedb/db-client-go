@@ -31,7 +31,6 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"math"
@@ -46,6 +45,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"fmt"
 
 	"golang.org/x/net/http/httpguts"
 	"golang.org/x/net/http2/hpack"

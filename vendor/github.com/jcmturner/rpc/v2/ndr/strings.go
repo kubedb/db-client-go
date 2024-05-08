@@ -1,8 +1,9 @@
 package ndr
 
 import (
-	"fmt"
 	"reflect"
+
+	"fmt"
 )
 
 const (

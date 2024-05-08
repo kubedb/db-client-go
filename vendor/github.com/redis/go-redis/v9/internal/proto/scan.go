@@ -2,10 +2,11 @@ package proto
 
 import (
 	"encoding"
-	"fmt"
 	"net"
 	"reflect"
 	"time"
+
+	"fmt"
 
 	"github.com/redis/go-redis/v9/internal/util"
 )

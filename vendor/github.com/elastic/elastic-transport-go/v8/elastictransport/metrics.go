@@ -19,11 +19,12 @@ package elastictransport
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"fmt"
 )
 
 // Measurable defines the interface for transports supporting metrics.

@@ -6,8 +6,9 @@ package http2
 
 import (
 	"errors"
-	"fmt"
 	"sync"
+
+	"fmt"
 )
 
 // Buffer chunks are allocated from a pool to reduce pressure on GC.

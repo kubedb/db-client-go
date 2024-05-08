@@ -17,10 +17,11 @@ limitations under the License.
 package net
 
 import (
-	"fmt"
 	"net"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 // Protocol is a network protocol support by LocalPort.

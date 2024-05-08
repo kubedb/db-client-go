@@ -7,11 +7,12 @@ package statements
 import (
 	"database/sql/driver"
 	"errors"
-	"fmt"
 	"math/big"
 	"reflect"
 	"strings"
 	"time"
+
+	"fmt"
 
 	"xorm.io/builder"
 	"xorm.io/xorm/contexts"

@@ -5,8 +5,9 @@
 package bidi
 
 import (
-	"fmt"
 	"log"
+
+	"fmt"
 )
 
 // This implementation is a port based on the reference implementation found at:

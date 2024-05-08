@@ -3,8 +3,9 @@ package types
 // Reference: https://www.ietf.org/rfc/rfc4120.txt
 // Section: 5.2.7
 import (
-	"fmt"
 	"time"
+
+	"fmt"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
 	"github.com/jcmturner/gokrb5/v8/iana/patype"

@@ -2,9 +2,11 @@ package solr
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/pkg/errors"
 	"io"
+
+	"github.com/pkg/errors"
+
+	"fmt"
 )
 
 func (sc *SLClient) DecodeResponse(response *Response) (map[string]interface{}, error) {

@@ -1,9 +1,10 @@
 package pflag
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 // -- uintSlice Value

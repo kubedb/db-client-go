@@ -3,12 +3,13 @@ package mssql
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"io"
 	"math"
 	"reflect"
 	"strconv"
 	"time"
+
+	"fmt"
 
 	"github.com/microsoft/go-mssqldb/internal/cp"
 	"github.com/microsoft/go-mssqldb/internal/decimal"

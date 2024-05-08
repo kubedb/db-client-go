@@ -15,11 +15,12 @@ package procfs
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"os"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 // For the proc file format details,

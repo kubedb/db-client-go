@@ -95,7 +95,6 @@ import (
 	"bytes"
 	"errors"
 	"flag"
-	"fmt"
 	"io"
 	stdLog "log"
 	"math"
@@ -107,6 +106,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"fmt"
 
 	"k8s.io/klog/v2/internal/buffer"
 	"k8s.io/klog/v2/internal/clock"

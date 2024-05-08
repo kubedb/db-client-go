@@ -11,11 +11,11 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"hash/crc32"
 	"io"
 	"reflect"
 	"strconv"
+
 	"xorm.io/xorm/contexts"
 	"xorm.io/xorm/convert"
 	"xorm.io/xorm/core"
@@ -23,6 +23,8 @@ import (
 	"xorm.io/xorm/internal/statements"
 	"xorm.io/xorm/log"
 	"xorm.io/xorm/schemas"
+
+	"fmt"
 )
 
 // ErrFieldIsNotExist columns does not exist

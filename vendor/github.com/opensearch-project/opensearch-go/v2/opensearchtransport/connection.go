@@ -28,12 +28,13 @@ package opensearchtransport
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"net/url"
 	"sort"
 	"sync"
 	"time"
+
+	"fmt"
 )
 
 var (

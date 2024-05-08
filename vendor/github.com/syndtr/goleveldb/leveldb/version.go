@@ -7,9 +7,10 @@
 package leveldb
 
 import (
-	"fmt"
 	"sync/atomic"
 	"unsafe"
+
+	"fmt"
 
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/opt"

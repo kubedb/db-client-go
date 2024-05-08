@@ -2,6 +2,7 @@ package yaml
 
 import (
 	"bytes"
+
 	"fmt"
 )
 

@@ -3,10 +3,11 @@ package sarama
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sort"
 	"sync"
 	"time"
+
+	"fmt"
 
 	"github.com/rcrowley/go-metrics"
 )

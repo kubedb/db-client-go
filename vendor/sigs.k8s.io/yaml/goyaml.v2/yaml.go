@@ -8,11 +8,12 @@ package yaml
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"reflect"
 	"strings"
 	"sync"
+
+	"fmt"
 )
 
 // MapSlice encodes and decodes as a YAML map.

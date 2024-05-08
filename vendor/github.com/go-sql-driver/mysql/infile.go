@@ -9,11 +9,12 @@
 package mysql
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"strings"
 	"sync"
+
+	"fmt"
 )
 
 var (

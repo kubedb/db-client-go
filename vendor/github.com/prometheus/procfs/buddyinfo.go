@@ -15,11 +15,12 @@ package procfs
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"os"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 // A BuddyInfo is the details parsed from /proc/buddyinfo.

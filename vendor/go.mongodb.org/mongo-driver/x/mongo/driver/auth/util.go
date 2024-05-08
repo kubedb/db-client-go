@@ -7,8 +7,9 @@
 package auth
 
 import (
-	"fmt"
 	"io"
+
+	"fmt"
 
 	// Ignore gosec warning "Blocklisted import crypto/md5: weak cryptographic primitive". We need
 	// to use MD5 here to implement the SCRAM specification.

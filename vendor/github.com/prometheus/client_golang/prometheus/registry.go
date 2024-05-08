@@ -16,7 +16,6 @@ package prometheus
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -25,6 +24,8 @@ import (
 	"strings"
 	"sync"
 	"unicode/utf8"
+
+	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus/internal"
 

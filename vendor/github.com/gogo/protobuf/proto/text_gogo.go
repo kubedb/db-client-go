@@ -29,8 +29,9 @@
 package proto
 
 import (
-	"fmt"
 	"reflect"
+
+	"fmt"
 )
 
 func (tm *TextMarshaler) writeEnum(w *textWriter, v reflect.Value, props *Properties) error {

@@ -3,8 +3,9 @@ package mstypes
 import (
 	"bufio"
 	"encoding/binary"
-	"fmt"
 	"io"
+
+	"fmt"
 )
 
 // Byte sizes of primitive types

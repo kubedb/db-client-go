@@ -9,9 +9,10 @@ package codecutil
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"reflect"
+
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"

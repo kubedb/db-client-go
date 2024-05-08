@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"errors"
+
 	"fmt"
 
 	"github.com/jcmturner/rpc/v2/ndr"

@@ -16,10 +16,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"sync/atomic"
 	"time"
+
+	"fmt"
 )
 
 // ErrInvalidHex indicates that a hex string cannot be converted to an ObjectID.

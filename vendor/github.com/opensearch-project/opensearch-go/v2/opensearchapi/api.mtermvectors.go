@@ -54,7 +54,7 @@ type Mtermvectors func(o ...func(*MtermvectorsRequest)) (*Response, error)
 // MtermvectorsRequest configures the Mtermvectors API request.
 //
 type MtermvectorsRequest struct {
-	Index        string
+	Index string
 
 	Body io.Reader
 

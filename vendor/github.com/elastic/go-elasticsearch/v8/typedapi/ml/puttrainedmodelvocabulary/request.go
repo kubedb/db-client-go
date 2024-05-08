@@ -15,15 +15,14 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
 // https://github.com/elastic/elasticsearch-specification/tree/4316fc1aa18bb04678b156f23b22c9d3f996f9c9
-
 
 package puttrainedmodelvocabulary
 
 import (
 	"encoding/json"
+
 	"fmt"
 )
 

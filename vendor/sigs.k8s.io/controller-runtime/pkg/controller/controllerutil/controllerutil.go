@@ -18,8 +18,9 @@ package controllerutil
 
 import (
 	"context"
-	"fmt"
 	"reflect"
+
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"

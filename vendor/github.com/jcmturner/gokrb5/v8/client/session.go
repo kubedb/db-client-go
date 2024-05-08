@@ -2,11 +2,12 @@ package client
 
 import (
 	"encoding/json"
-	"fmt"
 	"sort"
 	"strings"
 	"sync"
 	"time"
+
+	"fmt"
 
 	"github.com/jcmturner/gokrb5/v8/iana/nametype"
 	"github.com/jcmturner/gokrb5/v8/krberror"

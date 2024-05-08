@@ -1,10 +1,11 @@
 package metrics
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 	"sync"
+
+	"fmt"
 )
 
 // DuplicateMetric is the error returned by Registry.Register when a metric

@@ -22,11 +22,12 @@ package esapi
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 func newSearchMvtFunc(t Transport) SearchMvt {

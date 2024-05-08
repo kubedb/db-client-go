@@ -8,10 +8,11 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
-	"fmt"
 	"reflect"
 	"regexp"
 	"sync"
+
+	"fmt"
 
 	"xorm.io/xorm/contexts"
 	"xorm.io/xorm/log"

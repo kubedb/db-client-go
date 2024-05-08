@@ -37,11 +37,12 @@ package proto
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"reflect"
 	"strconv"
 	"sync"
+
+	"fmt"
 )
 
 // ErrMissingExtension is the error returned by GetExtension if the named extension is not in the message.

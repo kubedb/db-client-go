@@ -13,9 +13,10 @@ package v4
 
 import (
 	"bytes"
-	"fmt"
 	"net/url"
 	"strings"
+
+	"fmt"
 )
 
 // Whether the byte value can be sent without escaping in AWS URLs

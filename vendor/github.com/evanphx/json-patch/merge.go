@@ -3,8 +3,9 @@ package jsonpatch
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"reflect"
+
+	"fmt"
 )
 
 func merge(cur, patch *lazyNode, mergeMerge bool) *lazyNode {

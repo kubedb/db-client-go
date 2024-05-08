@@ -6,8 +6,9 @@ package unix
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
+
+	"fmt"
 )
 
 // Pledge implements the pledge syscall.

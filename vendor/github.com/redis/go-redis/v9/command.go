@@ -3,13 +3,14 @@ package redis
 import (
 	"bufio"
 	"context"
-	"fmt"
 	"net"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"fmt"
 
 	"github.com/redis/go-redis/v9/internal"
 	"github.com/redis/go-redis/v9/internal/hscan"

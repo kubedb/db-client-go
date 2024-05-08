@@ -3,9 +3,10 @@ package mstypes
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"fmt"
 	"math"
 	"strings"
+
+	"fmt"
 )
 
 // RPCSID implements https://msdn.microsoft.com/en-us/library/cc230364.aspx

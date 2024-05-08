@@ -2,8 +2,9 @@ package sarama
 
 import (
 	"errors"
-	"fmt"
 	"strings"
+
+	"fmt"
 
 	"github.com/hashicorp/go-multierror"
 )

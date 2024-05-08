@@ -7,11 +7,12 @@ package windows
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"runtime"
 	"strings"
 	"syscall"
 	"unsafe"
+
+	"fmt"
 )
 
 // This file contains functions that wrap SetupAPI.dll and CfgMgr32.dll,

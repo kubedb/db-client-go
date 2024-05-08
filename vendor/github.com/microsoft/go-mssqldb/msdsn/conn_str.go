@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net"
 	"net/url"
@@ -13,6 +12,8 @@ import (
 	"strings"
 	"time"
 	"unicode"
+
+	"fmt"
 )
 
 type (

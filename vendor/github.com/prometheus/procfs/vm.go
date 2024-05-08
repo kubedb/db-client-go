@@ -17,10 +17,11 @@
 package procfs
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"fmt"
 
 	"github.com/prometheus/procfs/internal/util"
 )

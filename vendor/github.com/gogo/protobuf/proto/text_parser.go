@@ -42,12 +42,13 @@ package proto
 import (
 	"encoding"
 	"errors"
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
+
+	"fmt"
 )
 
 // Error string emitted when deserializing Any and fields are already set

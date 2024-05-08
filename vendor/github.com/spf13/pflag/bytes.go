@@ -3,8 +3,9 @@ package pflag
 import (
 	"encoding/base64"
 	"encoding/hex"
-	"fmt"
 	"strings"
+
+	"fmt"
 )
 
 // BytesHex adapts []byte for use as a flag. Value of flag is HEX encoded

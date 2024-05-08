@@ -21,11 +21,12 @@ package esapi
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 func newMLGetOverallBucketsFunc(t Transport) MLGetOverallBuckets {

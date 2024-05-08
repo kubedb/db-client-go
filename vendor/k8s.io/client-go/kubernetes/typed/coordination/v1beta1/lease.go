@@ -21,8 +21,9 @@ package v1beta1
 import (
 	"context"
 	json "encoding/json"
-	"fmt"
 	"time"
+
+	"fmt"
 
 	v1beta1 "k8s.io/api/coordination/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

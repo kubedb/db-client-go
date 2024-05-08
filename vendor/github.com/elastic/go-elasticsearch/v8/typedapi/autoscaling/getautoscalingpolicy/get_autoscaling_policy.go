@@ -15,10 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
 // https://github.com/elastic/elasticsearch-specification/tree/4316fc1aa18bb04678b156f23b22c9d3f996f9c9
-
 
 // Retrieves an autoscaling policy. Designed for indirect use by ECE/ESS and
 // ECK. Direct use is not supported.
@@ -28,12 +26,13 @@ import (
 	gobytes "bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"fmt"
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 )

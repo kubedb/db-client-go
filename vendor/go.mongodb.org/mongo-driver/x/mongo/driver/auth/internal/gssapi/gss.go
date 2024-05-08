@@ -19,10 +19,11 @@ package gssapi
 */
 import "C"
 import (
-	"fmt"
 	"runtime"
 	"strings"
 	"unsafe"
+
+	"fmt"
 )
 
 // New creates a new SaslClient. The target parameter should be a hostname with no port.

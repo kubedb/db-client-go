@@ -5,9 +5,10 @@ package flate
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"math/bits"
 	"strings"
+
+	"fmt"
 )
 
 // Decode a single Huffman block from f.

@@ -15,10 +15,11 @@ package procfs
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 // XfrmStat models the contents of /proc/net/xfrm_stat.

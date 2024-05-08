@@ -6,9 +6,10 @@ package flate
 
 import (
 	"encoding/binary"
-	"fmt"
 	"io"
 	"math"
+
+	"fmt"
 )
 
 const (

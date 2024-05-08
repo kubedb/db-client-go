@@ -33,10 +33,11 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"encoding/base64"
-	"fmt"
 	"hash"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 // Client implements a SCRAM-* client (SCRAM-SHA-1, SCRAM-SHA-256, etc).

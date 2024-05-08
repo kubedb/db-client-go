@@ -21,8 +21,9 @@ package v2beta2
 import (
 	"context"
 	json "encoding/json"
-	"fmt"
 	"time"
+
+	"fmt"
 
 	v2beta2 "k8s.io/api/autoscaling/v2beta2"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

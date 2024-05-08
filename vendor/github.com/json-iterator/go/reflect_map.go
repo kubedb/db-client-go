@@ -1,12 +1,14 @@
 package jsoniter
 
 import (
-	"fmt"
-	"github.com/modern-go/reflect2"
 	"io"
 	"reflect"
 	"sort"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
+
+	"fmt"
 )
 
 func decoderOfMap(ctx *ctx, typ reflect2.Type) ValDecoder {

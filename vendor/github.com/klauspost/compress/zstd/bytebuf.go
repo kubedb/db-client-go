@@ -5,8 +5,9 @@
 package zstd
 
 import (
-	"fmt"
 	"io"
+
+	"fmt"
 )
 
 type byteBuffer interface {

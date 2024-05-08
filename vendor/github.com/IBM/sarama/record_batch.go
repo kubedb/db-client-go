@@ -2,8 +2,9 @@ package sarama
 
 import (
 	"errors"
-	"fmt"
 	"time"
+
+	"fmt"
 )
 
 const recordBatchOverhead = 49

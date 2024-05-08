@@ -18,8 +18,9 @@ package source
 
 import (
 	"context"
-	"fmt"
 	"sync"
+
+	"fmt"
 
 	"k8s.io/client-go/util/workqueue"
 	"sigs.k8s.io/controller-runtime/pkg/client"

@@ -3,6 +3,7 @@ package algorithms
 import (
 	"crypto/rand"
 	"crypto/subtle"
+
 	"fmt"
 
 	"github.com/microsoft/go-mssqldb/internal/github.com/swisscom/mssql-always-encrypted/pkg/crypto"

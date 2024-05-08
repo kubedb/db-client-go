@@ -2,10 +2,11 @@ package solr
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"net/http"
 	"time"
+
+	"fmt"
 
 	"github.com/go-logr/logr"
 	"github.com/go-resty/resty/v2"

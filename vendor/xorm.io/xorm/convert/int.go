@@ -7,9 +7,10 @@ package convert
 import (
 	"database/sql"
 	"database/sql/driver"
-	"fmt"
 	"reflect"
 	"strconv"
+
+	"fmt"
 )
 
 // AsInt64 converts interface as int64

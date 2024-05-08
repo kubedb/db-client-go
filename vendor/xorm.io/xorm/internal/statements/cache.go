@@ -5,9 +5,10 @@
 package statements
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
+
+	"fmt"
 
 	"xorm.io/xorm/internal/utils"
 	"xorm.io/xorm/schemas"

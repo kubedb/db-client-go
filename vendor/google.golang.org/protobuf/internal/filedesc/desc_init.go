@@ -5,8 +5,9 @@
 package filedesc
 
 import (
-	"fmt"
 	"sync"
+
+	"fmt"
 
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/internal/genid"

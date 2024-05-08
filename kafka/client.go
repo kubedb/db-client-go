@@ -17,8 +17,9 @@ limitations under the License.
 package kafka
 
 import (
-	"fmt"
 	"time"
+
+	"fmt"
 
 	kafkago "github.com/IBM/sarama"
 	"k8s.io/klog/v2"

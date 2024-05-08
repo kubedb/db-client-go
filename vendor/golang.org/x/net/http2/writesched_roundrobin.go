@@ -5,8 +5,9 @@
 package http2
 
 import (
-	"fmt"
 	"math"
+
+	"fmt"
 )
 
 type roundRobinWriteScheduler struct {

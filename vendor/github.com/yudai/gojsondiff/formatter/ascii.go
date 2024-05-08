@@ -3,8 +3,9 @@ package formatter
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"sort"
+
+	"fmt"
 
 	diff "github.com/yudai/gojsondiff"
 )

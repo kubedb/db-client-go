@@ -7,8 +7,9 @@ package sqlexp
 import (
 	"context"
 	"database/sql/driver"
-	"fmt"
 	"strings"
+
+	"fmt"
 )
 
 type mssql struct{}

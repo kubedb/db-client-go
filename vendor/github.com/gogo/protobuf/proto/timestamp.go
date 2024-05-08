@@ -35,8 +35,9 @@ package proto
 
 import (
 	"errors"
-	"fmt"
 	"time"
+
+	"fmt"
 )
 
 const (

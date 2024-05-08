@@ -2,8 +2,9 @@ package redis
 
 import (
 	"context"
-	"fmt"
 	"strings"
+
+	"fmt"
 )
 
 type GearsCmdable interface {

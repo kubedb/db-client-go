@@ -6,10 +6,11 @@ package convert
 
 import (
 	"database/sql"
-	"fmt"
 	"math/big"
 	"reflect"
 	"strconv"
+
+	"fmt"
 )
 
 // AsFloat64 convets interface as float64

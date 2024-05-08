@@ -20,12 +20,13 @@ package klog
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	"fmt"
 )
 
 // MaxSize is the maximum size of a log file in bytes.

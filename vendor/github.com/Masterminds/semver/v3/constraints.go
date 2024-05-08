@@ -3,9 +3,10 @@ package semver
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"regexp"
 	"strings"
+
+	"fmt"
 )
 
 // Constraints is one or more constraint that a semantic version can be

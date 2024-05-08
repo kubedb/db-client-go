@@ -1,9 +1,10 @@
 package pflag
 
 import (
-	"fmt"
 	"net"
 	"strings"
+
+	"fmt"
 )
 
 // -- net.IP value

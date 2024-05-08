@@ -3,8 +3,9 @@ package pool
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync/atomic"
+
+	"fmt"
 )
 
 const (

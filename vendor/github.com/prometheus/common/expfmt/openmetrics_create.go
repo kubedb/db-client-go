@@ -16,11 +16,12 @@ package expfmt
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"io"
 	"math"
 	"strconv"
 	"strings"
+
+	"fmt"
 
 	"github.com/prometheus/common/model"
 

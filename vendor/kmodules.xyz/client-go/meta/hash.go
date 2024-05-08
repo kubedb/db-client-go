@@ -17,10 +17,11 @@ limitations under the License.
 package meta
 
 import (
-	"fmt"
 	"hash"
 	"reflect"
 	"strconv"
+
+	"fmt"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/fatih/structs"

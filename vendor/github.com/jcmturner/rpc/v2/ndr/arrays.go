@@ -2,9 +2,10 @@ package ndr
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"strconv"
+
+	"fmt"
 )
 
 // intFromTag returns an int that is a value in a struct tag key/value pair

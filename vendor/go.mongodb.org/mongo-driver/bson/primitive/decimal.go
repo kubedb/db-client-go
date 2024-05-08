@@ -12,11 +12,12 @@ package primitive
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math/big"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 // These constants are the maximum and minimum values for the exponent field in a decimal128 value.

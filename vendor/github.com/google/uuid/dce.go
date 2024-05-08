@@ -6,8 +6,9 @@ package uuid
 
 import (
 	"encoding/binary"
-	"fmt"
 	"os"
+
+	"fmt"
 )
 
 // A Domain represents a Version 2 domain

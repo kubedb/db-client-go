@@ -6,9 +6,10 @@ package dialects
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 // Filter is an interface to filter SQL

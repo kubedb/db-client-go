@@ -6,6 +6,7 @@ package proto
 
 import (
 	"errors"
+
 	"fmt"
 
 	"google.golang.org/protobuf/encoding/prototext"

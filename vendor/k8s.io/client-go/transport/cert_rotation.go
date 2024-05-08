@@ -19,10 +19,11 @@ package transport
 import (
 	"bytes"
 	"crypto/tls"
-	"fmt"
 	"reflect"
 	"sync"
 	"time"
+
+	"fmt"
 
 	utilnet "k8s.io/apimachinery/pkg/util/net"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"

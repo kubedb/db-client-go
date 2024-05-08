@@ -14,13 +14,14 @@
 package prometheus
 
 import (
-	"fmt"
 	"math"
 	"runtime"
 	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"fmt"
 
 	dto "github.com/prometheus/client_model/go"
 

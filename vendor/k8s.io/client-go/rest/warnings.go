@@ -17,10 +17,11 @@ limitations under the License.
 package rest
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"sync"
+
+	"fmt"
 
 	"k8s.io/klog/v2"
 

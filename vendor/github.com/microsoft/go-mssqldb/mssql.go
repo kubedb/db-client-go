@@ -6,7 +6,6 @@ import (
 	"database/sql/driver"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
 	"math"
 	"math/bits"
@@ -15,6 +14,8 @@ import (
 	"strings"
 	"time"
 	"unicode"
+
+	"fmt"
 
 	"github.com/golang-sql/sqlexp"
 	"github.com/microsoft/go-mssqldb/aecmk"

@@ -19,11 +19,12 @@ package manager
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net"
 	"net/http"
 	"reflect"
 	"time"
+
+	"fmt"
 
 	"github.com/go-logr/logr"
 	coordinationv1 "k8s.io/api/coordination/v1"

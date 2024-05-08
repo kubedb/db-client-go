@@ -18,10 +18,11 @@ package procfs
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"regexp"
 	"strings"
+
+	"fmt"
 
 	"github.com/prometheus/procfs/internal/util"
 )

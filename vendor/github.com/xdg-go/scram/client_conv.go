@@ -10,8 +10,9 @@ import (
 	"crypto/hmac"
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"strings"
+
+	"fmt"
 )
 
 type clientState int

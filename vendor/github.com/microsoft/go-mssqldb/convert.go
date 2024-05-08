@@ -1,6 +1,15 @@
 package mssql
 
-import "errors"
+import (
+	"database/sql"
+	"database/sql/driver"
+	"errors"
+	"reflect"
+	"strconv"
+	"time"
+
+	"fmt"
+)
 
 // Copyright 2011 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
@@ -13,15 +22,6 @@ import "errors"
 // This function is used internally by sql to convert values during call to Scan, we need same
 // logic to return values for OUTPUT parameters.
 // TODO: sql library should instead expose function defaultCheckNamedValue to be callable by drivers
-
-import (
-	"database/sql"
-	"database/sql/driver"
-	"fmt"
-	"reflect"
-	"strconv"
-	"time"
-)
 
 var errNilPtr = errors.New("destination pointer is nil") // embedded in descriptive error
 

@@ -14,8 +14,9 @@ limitations under the License.
 package fieldpath
 
 import (
-	"fmt"
 	"strings"
+
+	"fmt"
 )
 
 // APIVersion describes the version of an object or of a fieldset.

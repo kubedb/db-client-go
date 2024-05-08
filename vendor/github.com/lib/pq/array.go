@@ -5,10 +5,11 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"encoding/hex"
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 var typeByteSlice = reflect.TypeOf([]byte{})

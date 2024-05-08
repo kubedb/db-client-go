@@ -12,8 +12,9 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"net"
+
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/x/mongo/driver/auth/internal/gssapi"
 )

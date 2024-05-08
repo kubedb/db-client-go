@@ -1,10 +1,11 @@
 package semver
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"unicode"
+
+	"fmt"
 )
 
 type wildcardType int

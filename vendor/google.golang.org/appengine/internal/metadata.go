@@ -10,10 +10,11 @@ package internal
 //	https://cloud.google.com/compute/docs/metadata
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+
+	"fmt"
 )
 
 const (

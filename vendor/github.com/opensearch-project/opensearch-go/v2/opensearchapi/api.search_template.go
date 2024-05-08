@@ -55,7 +55,7 @@ type SearchTemplate func(body io.Reader, o ...func(*SearchTemplateRequest)) (*Re
 // SearchTemplateRequest configures the Search Template API request.
 //
 type SearchTemplateRequest struct {
-	Index        []string
+	Index []string
 
 	Body io.Reader
 

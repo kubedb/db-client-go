@@ -17,8 +17,9 @@ limitations under the License.
 package validation
 
 import (
-	"fmt"
 	"strings"
+
+	"fmt"
 
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/meta"

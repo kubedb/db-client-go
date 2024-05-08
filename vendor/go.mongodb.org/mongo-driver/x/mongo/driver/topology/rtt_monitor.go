@@ -8,10 +8,11 @@ package topology
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"sync"
 	"time"
+
+	"fmt"
 
 	"github.com/montanaflynn/stats"
 	"go.mongodb.org/mongo-driver/x/mongo/driver"

@@ -2,10 +2,11 @@ package jsonpatch
 
 import (
 	"bytes"
-	"fmt"
 	"strconv"
 	"strings"
 	"unicode"
+
+	"fmt"
 
 	"github.com/evanphx/json-patch/v5/internal/json"
 	"github.com/pkg/errors"

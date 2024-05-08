@@ -4,8 +4,9 @@
 package zstd
 
 import (
-	"fmt"
 	"io"
+
+	"fmt"
 
 	"github.com/klauspost/compress/internal/cpuinfo"
 )

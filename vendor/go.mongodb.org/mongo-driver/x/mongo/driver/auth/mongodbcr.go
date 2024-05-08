@@ -8,8 +8,9 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"io"
+
+	"fmt"
 
 	// Ignore gosec warning "Blocklisted import crypto/md5: weak cryptographic primitive". We need
 	// to use MD5 here to implement the MONGODB-CR specification.

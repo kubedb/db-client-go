@@ -17,8 +17,9 @@ limitations under the License.
 package metrics
 
 import (
-	"fmt"
 	"regexp"
+
+	"fmt"
 
 	"github.com/blang/semver/v4"
 	"github.com/spf13/pflag"

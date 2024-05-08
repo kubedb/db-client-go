@@ -3,9 +3,10 @@ package jsonpatch
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"strings"
+
+	"fmt"
 
 	"github.com/pkg/errors"
 )

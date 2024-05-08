@@ -17,8 +17,9 @@ limitations under the License.
 package watch
 
 import (
-	"fmt"
 	"sync"
+
+	"fmt"
 
 	"k8s.io/klog/v2"
 

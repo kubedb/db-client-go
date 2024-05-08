@@ -17,9 +17,10 @@
 package jsonschema
 
 import (
-	"fmt"
 	"io/ioutil"
 	"strconv"
+
+	"fmt"
 
 	"gopkg.in/yaml.v3"
 )

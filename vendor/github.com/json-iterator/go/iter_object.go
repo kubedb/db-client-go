@@ -1,8 +1,9 @@
 package jsoniter
 
 import (
-	"fmt"
 	"strings"
+
+	"fmt"
 )
 
 // ReadObject read one field from object.

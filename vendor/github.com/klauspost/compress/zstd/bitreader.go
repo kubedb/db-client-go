@@ -7,9 +7,10 @@ package zstd
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
 	"math/bits"
+
+	"fmt"
 )
 
 // bitReader reads a bitstream in reverse.

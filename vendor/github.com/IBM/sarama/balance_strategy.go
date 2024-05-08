@@ -3,10 +3,11 @@ package sarama
 import (
 	"container/heap"
 	"errors"
-	"fmt"
 	"math"
 	"sort"
 	"strings"
+
+	"fmt"
 )
 
 const (

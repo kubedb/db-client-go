@@ -5,9 +5,10 @@
 package zstd
 
 import (
-	"fmt"
 	"math"
 	"sync"
+
+	"fmt"
 )
 
 var (

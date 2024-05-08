@@ -17,8 +17,9 @@
 package spew
 
 import (
-	"fmt"
 	"io"
+
+	"fmt"
 )
 
 // Errorf is a wrapper for fmt.Errorf that treats each argument as if it were

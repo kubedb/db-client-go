@@ -7,9 +7,10 @@
 package bsoncodec // import "go.mongodb.org/mongo-driver/bson/bsoncodec"
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
+
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson/bsonrw"
 	"go.mongodb.org/mongo-driver/bson/bsontype"

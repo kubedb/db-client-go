@@ -10,9 +10,10 @@
 package defval
 
 import (
-	"fmt"
 	"math"
 	"strconv"
+
+	"fmt"
 
 	ptext "google.golang.org/protobuf/internal/encoding/text"
 	"google.golang.org/protobuf/internal/errors"

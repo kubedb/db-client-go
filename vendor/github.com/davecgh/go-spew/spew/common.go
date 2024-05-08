@@ -18,11 +18,12 @@ package spew
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"reflect"
 	"sort"
 	"strconv"
+
+	"fmt"
 )
 
 // Some constants in the form of bytes to avoid string overhead.  This mirrors

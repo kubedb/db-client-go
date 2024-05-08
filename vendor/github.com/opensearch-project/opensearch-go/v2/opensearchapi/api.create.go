@@ -57,8 +57,8 @@ type Create func(index string, id string, body io.Reader, o ...func(*CreateReque
 // CreateRequest configures the Create API request.
 //
 type CreateRequest struct {
-	Index        string
-	DocumentID   string
+	Index      string
+	DocumentID string
 
 	Body io.Reader
 

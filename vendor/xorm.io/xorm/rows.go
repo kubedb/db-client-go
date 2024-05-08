@@ -6,8 +6,9 @@ package xorm
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
+
+	"fmt"
 
 	"xorm.io/builder"
 	"xorm.io/xorm/core"

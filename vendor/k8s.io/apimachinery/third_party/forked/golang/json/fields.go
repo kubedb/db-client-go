@@ -8,13 +8,14 @@ package json
 
 import (
 	"bytes"
-	"fmt"
 	"reflect"
 	"sort"
 	"strings"
 	"sync"
 	"unicode"
 	"unicode/utf8"
+
+	"fmt"
 )
 
 const (

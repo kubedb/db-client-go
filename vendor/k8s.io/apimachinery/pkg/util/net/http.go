@@ -21,7 +21,6 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"fmt"
 	"io"
 	"mime"
 	"net"
@@ -35,6 +34,8 @@ import (
 	"time"
 	"unicode"
 	"unicode/utf8"
+
+	"fmt"
 
 	"golang.org/x/net/http2"
 	"k8s.io/klog/v2"

@@ -7,11 +7,12 @@ package proto
 import (
 	"bytes"
 	"encoding"
-	"fmt"
 	"io"
 	"math"
 	"sort"
 	"strings"
+
+	"fmt"
 
 	"google.golang.org/protobuf/encoding/prototext"
 	"google.golang.org/protobuf/encoding/protowire"

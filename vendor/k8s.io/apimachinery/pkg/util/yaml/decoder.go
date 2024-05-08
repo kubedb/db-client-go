@@ -20,10 +20,11 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"strings"
 	"unicode"
+
+	"fmt"
 
 	jsonutil "k8s.io/apimachinery/pkg/util/json"
 

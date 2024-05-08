@@ -8,10 +8,11 @@ package dns
 
 import (
 	"errors"
-	"fmt"
 	"net"
 	"runtime"
 	"strings"
+
+	"fmt"
 )
 
 // Resolver resolves DNS records.

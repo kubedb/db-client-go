@@ -18,8 +18,9 @@ package typed
 
 import (
 	"errors"
-	"fmt"
 	"strings"
+
+	"fmt"
 
 	"sigs.k8s.io/structured-merge-diff/v4/fieldpath"
 	"sigs.k8s.io/structured-merge-diff/v4/schema"

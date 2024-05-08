@@ -34,13 +34,14 @@ package promhttp
 import (
 	"compress/gzip"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"fmt"
 
 	"github.com/prometheus/common/expfmt"
 

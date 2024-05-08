@@ -7,10 +7,11 @@ package rate
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"sync"
 	"time"
+
+	"fmt"
 )
 
 // Limit defines the maximum frequency of some events.

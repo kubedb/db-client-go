@@ -17,8 +17,9 @@ limitations under the License.
 package apiextensions
 
 import (
-	"fmt"
 	"time"
+
+	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

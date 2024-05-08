@@ -8,10 +8,11 @@ package esapi
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 func newXPackMLGetCalendarEventsFunc(t Transport) XPackMLGetCalendarEvents {

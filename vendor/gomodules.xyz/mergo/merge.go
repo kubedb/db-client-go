@@ -9,8 +9,9 @@
 package mergo
 
 import (
-	"fmt"
 	"reflect"
+
+	"fmt"
 )
 
 func hasMergeableFields(dst reflect.Value) (exported bool) {

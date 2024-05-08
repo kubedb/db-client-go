@@ -10,12 +10,13 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"net"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/internal/codecutil"
 	"go.mongodb.org/mongo-driver/mongo/options"

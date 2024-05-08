@@ -2,9 +2,10 @@ package ndr
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"strconv"
+
+	"fmt"
 )
 
 // type MyBytes []byte

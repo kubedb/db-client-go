@@ -54,8 +54,8 @@ type Termvectors func(index string, o ...func(*TermvectorsRequest)) (*Response, 
 // TermvectorsRequest configures the Termvectors API request.
 //
 type TermvectorsRequest struct {
-	Index        string
-	DocumentID   string
+	Index      string
+	DocumentID string
 
 	Body io.Reader
 

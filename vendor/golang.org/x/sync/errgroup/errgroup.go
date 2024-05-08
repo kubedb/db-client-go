@@ -11,8 +11,9 @@ package errgroup
 
 import (
 	"context"
-	"fmt"
 	"sync"
+
+	"fmt"
 )
 
 type token struct{}

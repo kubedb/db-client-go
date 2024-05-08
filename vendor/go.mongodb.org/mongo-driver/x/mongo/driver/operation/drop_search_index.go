@@ -9,8 +9,9 @@ package operation
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
+
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo/description"

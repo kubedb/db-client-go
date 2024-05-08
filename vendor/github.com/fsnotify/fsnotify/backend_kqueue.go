@@ -8,10 +8,11 @@ package fsnotify
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
+
+	"fmt"
 
 	"golang.org/x/sys/unix"
 )

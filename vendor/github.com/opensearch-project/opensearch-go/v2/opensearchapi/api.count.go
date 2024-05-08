@@ -54,7 +54,7 @@ type Count func(o ...func(*CountRequest)) (*Response, error)
 // CountRequest configures the Count API request.
 //
 type CountRequest struct {
-	Index        []string
+	Index []string
 
 	Body io.Reader
 

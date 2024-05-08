@@ -6,8 +6,9 @@ package ptypes
 
 import (
 	"errors"
-	"fmt"
 	"time"
+
+	"fmt"
 
 	durationpb "github.com/golang/protobuf/ptypes/duration"
 )

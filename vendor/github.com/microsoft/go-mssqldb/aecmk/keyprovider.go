@@ -1,9 +1,10 @@
 package aecmk
 
 import (
-	"fmt"
 	"sync"
 	"time"
+
+	"fmt"
 )
 
 const (

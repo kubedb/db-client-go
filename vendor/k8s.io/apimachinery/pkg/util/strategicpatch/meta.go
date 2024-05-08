@@ -18,9 +18,10 @@ package strategicpatch
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"strings"
+
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/util/mergepatch"
 	forkedjson "k8s.io/apimachinery/third_party/forked/golang/json"

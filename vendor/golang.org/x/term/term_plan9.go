@@ -5,8 +5,9 @@
 package term
 
 import (
-	"fmt"
 	"runtime"
+
+	"fmt"
 
 	"golang.org/x/sys/plan9"
 )

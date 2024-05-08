@@ -17,9 +17,10 @@ limitations under the License.
 package value
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
+
+	"fmt"
 )
 
 // TODO: This implements the same functionality as https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apimachinery/pkg/runtime/converter.go#L236

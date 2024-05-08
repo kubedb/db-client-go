@@ -7,8 +7,9 @@ package amqp091
 
 import (
 	"bytes"
-	"fmt"
 	"math/big"
+
+	"fmt"
 )
 
 const (

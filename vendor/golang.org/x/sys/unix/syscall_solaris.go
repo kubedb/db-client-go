@@ -13,12 +13,13 @@
 package unix
 
 import (
-	"fmt"
 	"os"
 	"runtime"
 	"sync"
 	"syscall"
 	"unsafe"
+
+	"fmt"
 )
 
 // Implemented in runtime/syscall_solaris.go.

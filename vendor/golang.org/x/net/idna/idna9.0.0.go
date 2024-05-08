@@ -18,9 +18,10 @@
 package idna // import "golang.org/x/net/idna"
 
 import (
-	"fmt"
 	"strings"
 	"unicode/utf8"
+
+	"fmt"
 
 	"golang.org/x/text/secure/bidirule"
 	"golang.org/x/text/unicode/norm"

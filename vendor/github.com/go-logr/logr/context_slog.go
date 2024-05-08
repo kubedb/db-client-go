@@ -21,8 +21,9 @@ package logr
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
+
+	"fmt"
 )
 
 // FromContext returns a Logger from ctx or an error if no Logger is found.

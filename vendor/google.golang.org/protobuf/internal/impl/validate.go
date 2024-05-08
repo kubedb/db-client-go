@@ -5,11 +5,12 @@
 package impl
 
 import (
-	"fmt"
 	"math"
 	"math/bits"
 	"reflect"
 	"unicode/utf8"
+
+	"fmt"
 
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/internal/encoding/messageset"

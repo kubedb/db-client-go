@@ -5,8 +5,9 @@
 package impl
 
 import (
-	"fmt"
 	"reflect"
+
+	"fmt"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"

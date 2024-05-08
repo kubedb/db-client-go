@@ -2,6 +2,7 @@ package ndr
 
 import (
 	"encoding/binary"
+
 	"fmt"
 )
 

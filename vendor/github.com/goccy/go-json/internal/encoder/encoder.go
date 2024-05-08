@@ -5,13 +5,14 @@ import (
 	"encoding"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"math"
 	"reflect"
 	"strconv"
 	"strings"
 	"sync"
 	"unsafe"
+
+	"fmt"
 
 	"github.com/goccy/go-json/internal/errors"
 	"github.com/goccy/go-json/internal/runtime"

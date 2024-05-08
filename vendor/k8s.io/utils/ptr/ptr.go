@@ -17,8 +17,9 @@ limitations under the License.
 package ptr
 
 import (
-	"fmt"
 	"reflect"
+
+	"fmt"
 )
 
 // AllPtrFieldsNil tests whether all pointer fields in a struct are nil.  This is useful when,

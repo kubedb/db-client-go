@@ -7,6 +7,7 @@ package amqp091
 
 import (
 	"bytes"
+
 	"fmt"
 )
 

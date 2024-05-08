@@ -6,9 +6,10 @@ package json
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"sync"
+
+	"fmt"
 )
 
 // SkipFunc may be returned by MarshalFuncV2 and UnmarshalFuncV2 functions.

@@ -7,10 +7,11 @@
 package leveldb
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"sync"
+
+	"fmt"
 
 	"github.com/syndtr/goleveldb/leveldb/errors"
 	"github.com/syndtr/goleveldb/leveldb/journal"

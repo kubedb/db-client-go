@@ -19,7 +19,6 @@ package cache
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"math/rand"
 	"os"
@@ -27,6 +26,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"fmt"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"

@@ -54,7 +54,7 @@ type Msearch func(body io.Reader, o ...func(*MsearchRequest)) (*Response, error)
 // MsearchRequest configures the Msearch API request.
 //
 type MsearchRequest struct {
-	Index        []string
+	Index []string
 
 	Body io.Reader
 

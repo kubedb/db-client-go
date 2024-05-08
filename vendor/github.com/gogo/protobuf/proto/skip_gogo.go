@@ -29,8 +29,9 @@
 package proto
 
 import (
-	"fmt"
 	"io"
+
+	"fmt"
 )
 
 func Skip(data []byte) (n int, err error) {

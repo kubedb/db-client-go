@@ -1,8 +1,9 @@
 package restful
 
 import (
-	"fmt"
 	"regexp"
+
+	"fmt"
 )
 
 var (

@@ -14,9 +14,10 @@
 package procfs
 
 import (
-	"fmt"
 	"os"
 	"strconv"
+
+	"fmt"
 
 	fsi "github.com/prometheus/procfs/internal/fs"
 )

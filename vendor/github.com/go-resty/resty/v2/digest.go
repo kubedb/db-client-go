@@ -12,11 +12,12 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"errors"
-	"fmt"
 	"hash"
 	"io"
 	"net/http"
 	"strings"
+
+	"fmt"
 )
 
 var (

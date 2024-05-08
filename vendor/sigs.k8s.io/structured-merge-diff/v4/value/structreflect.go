@@ -17,8 +17,9 @@ limitations under the License.
 package value
 
 import (
-	"fmt"
 	"reflect"
+
+	"fmt"
 )
 
 type structReflect struct {

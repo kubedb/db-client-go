@@ -18,8 +18,9 @@ package field
 
 import (
 	"bytes"
-	"fmt"
 	"strconv"
+
+	"fmt"
 )
 
 type pathOptions struct {

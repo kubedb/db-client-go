@@ -2,8 +2,9 @@ package jsoniter
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
+
+	"fmt"
 )
 
 // ValueType the type for JSON element

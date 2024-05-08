@@ -6,9 +6,10 @@ package zstd
 
 import (
 	"errors"
-	"fmt"
 	"math/bits"
 	"runtime"
+
+	"fmt"
 )
 
 // DOption is an option for creating a decoder.

@@ -1,9 +1,10 @@
 package lz4
 
 import (
-	"fmt"
 	"reflect"
 	"runtime"
+
+	"fmt"
 
 	"github.com/pierrec/lz4/v4/internal/lz4block"
 	"github.com/pierrec/lz4/v4/internal/lz4errors"

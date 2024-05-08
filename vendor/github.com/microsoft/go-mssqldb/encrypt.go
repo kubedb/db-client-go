@@ -4,9 +4,10 @@ import (
 	"context"
 	"database/sql/driver"
 	"encoding/binary"
-	"fmt"
 	"io"
 	"strings"
+
+	"fmt"
 
 	"github.com/microsoft/go-mssqldb/internal/github.com/swisscom/mssql-always-encrypted/pkg/algorithms"
 	"github.com/microsoft/go-mssqldb/internal/github.com/swisscom/mssql-always-encrypted/pkg/encryption"

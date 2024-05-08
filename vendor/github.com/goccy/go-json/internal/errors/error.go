@@ -1,9 +1,10 @@
 package errors
 
 import (
-	"fmt"
 	"reflect"
 	"strconv"
+
+	"fmt"
 )
 
 type InvalidUTF8Error struct {

@@ -4,10 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"time"
+
+	"fmt"
 )
 
 const (

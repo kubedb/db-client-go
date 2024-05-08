@@ -17,8 +17,9 @@ limitations under the License.
 package conversion
 
 import (
-	"fmt"
 	"reflect"
+
+	"fmt"
 )
 
 // EnforcePtr ensures that obj is a pointer of some sort. Returns a reflect.Value

@@ -17,9 +17,10 @@ limitations under the License.
 package metrics
 
 import (
-	"fmt"
 	"sync"
 	"sync/atomic"
+
+	"fmt"
 
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/client_golang/prometheus"

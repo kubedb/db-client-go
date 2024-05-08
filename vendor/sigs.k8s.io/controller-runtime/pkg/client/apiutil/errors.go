@@ -17,9 +17,10 @@ limitations under the License.
 package apiutil
 
 import (
-	"fmt"
 	"sort"
 	"strings"
+
+	"fmt"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"

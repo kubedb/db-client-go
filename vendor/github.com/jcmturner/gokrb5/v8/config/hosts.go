@@ -1,11 +1,12 @@
 package config
 
 import (
-	"fmt"
 	"math/rand"
 	"net"
 	"strconv"
 	"strings"
+
+	"fmt"
 
 	"github.com/jcmturner/dnsutils/v2"
 )

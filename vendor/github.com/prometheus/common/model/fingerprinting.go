@@ -14,8 +14,9 @@
 package model
 
 import (
-	"fmt"
 	"strconv"
+
+	"fmt"
 )
 
 // Fingerprint provides a hash-capable representation of a Metric.

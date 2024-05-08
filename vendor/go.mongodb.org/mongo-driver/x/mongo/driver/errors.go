@@ -10,8 +10,9 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"strings"
+
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/description"

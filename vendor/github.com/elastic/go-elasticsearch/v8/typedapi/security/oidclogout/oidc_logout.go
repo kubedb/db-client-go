@@ -15,10 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
 // https://github.com/elastic/elasticsearch-specification/tree/4316fc1aa18bb04678b156f23b22c9d3f996f9c9
-
 
 // Invalidates a refresh token and access token that was generated from the
 // OpenID Connect Authenticate API
@@ -28,12 +26,13 @@ import (
 	gobytes "bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"fmt"
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 )

@@ -18,6 +18,7 @@ package meta
 
 import (
 	"errors"
+
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"

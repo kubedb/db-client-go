@@ -7,12 +7,13 @@ package tags
 import (
 	"encoding/gob"
 	"errors"
-	"fmt"
 	"reflect"
 	"strings"
 	"sync"
 	"time"
 	"unicode"
+
+	"fmt"
 
 	"xorm.io/xorm/caches"
 	"xorm.io/xorm/convert"

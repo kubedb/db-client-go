@@ -11,8 +11,9 @@ package primitive // import "go.mongodb.org/mongo-driver/bson/primitive"
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"time"
+
+	"fmt"
 )
 
 // Binary represents a BSON binary value.

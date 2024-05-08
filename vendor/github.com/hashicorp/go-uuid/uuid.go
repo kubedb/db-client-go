@@ -3,8 +3,9 @@ package uuid
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"fmt"
 	"io"
+
+	"fmt"
 )
 
 // GenerateRandomBytes is used to generate random bytes of given size.
@@ -23,7 +24,6 @@ func GenerateRandomBytesWithReader(size int, reader io.Reader) ([]byte, error) {
 	}
 	return buf, nil
 }
-
 
 const uuidLen = 16
 
@@ -58,7 +58,7 @@ func FormatUUID(buf []byte) (string, error) {
 }
 
 func ParseUUID(uuid string) ([]byte, error) {
-	if len(uuid) != 2 * uuidLen + 4 {
+	if len(uuid) != 2*uuidLen+4 {
 		return nil, fmt.Errorf("uuid string is wrong length")
 	}
 

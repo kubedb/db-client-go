@@ -16,6 +16,7 @@ package spec
 
 import (
 	"encoding/json"
+
 	"fmt"
 
 	"github.com/go-openapi/swag"

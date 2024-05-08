@@ -17,14 +17,16 @@ limitations under the License.
 package fuzz
 
 import (
-	"fmt"
 	"math/rand"
 	"reflect"
 	"regexp"
 	"time"
 
-	"github.com/google/gofuzz/bytesource"
+	"fmt"
+
 	"strings"
+
+	"github.com/google/gofuzz/bytesource"
 )
 
 // fuzzFuncMap is a map from a type to a fuzzFunc that handles that type.

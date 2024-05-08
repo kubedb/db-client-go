@@ -9,10 +9,11 @@ package creds
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
+
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
 )

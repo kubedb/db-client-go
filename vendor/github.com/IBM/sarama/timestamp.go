@@ -1,8 +1,9 @@
 package sarama
 
 import (
-	"fmt"
 	"time"
+
+	"fmt"
 )
 
 type Timestamp struct {

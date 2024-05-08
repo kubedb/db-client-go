@@ -2,11 +2,12 @@ package zstd
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"math/bits"
 	"runtime"
 	"strings"
+
+	"fmt"
 )
 
 // EOption is an option for creating a encoder.

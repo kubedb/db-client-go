@@ -1,12 +1,13 @@
 package errors
 
 import (
-	"fmt"
 	"io"
 	"path"
 	"runtime"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 // Frame represents a program counter inside a stack frame.

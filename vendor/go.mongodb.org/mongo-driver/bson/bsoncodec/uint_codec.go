@@ -7,9 +7,10 @@
 package bsoncodec
 
 import (
-	"fmt"
 	"math"
 	"reflect"
+
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson/bsonoptions"
 	"go.mongodb.org/mongo-driver/bson/bsonrw"

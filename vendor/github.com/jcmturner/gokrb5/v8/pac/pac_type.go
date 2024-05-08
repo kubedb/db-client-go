@@ -3,8 +3,9 @@ package pac
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"log"
+
+	"fmt"
 
 	"github.com/jcmturner/gokrb5/v8/crypto"
 	"github.com/jcmturner/gokrb5/v8/iana/keyusage"

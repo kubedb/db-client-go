@@ -8,11 +8,12 @@ package table
 
 import (
 	"encoding/binary"
-	"fmt"
 	"io"
 	"sort"
 	"strings"
 	"sync"
+
+	"fmt"
 
 	"github.com/golang/snappy"
 

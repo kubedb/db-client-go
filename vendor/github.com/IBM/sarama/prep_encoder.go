@@ -3,8 +3,9 @@ package sarama
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"math"
+
+	"fmt"
 
 	"github.com/rcrowley/go-metrics"
 )

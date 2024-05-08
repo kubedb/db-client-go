@@ -14,11 +14,12 @@
 package procfs
 
 import (
-	"fmt"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 var (

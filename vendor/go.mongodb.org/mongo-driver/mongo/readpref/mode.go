@@ -7,8 +7,9 @@
 package readpref
 
 import (
-	"fmt"
 	"strings"
+
+	"fmt"
 )
 
 // Mode indicates the user's preference on reads.

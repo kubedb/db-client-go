@@ -17,8 +17,9 @@ limitations under the License.
 package version
 
 import (
-	"fmt"
 	"runtime"
+
+	"fmt"
 
 	apimachineryversion "k8s.io/apimachinery/pkg/version"
 )

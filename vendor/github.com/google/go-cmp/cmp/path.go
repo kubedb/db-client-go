@@ -5,11 +5,12 @@
 package cmp
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"fmt"
 
 	"github.com/google/go-cmp/cmp/internal/value"
 )

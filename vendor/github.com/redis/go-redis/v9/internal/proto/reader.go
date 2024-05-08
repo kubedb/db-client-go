@@ -3,11 +3,12 @@ package proto
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"io"
 	"math"
 	"math/big"
 	"strconv"
+
+	"fmt"
 
 	"github.com/redis/go-redis/v9/internal/util"
 )

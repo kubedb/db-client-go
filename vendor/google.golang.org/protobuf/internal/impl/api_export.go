@@ -5,9 +5,10 @@
 package impl
 
 import (
-	"fmt"
 	"reflect"
 	"strconv"
+
+	"fmt"
 
 	"google.golang.org/protobuf/encoding/prototext"
 	"google.golang.org/protobuf/internal/errors"

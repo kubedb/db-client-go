@@ -17,8 +17,9 @@ limitations under the License.
 package internal
 
 import (
-	"fmt"
 	"math/rand"
+
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"

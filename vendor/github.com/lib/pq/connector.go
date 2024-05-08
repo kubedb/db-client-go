@@ -4,9 +4,10 @@ import (
 	"context"
 	"database/sql/driver"
 	"errors"
-	"fmt"
 	"os"
 	"strings"
+
+	"fmt"
 )
 
 // Connector represents a fixed configuration for the pq driver with a given

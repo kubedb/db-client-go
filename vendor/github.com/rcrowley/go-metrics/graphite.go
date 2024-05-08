@@ -2,12 +2,13 @@ package metrics
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"net"
 	"strconv"
 	"strings"
 	"time"
+
+	"fmt"
 )
 
 // GraphiteConfig provides a container with configuration parameters for

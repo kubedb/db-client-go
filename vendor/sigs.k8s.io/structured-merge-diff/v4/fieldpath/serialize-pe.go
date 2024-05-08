@@ -18,10 +18,11 @@ package fieldpath
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"strconv"
 	"strings"
+
+	"fmt"
 
 	jsoniter "github.com/json-iterator/go"
 	"sigs.k8s.io/structured-merge-diff/v4/value"

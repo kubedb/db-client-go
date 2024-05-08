@@ -18,9 +18,10 @@ package clientcmd
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
+
+	"fmt"
 
 	"golang.org/x/term"
 

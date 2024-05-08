@@ -7,10 +7,11 @@
 package bsoncore
 
 import (
-	"fmt"
 	"io"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 // NewArrayLengthError creates and returns an error for when the length of an array exceeds the

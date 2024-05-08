@@ -2,12 +2,13 @@ package metrics
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"net"
 	"os"
 	"strings"
 	"time"
+
+	"fmt"
 )
 
 var shortHostName string = ""

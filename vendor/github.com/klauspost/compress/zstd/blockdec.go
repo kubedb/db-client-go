@@ -8,12 +8,13 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"hash/crc32"
 	"io"
 	"os"
 	"path/filepath"
 	"sync"
+
+	"fmt"
 
 	"github.com/klauspost/compress/huff0"
 	"github.com/klauspost/compress/zstd/internal/xxhash"

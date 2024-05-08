@@ -15,9 +15,10 @@ package model
 
 import (
 	"encoding/json"
-	"fmt"
 	"regexp"
 	"time"
+
+	"fmt"
 )
 
 // Matcher describes a matches the value of a given label.

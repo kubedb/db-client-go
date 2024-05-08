@@ -8,9 +8,10 @@
 package impl
 
 import (
-	"fmt"
 	"reflect"
 	"sync"
+
+	"fmt"
 )
 
 const UnsafeEnabled = false

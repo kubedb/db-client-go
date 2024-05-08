@@ -16,11 +16,12 @@ package model
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math"
 	"strconv"
 	"strings"
 	"time"
+
+	"fmt"
 )
 
 const (

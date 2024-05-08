@@ -17,8 +17,9 @@ limitations under the License.
 package meta
 
 import (
-	"fmt"
 	"reflect"
+
+	"fmt"
 
 	"github.com/fatih/structs"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"

@@ -18,8 +18,9 @@ package spec3
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
+
+	"fmt"
 
 	"github.com/go-openapi/swag"
 	"k8s.io/kube-openapi/pkg/internal"

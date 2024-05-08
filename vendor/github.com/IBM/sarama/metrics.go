@@ -1,9 +1,10 @@
 package sarama
 
 import (
-	"fmt"
 	"strings"
 	"sync"
+
+	"fmt"
 
 	"github.com/rcrowley/go-metrics"
 )

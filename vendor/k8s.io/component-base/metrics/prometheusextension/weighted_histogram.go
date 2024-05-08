@@ -17,10 +17,11 @@ limitations under the License.
 package prometheusextension
 
 import (
-	"fmt"
 	"math"
 	"sort"
 	"sync"
+
+	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"

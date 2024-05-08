@@ -7,9 +7,10 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"errors"
-	"fmt"
 	"reflect"
 	"time"
+
+	"fmt"
 
 	"github.com/golang-sql/sqlexp"
 

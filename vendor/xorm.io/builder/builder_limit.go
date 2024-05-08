@@ -5,8 +5,9 @@
 package builder
 
 import (
-	"fmt"
 	"strings"
+
+	"fmt"
 )
 
 func (b *Builder) limitWriteTo(w Writer) error {

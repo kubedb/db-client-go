@@ -55,8 +55,8 @@ type Index func(index string, body io.Reader, o ...func(*IndexRequest)) (*Respon
 // IndexRequest configures the Index API request.
 //
 type IndexRequest struct {
-	Index        string
-	DocumentID   string
+	Index      string
+	DocumentID string
 
 	Body io.Reader
 

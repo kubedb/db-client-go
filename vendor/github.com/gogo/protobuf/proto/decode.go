@@ -37,8 +37,9 @@ package proto
 
 import (
 	"errors"
-	"fmt"
 	"io"
+
+	"fmt"
 )
 
 // errOverflow is returned when an integer is too large to be represented.

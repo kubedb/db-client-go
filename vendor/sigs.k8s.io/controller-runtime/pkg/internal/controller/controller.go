@@ -19,9 +19,10 @@ package controller
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
 	"time"
+
+	"fmt"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/types"

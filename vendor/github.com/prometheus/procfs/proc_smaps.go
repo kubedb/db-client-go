@@ -19,11 +19,12 @@ package procfs
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"fmt"
 
 	"github.com/prometheus/procfs/internal/util"
 )

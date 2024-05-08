@@ -35,10 +35,11 @@
 package proto
 
 import (
-	"fmt"
 	"log"
 	"reflect"
 	"strings"
+
+	"fmt"
 )
 
 // Clone returns a deep copy of a protocol buffer.

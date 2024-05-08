@@ -20,8 +20,9 @@ package cache
 
 import (
 	"container/heap"
-	"fmt"
 	"sync"
+
+	"fmt"
 )
 
 const (

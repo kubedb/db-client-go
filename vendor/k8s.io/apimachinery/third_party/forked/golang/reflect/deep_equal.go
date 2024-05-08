@@ -7,9 +7,10 @@
 package reflect
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
+
+	"fmt"
 )
 
 // Equalities is a map from type to a function comparing two values of

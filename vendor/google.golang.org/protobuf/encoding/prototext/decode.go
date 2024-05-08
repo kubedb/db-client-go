@@ -5,8 +5,9 @@
 package prototext
 
 import (
-	"fmt"
 	"unicode/utf8"
+
+	"fmt"
 
 	"google.golang.org/protobuf/internal/encoding/messageset"
 	"google.golang.org/protobuf/internal/encoding/text"

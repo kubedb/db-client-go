@@ -6,10 +6,11 @@ package http2
 
 import (
 	"bytes"
-	"fmt"
 	"log"
 	"net/http"
 	"net/url"
+
+	"fmt"
 
 	"golang.org/x/net/http/httpguts"
 	"golang.org/x/net/http2/hpack"

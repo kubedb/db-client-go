@@ -2,8 +2,9 @@ package ndr
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
+
+	"fmt"
 )
 
 // Union interface must be implemented by structs that will be unmarshaled into from the NDR byte stream union representation.

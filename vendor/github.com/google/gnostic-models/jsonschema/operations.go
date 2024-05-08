@@ -15,9 +15,10 @@
 package jsonschema
 
 import (
-	"fmt"
 	"log"
 	"strings"
+
+	"fmt"
 )
 
 //

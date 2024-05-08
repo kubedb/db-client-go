@@ -18,10 +18,11 @@ package config
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"os/user"
 	"path/filepath"
+
+	"fmt"
 
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"

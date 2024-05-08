@@ -17,10 +17,11 @@ limitations under the License.
 package strategicpatch
 
 import (
-	"fmt"
 	"reflect"
 	"sort"
 	"strings"
+
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/json"

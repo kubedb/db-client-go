@@ -21,12 +21,13 @@ package esapi
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"fmt"
 )
 
 func newAsyncSearchSubmitFunc(t Transport) AsyncSearchSubmit {

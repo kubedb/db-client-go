@@ -1,8 +1,9 @@
 package jsoniter
 
 import (
-	"fmt"
 	"strconv"
+
+	"fmt"
 )
 
 type stringAny struct {

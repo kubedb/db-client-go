@@ -6,9 +6,10 @@ package restful
 
 import (
 	"bytes"
-	"fmt"
 	"regexp"
 	"strings"
+
+	"fmt"
 )
 
 // PathExpression holds a compiled path expression (RegExp) needed to match against

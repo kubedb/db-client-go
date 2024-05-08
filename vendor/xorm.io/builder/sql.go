@@ -6,10 +6,11 @@ package builder
 
 import (
 	sql2 "database/sql"
-	"fmt"
 	"reflect"
 	"strings"
 	"time"
+
+	"fmt"
 )
 
 func condToSQL(cond Cond) (string, []interface{}, error) {

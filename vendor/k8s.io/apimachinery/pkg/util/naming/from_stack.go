@@ -17,12 +17,13 @@ limitations under the License.
 package naming
 
 import (
-	"fmt"
 	"regexp"
 	goruntime "runtime"
 	"runtime/debug"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 // GetNameFromCallsite walks back through the call stack until we find a caller from outside of the ignoredPackages

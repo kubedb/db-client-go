@@ -18,9 +18,10 @@ package memory
 
 import (
 	"errors"
-	"fmt"
 	"sync"
 	"syscall"
+
+	"fmt"
 
 	openapi_v2 "github.com/google/gnostic-models/openapiv2"
 

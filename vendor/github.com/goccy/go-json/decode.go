@@ -2,10 +2,11 @@ package json
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"reflect"
 	"unsafe"
+
+	"fmt"
 
 	"github.com/goccy/go-json/internal/decoder"
 	"github.com/goccy/go-json/internal/errors"

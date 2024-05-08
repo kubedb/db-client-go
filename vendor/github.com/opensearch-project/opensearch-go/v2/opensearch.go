@@ -28,7 +28,6 @@ package opensearch
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -36,6 +35,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"fmt"
 
 	"github.com/opensearch-project/opensearch-go/v2/signer"
 
@@ -107,8 +108,8 @@ type Config struct {
 // Client represents the OpenSearch client.
 //
 type Client struct {
-	*opensearchapi.API   // Embeds the API methods
-	Transport            opensearchtransport.Interface
+	*opensearchapi.API // Embeds the API methods
+	Transport          opensearchtransport.Interface
 }
 
 type esVersion struct {

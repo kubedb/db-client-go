@@ -17,10 +17,11 @@ limitations under the License.
 package clientcmd
 
 import (
-	"fmt"
 	"net/url"
 	"strconv"
 	"time"
+
+	"fmt"
 )
 
 // ParseTimeout returns a parsed duration from a string

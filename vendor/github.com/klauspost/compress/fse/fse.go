@@ -13,8 +13,9 @@ package fse
 
 import (
 	"errors"
-	"fmt"
 	"math/bits"
+
+	"fmt"
 )
 
 const (

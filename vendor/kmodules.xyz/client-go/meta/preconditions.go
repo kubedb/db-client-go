@@ -17,8 +17,9 @@ limitations under the License.
 package meta
 
 import (
-	"fmt"
 	"strings"
+
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/util/mergepatch"
 	"k8s.io/apimachinery/pkg/util/sets"

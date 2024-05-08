@@ -5,9 +5,10 @@
 package http2
 
 import (
-	"fmt"
 	"math"
 	"sort"
+
+	"fmt"
 )
 
 // RFC 7540, Section 5.3.5: the default weight is 16.

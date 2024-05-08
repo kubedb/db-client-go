@@ -9,9 +9,10 @@ package driver
 import (
 	"bytes"
 	"compress/zlib"
-	"fmt"
 	"io"
 	"sync"
+
+	"fmt"
 
 	"github.com/golang/snappy"
 	"github.com/klauspost/compress/zstd"

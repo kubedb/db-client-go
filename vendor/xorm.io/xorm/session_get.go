@@ -7,11 +7,12 @@ package xorm
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"math/big"
 	"reflect"
 	"strconv"
 	"time"
+
+	"fmt"
 
 	"xorm.io/xorm/caches"
 	"xorm.io/xorm/convert"

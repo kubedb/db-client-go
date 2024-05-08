@@ -1,8 +1,9 @@
 package yaml
 
 import (
-	"fmt"
 	"io"
+
+	"fmt"
 )
 
 // The version directive data.

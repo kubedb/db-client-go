@@ -19,9 +19,10 @@ package client
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
+
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

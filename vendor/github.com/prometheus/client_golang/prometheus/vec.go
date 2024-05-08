@@ -14,8 +14,9 @@
 package prometheus
 
 import (
-	"fmt"
 	"sync"
+
+	"fmt"
 
 	"github.com/prometheus/common/model"
 )

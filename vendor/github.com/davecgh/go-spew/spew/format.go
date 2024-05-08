@@ -18,10 +18,11 @@ package spew
 
 import (
 	"bytes"
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 // supportedFlags is a list of all the character flags supported by fmt package.

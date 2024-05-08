@@ -32,9 +32,10 @@
 package cmp
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
+
+	"fmt"
 
 	"github.com/google/go-cmp/cmp/internal/diff"
 	"github.com/google/go-cmp/cmp/internal/function"

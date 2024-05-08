@@ -14,8 +14,9 @@
 package model
 
 import (
-	"fmt"
 	"time"
+
+	"fmt"
 )
 
 type AlertStatus string

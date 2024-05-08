@@ -17,8 +17,9 @@ limitations under the License.
 package version
 
 import (
-	"fmt"
 	"sync/atomic"
+
+	"fmt"
 
 	utilversion "k8s.io/apimachinery/pkg/util/version"
 )

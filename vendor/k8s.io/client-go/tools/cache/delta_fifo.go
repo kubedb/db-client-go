@@ -18,9 +18,10 @@ package cache
 
 import (
 	"errors"
-	"fmt"
 	"sync"
 	"time"
+
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 

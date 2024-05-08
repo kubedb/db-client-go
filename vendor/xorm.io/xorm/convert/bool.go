@@ -6,8 +6,9 @@ package convert
 
 import (
 	"database/sql"
-	"fmt"
 	"strconv"
+
+	"fmt"
 )
 
 // AsBool convert interface as bool

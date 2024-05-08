@@ -3,8 +3,9 @@ package internal
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
+
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"

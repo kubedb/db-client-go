@@ -1,8 +1,9 @@
 package multierror
 
 import (
-	"fmt"
 	"strings"
+
+	"fmt"
 )
 
 // ErrorFormatFunc is a function callback that is called by Error to

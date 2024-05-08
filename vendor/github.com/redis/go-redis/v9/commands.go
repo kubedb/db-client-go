@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding"
 	"errors"
-	"fmt"
 	"io"
 	"net"
 	"reflect"
 	"runtime"
 	"strings"
 	"time"
+
+	"fmt"
 
 	"github.com/redis/go-redis/v9/internal"
 )

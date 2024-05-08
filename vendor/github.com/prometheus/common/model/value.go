@@ -15,10 +15,11 @@ package model
 
 import (
 	"encoding/json"
-	"fmt"
 	"sort"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 var (

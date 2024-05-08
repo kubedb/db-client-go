@@ -5,10 +5,11 @@
 package value
 
 import (
-	"fmt"
 	"math"
 	"reflect"
 	"sort"
+
+	"fmt"
 )
 
 // SortKeys sorts a list of map keys, deduplicating keys if necessary.

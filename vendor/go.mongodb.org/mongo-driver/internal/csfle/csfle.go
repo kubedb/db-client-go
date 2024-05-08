@@ -8,6 +8,7 @@ package csfle
 
 import (
 	"errors"
+
 	"fmt"
 
 	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"

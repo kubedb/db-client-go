@@ -6,8 +6,9 @@ package builder
 
 import (
 	"bytes"
-	"fmt"
 	"sort"
+
+	"fmt"
 )
 
 // Insert creates an insert Builder

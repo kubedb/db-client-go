@@ -2,12 +2,14 @@ package jsoniter
 
 import (
 	"errors"
-	"fmt"
-	"github.com/modern-go/reflect2"
 	"io"
 	"reflect"
 	"strconv"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
+
+	"fmt"
 )
 
 // Any generic object representation.

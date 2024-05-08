@@ -8,10 +8,11 @@ import (
 	"database/sql"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"reflect"
 	"strings"
 	"time"
+
+	"fmt"
 )
 
 const (

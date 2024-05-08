@@ -17,8 +17,9 @@ limitations under the License.
 package mergepatch
 
 import (
-	"fmt"
 	"reflect"
+
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/util/dump"
 	"sigs.k8s.io/yaml"

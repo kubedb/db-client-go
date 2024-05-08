@@ -5,6 +5,7 @@ package zstd
 
 import (
 	"errors"
+
 	"fmt"
 )
 

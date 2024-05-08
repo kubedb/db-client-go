@@ -5,9 +5,10 @@
 package cmp
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
+
+	"fmt"
 
 	"github.com/google/go-cmp/cmp/internal/flags"
 	"github.com/google/go-cmp/cmp/internal/value"

@@ -5,8 +5,9 @@ package mssql
 
 import (
 	"encoding/binary"
-	"fmt"
 	"unicode/utf16"
+
+	"fmt"
 )
 
 func ucs22str(s []byte) (string, error) {

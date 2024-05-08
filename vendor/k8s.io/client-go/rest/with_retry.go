@@ -18,11 +18,12 @@ package rest
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"time"
+
+	"fmt"
 
 	"k8s.io/klog/v2"
 )

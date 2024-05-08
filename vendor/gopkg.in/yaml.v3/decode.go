@@ -18,12 +18,13 @@ package yaml
 import (
 	"encoding"
 	"encoding/base64"
-	"fmt"
 	"io"
 	"math"
 	"reflect"
 	"strconv"
 	"time"
+
+	"fmt"
 )
 
 // ----------------------------------------------------------------------------

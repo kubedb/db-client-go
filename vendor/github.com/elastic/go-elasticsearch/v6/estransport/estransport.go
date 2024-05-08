@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"crypto/x509"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -20,6 +19,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"fmt"
 
 	"github.com/elastic/go-elasticsearch/v6/internal/version"
 )

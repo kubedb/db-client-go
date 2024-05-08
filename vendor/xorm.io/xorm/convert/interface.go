@@ -6,8 +6,9 @@ package convert
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
+
+	"fmt"
 )
 
 // Interface2Interface converts interface of pointer as interface of value

@@ -17,8 +17,9 @@ limitations under the License.
 package v1
 
 import (
-	"fmt"
 	"strings"
+
+	"fmt"
 )
 
 var ErrInvalidClusterManager = fmt.Errorf("not a valid ClusterManager, try [%s]", strings.Join(_ClusterManagerNames, ", "))

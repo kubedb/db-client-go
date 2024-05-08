@@ -11,8 +11,9 @@ package mysql
 import (
 	"database/sql"
 	"database/sql/driver"
-	"fmt"
 	"time"
+
+	"fmt"
 )
 
 // NullTime represents a time.Time that may be NULL.

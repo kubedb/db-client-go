@@ -2,8 +2,9 @@ package lz4
 
 import (
 	"errors"
-	"fmt"
 	"io"
+
+	"fmt"
 
 	"github.com/pierrec/lz4/v4/internal/lz4errors"
 )

@@ -19,13 +19,14 @@ package spew
 import (
 	"bytes"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"os"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 var (

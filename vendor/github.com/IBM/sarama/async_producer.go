@@ -3,10 +3,11 @@ package sarama
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"math"
 	"sync"
 	"time"
+
+	"fmt"
 
 	"github.com/eapache/go-resiliency/breaker"
 	"github.com/eapache/queue"

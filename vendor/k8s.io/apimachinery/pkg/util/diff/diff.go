@@ -18,10 +18,11 @@ package diff
 
 import (
 	"bytes"
-	"fmt"
 	"reflect"
 	"strings"
 	"text/tabwriter"
+
+	"fmt"
 
 	"github.com/google/go-cmp/cmp"
 	"k8s.io/apimachinery/pkg/util/dump"

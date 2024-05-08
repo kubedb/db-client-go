@@ -7,12 +7,13 @@ package restful
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"runtime"
 	"strings"
 	"sync"
+
+	"fmt"
 
 	"github.com/emicklei/go-restful/v3/log"
 )

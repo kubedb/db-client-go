@@ -15,12 +15,13 @@ package expfmt
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"math"
 	"strconv"
 	"strings"
 	"sync"
+
+	"fmt"
 
 	"github.com/prometheus/common/model"
 

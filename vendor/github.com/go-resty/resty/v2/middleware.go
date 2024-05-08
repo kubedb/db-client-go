@@ -7,7 +7,6 @@ package resty
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -18,6 +17,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"fmt"
 )
 
 const debugRequestLogKey = "__restyDebugRequestLog"

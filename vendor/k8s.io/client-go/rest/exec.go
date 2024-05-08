@@ -17,9 +17,10 @@ limitations under the License.
 package rest
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
+
+	"fmt"
 
 	clientauthenticationapi "k8s.io/client-go/pkg/apis/clientauthentication"
 )

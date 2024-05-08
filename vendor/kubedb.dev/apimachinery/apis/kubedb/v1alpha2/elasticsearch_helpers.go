@@ -19,9 +19,10 @@ package v1alpha2
 
 import (
 	"errors"
-	"fmt"
 	"path/filepath"
 	"strings"
+
+	"fmt"
 
 	"kubedb.dev/apimachinery/apis"
 	catalog "kubedb.dev/apimachinery/apis/catalog/v1alpha1"

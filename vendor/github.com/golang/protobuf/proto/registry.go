@@ -7,11 +7,12 @@ package proto
 import (
 	"bytes"
 	"compress/gzip"
-	"fmt"
 	"io/ioutil"
 	"reflect"
 	"strings"
 	"sync"
+
+	"fmt"
 
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"

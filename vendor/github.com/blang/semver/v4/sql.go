@@ -2,6 +2,7 @@ package semver
 
 import (
 	"database/sql/driver"
+
 	"fmt"
 )
 

@@ -18,11 +18,12 @@ package net
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"math/big"
 	"net"
 	"strconv"
+
+	"fmt"
 )
 
 // ParseCIDRs parses a list of cidrs and return error if any is invalid.

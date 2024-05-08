@@ -43,7 +43,6 @@ import (
 	"bytes"
 	"encoding"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"math"
@@ -52,6 +51,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"fmt"
 )
 
 var (

@@ -7,10 +7,11 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 	"unicode/utf16"
+
+	"fmt"
 
 	"github.com/microsoft/go-mssqldb/integratedauth"
 	"github.com/microsoft/go-mssqldb/msdsn"

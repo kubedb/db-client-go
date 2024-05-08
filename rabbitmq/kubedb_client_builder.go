@@ -19,6 +19,7 @@ package rabbitmq
 import (
 	"context"
 	"errors"
+
 	"fmt"
 
 	amqp "github.com/rabbitmq/amqp091-go"

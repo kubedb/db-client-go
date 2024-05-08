@@ -18,6 +18,7 @@ package managedfields
 
 import (
 	"bytes"
+
 	"fmt"
 
 	"sigs.k8s.io/structured-merge-diff/v4/fieldpath"

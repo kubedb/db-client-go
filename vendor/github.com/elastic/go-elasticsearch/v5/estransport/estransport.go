@@ -2,7 +2,6 @@ package estransport
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -10,6 +9,8 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"fmt"
 
 	"github.com/elastic/go-elasticsearch/v5/internal/version"
 )

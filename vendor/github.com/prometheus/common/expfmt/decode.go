@@ -14,11 +14,12 @@
 package expfmt
 
 import (
-	"fmt"
 	"io"
 	"math"
 	"mime"
 	"net/http"
+
+	"fmt"
 
 	dto "github.com/prometheus/client_model/go"
 

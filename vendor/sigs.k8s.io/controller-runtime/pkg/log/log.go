@@ -36,11 +36,12 @@ package log
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"os"
 	"runtime/debug"
 	"sync/atomic"
 	"time"
+
+	"fmt"
 
 	"github.com/go-logr/logr"
 )

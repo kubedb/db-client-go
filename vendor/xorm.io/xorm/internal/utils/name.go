@@ -5,8 +5,9 @@
 package utils
 
 import (
-	"fmt"
 	"strings"
+
+	"fmt"
 )
 
 // IndexName returns index name

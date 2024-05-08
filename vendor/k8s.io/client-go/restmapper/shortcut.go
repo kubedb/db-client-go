@@ -17,8 +17,9 @@ limitations under the License.
 package restmapper
 
 import (
-	"fmt"
 	"strings"
+
+	"fmt"
 
 	"k8s.io/klog/v2"
 

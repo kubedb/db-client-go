@@ -17,8 +17,9 @@ limitations under the License.
 package meta
 
 import (
-	"fmt"
 	"strings"
+
+	"fmt"
 
 	jsonpatch "github.com/evanphx/json-patch"
 	jsoniter "github.com/json-iterator/go"

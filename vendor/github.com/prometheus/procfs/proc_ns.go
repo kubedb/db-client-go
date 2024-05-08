@@ -14,10 +14,11 @@
 package procfs
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
+
+	"fmt"
 )
 
 // Namespace represents a single namespace of a process.
