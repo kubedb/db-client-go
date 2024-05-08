@@ -2,6 +2,7 @@ package solr
 
 import (
 	"context"
+	"errors"
 	"net"
 	"net/http"
 	"time"
@@ -53,8 +54,17 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 }
 
 func (o *KubeDBClientBuilder) GetSolrClient() (SLClient, error) {
+	if o.podName != "" {
+		o.url = o.GetHostPath(o.db)
+	}
+	if o.url == "" {
+		o.url = o.GetHostPath(o.db)
+	}
+	if o.db == nil {
+		return SLClient{}, errors.New("db is empty")
+	}
 	config := Config{
-		host: getHostPath(o.db),
+		host: o.url,
 		transport: &http.Transport{
 			IdleConnTimeout: time.Second * 20,
 			DialContext: (&net.Dialer{
@@ -92,6 +102,6 @@ func (o *KubeDBClientBuilder) GetSolrClient() (SLClient, error) {
 
 }
 
-func getHostPath(db *api.Solr) string {
+func (o *KubeDBClientBuilder) GetHostPath(db *api.Solr) string {
 	return fmt.Sprintf("%v://%s.%s.svc.cluster.local:%d", db.GetConnectionScheme(), db.ServiceName(), db.GetNamespace(), api.SolrRestPort)
 }
