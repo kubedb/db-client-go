@@ -18,6 +18,7 @@ package pgbouncer
 
 import (
 	"database/sql"
+	"sync"
 
 	"xorm.io/xorm"
 )
@@ -28,4 +29,10 @@ type Client struct {
 
 type XormClient struct {
 	*xorm.Engine
+}
+
+type XormClientList struct {
+	List    []*XormClient
+	Mutex   sync.Mutex
+	message string
 }
