@@ -581,6 +581,8 @@ const (
 	PgpoolExporterTlsVolumeName        = "exporter-certs"
 	PgpoolExporterTlsVolumeMountPath   = "/tls/certs"
 	PgpoolRootUser                     = "postgres"
+	PgpoolPrimaryServicePortName       = "primary"
+	PgpoolDatabasePortName             = "db"
 	// ========================================== ZooKeeper Constants =================================================//
 
 	KubeDBZooKeeperRoleName         = "kubedb:zookeeper-version-reader"
@@ -1200,6 +1202,23 @@ const (
 	FerretDBTLSPort     = 27018
 
 	FerretDBMetricsPath = "/debug/metrics"
+)
+
+// =========================== ClickHouse Constants ============================
+
+const (
+	ClickHouseKeeperPort  = 9181
+	ClickHouseDefaultHTTP = 8123
+	ClickHouseDefaultTLS  = 8443
+	ClickHouseNativeTCP   = 9000
+	ClickHouseNativeTLS   = 9440
+	ClickhousePromethues  = 9363
+
+	ClickHouseVolumeData = "data"
+	ClickHouseDataDir    = "/var/lib/clickhouse"
+
+	ClickHouseContainerName     = "clickhouse"
+	ClickHouseInitContainerName = "clickhouse-init"
 )
 
 // Resource kind related constants
