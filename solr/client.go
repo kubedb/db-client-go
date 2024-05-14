@@ -56,3 +56,14 @@ type QueryParams struct {
 	Query string `json:"query,omitempty" yaml:"query,omitempty"`
 	Limit int    `json:"limit,omitempty" yaml:"limit,omitempty"`
 }
+
+type BackupParams struct {
+	Location   string `json:"location,omitempty" yaml:"location,omitempty"`
+	Repository string `json:"repository,omitempty" yaml:"repository,omitempty"`
+}
+
+type RestoreParams struct {
+	Location   string `json:"location,omitempty" yaml:"location,omitempty"`
+	Repository string `json:"repository,omitempty" yaml:"repository,omitempty"`
+	Collection string `json:"collection,omitempty" yaml:"collection,omitempty"`
+}

@@ -121,20 +121,42 @@ func (sc *SLClient) ReadCollection() (*Response, error) {
 	return writeResponse, nil
 }
 
-func (sc *SLClient) BackupRestoreCollection(ctx context.Context, action string, collection string, backupName string, location string, repository string) (*Response, error) {
+func (sc *SLClient) BackupCollection(ctx context.Context, collection string, backupName string, location string, repository string) (*Response, error) {
 	sc.Config.log.V(5).Info(fmt.Sprintf("BACKUP COLLECTION: %s", collection))
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
-	params := map[string]string{
-		"action":     action,
-		"collection": collection,
-		"name":       backupName,
-		"location":   location,
-		"repository": repository,
+	backupParams := &BackupParams{
+		Location:   location,
+		Repository: repository,
 	}
-	req.SetQueryParams(params)
-	res, err := req.Get("/solr/admin/collections")
+	req.SetBody(backupParams)
+
+	res, err := req.Get(fmt.Sprintf("/api/collections/%s/backups/%s/versions", collection, backupName))
 	if err != nil {
 		sc.log.Error(err, "Failed to send http request to backup a collection")
+		return nil, err
+	}
+
+	backupResponse := &Response{
+		Code:   res.StatusCode(),
+		header: res.Header(),
+		body:   res.RawBody(),
+	}
+	return backupResponse, nil
+}
+
+func (sc *SLClient) RestoreCollection(ctx context.Context, collection string, backupName string, location string, repository string) (*Response, error) {
+	sc.Config.log.V(5).Info(fmt.Sprintf("RESTORE COLLECTION: %s", collection))
+	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
+	restoreParams := &RestoreParams{
+		Location:   location,
+		Repository: repository,
+		Collection: collection,
+	}
+	req.SetBody(restoreParams)
+
+	res, err := req.Get(fmt.Sprintf("/api/backups/%s/restore", backupName))
+	if err != nil {
+		sc.log.Error(err, "Failed to send http request to restore a collection")
 		return nil, err
 	}
 
