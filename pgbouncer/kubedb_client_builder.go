@@ -70,8 +70,11 @@ func (o *KubeDBClientBuilder) WithAuth(auth *Auth) *KubeDBClientBuilder {
 	if auth != nil && auth.userName != "" && auth.password != "" {
 		o.auth = auth
 	}
-
 	return o
+}
+
+func GenerateAuth(userName, password string) *Auth {
+	return &Auth{userName: userName, password: password}
 }
 
 func (o *KubeDBClientBuilder) WithPod(podName string) *KubeDBClientBuilder {
