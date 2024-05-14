@@ -66,14 +66,14 @@ func (o *KubeDBClientBuilder) GetSolrClient() (SLClient, error) {
 	config := Config{
 		host: o.url,
 		transport: &http.Transport{
-			IdleConnTimeout: time.Second * 120,
+			IdleConnTimeout: time.Second * 300,
 			DialContext: (&net.Dialer{
-				Timeout:   time.Second * 120,
-				KeepAlive: time.Second * 120,
+				Timeout:   time.Second * 300,
+				KeepAlive: time.Second * 300,
 			}).DialContext,
-			TLSHandshakeTimeout:   100 * time.Second,
-			ResponseHeaderTimeout: 100 * time.Second,
-			ExpectContinueTimeout: 100 * time.Second,
+			TLSHandshakeTimeout:   300 * time.Second,
+			ResponseHeaderTimeout: 300 * time.Second,
+			ExpectContinueTimeout: 300 * time.Second,
 		},
 		connectionScheme: o.db.GetConnectionScheme(),
 		log:              o.log,
