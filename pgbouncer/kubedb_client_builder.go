@@ -38,7 +38,7 @@ const (
 	TLSModeDisable       = "disable"
 )
 
-type auth struct {
+type Auth struct {
 	userName string
 	password string
 }
@@ -51,7 +51,7 @@ type KubeDBClientBuilder struct {
 	backendDBName string
 	ctx           context.Context
 	databaseRef   *api.Database
-	auth
+	auth          *Auth
 }
 
 func NewKubeDBClientBuilder(kc client.Client, pb *api.PgBouncer) *KubeDBClientBuilder {
@@ -66,10 +66,9 @@ func (o *KubeDBClientBuilder) WithURL(url string) *KubeDBClientBuilder {
 	return o
 }
 
-func (o *KubeDBClientBuilder) WithAuth(userName, password string) *KubeDBClientBuilder {
-	if userName != "" && password != "" {
-		o.userName = userName
-		o.password = password
+func (o *KubeDBClientBuilder) WithAuth(auth *Auth) *KubeDBClientBuilder {
+	if auth != nil && auth.userName != "" && auth.password != "" {
+		o.auth = auth
 	}
 
 	return o
@@ -129,8 +128,8 @@ func (o *KubeDBClientBuilder) getURL() string {
 }
 
 func (o *KubeDBClientBuilder) getBackendAuth() (string, string, error) {
-	if o.userName != "" && o.password != "" {
-		return o.userName, o.password, nil
+	if o.auth != nil {
+		return o.auth.userName, o.auth.password, nil
 	}
 
 	db := o.databaseRef
@@ -191,7 +190,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	return connector, nil
 }
 
-func GetXormClientList(kc client.Client, pb *api.PgBouncer, ctx context.Context, userName string, password string) (*XormClientList, error) {
+func GetXormClientList(kc client.Client, pb *api.PgBouncer, ctx context.Context, auth *Auth) (*XormClientList, error) {
 	clientlist := &XormClientList{
 		List: []*XormClient{},
 	}
@@ -205,7 +204,7 @@ func GetXormClientList(kc client.Client, pb *api.PgBouncer, ctx context.Context,
 	if &pb.Spec.Database != nil {
 		postgresRef := pb.Spec.Database
 		for _, pod := range podList.Items {
-			go clientlist.addXormClient(kc, pb, ctx, pod.Name, &postgresRef, ch, len(podList.Items), userName, password)
+			go clientlist.addXormClient(kc, pb, ctx, pod.Name, &postgresRef, ch, len(podList.Items), auth)
 		}
 	}
 	message := <-ch
@@ -215,8 +214,8 @@ func GetXormClientList(kc client.Client, pb *api.PgBouncer, ctx context.Context,
 	return nil, fmt.Errorf(message)
 }
 
-func (l *XormClientList) addXormClient(kc client.Client, pb *api.PgBouncer, ctx context.Context, podName string, postgresRef *api.Database, c chan string, pgReplica int, userName string, password string) {
-	xormClient, err := NewKubeDBClientBuilder(kc, pb).WithContext(ctx).WithDatabaseRef(postgresRef).WithPod(podName).WithAuth(userName, password).GetPgBouncerXormClient()
+func (l *XormClientList) addXormClient(kc client.Client, pb *api.PgBouncer, ctx context.Context, podName string, postgresRef *api.Database, c chan string, pgReplica int, auth *Auth) {
+	xormClient, err := NewKubeDBClientBuilder(kc, pb).WithContext(ctx).WithDatabaseRef(postgresRef).WithPod(podName).WithAuth(auth).GetPgBouncerXormClient()
 	l.Mutex.Lock()
 	defer l.Mutex.Unlock()
 	if err != nil {
