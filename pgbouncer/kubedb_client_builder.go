@@ -125,14 +125,6 @@ func (o *KubeDBClientBuilder) GetPgBouncerXormClient() (*XormClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, err = engine.Query("SELECT 1")
-	if err != nil {
-		err2 := engine.Close()
-		if err2 != nil {
-			return nil, err2
-		}
-		return nil, err
-	}
 
 	engine.SetDefaultContext(o.ctx)
 	return &XormClient{
