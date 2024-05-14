@@ -104,7 +104,7 @@ func (sc *SLClient) GetCollectionList(responseBody map[string]interface{}) ([]st
 
 func (sc *SLClient) SearchCollection(collections []string) bool {
 	for _, collection := range collections {
-		if collection == "kubedb-collection" {
+		if collection == "kubedb-system" {
 			return true
 		}
 	}

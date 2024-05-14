@@ -23,7 +23,7 @@ func (sc *SLClient) GetClusterStatus() (*Response, error) {
 }
 
 func (sc *SLClient) ListCollection() (*Response, error) {
-	sc.Config.log.V(5).Info("SEARCHING COLLECTION: kubedb-collection")
+	sc.Config.log.V(5).Info("SEARCHING COLLECTION: kubedb-system")
 	req := sc.Client.R().SetDoNotParseResponse(true)
 	res, err := req.Get("/api/collections")
 	if err != nil {
@@ -39,7 +39,7 @@ func (sc *SLClient) ListCollection() (*Response, error) {
 }
 
 func (sc *SLClient) CreateCollection() (*Response, error) {
-	sc.Config.log.V(5).Info("CREATING COLLECTION: kubedb-collection")
+	sc.Config.log.V(5).Info("CREATING COLLECTION: kubedb-system")
 	req := sc.Client.R().SetDoNotParseResponse(true)
 	req.SetHeader("Content-Type", "application/json")
 	createParams := &CreateParams{
