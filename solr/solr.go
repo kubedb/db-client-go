@@ -81,7 +81,7 @@ func (sc *SLClient) WriteCollection() (*Response, error) {
 		Add: data1,
 	}
 	req.SetBody(add)
-	res, err := req.Post("/solr/kubedb-collection/update")
+	res, err := req.Post("/solr/kubedb-system/update")
 	if err != nil {
 		sc.log.Error(err, "Failed to send http request to add document in collect")
 		return nil, err
@@ -104,7 +104,7 @@ func (sc *SLClient) ReadCollection() (*Response, error) {
 		Limit: 10,
 	}
 	req.SetBody(queryParams)
-	res, err := req.Get("/solr/kubedb-collection/select")
+	res, err := req.Get("/solr/kubedb-system/select")
 	if err != nil {
 		sc.log.Error(err, "Failed to send http request to read a collection")
 		return nil, err
@@ -121,6 +121,7 @@ func (sc *SLClient) ReadCollection() (*Response, error) {
 func (sc *SLClient) BackupCollection(ctx context.Context, collection string, backupName string, location string, repository string) (*Response, error) {
 	sc.Config.log.V(5).Info(fmt.Sprintf("BACKUP COLLECTION: %s", collection))
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
+	req.SetHeader("Content-Type", "application/json")
 	backupParams := &BackupParams{
 		Location:   location,
 		Repository: repository,
@@ -144,6 +145,7 @@ func (sc *SLClient) BackupCollection(ctx context.Context, collection string, bac
 func (sc *SLClient) RestoreCollection(ctx context.Context, collection string, backupName string, location string, repository string) (*Response, error) {
 	sc.Config.log.V(5).Info(fmt.Sprintf("RESTORE COLLECTION: %s", collection))
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
+	req.SetHeader("Content-Type", "application/json")
 	restoreParams := &RestoreParams{
 		Location:   location,
 		Repository: repository,
