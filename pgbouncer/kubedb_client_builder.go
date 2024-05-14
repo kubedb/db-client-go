@@ -92,7 +92,7 @@ func (o *KubeDBClientBuilder) WithDBName(dbName string) *KubeDBClientBuilder {
 	if dbName == "" {
 		o.backendDBName = o.databaseRef.DatabaseName
 	} else {
-		o.backendDBType = dbName
+		o.backendDBName = dbName
 	}
 	return o
 }
