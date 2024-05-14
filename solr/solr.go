@@ -8,8 +8,7 @@ import (
 func (sc *SLClient) GetClusterStatus() (*Response, error) {
 	sc.Config.log.V(5).Info("GETTING CLUSTER STATUS")
 	req := sc.Client.R().SetDoNotParseResponse(true)
-	req.SetQueryParam("action", "CLUSTERSTATUS")
-	res, err := req.Get("/solr/admin/collections")
+	res, err := req.Get("/api/cluster")
 	if err != nil {
 		sc.log.Error(err, "Failed to send http request")
 		return nil, err
@@ -26,8 +25,7 @@ func (sc *SLClient) GetClusterStatus() (*Response, error) {
 func (sc *SLClient) ListCollection() (*Response, error) {
 	sc.Config.log.V(5).Info("SEARCHING COLLECTION: kubedb-collection")
 	req := sc.Client.R().SetDoNotParseResponse(true)
-	req.SetQueryParam("action", "LIST")
-	res, err := req.Get("/solr/admin/collections")
+	res, err := req.Get("/api/collections")
 	if err != nil {
 		sc.log.Error(err, "Failed to send http request while getting colection list")
 		return nil, err
@@ -43,15 +41,15 @@ func (sc *SLClient) ListCollection() (*Response, error) {
 func (sc *SLClient) CreateCollection() (*Response, error) {
 	sc.Config.log.V(5).Info("CREATING COLLECTION: kubedb-collection")
 	req := sc.Client.R().SetDoNotParseResponse(true)
-	params := map[string]string{
-		"action":            "CREATE",
-		"name":              "kubedb-collection",
-		"numShards":         "1",
-		"replicationFactor": "1",
+	req.SetHeader("Content-Type", "application/json")
+	createParams := &CreateParams{
+		Name:              "kubedb-system",
+		NumShards:         1,
+		ReplicationFactor: 1,
 	}
 
-	req.SetQueryParams(params)
-	res, err := req.Post("/solr/admin/collections")
+	req.SetBody(createParams)
+	res, err := req.Post("/api/collections")
 	if err != nil {
 		sc.log.Error(err, "Failed to send http request to create a collection")
 		return nil, err
@@ -68,7 +66,7 @@ func (sc *SLClient) CreateCollection() (*Response, error) {
 type ADDList []ADD
 
 func (sc *SLClient) WriteCollection() (*Response, error) {
-	sc.Config.log.V(5).Info("WRITING COLLECTION: kubedb-collection")
+	sc.Config.log.V(5).Info("WRITING COLLECTION: kubedb-system")
 	req := sc.Client.R().SetDoNotParseResponse(true)
 	req.SetHeader("Content-Type", "application/json")
 	data1 := &Data{
@@ -98,15 +96,14 @@ func (sc *SLClient) WriteCollection() (*Response, error) {
 }
 
 func (sc *SLClient) ReadCollection() (*Response, error) {
-	sc.Config.log.V(5).Info("READING COLLECTION: kubedb-collection")
+	sc.Config.log.V(5).Info("READING COLLECTION: kubedb-system")
 	req := sc.Client.R().SetDoNotParseResponse(true)
-	//req.SetHeader("Content-Type", "application/json")
-	//queryParams := QueryParams{
-	//	Query: "*:*",
-	//	Limit: 10,
-	//}
-	//req.SetBody(queryParams)
-	req.SetQueryParam("q", "*:*")
+	req.SetHeader("Content-Type", "application/json")
+	queryParams := QueryParams{
+		Query: "*:*",
+		Limit: 10,
+	}
+	req.SetBody(queryParams)
 	res, err := req.Get("/solr/kubedb-collection/select")
 	if err != nil {
 		sc.log.Error(err, "Failed to send http request to read a collection")

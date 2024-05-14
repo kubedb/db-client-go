@@ -67,3 +67,10 @@ type RestoreParams struct {
 	Repository string `json:"repository,omitempty" yaml:"repository,omitempty"`
 	Collection string `json:"collection,omitempty" yaml:"collection,omitempty"`
 }
+
+type CreateParams struct {
+	Name              string `json:"name,omitempty" yaml:"name,omitempty"`
+	Config            string `json:"config,omitempty" yaml:"config,omitempty"`
+	NumShards         int    `json:"numShards,omitempty" yaml:"numShards,omitempty"`
+	ReplicationFactor int    `json:"replicationFactor,omitempty" yaml:"replicationFactor,omitempty"`
+}
