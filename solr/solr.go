@@ -123,7 +123,7 @@ func (sc *SLClient) ReadCollection() (*Response, error) {
 
 func (sc *SLClient) BackupRestoreCollection(ctx context.Context, action string, collection string, backupName string, location string, repository string) (*Response, error) {
 	sc.Config.log.V(5).Info(fmt.Sprintf("BACKUP COLLECTION: %s", collection))
-	req := sc.Client.R().SetContext(ctx)
+	req := sc.Client.R()
 	params := map[string]string{
 		"action":     action,
 		"collection": collection,
