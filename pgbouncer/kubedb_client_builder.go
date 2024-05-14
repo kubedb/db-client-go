@@ -243,9 +243,8 @@ func (l *XormClientList) addXormClient(kc client.Client, pb *api.PgBouncer, ctx 
 		} else {
 			l.message = fmt.Sprintf("%s pgbouncer %s/%s to make pool with database %s", l.message, pb.Namespace, pb.Name, postgresRef.DatabaseName)
 		}
-	} else {
-		l.List = append(l.List, xormClient)
 	}
+	l.List = append(l.List, xormClient)
 	if (pgReplica) <= len(l.List) {
 		c <- l.message
 	}
