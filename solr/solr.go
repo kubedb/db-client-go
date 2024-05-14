@@ -1,6 +1,7 @@
 package solr
 
 import (
+	"context"
 	"fmt"
 )
 
@@ -120,9 +121,9 @@ func (sc *SLClient) ReadCollection() (*Response, error) {
 	return writeResponse, nil
 }
 
-func (sc *SLClient) BackupRestoreCollection(action string, collection string, backupName string, location string, repository string) (*Response, error) {
+func (sc *SLClient) BackupRestoreCollection(ctx context.Context, action string, collection string, backupName string, location string, repository string) (*Response, error) {
 	sc.Config.log.V(5).Info(fmt.Sprintf("BACKUP COLLECTION: %s", collection))
-	req := sc.Client.R().SetDoNotParseResponse(true)
+	req := sc.Client.R().SetContext(ctx)
 	params := map[string]string{
 		"action":     action,
 		"collection": collection,
