@@ -234,4 +234,5 @@ func (l *XormClientList) addXormClient(kc client.Client, pb *api.PgBouncer, ctx 
 	} else {
 		l.List = append(l.List, xormClient)
 	}
+	l.WG.Done()
 }
