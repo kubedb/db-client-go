@@ -39,8 +39,8 @@ const (
 )
 
 type Auth struct {
-	userName string
-	password string
+	UserName string
+	Password string
 }
 
 type KubeDBClientBuilder struct {
@@ -68,14 +68,10 @@ func (o *KubeDBClientBuilder) WithURL(url string) *KubeDBClientBuilder {
 }
 
 func (o *KubeDBClientBuilder) WithAuth(auth *Auth) *KubeDBClientBuilder {
-	if auth != nil && auth.userName != "" && auth.password != "" {
+	if auth != nil && auth.UserName != "" && auth.Password != "" {
 		o.auth = auth
 	}
 	return o
-}
-
-func GenerateAuth(userName, password string) *Auth {
-	return &Auth{userName: userName, password: password}
 }
 
 func (o *KubeDBClientBuilder) WithPod(podName string) *KubeDBClientBuilder {
@@ -88,7 +84,7 @@ func (o *KubeDBClientBuilder) WithDatabaseRef(db *api.Database) *KubeDBClientBui
 	return o
 }
 
-func (o *KubeDBClientBuilder) WithDBName(dbName string) *KubeDBClientBuilder {
+func (o *KubeDBClientBuilder) WithPostgresDBName(dbName string) *KubeDBClientBuilder {
 	if dbName == "" {
 		o.backendDBName = o.databaseRef.DatabaseName
 	} else {
@@ -97,11 +93,11 @@ func (o *KubeDBClientBuilder) WithDBName(dbName string) *KubeDBClientBuilder {
 	return o
 }
 
-func (o *KubeDBClientBuilder) WithPgBouncerDB(pgDB string) *KubeDBClientBuilder {
-	if pgDB == "" {
+func (o *KubeDBClientBuilder) WithBackendDBType(dbType string) *KubeDBClientBuilder {
+	if dbType == "" {
 		o.backendDBType = DefaultBackendDBType
 	} else {
-		o.backendDBType = pgDB
+		o.backendDBType = dbType
 	}
 	return o
 }
@@ -125,6 +121,9 @@ func (o *KubeDBClientBuilder) GetPgBouncerXormClient() (*XormClient, error) {
 	if err != nil {
 		return nil, err
 	}
+	if engine == nil {
+		return nil, fmt.Errorf("Xorm Engine can't be build for pgbouncer")
+	}
 
 	engine.SetDefaultContext(o.ctx)
 	return &XormClient{
@@ -138,7 +137,7 @@ func (o *KubeDBClientBuilder) getURL() string {
 
 func (o *KubeDBClientBuilder) getBackendAuth() (string, string, error) {
 	if o.auth != nil {
-		return o.auth.userName, o.auth.password, nil
+		return o.auth.UserName, o.auth.Password, nil
 	}
 
 	db := o.databaseRef
@@ -205,39 +204,34 @@ func GetXormClientList(kc client.Client, pb *api.PgBouncer, ctx context.Context,
 	}
 
 	podList := &corev1.PodList{}
-	err := kc.List(context.Background(), podList, client.MatchingLabels(pb.PodLabels()))
-	if err != nil {
-		return nil, fmt.Errorf("failed get pod list for XormClientList")
-	}
-	ch := make(chan string)
-	if &pb.Spec.Database != nil {
-		postgresRef := pb.Spec.Database
-		for _, pod := range podList.Items {
-			go clientlist.addXormClient(kc, pb, ctx, pod.Name, &postgresRef, ch, len(podList.Items), auth, dbType, dbName)
+	for i := 0; int32(i) < *pb.Spec.Replicas; i++ {
+		podName := fmt.Sprintf("%s-%d", pb.OffshootName(), i)
+		pod := corev1.Pod{}
+		err := kc.Get(ctx, types.NamespacedName{Name: podName, Namespace: pb.Namespace}, &pod)
+		if err != nil {
+			return clientlist, err
 		}
+		podList.Items = append(podList.Items, pod)
 	}
-	message := <-ch
-	if message == "" {
-		return clientlist, nil
+
+	for _, pod := range podList.Items {
+		clientlist.WG.Add(1)
+		go clientlist.addXormClient(kc, pb, ctx, pod.Name, auth, dbType, dbName)
 	}
-	return nil, fmt.Errorf(message)
+	clientlist.WG.Wait()
+	if len(clientlist.List) != len(podList.Items) {
+		return nil, fmt.Errorf("Failed to generate Xorm Client List")
+	}
+	return clientlist, nil
 }
 
-func (l *XormClientList) addXormClient(kc client.Client, pb *api.PgBouncer, ctx context.Context, podName string, postgresRef *api.Database, c chan string, pgReplica int, auth *Auth, dbType string, dbName string) {
-	xormClient, err := NewKubeDBClientBuilder(kc, pb).WithContext(ctx).WithDatabaseRef(postgresRef).WithPod(podName).WithAuth(auth).WithPgBouncerDB(dbType).WithDBName(dbName).GetPgBouncerXormClient()
+func (l *XormClientList) addXormClient(kc client.Client, pb *api.PgBouncer, ctx context.Context, podName string, auth *Auth, dbType string, dbName string) {
+	xormClient, err := NewKubeDBClientBuilder(kc, pb).WithContext(ctx).WithDatabaseRef(&pb.Spec.Database).WithPod(podName).WithAuth(auth).WithBackendDBType(dbType).WithPostgresDBName(dbName).GetPgBouncerXormClient()
 	l.Mutex.Lock()
 	defer l.Mutex.Unlock()
 	if err != nil {
-		klog.V(5).ErrorS(err, fmt.Sprintf("failed to create xorm client for pgbouncer %s/%s to make pool with database %s", pb.Namespace, pb.Name, postgresRef.DatabaseName))
-		l.List = append(l.List, nil)
-		if l.message == "" {
-			l.message = fmt.Sprintf("failed to create xorm client for: pgbouncer %s/%s to make pool with database %s", pb.Namespace, pb.Name, postgresRef.DatabaseName)
-		} else {
-			l.message = fmt.Sprintf("%s pgbouncer %s/%s to make pool with database %s", l.message, pb.Namespace, pb.Name, postgresRef.DatabaseName)
-		}
-	}
-	l.List = append(l.List, xormClient)
-	if (pgReplica) <= len(l.List) {
-		c <- l.message
+		klog.V(5).ErrorS(err, fmt.Sprintf("failed to create xorm client for pgbouncer %s/%s ", pb.Namespace, pb.Name))
+	} else {
+		l.List = append(l.List, xormClient)
 	}
 }
