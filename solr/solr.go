@@ -125,6 +125,7 @@ func (sc *SLClient) BackupCollection(ctx context.Context, collection string, bac
 	backupParams := &BackupParams{
 		Location:   location,
 		Repository: repository,
+		Async:      backupName,
 	}
 	req.SetBody(backupParams)
 
