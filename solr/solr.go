@@ -125,7 +125,7 @@ func (sc *SLClient) BackupCollection(ctx context.Context, collection string, bac
 	backupParams := &BackupParams{
 		Location:   location,
 		Repository: repository,
-		Async:      backupName,
+		Async:      fmt.Sprintf("%s-async", backupName),
 	}
 	req.SetBody(backupParams)
 
@@ -157,6 +157,26 @@ func (sc *SLClient) RestoreCollection(ctx context.Context, collection string, ba
 	res, err := req.Post(fmt.Sprintf("/api/backups/%s/restore", backupName))
 	if err != nil {
 		sc.log.Error(err, "Failed to send http request to restore a collection")
+		return nil, err
+	}
+
+	backupResponse := &Response{
+		Code:   res.StatusCode(),
+		header: res.Header(),
+		body:   res.RawBody(),
+	}
+	return backupResponse, nil
+}
+
+func (sc *SLClient) FlushStatus() (*Response, error) {
+	sc.Config.log.V(5).Info(fmt.Sprintf("Flush Status"))
+	req := sc.Client.R().SetDoNotParseResponse(true)
+	req.SetHeader("Content-Type", "application/json")
+	req.SetQueryParam("flush", "true")
+
+	res, err := req.Delete("/api/cluster/command-status")
+	if err != nil {
+		sc.log.Error(err, "Failed to send http request to flush status")
 		return nil, err
 	}
 
