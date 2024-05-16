@@ -17,23 +17,28 @@ limitations under the License.
 package rabbitmq
 
 import (
-	rmqhttp "github.com/michaelklishin/rabbit-hole/v2"
-	amqp "github.com/rabbitmq/amqp091-go"
+	"fmt"
+	"k8s.io/klog/v2"
 )
 
-type Client struct {
-	AMQPClient
-	HTTPClient
-}
+func (c *HTTPClient) IsAllNodesRunningInCluster(replicas int) (bool, error) {
+	nodes, err := c.ListNodes()
+	if err != nil {
+		klog.Error(err, "Failed to get node lists")
+		return true, err
+	}
 
-type AMQPClient struct {
-	*amqp.Connection
-}
+	if len(nodes) < replicas {
+		klog.Info(fmt.Sprintf("Cluster requires %v nodes but only %v nodes joined", replicas, len(nodes)))
+		return false, nil
+	}
+	for _, node := range nodes {
+		if !node.IsRunning {
+			klog.Error(err, fmt.Sprintf("Node: %s is not running", node.Name))
+			return false, nil
+		}
+	}
 
-type HTTPClient struct {
-	*rmqhttp.Client
-}
-
-type Channel struct {
-	*amqp.Channel
+	klog.Info("All required nodes running in cluster")
+	return true, nil
 }
