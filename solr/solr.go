@@ -170,7 +170,7 @@ func (sc *SLClient) RestoreCollection(ctx context.Context, collection string, ba
 }
 
 func (sc *SLClient) FlushStatus() (*Response, error) {
-	sc.Config.log.V(5).Info(fmt.Sprintf("Flush Status"))
+	sc.Config.log.V(5).Info("Flush Status")
 	req := sc.Client.R().SetDoNotParseResponse(true)
 	req.SetHeader("Content-Type", "application/json")
 	req.SetQueryParam("flush", "true")
