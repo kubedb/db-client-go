@@ -151,6 +151,7 @@ func (sc *SLClient) RestoreCollection(ctx context.Context, collection string, ba
 		Location:   location,
 		Repository: repository,
 		Collection: collection,
+		Async:      fmt.Sprintf("%s-restore", backupName),
 	}
 	req.SetBody(restoreParams)
 
