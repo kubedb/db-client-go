@@ -229,10 +229,10 @@ func (l *XormClientList) addXormClient(kc client.Client, pb *api.PgBouncer, ctx 
 	xormClient, err := NewKubeDBClientBuilder(kc, pb).WithContext(ctx).WithDatabaseRef(&pb.Spec.Database).WithPod(podName).WithAuth(auth).WithBackendDBType(dbType).WithPostgresDBName(dbName).GetPgBouncerXormClient()
 	l.Mutex.Lock()
 	defer l.Mutex.Unlock()
+	defer l.WG.Done()
 	if err != nil {
 		klog.V(5).ErrorS(err, fmt.Sprintf("failed to create xorm client for pgbouncer %s/%s ", pb.Namespace, pb.Name))
 	} else {
 		l.List = append(l.List, xormClient)
 	}
-	l.WG.Done()
 }
