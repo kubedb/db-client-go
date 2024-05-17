@@ -142,7 +142,7 @@ func (o *KubeDBClientBuilder) getBackendAuth() (string, string, error) {
 
 	db := o.databaseRef
 
-	if db == nil || &db.DatabaseRef == nil {
+	if db == nil {
 		return "", "", fmt.Errorf("there is no DatabaseReference found for pgBouncer %s/%s", o.pgbouncer.Namespace, o.pgbouncer.Name)
 	}
 	appBinding := &appbinding.AppBinding{}
