@@ -365,6 +365,7 @@ const (
 	SinglestoreTLSConfigPreferred  = "preferred"
 
 	// =========================== MSSQLServer Constants ============================
+	MSSQLCAProviderClassName     = "mssql-ca-provider"
 	MSSQLSAUser                  = "sa"
 	MSSQLEndpointCertsSecretName = "endpoint-cert"
 	MSSQLDbmLoginSecretName      = "dbm-login-secret"
@@ -383,25 +384,35 @@ const (
 	MSSQLDatabasePort                  = 1433
 	MSSQLDatabaseMirroringEndpointPort = 5022
 	MSSQLCoordinatorPort               = 2381
+
 	// environment variables
 	EnvAcceptEula        = "ACCEPT_EULA"
 	EnvMSSQLEnableHADR   = "MSSQL_ENABLE_HADR"
 	EnvMSSQLAgentEnabled = "MSSQL_AGENT_ENABLED"
 	EnvMSSQLSAUsername   = "MSSQL_SA_USERNAME"
 	EnvMSSQLSAPassword   = "MSSQL_SA_PASSWORD"
+
 	// container related
 	MSSQLContainerName            = "mssql"
 	MSSQLCoordinatorContainerName = "mssql-coordinator"
 	MSSQLInitContainerName        = "mssql-init"
+
 	// volume related
-	MSSQLVolumeNameData              = "data"
-	MSSQLVolumeMountPathData         = "/var/opt/mssql"
-	MSSQLVolumeNameInitScript        = "init-scripts"
-	MSSQLVolumeMountPathInitScript   = "/scripts"
-	MSSQLVolumeNameEndpointCert      = "endpoint-cert"
-	MSSQLVolumeMountPathEndpointCert = "/var/opt/mssql/endpoint-cert"
-	MSSQLVolumeNameCerts             = "certs"
-	MSSQLVolumeMountPathCerts        = "/var/opt/mssql/certs"
+	MSSQLVolumeNameData                        = "data"
+	MSSQLVolumeMountPathData                   = "/var/opt/mssql"
+	MSSQLVolumeNameInitScript                  = "init-scripts"
+	MSSQLVolumeMountPathInitScript             = "/scripts"
+	MSSQLVolumeNameEndpointCert                = "endpoint-cert"
+	MSSQLVolumeMountPathEndpointCert           = "/var/opt/mssql/endpoint-cert"
+	MSSQLVolumeNameCerts                       = "certs"
+	MSSQLVolumeMountPathCerts                  = "/var/opt/mssql/certs"
+	MSSQLVolumeNameTLS                         = "tls"
+	MSSQLVolumeMountPathTLS                    = "/var/opt/mssql/tls"
+	MSSQLVolumeNameSecurityCACertificates      = "security-ca-certificates"
+	MSSQLVolumeMountPathSecurityCACertificates = "/var/opt/mssql/security/ca-certificates"
+	MSSQLVolumeNameCACerts                     = "cacerts"
+	MSSQLVolumeMountPathCACerts                = "/etc/ssl/certs"
+
 	// tls related
 	MSSQLInternalTLSCrt = "tls.crt"
 	MSSQLInternalTLSKey = "tls.key"
@@ -581,6 +592,8 @@ const (
 	PgpoolExporterTlsVolumeName        = "exporter-certs"
 	PgpoolExporterTlsVolumeMountPath   = "/tls/certs"
 	PgpoolRootUser                     = "postgres"
+	PgpoolPrimaryServicePortName       = "primary"
+	PgpoolDatabasePortName             = "db"
 	// ========================================== ZooKeeper Constants =================================================//
 
 	KubeDBZooKeeperRoleName         = "kubedb:zookeeper-version-reader"

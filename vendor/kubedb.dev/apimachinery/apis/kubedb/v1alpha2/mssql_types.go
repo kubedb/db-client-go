@@ -31,11 +31,19 @@ const (
 )
 
 // +kubebuilder:validation:Enum=AvailabilityGroup;RemoteReplica
-type MSSQLMode string
+type MSSQLServerMode string
 
 const (
-	MSSQLModeAvailabilityGroup MSSQLMode = "AvailabilityGroup"
-	MSSQLModeRemoteReplica     MSSQLMode = "RemoteReplica"
+	MSSQLServerModeAvailabilityGroup MSSQLServerMode = "AvailabilityGroup"
+	MSSQLServerModeRemoteReplica     MSSQLServerMode = "RemoteReplica"
+)
+
+// +kubebuilder:validation:Enum=server;client;metrics-exporter
+type MSSQLServerCertificateAlias string
+
+const (
+	MSSQLServerServerCert MSSQLServerCertificateAlias = "server"
+	MSSQLServerClientCert MSSQLServerCertificateAlias = "client"
 )
 
 // MSSQLServer defines a MSSQLServer database.
@@ -68,7 +76,7 @@ type MSSQLServerSpec struct {
 
 	// MSSQLServer cluster topology
 	// +optional
-	Topology *MSSQLTopology `json:"topology,omitempty"`
+	Topology *MSSQLServerTopology `json:"topology,omitempty"`
 
 	// StorageType can be durable (default) or ephemeral
 	StorageType StorageType `json:"storageType,omitempty"`
@@ -93,6 +101,9 @@ type MSSQLServerSpec struct {
 	// +optional
 	PodTemplate *ofst.PodTemplateSpec `json:"podTemplate,omitempty"`
 
+	// TLS contains tls configurations for client and server.
+	TLS *SQLServerTLSConfig `json:"tls,omitempty"`
+
 	// ServiceTemplates is an optional configuration for services used to expose database
 	// +optional
 	ServiceTemplates []NamedServiceTemplateSpec `json:"serviceTemplates,omitempty"`
@@ -111,7 +122,7 @@ type MSSQLServerSpec struct {
 
 	// Leader election configuration
 	// +optional
-	LeaderElection *MSSQLLeaderElectionConfig `json:"leaderElection,omitempty"`
+	LeaderElection *MSSQLServerLeaderElectionConfig `json:"leaderElection,omitempty"`
 
 	// HealthChecker defines attributes of the health checker
 	// +optional
@@ -130,18 +141,23 @@ type InternalAuthentication struct {
 	EndpointCert *kmapi.TLSConfig `json:"endpointCert"`
 }
 
-type MSSQLTopology struct {
+type SQLServerTLSConfig struct {
+	kmapi.TLSConfig `json:"inline"`
+	ClientTLS       bool `json:"clientTLS"`
+}
+
+type MSSQLServerTopology struct {
 	// If set to -
 	// "AvailabilityGroup", MSSQLAvailabilityGroupSpec is required and MSSQLServer servers will start an Availability Group
-	Mode *MSSQLMode `json:"mode,omitempty"`
+	Mode *MSSQLServerMode `json:"mode,omitempty"`
 
 	// AvailabilityGroup info for MSSQLServer
 	// +optional
-	AvailabilityGroup *MSSQLAvailabilityGroupSpec `json:"availabilityGroup,omitempty"`
+	AvailabilityGroup *MSSQLServerAvailabilityGroupSpec `json:"availabilityGroup,omitempty"`
 }
 
-// MSSQLAvailabilityGroupSpec defines the availability group spec for MSSQLServer
-type MSSQLAvailabilityGroupSpec struct {
+// MSSQLServerAvailabilityGroupSpec defines the availability group spec for MSSQLServer
+type MSSQLServerAvailabilityGroupSpec struct {
 	// AvailabilityDatabases is an array of databases to be included in the availability group
 	// +optional
 	Databases []string `json:"databases"`
@@ -161,8 +177,8 @@ type MSSQLServerStatus struct {
 	Conditions []kmapi.Condition `json:"conditions,omitempty"`
 }
 
-// MSSQLLeaderElectionConfig contains essential attributes of leader election.
-type MSSQLLeaderElectionConfig struct {
+// MSSQLServerLeaderElectionConfig contains essential attributes of leader election.
+type MSSQLServerLeaderElectionConfig struct {
 	// Period between Node.Tick invocations
 	// +kubebuilder:default="100ms"
 	// +optional
