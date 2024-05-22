@@ -65,6 +65,20 @@ func (sc *SLClient) GetResponseStatus(responseBody map[string]interface{}) (int,
 	return int(status), nil
 }
 
+func (sc *SLClient) GetAsyncStatus(responseBody map[string]interface{}) (string, error) {
+	status, ok := responseBody["status"].(map[string]interface{})
+	if !ok {
+		return "unknown", errors.New("didn't find status")
+	}
+
+	state, ok := status["state"].(string)
+	if !ok {
+		return "unknown", errors.New("didn't find state")
+	}
+
+	return state, nil
+}
+
 func (sc *SLClient) DecodeCollectionHealth(responseBody map[string]interface{}) error {
 	clusterInfo, ok := responseBody["cluster"].(map[string]interface{})
 	if !ok {

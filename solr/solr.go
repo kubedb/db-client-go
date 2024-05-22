@@ -188,3 +188,20 @@ func (sc *SLClient) FlushStatus() (*Response, error) {
 	}
 	return backupResponse, nil
 }
+
+func (sc *SLClient) RequestStatus(asyncId string) (*Response, error) {
+	sc.Config.log.V(5).Info("Request Status")
+	req := sc.Client.R().SetDoNotParseResponse(true)
+	req.SetHeader("Content-Type", "application/json")
+	res, err := req.Get(fmt.Sprintf("/api/cluster/command-status/%s", asyncId))
+	if err != nil {
+		sc.log.Error(err, "Failed to send http request to request status")
+		return nil, err
+	}
+	backupResponse := &Response{
+		Code:   res.StatusCode(),
+		header: res.Header(),
+		body:   res.RawBody(),
+	}
+	return backupResponse, nil
+}
