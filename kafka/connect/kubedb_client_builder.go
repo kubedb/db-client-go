@@ -21,10 +21,11 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
-	"fmt"
 	"net"
 	"net/http"
 	"time"
+
+	"fmt"
 
 	"github.com/go-resty/resty/v2"
 	core "k8s.io/api/core/v1"
