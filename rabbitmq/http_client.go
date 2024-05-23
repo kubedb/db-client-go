@@ -18,6 +18,7 @@ package rabbitmq
 
 import (
 	"fmt"
+	rabbithole "github.com/michaelklishin/rabbit-hole/v2"
 	"k8s.io/klog/v2"
 )
 
@@ -41,4 +42,77 @@ func (c *HTTPClient) IsAllNodesRunningInCluster(replicas int) (bool, error) {
 
 	klog.Info("All required nodes running in cluster")
 	return true, nil
+}
+
+func (c *HTTPClient) getQueues() ([]rabbithole.QueueInfo, error) {
+	queues, err := c.Client.ListQueues()
+	if err != nil {
+		klog.Error(err, "Failed to get queue lists")
+		return nil, err
+	}
+	return queues, nil
+}
+
+func (c *HTTPClient) getClassicQueues() ([]rabbithole.QueueInfo, error) {
+	queues, err := c.getQueues()
+	if err != nil {
+		klog.Error(err, "Failed to get queue lists")
+		return nil, err
+	}
+	classicQueues := []rabbithole.QueueInfo{}
+
+	for _, q := range queues {
+		if q.Type == rabbitmqQueueTypeClassic {
+			classicQueues = append(classicQueues, q)
+		}
+	}
+
+	return classicQueues, nil
+}
+
+func (c *HTTPClient) hasNodeAnyClassicQueue(queues []rabbithole.QueueInfo, node string) bool {
+	for _, q := range queues {
+		if q.Type == rabbitmqQueueTypeClassic && q.Node == node {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *HTTPClient) getQuorumQueues() ([]rabbithole.QueueInfo, error) {
+	queues, err := c.getQueues()
+	if err != nil {
+		klog.Error(err, "Failed to get queue lists")
+		return nil, err
+	}
+	quorumQueues := []rabbithole.QueueInfo{}
+
+	for _, q := range queues {
+		if q.Type == rabbitmqQueueTypeQuorum {
+			quorumQueues = append(quorumQueues, q)
+		}
+	}
+
+	return quorumQueues, nil
+}
+
+func (c *HTTPClient) hasNodeAnyQuorumQueue(queues []rabbithole.QueueInfo, node string) bool {
+	for _, q := range queues {
+		if q.Type == rabbitmqQueueTypeQuorum && q.Node == node {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *HTTPClient) getNodeNameFromPodURL(url string) string {
+	podClient, err := rabbithole.NewClient(url, c.Username, c.Password)
+	if err != nil {
+		return ""
+	}
+	overview, err := podClient.Overview()
+	if err != nil {
+		return ""
+	}
+	return overview.Node
 }

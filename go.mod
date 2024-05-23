@@ -2,8 +2,6 @@ module kubedb.dev/db-client-go
 
 go 1.22.0
 
-toolchain go1.22.1
-
 require (
 	github.com/IBM/sarama v1.42.1
 	github.com/Masterminds/semver/v3 v3.2.1

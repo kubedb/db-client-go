@@ -44,6 +44,11 @@ type KubeDBClientBuilder struct {
 	disableAMQPClient bool
 }
 
+const (
+	rabbitmqQueueTypeQuorum  = "quorum"
+	rabbitmqQueueTypeClassic = "classic"
+)
+
 func NewKubeDBClientBuilder(kc client.Client, db *api.RabbitMQ) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc: kc,
