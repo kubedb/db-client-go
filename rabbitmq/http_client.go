@@ -44,7 +44,7 @@ func (c *HTTPClient) IsAllNodesRunningInCluster(replicas int) (bool, error) {
 	return true, nil
 }
 
-func (c *HTTPClient) getQueues() ([]rabbithole.QueueInfo, error) {
+func (c *HTTPClient) GetQueues() ([]rabbithole.QueueInfo, error) {
 	queues, err := c.Client.ListQueues()
 	if err != nil {
 		klog.Error(err, "Failed to get queue lists")
@@ -53,8 +53,8 @@ func (c *HTTPClient) getQueues() ([]rabbithole.QueueInfo, error) {
 	return queues, nil
 }
 
-func (c *HTTPClient) getClassicQueues() ([]rabbithole.QueueInfo, error) {
-	queues, err := c.getQueues()
+func (c *HTTPClient) GetClassicQueues() ([]rabbithole.QueueInfo, error) {
+	queues, err := c.GetQueues()
 	if err != nil {
 		klog.Error(err, "Failed to get queue lists")
 		return nil, err
@@ -70,7 +70,7 @@ func (c *HTTPClient) getClassicQueues() ([]rabbithole.QueueInfo, error) {
 	return classicQueues, nil
 }
 
-func (c *HTTPClient) hasNodeAnyClassicQueue(queues []rabbithole.QueueInfo, node string) bool {
+func (c *HTTPClient) HasNodeAnyClassicQueue(queues []rabbithole.QueueInfo, node string) bool {
 	for _, q := range queues {
 		if q.Type == rabbitmqQueueTypeClassic && q.Node == node {
 			return true
@@ -79,8 +79,8 @@ func (c *HTTPClient) hasNodeAnyClassicQueue(queues []rabbithole.QueueInfo, node 
 	return false
 }
 
-func (c *HTTPClient) getQuorumQueues() ([]rabbithole.QueueInfo, error) {
-	queues, err := c.getQueues()
+func (c *HTTPClient) GetQuorumQueues() ([]rabbithole.QueueInfo, error) {
+	queues, err := c.GetQueues()
 	if err != nil {
 		klog.Error(err, "Failed to get queue lists")
 		return nil, err
@@ -96,16 +96,16 @@ func (c *HTTPClient) getQuorumQueues() ([]rabbithole.QueueInfo, error) {
 	return quorumQueues, nil
 }
 
-func (c *HTTPClient) hasNodeAnyQuorumQueue(queues []rabbithole.QueueInfo, node string) bool {
+func (c *HTTPClient) IsNodePrimaryReplica(queues []rabbithole.QueueInfo, node string) bool {
 	for _, q := range queues {
-		if q.Type == rabbitmqQueueTypeQuorum && q.Node == node {
+		if q.Type == rabbitmqQueueTypeQuorum && q.Leader == node {
 			return true
 		}
 	}
 	return false
 }
 
-func (c *HTTPClient) getNodeNameFromPodURL(url string) string {
+func (c *HTTPClient) GetNodeNameFromPodURL(url string) string {
 	podClient, err := rabbithole.NewClient(url, c.Username, c.Password)
 	if err != nil {
 		return ""
