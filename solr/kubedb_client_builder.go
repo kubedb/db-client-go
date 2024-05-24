@@ -66,14 +66,14 @@ func (o *KubeDBClientBuilder) GetSolrClient() (SLClient, error) {
 	config := Config{
 		host: o.url,
 		transport: &http.Transport{
-			IdleConnTimeout: time.Second * 300,
+			IdleConnTimeout: time.Minute * 2,
 			DialContext: (&net.Dialer{
-				Timeout:   time.Second * 300,
-				KeepAlive: time.Second * 300,
+				Timeout:   time.Minute * 2,
+				KeepAlive: time.Minute * 2,
 			}).DialContext,
-			TLSHandshakeTimeout:   300 * time.Second,
-			ResponseHeaderTimeout: 300 * time.Second,
-			ExpectContinueTimeout: 300 * time.Second,
+			TLSHandshakeTimeout:   time.Minute * 2,
+			ResponseHeaderTimeout: time.Minute * 2,
+			ExpectContinueTimeout: time.Minute * 2,
 		},
 		connectionScheme: o.db.GetConnectionScheme(),
 		log:              o.log,
@@ -82,7 +82,7 @@ func (o *KubeDBClientBuilder) GetSolrClient() (SLClient, error) {
 	newClient := resty.New()
 	newClient.SetScheme(config.connectionScheme).SetBaseURL(config.host).SetTransport(config.transport)
 	newClient.SetHeader("Accept", "application/json")
-	newClient.SetTimeout(time.Second * 300)
+	newClient.SetTimeout(time.Minute * 2)
 	newClient.SetDisableWarn(true)
 
 	if !o.db.Spec.DisableSecurity {
