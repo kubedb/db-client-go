@@ -19,8 +19,9 @@ package pgbouncer
 import (
 	"context"
 	"database/sql"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sync"
+
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	"xorm.io/xorm"
 )
