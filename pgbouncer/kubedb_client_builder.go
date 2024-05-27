@@ -24,7 +24,6 @@ import (
 
 	_ "github.com/lib/pq"
 	core "k8s.io/api/core/v1"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	appbinding "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
@@ -202,35 +201,36 @@ func GetXormClientList(kc client.Client, pb *api.PgBouncer, ctx context.Context,
 	clientlist := &XormClientList{
 		List: []*XormClient{},
 	}
+	clientlist.context = ctx
+	clientlist.pb = pb
+	clientlist.auth = auth
+	clientlist.dbName = dbName
+	clientlist.dbType = dbType
 
-	podList := &corev1.PodList{}
 	for i := 0; int32(i) < *pb.Spec.Replicas; i++ {
 		podName := fmt.Sprintf("%s-%d", pb.OffshootName(), i)
-		pod := corev1.Pod{}
+		pod := core.Pod{}
 		err := kc.Get(ctx, types.NamespacedName{Name: podName, Namespace: pb.Namespace}, &pod)
 		if err != nil {
 			return clientlist, err
 		}
-		podList.Items = append(podList.Items, pod)
+		clientlist.WG.Add(1)
+		go clientlist.addXormClient(kc, podName)
 	}
 
-	for _, pod := range podList.Items {
-		clientlist.WG.Add(1)
-		go clientlist.addXormClient(kc, pb, ctx, pod.Name, auth, dbType, dbName)
-	}
 	clientlist.WG.Wait()
-	if len(clientlist.List) != len(podList.Items) {
+	if len(clientlist.List) != int(*pb.Spec.Replicas) {
 		return nil, fmt.Errorf("Failed to generate Xorm Client List")
 	}
 	return clientlist, nil
 }
 
-func (l *XormClientList) addXormClient(kc client.Client, pb *api.PgBouncer, ctx context.Context, podName string, auth *Auth, dbType string, dbName string) {
-	xormClient, err := NewKubeDBClientBuilder(kc, pb).WithContext(ctx).WithDatabaseRef(&pb.Spec.Database).WithPod(podName).WithAuth(auth).WithBackendDBType(dbType).WithPostgresDBName(dbName).GetPgBouncerXormClient()
+func (l *XormClientList) addXormClient(kc client.Client, podName string) {
+	xormClient, err := NewKubeDBClientBuilder(kc, l.pb).WithContext(l.context).WithDatabaseRef(&l.pb.Spec.Database).WithPod(podName).WithAuth(l.auth).WithBackendDBType(l.dbType).WithPostgresDBName(l.dbName).GetPgBouncerXormClient()
 	l.Mutex.Lock()
 	defer l.Mutex.Unlock()
 	if err != nil {
-		klog.V(5).ErrorS(err, fmt.Sprintf("failed to create xorm client for pgbouncer %s/%s ", pb.Namespace, pb.Name))
+		klog.V(5).ErrorS(err, fmt.Sprintf("failed to create xorm client for pgbouncer %s/%s ", l.pb.Namespace, l.pb.Name))
 	} else {
 		l.List = append(l.List, xormClient)
 	}
