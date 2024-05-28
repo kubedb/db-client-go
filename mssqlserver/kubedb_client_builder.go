@@ -123,7 +123,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 
 	// TLS Configuration
 	tlsConfig := ""
-	if !o.db.Spec.TLS.ClientTLS {
+	if o.db.Spec.TLS.ClientTLS {
 		// get client-secret
 		var clientSecret core.Secret
 		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.GetNamespace(), Name: o.db.GetCertSecretName(api.MSSQLServerClientCert)}, &clientSecret)
