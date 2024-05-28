@@ -136,6 +136,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		tlsConfig = fmt.Sprintf("encrypt=true;TrustServerCertificate=false;certificate=%s;", url.QueryEscape(string(caCert)))
 		tlsConfig = "encrypt=true;TrustServerCertificate=true;"
 		// todo: remove
+		klog.Infoln("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
 		klog.Infoln(tlsConfig)
 	}
 
