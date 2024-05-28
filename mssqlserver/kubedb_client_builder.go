@@ -19,9 +19,6 @@ package mssql
 import (
 	"context"
 	"fmt"
-	"k8s.io/klog/v2"
-	"net/url"
-
 	_ "github.com/microsoft/go-mssqldb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
@@ -125,19 +122,15 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	tlsConfig := ""
 	if o.db.Spec.TLS.ClientTLS {
 		// get client-secret
-		var clientSecret core.Secret
-		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.GetNamespace(), Name: o.db.GetCertSecretName(api.MSSQLServerClientCert)}, &clientSecret)
-		if err != nil {
-			return "", err
-		}
+		// var clientSecret core.Secret
+		// err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.GetNamespace(), Name: o.db.GetCertSecretName(api.MSSQLServerClientCert)}, &clientSecret)
+		// if err != nil {
+		//  	return "", err
+		// }
 		// Load CA certificate
-		caCert := clientSecret.Data["ca.crt"]
-
-		tlsConfig = fmt.Sprintf("encrypt=true;TrustServerCertificate=false;certificate=%s;", url.QueryEscape(string(caCert)))
+		// caCert := clientSecret.Data["ca.crt"]
+		// tlsConfig = fmt.Sprintf("encrypt=true;TrustServerCertificate=false;certificate=%s;", url.QueryEscape(string(caCert)))
 		tlsConfig = "encrypt=true;TrustServerCertificate=true;"
-		// todo: remove
-		klog.Infoln("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-		klog.Infoln(tlsConfig)
 	}
 
 	// The connection string in ADO format: key=value pairs separated by ;. Values may not contain ;, leading and trailing whitespace is ignored.
