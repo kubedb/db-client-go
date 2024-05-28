@@ -33,7 +33,6 @@ import (
 
 const (
 	DefaultBackendDBType = "postgres"
-	DefaultPgBouncerPort = api.PgBouncerDatabasePort
 	TLSModeDisable       = "disable"
 )
 
@@ -188,7 +187,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	if o.backendDBType == "" {
 		o.backendDBType = DefaultBackendDBType
 	}
-	var listeningPort int = DefaultPgBouncerPort
+	var listeningPort int = api.PgBouncerDatabasePort
 	if o.pgbouncer.Spec.ConnectionPool.Port != nil {
 		listeningPort = int(*o.pgbouncer.Spec.ConnectionPool.Port)
 	}
