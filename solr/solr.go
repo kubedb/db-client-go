@@ -143,7 +143,7 @@ func (sc *SLClient) BackupCollection(ctx context.Context, collection string, bac
 	return backupResponse, nil
 }
 
-func (sc *SLClient) RestoreCollection(ctx context.Context, collection string, backupName string, location string, repository string) (*Response, error) {
+func (sc *SLClient) RestoreCollection(ctx context.Context, collection string, backupName string, location string, repository string, backupId int) (*Response, error) {
 	sc.Config.log.V(5).Info(fmt.Sprintf("RESTORE COLLECTION: %s", collection))
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
 	req.SetHeader("Content-Type", "application/json")
@@ -151,6 +151,7 @@ func (sc *SLClient) RestoreCollection(ctx context.Context, collection string, ba
 		Location:   location,
 		Repository: repository,
 		Collection: collection,
+		BackupId:   backupId,
 		//Async:      fmt.Sprintf("%s-restore", collection),
 	}
 	req.SetBody(restoreParams)
