@@ -19,6 +19,7 @@ package mssql
 import (
 	"context"
 	"fmt"
+	"k8s.io/klog/v2"
 	"net/url"
 
 	_ "github.com/microsoft/go-mssqldb"
@@ -133,6 +134,9 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		caCert := clientSecret.Data["ca.crt"]
 
 		tlsConfig = fmt.Sprintf("encrypt=true;TrustServerCertificate=false;certificate=%s;", url.QueryEscape(string(caCert)))
+		tlsConfig = "encrypt=true;TrustServerCertificate=true;"
+		// todo: remove
+		klog.Infoln(tlsConfig)
 	}
 
 	// The connection string in ADO format: key=value pairs separated by ;. Values may not contain ;, leading and trailing whitespace is ignored.
