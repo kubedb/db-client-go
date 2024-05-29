@@ -117,6 +117,7 @@ func (o *KubeDBClientBuilder) GetPgBouncerXormClient() (*XormClient, error) {
 	engine.SetDefaultContext(o.ctx)
 	return &XormClient{
 		engine,
+		o.podName,
 	}, nil
 }
 
@@ -211,6 +212,7 @@ func GetXormClientList(kc client.Client, pb *api.PgBouncer, ctx context.Context,
 	if len(clientlist.List) != int(*pb.Spec.Replicas) {
 		return nil, fmt.Errorf("Failed to generate Xorm Client List")
 	}
+
 	return clientlist, nil
 }
 

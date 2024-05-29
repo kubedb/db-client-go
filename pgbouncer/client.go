@@ -32,6 +32,7 @@ type Client struct {
 
 type XormClient struct {
 	*xorm.Engine
+	podName string
 }
 
 type XormClientList struct {
