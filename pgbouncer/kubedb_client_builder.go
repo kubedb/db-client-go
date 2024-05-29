@@ -91,15 +91,6 @@ func (o *KubeDBClientBuilder) WithPostgresDBName(dbName string) *KubeDBClientBui
 	return o
 }
 
-func (o *KubeDBClientBuilder) WithBackendDBType(dbType string) *KubeDBClientBuilder {
-	if dbType == "" {
-		o.backendDBType = DefaultBackendDBType
-	} else {
-		o.backendDBType = dbType
-	}
-	return o
-}
-
 func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
 	o.ctx = ctx
 	return o
@@ -196,7 +187,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	return connector, nil
 }
 
-func GetXormClientList(kc client.Client, pb *api.PgBouncer, ctx context.Context, auth *Auth, dbType string, dbName string) (*XormClientList, error) {
+func GetXormClientList(kc client.Client, pb *api.PgBouncer, ctx context.Context, auth *Auth, dbName string) (*XormClientList, error) {
 	clientlist := &XormClientList{
 		List: []*XormClient{},
 	}
@@ -204,7 +195,6 @@ func GetXormClientList(kc client.Client, pb *api.PgBouncer, ctx context.Context,
 	clientlist.pb = pb
 	clientlist.auth = auth
 	clientlist.dbName = dbName
-	clientlist.dbType = dbType
 
 	for i := 0; int32(i) < *pb.Spec.Replicas; i++ {
 		podName := fmt.Sprintf("%s-%d", pb.OffshootName(), i)
@@ -225,7 +215,7 @@ func GetXormClientList(kc client.Client, pb *api.PgBouncer, ctx context.Context,
 }
 
 func (l *XormClientList) addXormClient(kc client.Client, podName string) {
-	xormClient, err := NewKubeDBClientBuilder(kc, l.pb).WithContext(l.context).WithDatabaseRef(&l.pb.Spec.Database).WithPod(podName).WithAuth(l.auth).WithBackendDBType(l.dbType).WithPostgresDBName(l.dbName).GetPgBouncerXormClient()
+	xormClient, err := NewKubeDBClientBuilder(kc, l.pb).WithContext(l.context).WithDatabaseRef(&l.pb.Spec.Database).WithPod(podName).WithAuth(l.auth).WithPostgresDBName(l.dbName).GetPgBouncerXormClient()
 	l.Mutex.Lock()
 	defer l.Mutex.Unlock()
 	if err != nil {

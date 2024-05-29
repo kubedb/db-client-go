@@ -42,6 +42,5 @@ type XormClientList struct {
 	context context.Context
 	pb      *api.PgBouncer
 	auth    *Auth
-	dbType  string
 	dbName  string
 }
