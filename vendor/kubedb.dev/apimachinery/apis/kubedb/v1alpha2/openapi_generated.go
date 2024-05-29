@@ -465,7 +465,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.ConnectionPoolConfig":             schema_apimachinery_apis_kubedb_v1alpha2_ConnectionPoolConfig(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.ConsumerNamespaces":               schema_apimachinery_apis_kubedb_v1alpha2_ConsumerNamespaces(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.CoordinatorSpec":                  schema_apimachinery_apis_kubedb_v1alpha2_CoordinatorSpec(ref),
-		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.Databases":                        schema_apimachinery_apis_kubedb_v1alpha2_Databases(ref),
+		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.Database":                         schema_apimachinery_apis_kubedb_v1alpha2_Database(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.DeepStorageSpec":                  schema_apimachinery_apis_kubedb_v1alpha2_DeepStorageSpec(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.Druid":                            schema_apimachinery_apis_kubedb_v1alpha2_Druid(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.DruidApp":                         schema_apimachinery_apis_kubedb_v1alpha2_DruidApp(ref),
@@ -23208,7 +23208,7 @@ func schema_apimachinery_apis_kubedb_v1alpha2_CoordinatorSpec(ref common.Referen
 	}
 }
 
-func schema_apimachinery_apis_kubedb_v1alpha2_Databases(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_apimachinery_apis_kubedb_v1alpha2_Database(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -23218,14 +23218,6 @@ func schema_apimachinery_apis_kubedb_v1alpha2_Databases(ref common.ReferenceCall
 						SchemaProps: spec.SchemaProps{
 							Description: "SyncUsers is a boolean type and when enabled, operator fetches users of backend server from externally managed secrets to the PgBouncer server. Secrets updation or deletion are also synced in pgBouncer when it is enabled.",
 							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"alias": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Alias to uniquely identify a target database running inside a specific Postgres instance.",
-							Default:     "",
-							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
@@ -23245,7 +23237,7 @@ func schema_apimachinery_apis_kubedb_v1alpha2_Databases(ref common.ReferenceCall
 						},
 					},
 				},
-				Required: []string{"alias", "databaseRef", "databaseName"},
+				Required: []string{"databaseRef", "databaseName"},
 			},
 		},
 		Dependencies: []string{
@@ -28486,18 +28478,11 @@ func schema_apimachinery_apis_kubedb_v1alpha2_PgBouncerSpec(ref common.Reference
 							Ref:         ref("kmodules.xyz/offshoot-api/api/v1.PodTemplateSpec"),
 						},
 					},
-					"databases": {
+					"database": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Databases to proxy by connection pooling.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("kubedb.dev/apimachinery/apis/kubedb/v1alpha2.Databases"),
-									},
-								},
-							},
+							Description: "Database to proxy by connection pooling.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("kubedb.dev/apimachinery/apis/kubedb/v1alpha2.Database"),
 						},
 					},
 					"connectionPool": {
@@ -28556,7 +28541,7 @@ func schema_apimachinery_apis_kubedb_v1alpha2_PgBouncerSpec(ref common.Reference
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.LocalObjectReference", "kmodules.xyz/client-go/api/v1.HealthCheckSpec", "kmodules.xyz/client-go/api/v1.TLSConfig", "kmodules.xyz/monitoring-agent-api/api/v1.AgentSpec", "kmodules.xyz/offshoot-api/api/v1.PodTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.AutoOpsSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.ConnectionPoolConfig", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.Databases", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.NamedServiceTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SecretReference"},
+			"k8s.io/api/core/v1.LocalObjectReference", "kmodules.xyz/client-go/api/v1.HealthCheckSpec", "kmodules.xyz/client-go/api/v1.TLSConfig", "kmodules.xyz/monitoring-agent-api/api/v1.AgentSpec", "kmodules.xyz/offshoot-api/api/v1.PodTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.AutoOpsSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.ConnectionPoolConfig", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.Database", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.NamedServiceTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SecretReference"},
 	}
 }
 
@@ -28597,6 +28582,13 @@ func schema_apimachinery_apis_kubedb_v1alpha2_PgBouncerStatus(ref common.Referen
 					"gateway": {
 						SchemaProps: spec.SchemaProps{
 							Ref: ref("kubedb.dev/apimachinery/apis/kubedb/v1alpha2.Gateway"),
+						},
+					},
+					"resourceVersionOfBackendSecret": {
+						SchemaProps: spec.SchemaProps{
+							Description: "It is to decide if the Auth_file needs to get updated by comparing with the Resource Version of the Backend Secret",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 				},
@@ -30755,10 +30747,24 @@ func schema_apimachinery_apis_kubedb_v1alpha2_SQLServerTLSConfig(ref common.Refe
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
-					"inline": {
+					"issuerRef": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("kmodules.xyz/client-go/api/v1.TLSConfig"),
+							Description: "IssuerRef is a reference to a Certificate Issuer.",
+							Ref:         ref("k8s.io/api/core/v1.TypedLocalObjectReference"),
+						},
+					},
+					"certificates": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Certificate provides server and/or client certificate options used by application pods. These options are passed to a cert-manager Certificate object. xref: https://github.com/jetstack/cert-manager/blob/v0.16.0/pkg/apis/certmanager/v1beta1/types_certificate.go#L82-L162",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("kmodules.xyz/client-go/api/v1.CertificateSpec"),
+									},
+								},
+							},
 						},
 					},
 					"clientTLS": {
@@ -30769,11 +30775,11 @@ func schema_apimachinery_apis_kubedb_v1alpha2_SQLServerTLSConfig(ref common.Refe
 						},
 					},
 				},
-				Required: []string{"inline", "clientTLS"},
+				Required: []string{"clientTLS"},
 			},
 		},
 		Dependencies: []string{
-			"kmodules.xyz/client-go/api/v1.TLSConfig"},
+			"k8s.io/api/core/v1.TypedLocalObjectReference", "kmodules.xyz/client-go/api/v1.CertificateSpec"},
 	}
 }
 

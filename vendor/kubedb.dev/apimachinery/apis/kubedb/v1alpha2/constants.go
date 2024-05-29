@@ -365,11 +365,7 @@ const (
 	SinglestoreTLSConfigPreferred  = "preferred"
 
 	// =========================== MSSQLServer Constants ============================
-	MSSQLCAProviderClassName     = "mssql-ca-provider"
-	MSSQLSAUser                  = "sa"
-	MSSQLEndpointCertsSecretName = "endpoint-cert"
-	MSSQLDbmLoginSecretName      = "dbm-login-secret"
-	MSSQLMasterKeySecretName     = "master-key-secret"
+	MSSQLSAUser = "sa"
 
 	AGPrimaryReplicaReadyCondition = "AGPrimaryReplicaReady"
 

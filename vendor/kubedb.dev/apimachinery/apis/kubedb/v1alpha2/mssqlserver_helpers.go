@@ -200,9 +200,9 @@ func (m *MSSQLServer) GetPersistentSecrets() []string {
 		secrets = append(secrets, m.Spec.AuthSecret.Name)
 	}
 
-	secrets = append(secrets, MSSQLEndpointCertsSecretName)
-	secrets = append(secrets, MSSQLDbmLoginSecretName)
-	secrets = append(secrets, MSSQLMasterKeySecretName)
+	secrets = append(secrets, m.EndpointCertSecretName())
+	secrets = append(secrets, m.DbmLoginSecretName())
+	secrets = append(secrets, m.MasterKeySecretName())
 
 	return secrets
 }
@@ -230,9 +230,29 @@ func (m MSSQLServer) GetAuthSecretName() string {
 	return metautil.NameWithSuffix(m.OffshootName(), "auth")
 }
 
+func (m *MSSQLServer) CAProviderClassName() string {
+	return metautil.NameWithSuffix(m.OffshootName(), "ca-provider")
+}
+
+func (m *MSSQLServer) DbmLoginSecretName() string {
+	return metautil.NameWithSuffix(m.OffshootName(), "dbm-login")
+}
+
+func (m *MSSQLServer) MasterKeySecretName() string {
+	return metautil.NameWithSuffix(m.OffshootName(), "master-key")
+}
+
+func (m *MSSQLServer) EndpointCertSecretName() string {
+	return metautil.NameWithSuffix(m.OffshootName(), "endpoint-cert")
+}
+
 // CertificateName returns the default certificate name and/or certificate secret name for a certificate alias
 func (s *MSSQLServer) CertificateName(alias MSSQLServerCertificateAlias) string {
 	return metautil.NameWithSuffix(s.Name, fmt.Sprintf("%s-cert", string(alias)))
+}
+
+func (s *MSSQLServer) SecretName(alias MSSQLServerCertificateAlias) string {
+	return metautil.NameWithSuffix(s.Name, string(alias))
 }
 
 // GetCertSecretName returns the secret name for a certificate alias if any

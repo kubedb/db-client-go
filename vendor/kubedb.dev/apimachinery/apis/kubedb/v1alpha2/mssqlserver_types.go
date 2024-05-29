@@ -44,6 +44,7 @@ type MSSQLServerCertificateAlias string
 const (
 	MSSQLServerServerCert MSSQLServerCertificateAlias = "server"
 	MSSQLServerClientCert MSSQLServerCertificateAlias = "client"
+	MSSQLServerEndpoint   MSSQLServerCertificateAlias = "endpoint"
 )
 
 // MSSQLServer defines a MSSQLServer database.
@@ -142,7 +143,7 @@ type InternalAuthentication struct {
 }
 
 type SQLServerTLSConfig struct {
-	kmapi.TLSConfig `json:"inline"`
+	kmapi.TLSConfig `json:",inline"`
 	ClientTLS       bool `json:"clientTLS"`
 }
 
