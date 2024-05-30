@@ -20,9 +20,9 @@ import (
 	"context"
 	"fmt"
 
+	_ "github.com/microsoft/go-mssqldb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
-	_ "github.com/microsoft/go-mssqldb"
 	core "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"xorm.io/xorm"
@@ -119,40 +119,13 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		o.url = o.getURL()
 	}
 
-	// TODO: Add tlsConfig
+	// TLS Configuration
 	tlsConfig := ""
-	//if o.db.Spec.RequireSSL && o.db.Spec.TLS != nil {
-	//	// get client-secret
-	//	var clientSecret core.Secret
-	//	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.GetNamespace(), Name: o.db.GetCertSecretName(api.MSSQLClientCert)}, &clientSecret)
-	//	if err != nil {
-	//		return "", err
-	//	}
-	//	cacrt := clientSecret.Data["ca.crt"]
-	//	certPool := x509.NewCertPool()
-	//	certPool.AppendCertsFromPEM(cacrt)
-	//
-	//	crt := clientSecret.Data["tls.crt"]
-	//	key := clientSecret.Data["tls.key"]
-	//	cert, err := tls.X509KeyPair(crt, key)
-	//	if err != nil {
-	//		return "", err
-	//	}
-	//	var clientCert []tls.Certificate
-	//	clientCert = append(clientCert, cert)
-	//
-	//	// tls custom setup
-	//	if o.db.Spec.RequireSSL {
-	//		mssql_driver.RegisterTLSConfig(api.MSSQLTLSConfigCustom, &tls.Config{
-	//			RootCAs:      certPool,
-	//			Certificates: clientCert,
-	//		})
-	//		tlsConfig = fmt.Sprintf("tls=%s", api.MSSQLTLSConfigCustom)
-	//	} else {
-	//		tlsConfig = fmt.Sprintf("tls=%s", api.MSSQLTLSConfigSkipVerify)
-	//	}
-	//}
+	if o.db.Spec.TLS.ClientTLS {
+		tlsConfig = "encrypt=true;TrustServerCertificate=true;"
+	}
 
+	// The connection string in ADO format: key=value pairs separated by ;. Values may not contain ;, leading and trailing whitespace is ignored.
 	connectionString := fmt.Sprintf("server=%s;user id=%s;password=%s;database=master;%s", o.url, user, pass, tlsConfig)
 	return connectionString, nil
 }

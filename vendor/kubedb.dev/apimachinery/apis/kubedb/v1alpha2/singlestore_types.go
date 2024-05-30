@@ -58,9 +58,6 @@ type SinglestoreSpec struct {
 	// +optional
 	Version string `json:"version"`
 
-	// +optional
-	Replicas *int32 `json:"replicas,omitempty"`
-
 	// Singlestore topology for node specification
 	// +optional
 	Topology *SinglestoreTopology `json:"topology,omitempty"`
@@ -70,6 +67,11 @@ type SinglestoreSpec struct {
 
 	// Storage to specify how storage shall be used.
 	Storage *core.PersistentVolumeClaimSpec `json:"storage,omitempty"`
+
+	// ConfigSecret is an optional field to provide custom configuration file for database (i.e config.properties).
+	// If specified, this file will be used as configuration file otherwise default configuration file will be used.
+	// +optional
+	ConfigSecret *core.LocalObjectReference `json:"configSecret,omitempty"`
 
 	// Init is used to initialize database
 	// +optional
@@ -81,11 +83,6 @@ type SinglestoreSpec struct {
 	// Database authentication secret
 	// +optional
 	AuthSecret *SecretReference `json:"authSecret,omitempty"`
-
-	// ConfigSecret is an optional field to provide custom configuration file for database (i.e config.properties).
-	// If specified, this file will be used as configuration file otherwise default configuration file will be used.
-	// +optional
-	ConfigSecret *core.LocalObjectReference `json:"configSecret,omitempty"`
 
 	// PodTemplate is an optional configuration for pods used to expose database
 	// +optional
@@ -136,6 +133,11 @@ type SinglestoreNode struct {
 	// suffix to append with node name
 	// +optional
 	Suffix string `json:"suffix,omitempty"`
+
+	// ConfigSecret is an optional field to provide custom configuration file for database (i.e config.properties).
+	// If specified, this file will be used as configuration file otherwise default configuration file will be used.
+	// +optional
+	ConfigSecret *core.LocalObjectReference `json:"configSecret,omitempty"`
 
 	// Storage to specify how storage shall be used.
 	// +optional

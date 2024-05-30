@@ -46,7 +46,7 @@ func (r *MSSQLServer) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-//+kubebuilder:webhook:path=/mutate-kubedb-com-v1alpha2-mssql,mutating=true,failurePolicy=fail,sideEffects=None,groups=kubedb.com,resources=mssqls,verbs=create;update,versions=v1alpha2,name=mmssql.kb.io,admissionReviewVersions=v1
+//+kubebuilder:webhook:path=/mutate-kubedb-com-v1alpha2-mssqlserver,mutating=true,failurePolicy=fail,sideEffects=None,groups=kubedb.com,resources=mssqlservers,verbs=create;update,versions=v1alpha2,name=mmssqlserver.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &MSSQLServer{}
 
@@ -60,7 +60,7 @@ func (m *MSSQLServer) Default() {
 	m.SetDefaults()
 }
 
-//+kubebuilder:webhook:path=/validate-kubedb-com-v1alpha2-mssql,mutating=false,failurePolicy=fail,sideEffects=None,groups=kubedb.com,resources=mssqls,verbs=create;update,versions=v1alpha2,name=vmssql.kb.io,admissionReviewVersions=v1
+//+kubebuilder:webhook:path=/validate-kubedb-com-v1alpha2-mssqlserver,mutating=false,failurePolicy=fail,sideEffects=None,groups=kubedb.com,resources=mssqlservers,verbs=create;update,versions=v1alpha2,name=vmssqlserver.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Validator = &MSSQLServer{}
 
@@ -148,6 +148,14 @@ func (m *MSSQLServer) ValidateCreateOrUpdate() field.ErrorList {
 		}
 	}
 
+	if m.Spec.TLS == nil {
+		allErr = append(allErr, field.Invalid(field.NewPath("spec").Child("tls"),
+			m.Name, "spec.tls is missing"))
+	} else if m.Spec.TLS.IssuerRef == nil {
+		allErr = append(allErr, field.Invalid(field.NewPath("spec").Child("tls").Child("issuerRef"),
+			m.Name, "spec.tls.issuerRef' is missing"))
+	}
+
 	err = mssqlValidateVolumes(m.Spec.PodTemplate)
 	if err != nil {
 		allErr = append(allErr, field.Invalid(field.NewPath("spec").Child("podTemplate").Child("spec").Child("volumes"),
@@ -187,6 +195,9 @@ var mssqlReservedVolumes = []string{
 	MSSQLVolumeNameInitScript,
 	MSSQLVolumeNameEndpointCert,
 	MSSQLVolumeNameCerts,
+	MSSQLVolumeNameTLS,
+	MSSQLVolumeNameSecurityCACertificates,
+	MSSQLVolumeNameCACerts,
 }
 
 var mssqlReservedVolumesMountPaths = []string{
@@ -194,6 +205,9 @@ var mssqlReservedVolumesMountPaths = []string{
 	MSSQLVolumeMountPathInitScript,
 	MSSQLVolumeMountPathEndpointCert,
 	MSSQLVolumeMountPathCerts,
+	MSSQLVolumeMountPathTLS,
+	MSSQLVolumeMountPathSecurityCACertificates,
+	MSSQLVolumeMountPathCACerts,
 }
 
 func mssqlValidateVersion(m *MSSQLServer) error {
