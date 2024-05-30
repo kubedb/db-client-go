@@ -35,7 +35,7 @@ func (c *HTTPClient) IsAllNodesRunningInCluster(replicas int) (bool, error) {
 	}
 	for _, node := range nodes {
 		if !node.IsRunning {
-			klog.Error(err, fmt.Sprintf("Node: %s is not running", node.Name))
+			klog.Error(fmt.Sprintf("Node: %s is not running", node.Name))
 			return false, nil
 		}
 	}
