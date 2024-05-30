@@ -117,7 +117,6 @@ func (o *KubeDBClientBuilder) GetPgBouncerXormClient() (*XormClient, error) {
 	engine.SetDefaultContext(o.ctx)
 	return &XormClient{
 		engine,
-		o.podName,
 	}, nil
 }
 
