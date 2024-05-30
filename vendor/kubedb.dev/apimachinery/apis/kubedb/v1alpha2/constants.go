@@ -31,7 +31,8 @@ const (
 
 	KubeDBOrganization = "kubedb"
 
-	LabelRole = kubedb.GroupName + "/role"
+	LabelRole   = kubedb.GroupName + "/role"
+	LabelPetSet = kubedb.GroupName + "/petset"
 
 	ReplicationModeDetectorContainerName = "replication-mode-detector"
 	DatabasePodPrimary                   = "primary"
@@ -124,10 +125,13 @@ const (
 	ElasticsearchMinHeapSize = 128 * 1024 * 1024
 
 	// =========================== Memcached Constants ============================
+	MemcachedConfigKey              = "memcached.conf" // MemcachedConfigKey is going to create for the customize redis configuration
 	MemcachedDatabasePortName       = "db"
 	MemcachedPrimaryServicePortName = "primary"
 	MemcachedDatabasePort           = 11211
 	MemcachedShardKey               = MemcachedKey + "/shard"
+	MemcachedContainerName          = ResourceSingularMemcached
+	MemcachedConfigVolumePath       = "/etc/memcached/"
 	// =========================== MongoDB Constants ============================
 
 	MongoDBDatabasePortName       = "db"
@@ -339,6 +343,7 @@ const (
 	DatabasePodLeaf         = "Leaf"
 	PetSetTypeAggregator    = "aggregator"
 	PetSetTypeLeaf          = "leaf"
+	PetSetTypeStandalone    = "standalone"
 
 	SinglestoreDatabaseHealth = "singlestore_health"
 	SinglestoreTableHealth    = "singlestore_health_table"
@@ -350,7 +355,7 @@ const (
 	SinglestoreVolumeNameUserInitScript      = "initial-script"
 	SinglestoreVolumeMountPathUserInitScript = "/docker-entrypoint-initdb.d"
 	SinglestoreVolumeNameCustomConfig        = "custom-config"
-	SinglestoreVolumeMountPathCustomConfig   = "/config"
+	SinglestoreVolumeMountPathCustomConfig   = "/etc/memsql/conf.d"
 	SinglestoreVolmeNameInitScript           = "init-scripts"
 	SinglestoreVolumeMountPathInitScript     = "/scripts"
 	SinglestoreVolumeNameData                = "data"
