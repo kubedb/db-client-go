@@ -17,9 +17,23 @@ limitations under the License.
 package rabbitmq
 
 import (
+	rmqhttp "github.com/michaelklishin/rabbit-hole/v2"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Client struct {
+	AMQPClient
+	HTTPClient
+}
+
+type AMQPClient struct {
 	*amqp.Connection
+}
+
+type HTTPClient struct {
+	*rmqhttp.Client
+}
+
+type Channel struct {
+	*amqp.Channel
 }

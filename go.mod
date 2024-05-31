@@ -2,8 +2,6 @@ module kubedb.dev/db-client-go
 
 go 1.22.0
 
-toolchain go1.22.1
-
 require (
 	github.com/IBM/sarama v1.42.1
 	github.com/Masterminds/semver/v3 v3.2.1
@@ -14,6 +12,7 @@ require (
 	github.com/go-resty/resty/v2 v2.11.0
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/lib/pq v1.10.7
+	github.com/michaelklishin/rabbit-hole/v2 v2.16.0
 	github.com/microsoft/go-mssqldb v1.6.0
 	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
