@@ -18,6 +18,7 @@ package rabbitmq
 
 import (
 	"fmt"
+
 	rabbithole "github.com/michaelklishin/rabbit-hole/v2"
 	"k8s.io/klog/v2"
 )

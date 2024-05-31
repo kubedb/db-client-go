@@ -19,6 +19,7 @@ package rabbitmq
 import (
 	"context"
 	"errors"
+
 	amqp "github.com/rabbitmq/amqp091-go"
 	"k8s.io/klog/v2"
 )
