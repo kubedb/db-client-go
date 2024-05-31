@@ -46,7 +46,6 @@ type KubeDBClientBuilder struct {
 	pgbouncer     *api.PgBouncer
 	url           string
 	podName       string
-	backendDBType string
 	backendDBName string
 	ctx           context.Context
 	databaseRef   *api.Database
@@ -106,7 +105,7 @@ func (o *KubeDBClientBuilder) GetPgBouncerXormClient() (*XormClient, error) {
 		return nil, err
 	}
 
-	engine, err := xorm.NewEngine(o.backendDBType, connector)
+	engine, err := xorm.NewEngine(DefaultBackendDBType, connector)
 	if err != nil {
 		return nil, err
 	}
@@ -175,9 +174,6 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		o.url = o.getURL()
 	}
 
-	if o.backendDBType == "" {
-		o.backendDBType = DefaultBackendDBType
-	}
 	var listeningPort int = api.PgBouncerDatabasePort
 	if o.pgbouncer.Spec.ConnectionPool.Port != nil {
 		listeningPort = int(*o.pgbouncer.Spec.ConnectionPool.Port)
