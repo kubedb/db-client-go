@@ -565,6 +565,7 @@ const (
 	PgBouncerAdminUsername                  = "pgbouncer"
 	PgBouncerDefaultPoolMode                = "session"
 	PgBouncerDefaultIgnoreStartupParameters = "empty"
+	BackendSecretResourceVersion            = "backend-secret-resource-version"
 
 	// =========================== Pgpool Constants ============================
 	EnvPostgresUsername                = "POSTGRES_USERNAME"
@@ -578,6 +579,7 @@ const (
 	PgpoolContainerName                = "pgpool"
 	PgpoolDefaultServicePort           = 9999
 	PgpoolMonitoringDefaultServicePort = 9719
+	PgpoolPcpPort                      = 9595
 	PgpoolExporterDatabase             = "postgres"
 	EnvPgpoolExporterDatabase          = "POSTGRES_DATABASE"
 	EnvPgpoolService                   = "PGPOOL_SERVICE"
@@ -595,6 +597,8 @@ const (
 	PgpoolRootUser                     = "postgres"
 	PgpoolPrimaryServicePortName       = "primary"
 	PgpoolDatabasePortName             = "db"
+	PgpoolPcpPortName                  = "pcp"
+	PgpoolCustomConfigFile             = "pgpool.conf"
 	// ========================================== ZooKeeper Constants =================================================//
 
 	KubeDBZooKeeperRoleName         = "kubedb:zookeeper-version-reader"
@@ -1161,7 +1165,9 @@ const (
 	RabbitMQLoopBackUserKey            = "loopback_users"
 	RabbitMQLoopBackUserVal            = "none"
 	RabbitMQDefaultTCPListenerKey      = "listeners.tcp.default"
+	RabbitMQDefaultSSLListenerKey      = "listeners.ssl.default"
 	RabbitMQDefaultTCPListenerVal      = "5672"
+	RabbitMQDefaultTLSListenerVal      = "5671"
 	RabbitMQQueueMasterLocatorKey      = "queue_master_locator"
 	RabbitMQQueueMasterLocatorVal      = "min-masters"
 	RabbitMQDiskFreeLimitKey           = "disk_free_limit.absolute"
@@ -1188,6 +1194,11 @@ const (
 	RabbitMQDefaultPasswordVal         = "$(RABBITMQ_DEFAULT_PASS)"
 	RabbitMQClusterNameKey             = "cluster_name"
 	RabbitMQK8sSvcNameKey              = "cluster_formation.k8s.service_name"
+	RabbitMQSSLOptionsCAKey            = "ssl_options.cacertfile"
+	RabbitMQSSLOptionsCertKey          = "ssl_options.certfile"
+	RabbitMQSSLOptionsPrivateKey       = "ssl_options.keyfile"
+	RabbitMQSSLOptionsVerifyKey        = "ssl_options.verify"
+	RabbitMQSSLOptionsFailIfNoPeerKey  = "ssl_options.fail_if_no_peer_cert"
 	RabbitMQConfigFileName             = "rabbitmq.conf"
 	RabbitMQEnabledPluginsFileName     = "enabled_plugins"
 	RabbitMQHealthCheckerQueueName     = "kubedb-system"
@@ -1217,6 +1228,41 @@ const (
 	FerretDBTLSPort     = 27018
 
 	FerretDBMetricsPath = "/debug/metrics"
+)
+
+// =========================== ClickHouse Constants ============================
+
+const (
+	ClickHouseKeeperPort  = 9181
+	ClickHouseDefaultHTTP = 8123
+	ClickHouseDefaultTLS  = 8443
+	ClickHouseNativeTCP   = 9000
+	ClickHouseNativeTLS   = 9440
+	ClickhousePromethues  = 9363
+
+	ClickHouseVolumeData         = "data"
+	ClickHouseDataDir            = "/var/lib/clickhouse"
+	ClickHouseConfigVolName      = "clickhouse-config"
+	ClickHouseConfigDir          = "/etc/clickhouse-server/config.d"
+	ClickHouseDefaultStorageSize = "2Gi"
+
+	ClickHouseClusterConfigVolName = "cluster-config"
+	ClickHouseClusterConfigDir     = "/etc/clickhouse-server/conf.d"
+
+	ClickHouseTempClusterConfigVolName = "temp-cluster-config"
+
+	ClickHouseContainerName     = "clickhouse"
+	ClickHouseInitContainerName = "clickhouse-init"
+
+	ClickHouseClusterConfigFileName = "cluster-config.yaml"
+	ClickHouseTempConfigDir         = "/ch-tmp/config"
+	ClickHouseTempDir               = "/ch-tmp"
+
+	ClickHouseUserConfigDir  = "/etc/clickhouse-server/user.d"
+	ClickHouseMacrosFileName = "macros.yaml"
+
+	ClickHouseStandalone = "standalone"
+	ClickHouseCluster    = "cluster"
 )
 
 // Resource kind related constants
