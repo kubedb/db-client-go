@@ -48,8 +48,6 @@ func (p *Pgpool) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-
 //+kubebuilder:webhook:path=/mutate-kubedb-com-v1alpha2-pgpool,mutating=true,failurePolicy=fail,sideEffects=None,groups=kubedb.com,resources=pgpools,verbs=create;update,versions=v1alpha2,name=mpgpool.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &Pgpool{}
@@ -91,7 +89,7 @@ func (p *Pgpool) ValidateDelete() (admission.Warnings, error) {
 	pgpoollog.Info("validate delete", "name", p.Name)
 
 	var errorList field.ErrorList
-	if p.Spec.TerminationPolicy == TerminationPolicyDoNotTerminate {
+	if p.Spec.DeletionPolicy == TerminationPolicyDoNotTerminate {
 		errorList = append(errorList, field.Invalid(field.NewPath("spec").Child("terminationPolicy"),
 			p.Name,
 			"Can not delete as terminationPolicy is set to \"DoNotTerminate\""))
