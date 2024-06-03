@@ -206,8 +206,9 @@ func GetXormClientList(kc client.Client, pb *api.PgBouncer, ctx context.Context,
 	}
 
 	clientlist.WG.Wait()
+
 	if len(clientlist.List) != int(*pb.Spec.Replicas) {
-		return nil, fmt.Errorf("Failed to generate Xorm Client List")
+		return clientlist, fmt.Errorf("Failed to generate Xorm Client List")
 	}
 
 	return clientlist, nil
