@@ -199,7 +199,9 @@ func GetXormClientList(kc client.Client, pb *api.PgBouncer, ctx context.Context,
 		if err != nil {
 			return clientlist, err
 		}
+		clientlist.Mutex.Lock()
 		clientlist.WG.Add(1)
+		clientlist.Mutex.Unlock()
 		go clientlist.addXormClient(kc, podName)
 	}
 
