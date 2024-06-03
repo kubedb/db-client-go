@@ -100,9 +100,9 @@ type SinglestoreSpec struct {
 	// +optional
 	Halted bool `json:"halted,omitempty"`
 
-	// TerminationPolicy controls the delete operation for database
+	// DeletionPolicy controls the delete operation for database
 	// +optional
-	TerminationPolicy TerminationPolicy `json:"terminationPolicy,omitempty"`
+	DeletionPolicy TerminationPolicy `json:"deletionPolicy,omitempty"`
 
 	// HealthChecker defines attributes of the health checker
 	// +optional
@@ -112,11 +112,6 @@ type SinglestoreSpec struct {
 	// Monitor is used monitor database instance
 	// +optional
 	Monitor *mona.AgentSpec `json:"monitor,omitempty"`
-
-	// PodPlacementPolicy is the reference of the podPlacementPolicy
-	// +kubebuilder:default={name: "default"}
-	// +optional
-	PodPlacementPolicy *core.LocalObjectReference `json:"podPlacementPolicy,omitempty"`
 }
 
 // SinglestoreTopology defines singlestore topology node specs for aggregators and leaves node
@@ -146,11 +141,6 @@ type SinglestoreNode struct {
 	// PodTemplate is an optional configuration for pods used to expose database
 	// +optional
 	PodTemplate *ofst.PodTemplateSpec `json:"podTemplate,omitempty"`
-
-	// PodPlacementPolicy is the reference of the podPlacementPolicy
-	// +kubebuilder:default={name: "default"}
-	// +optional
-	PodPlacementPolicy *core.LocalObjectReference `json:"podPlacementPolicy,omitempty"`
 }
 
 // SinglestoreStatus defines the observed state of Singlestore
