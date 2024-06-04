@@ -17,7 +17,11 @@ limitations under the License.
 package pgbouncer
 
 import (
+	"context"
 	"database/sql"
+	"sync"
+
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	"xorm.io/xorm"
 )
@@ -28,4 +32,15 @@ type Client struct {
 
 type XormClient struct {
 	*xorm.Engine
+}
+
+type XormClientList struct {
+	List  []*XormClient
+	Mutex sync.Mutex
+	WG    sync.WaitGroup
+
+	context context.Context
+	pb      *api.PgBouncer
+	auth    *Auth
+	dbName  string
 }
