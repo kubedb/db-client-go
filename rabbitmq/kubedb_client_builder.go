@@ -49,11 +49,20 @@ const (
 	rabbitmqQueueTypeClassic = "classic"
 )
 
+// NewKubeDBClientBuilder returns a client builder only for amqp client
 func NewKubeDBClientBuilder(kc client.Client, db *api.RabbitMQ) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc: kc,
 		db: db,
 	}
+}
+
+// NewKubeDBClientBuilderForHTTP returns a KubeDB client builder only for http client
+func NewKubeDBClientBuilderForHTTP(kc client.Client, db *api.RabbitMQ) *KubeDBClientBuilder {
+	return NewKubeDBClientBuilder(kc, db).
+		WithContext(context.TODO()).
+		WithAMQPClientDisabled().
+		WithHTTPClientEnabled()
 }
 
 func (o *KubeDBClientBuilder) WithPod(podName string) *KubeDBClientBuilder {
@@ -158,7 +167,11 @@ func (o *KubeDBClientBuilder) GetAMQPconnURL(username string, password string) s
 }
 
 func (o *KubeDBClientBuilder) GetHTTPconnURL() string {
-	return fmt.Sprintf("http://%s.%s.svc.cluster.local:%d", o.db.OffshootName(), o.db.Namespace, api.RabbitMQManagementUIPort)
+	protocolScheme := rmqhttp.HTTP
+	if o.podName != "" {
+		return fmt.Sprintf("%s://%s.%s.%s.svc:%d", protocolScheme, o.podName, o.db.GoverningServiceName(), o.db.Namespace, api.RabbitMQManagementUIPort)
+	}
+	return fmt.Sprintf("%s://%s.%s.svc.cluster.local:%d", protocolScheme, o.db.ServiceName(), o.db.Namespace, api.RabbitMQManagementUIPort)
 }
 
 // RabbitMQ server have a default virtual host "/"
