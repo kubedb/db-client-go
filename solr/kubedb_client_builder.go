@@ -82,7 +82,6 @@ func (o *KubeDBClientBuilder) GetSolrClient() (SLClient, error) {
 	newClient := resty.New()
 	newClient.SetScheme(config.connectionScheme).SetBaseURL(config.host).SetTransport(config.transport)
 	newClient.SetHeader("Accept", "application/json")
-	newClient.SetTimeout(time.Minute * 2)
 	newClient.SetDisableWarn(true)
 
 	if !o.db.Spec.DisableSecurity {
