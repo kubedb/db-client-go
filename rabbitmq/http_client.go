@@ -106,15 +106,10 @@ func (c *HTTPClient) IsNodePrimaryReplica(queues []rabbithole.QueueInfo, node st
 	return false
 }
 
-func (c *HTTPClient) GetNodeNameFromPodURL(url string) (string, error) {
-	podClient, err := rabbithole.NewClient(url, c.Username, c.Password)
+func (c *HTTPClient) GetNodeName() (string, error) {
+	overview, err := c.Overview()
 	if err != nil {
-		klog.Error(err, "Failed to create new client for pod url", url)
-		return "", err
-	}
-	overview, err := podClient.Overview()
-	if err != nil {
-		klog.Error(err, "Failed to get node overview from node client", url)
+		klog.Error(err, "Failed to get node overview from node client")
 		return "", err
 	}
 	return overview.Node, nil
