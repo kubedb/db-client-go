@@ -22,7 +22,7 @@ import (
 	"errors"
 	"fmt"
 
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1"
 
 	core "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
