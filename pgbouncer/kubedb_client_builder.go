@@ -43,14 +43,14 @@ type Auth struct {
 }
 
 type KubeDBClientBuilder struct {
-	kc            client.Client
-	pgbouncer     *api.PgBouncer
-	url           string
-	podName       string
-	backendDBName string
-	ctx           context.Context
-	databaseRef   *api.Database
-	auth          *Auth
+	kc           client.Client
+	pgbouncer    *api.PgBouncer
+	url          string
+	podName      string
+	databaseName string
+	ctx          context.Context
+	databaseRef  *api.Database
+	auth         *Auth
 }
 
 func NewKubeDBClientBuilder(kc client.Client, pb *api.PgBouncer) *KubeDBClientBuilder {
@@ -82,11 +82,11 @@ func (o *KubeDBClientBuilder) WithDatabaseRef(db *api.Database) *KubeDBClientBui
 	return o
 }
 
-func (o *KubeDBClientBuilder) WithPostgresDBName(dbName string) *KubeDBClientBuilder {
+func (o *KubeDBClientBuilder) WithDatabaseName(dbName string) *KubeDBClientBuilder {
 	if dbName == "" {
-		o.backendDBName = o.databaseRef.DatabaseName
+		o.databaseName = o.databaseRef.DatabaseName
 	} else {
-		o.backendDBName = dbName
+		o.databaseName = dbName
 	}
 	return o
 }
@@ -169,7 +169,7 @@ func (o *KubeDBClientBuilder) getTLSConfig() (*certholder.Paths, error) {
 	secretName := ""
 	secretNamespace := ""
 
-	if o.backendDBName == "pgbouncer" {
+	if o.databaseName == "pgbouncer" {
 		secretName = o.pgbouncer.GetCertSecretName(api.PgBouncerClientCert)
 		secretNamespace = o.pgbouncer.Namespace
 	} else {
@@ -230,12 +230,12 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 			return "", err
 		}
 		if o.pgbouncer.Spec.ConnectionPool.AuthType == api.PgBouncerClientAuthModeCert || o.pgbouncer.Spec.SSLMode == api.PgBouncerSSLModeVerifyCA || o.pgbouncer.Spec.SSLMode == api.PgBouncerSSLModeVerifyFull {
-			connector = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s sslrootcert=%s sslcert=%s sslkey=%s", user, pass, o.url, listeningPort, o.backendDBName, sslMode, paths.CACert, paths.Cert, paths.Key)
+			connector = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s sslrootcert=%s sslcert=%s sslkey=%s", user, pass, o.url, listeningPort, o.databaseName, sslMode, paths.CACert, paths.Cert, paths.Key)
 		} else {
-			connector = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s sslrootcert=%s", user, pass, o.url, listeningPort, o.backendDBName, sslMode, paths.CACert)
+			connector = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s sslrootcert=%s", user, pass, o.url, listeningPort, o.databaseName, sslMode, paths.CACert)
 		}
 	} else {
-		connector = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s", user, pass, o.url, listeningPort, o.backendDBName, sslMode)
+		connector = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s", user, pass, o.url, listeningPort, o.databaseName, sslMode)
 	}
 	return connector, nil
 }
@@ -272,7 +272,7 @@ func GetXormClientList(kc client.Client, pb *api.PgBouncer, ctx context.Context,
 }
 
 func (l *XormClientList) addXormClient(kc client.Client, podName string) {
-	xormClient, err := NewKubeDBClientBuilder(kc, l.pb).WithContext(l.context).WithDatabaseRef(&l.pb.Spec.Database).WithPod(podName).WithAuth(l.auth).WithPostgresDBName(l.dbName).GetPgBouncerXormClient()
+	xormClient, err := NewKubeDBClientBuilder(kc, l.pb).WithContext(l.context).WithDatabaseRef(&l.pb.Spec.Database).WithPod(podName).WithAuth(l.auth).WithDatabaseName(l.dbName).GetPgBouncerXormClient()
 	l.Mutex.Lock()
 	defer l.Mutex.Unlock()
 	if err != nil {
