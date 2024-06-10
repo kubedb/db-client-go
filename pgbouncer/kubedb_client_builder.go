@@ -189,7 +189,7 @@ func (o *KubeDBClientBuilder) getTLSConfig() (*certholder.Paths, error) {
 		secretNamespace = appBinding.Namespace
 	}
 
-	var certSecret *core.Secret
+	certSecret := &core.Secret{}
 	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: secretNamespace, Name: secretName}, certSecret)
 	if err != nil {
 		klog.Error(err, "failed to get certificate secret.", secretName)
