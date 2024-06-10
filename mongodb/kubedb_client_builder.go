@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"kubedb.dev/apimachinery/apis/kubedb"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	mgoptions "go.mongodb.org/mongo-driver/mongo/options"
