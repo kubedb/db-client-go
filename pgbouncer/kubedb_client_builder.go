@@ -19,6 +19,7 @@ package pgbouncer
 import (
 	"context"
 	"fmt"
+	"kmodules.xyz/client-go/tools/certholder"
 
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
@@ -164,6 +165,46 @@ func (o *KubeDBClientBuilder) getBackendAuth() (string, string, error) {
 	return string(user), string(pass), nil
 }
 
+func (o *KubeDBClientBuilder) getTLSConfig() (*certholder.Paths, error) {
+	secretName := ""
+	secretNamespace := ""
+
+	if o.backendDBName == "pgbouncer" {
+		secretName = o.pgbouncer.GetCertSecretName(api.PgBouncerClientCert)
+		secretNamespace = o.pgbouncer.Namespace
+	} else {
+		// is database name isn't "pgbouncer" then the database is from postgres and need to find the CA secret from appbinding
+		appBinding := &appbinding.AppBinding{}
+		err := o.kc.Get(o.ctx, types.NamespacedName{
+			Name:      o.databaseRef.DatabaseRef.Name,
+			Namespace: o.databaseRef.DatabaseRef.Namespace,
+		}, appBinding)
+		if err != nil {
+			return nil, err
+		}
+		if appBinding.Spec.TLSSecret == nil || appBinding.Spec.TLSSecret.Name == "" {
+			return nil, fmt.Errorf("TLS secret is empty in appbinding %s/%s", appBinding.Namespace, appBinding.Name)
+		}
+		secretName = appBinding.Spec.TLSSecret.Name
+		secretNamespace = appBinding.Namespace
+	}
+
+	var certSecret *core.Secret
+	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: secretNamespace, Name: secretName}, certSecret)
+	if err != nil {
+		klog.Error(err, "failed to get certificate secret.", secretName)
+		return nil, err
+	}
+
+	certs, _ := certholder.DefaultHolder.ForResource(api.SchemeGroupVersion.WithResource(api.ResourcePluralPgBouncer), o.pgbouncer.ObjectMeta)
+	paths, err := certs.Save(certSecret)
+	if err != nil {
+		klog.Error(err, "failed to save certificate")
+		return nil, err
+	}
+	return paths, nil
+}
+
 func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	user, pass, err := o.getBackendAuth()
 	if err != nil {
@@ -178,8 +219,24 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	if o.pgbouncer.Spec.ConnectionPool.Port != nil {
 		listeningPort = int(*o.pgbouncer.Spec.ConnectionPool.Port)
 	}
-	// TODO ssl mode is disable now need to work on this after adding tls support
-	connector := fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s", user, pass, o.url, listeningPort, o.backendDBName, TLSModeDisable)
+	sslMode := o.pgbouncer.Spec.SSLMode
+	if sslMode == "" {
+		sslMode = api.PgBouncerSSLModeDisable
+	}
+	var connector = ""
+	if o.pgbouncer.Spec.TLS != nil {
+		paths, err := o.getTLSConfig()
+		if err != nil {
+			return "", err
+		}
+		if o.pgbouncer.Spec.ConnectionPool.AuthType == api.PgBouncerClientAuthModeCert || o.pgbouncer.Spec.SSLMode == api.PgBouncerSSLModeVerifyCA || o.pgbouncer.Spec.SSLMode == api.PgBouncerSSLModeVerifyFull {
+			connector = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s sslrootcert=%s sslcert=%s sslkey=%s", user, pass, o.url, listeningPort, o.backendDBName, sslMode, paths.CACert, paths.Cert, paths.Key)
+		} else {
+			connector = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s sslrootcert=%s", user, pass, o.url, listeningPort, o.backendDBName, sslMode, paths.CACert)
+		}
+	} else {
+		connector = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s", user, pass, o.url, listeningPort, o.backendDBName, sslMode)
+	}
 	return connector, nil
 }
 
