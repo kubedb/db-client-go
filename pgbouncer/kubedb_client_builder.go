@@ -19,7 +19,6 @@ package pgbouncer
 import (
 	"context"
 	"fmt"
-	"kmodules.xyz/client-go/tools/certholder"
 
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
@@ -27,6 +26,7 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
+	"kmodules.xyz/client-go/tools/certholder"
 	appbinding "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"xorm.io/xorm"
@@ -223,7 +223,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	if sslMode == "" {
 		sslMode = api.PgBouncerSSLModeDisable
 	}
-	var connector = ""
+	connector := ""
 	if o.pgbouncer.Spec.TLS != nil {
 		paths, err := o.getTLSConfig()
 		if err != nil {
