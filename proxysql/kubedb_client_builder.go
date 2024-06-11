@@ -21,6 +21,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	core "k8s.io/api/core/v1"
@@ -144,6 +145,6 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		o.url = o.getURL()
 	}
 
-	connector := fmt.Sprintf("%v:%v@tcp(%s:%d)/", user, pass, o.url, api.ProxySQLAdminPort)
+	connector := fmt.Sprintf("%v:%v@tcp(%s:%d)/", user, pass, o.url, kubedb.ProxySQLAdminPort)
 	return connector, nil
 }

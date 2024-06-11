@@ -23,6 +23,7 @@ import (
 	"strings"
 	"time"
 
+	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -144,7 +145,7 @@ func (o *KubeDBClientBuilder) GetMongoClient() (*Client, error) {
 
 func (o *KubeDBClientBuilder) getURL() string {
 	nodeType := o.podName[:strings.LastIndex(o.podName, "-")]
-	if strings.HasSuffix(nodeType, api.NodeTypeArbiter) {
+	if strings.HasSuffix(nodeType, kubedb.NodeTypeArbiter) {
 		// nodeType looks like <DB_NAME>-shard<SHARD_NUMBER>-arbiter for shard, <DB_NAME>-arbiter otherwise.
 		// so excluding  '-arbiter' will give us the stsName where this arbiter belongs as a member of rs
 		nodeType = nodeType[:strings.LastIndex(nodeType, "-")]

@@ -26,6 +26,7 @@ import (
 	sql_driver "github.com/go-sql-driver/mysql"
 	core "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
+	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"xorm.io/xorm"
@@ -170,14 +171,14 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		clientCert = append(clientCert, cert)
 
 		// tls custom setup
-		err = sql_driver.RegisterTLSConfig(api.SinglestoreTLSConfigCustom, &tls.Config{
+		err = sql_driver.RegisterTLSConfig(kubedb.SinglestoreTLSConfigCustom, &tls.Config{
 			RootCAs:      certPool,
 			Certificates: clientCert,
 		})
 		if err != nil {
 			return "", err
 		}
-		tlsConfig = fmt.Sprintf("tls=%s", api.SinglestoreTLSConfigCustom)
+		tlsConfig = fmt.Sprintf("tls=%s", kubedb.SinglestoreTLSConfigCustom)
 	}
 
 	connector := fmt.Sprintf("%v:%v@tcp(%s:%d)/%s?%s", user, pass, o.url, 3306, "memsql", tlsConfig)

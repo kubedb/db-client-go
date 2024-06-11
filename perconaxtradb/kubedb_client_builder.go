@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	sql_driver "github.com/go-sql-driver/mysql"
@@ -172,16 +173,16 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 
 		// tls custom setup
 		if o.db.Spec.RequireSSL {
-			err = sql_driver.RegisterTLSConfig(api.PerconaXtraDBTLSConfigCustom, &tls.Config{
+			err = sql_driver.RegisterTLSConfig(kubedb.PerconaXtraDBTLSConfigCustom, &tls.Config{
 				RootCAs:      certPool,
 				Certificates: clientCert,
 			})
 			if err != nil {
 				return "", err
 			}
-			tlsConfig = fmt.Sprintf("tls=%s", api.PerconaXtraDBTLSConfigCustom)
+			tlsConfig = fmt.Sprintf("tls=%s", kubedb.PerconaXtraDBTLSConfigCustom)
 		} else {
-			tlsConfig = fmt.Sprintf("tls=%s", api.MySQLTLSConfigSkipVerify)
+			tlsConfig = fmt.Sprintf("tls=%s", kubedb.MySQLTLSConfigSkipVerify)
 		}
 	}
 

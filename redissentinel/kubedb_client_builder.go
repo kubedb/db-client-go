@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"time"
 
+	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	rd "github.com/redis/go-redis/v9"
@@ -141,5 +142,5 @@ func (o *KubeDBClientBuilder) getTLSConfig(ctx context.Context) (*tls.Config, er
 }
 
 func (o *KubeDBClientBuilder) getSentinelPodURL() string {
-	return fmt.Sprintf("%v.%v.%v.svc:%d", o.podName, o.db.GoverningServiceName(), o.db.Namespace, api.RedisSentinelPort)
+	return fmt.Sprintf("%v.%v.%v.svc:%d", o.podName, o.db.GoverningServiceName(), o.db.Namespace, kubedb.RedisSentinelPort)
 }

@@ -28,6 +28,7 @@ import (
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
+	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -163,15 +164,15 @@ func (o *KubeDBClientBuilder) GetRabbitMQClient() (*Client, error) {
 }
 
 func (o *KubeDBClientBuilder) GetAMQPconnURL(username string, password string) string {
-	return fmt.Sprintf("amqp://%s:%s@%s.%s.svc.cluster.local:%d/", username, password, o.db.OffshootName(), o.db.Namespace, api.RabbitMQAMQPPort)
+	return fmt.Sprintf("amqp://%s:%s@%s.%s.svc.cluster.local:%d/", username, password, o.db.OffshootName(), o.db.Namespace, kubedb.RabbitMQAMQPPort)
 }
 
 func (o *KubeDBClientBuilder) GetHTTPconnURL() string {
 	protocolScheme := rmqhttp.HTTP
 	if o.podName != "" {
-		return fmt.Sprintf("%s://%s.%s.%s.svc:%d", protocolScheme, o.podName, o.db.GoverningServiceName(), o.db.Namespace, api.RabbitMQManagementUIPort)
+		return fmt.Sprintf("%s://%s.%s.%s.svc:%d", protocolScheme, o.podName, o.db.GoverningServiceName(), o.db.Namespace, kubedb.RabbitMQManagementUIPort)
 	}
-	return fmt.Sprintf("%s://%s.%s.svc.cluster.local:%d", protocolScheme, o.db.ServiceName(), o.db.Namespace, api.RabbitMQManagementUIPort)
+	return fmt.Sprintf("%s://%s.%s.svc.cluster.local:%d", protocolScheme, o.db.ServiceName(), o.db.Namespace, kubedb.RabbitMQManagementUIPort)
 }
 
 // RabbitMQ server have a default virtual host "/"
