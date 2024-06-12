@@ -30,7 +30,7 @@ import (
 	catalog "kubedb.dev/apimachinery/apis/catalog/v1alpha1"
 	"kubedb.dev/apimachinery/apis/elasticsearch/v1alpha1"
 	"kubedb.dev/apimachinery/apis/kubedb"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1"
 
 	"github.com/Masterminds/semver/v3"
 	esv5 "github.com/elastic/go-elasticsearch/v5"
