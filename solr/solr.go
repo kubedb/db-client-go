@@ -125,7 +125,7 @@ func (sc *SLClient) BackupCollection(ctx context.Context, collection string, bac
 	backupParams := &BackupParams{
 		Location:   location,
 		Repository: repository,
-		//Async:      fmt.Sprintf("%s-backup", collection),
+		Async:      fmt.Sprintf("%s-backup", collection),
 	}
 	req.SetBody(backupParams)
 
@@ -152,7 +152,7 @@ func (sc *SLClient) RestoreCollection(ctx context.Context, collection string, ba
 		Repository: repository,
 		Collection: collection,
 		BackupId:   backupId,
-		//Async:      fmt.Sprintf("%s-restore", collection),
+		Async:      fmt.Sprintf("%s-restore", collection),
 	}
 	req.SetBody(restoreParams)
 
