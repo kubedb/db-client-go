@@ -21,7 +21,7 @@ import (
 	"database/sql"
 	"sync"
 
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1"
 
 	"xorm.io/xorm"
 )
