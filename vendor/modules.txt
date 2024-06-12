@@ -1508,7 +1508,7 @@ kmodules.xyz/monitoring-agent-api/api/v1
 kmodules.xyz/offshoot-api/api/v1
 kmodules.xyz/offshoot-api/api/v1/conversion
 kmodules.xyz/offshoot-api/api/v2
-# kubedb.dev/apimachinery v0.46.1-0.20240611074256-e35c4320d8a0
+# kubedb.dev/apimachinery v0.46.1-0.20240611134003-2a27409da656
 ## explicit; go 1.22.0
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog

@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"kubedb.dev/apimachinery/apis/kubedb"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1"
 
 	rd "github.com/redis/go-redis/v9"
 	core "k8s.io/api/core/v1"
