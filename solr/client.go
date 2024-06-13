@@ -63,7 +63,7 @@ type BackupParams struct {
 	Async      string `json:"async,omitempty" yaml:"async,omitempty"`
 }
 
-type RestoreParams struct {
+type BackupRestoreParams struct {
 	Location   string `json:"location,omitempty" yaml:"location,omitempty"`
 	Repository string `json:"repository,omitempty" yaml:"repository,omitempty"`
 	Collection string `json:"collection,omitempty" yaml:"collection,omitempty"`

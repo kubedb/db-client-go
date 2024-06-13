@@ -122,7 +122,7 @@ func (sc *SLClient) BackupCollection(ctx context.Context, collection string, bac
 	sc.Config.log.V(5).Info(fmt.Sprintf("BACKUP COLLECTION: %s", collection))
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
 	req.SetHeader("Content-Type", "application/json")
-	backupParams := &BackupParams{
+	backupParams := &BackupRestoreParams{
 		Location:   location,
 		Repository: repository,
 		Async:      fmt.Sprintf("%s-backup", collection),
@@ -147,7 +147,7 @@ func (sc *SLClient) RestoreCollection(ctx context.Context, collection string, ba
 	sc.Config.log.V(5).Info(fmt.Sprintf("RESTORE COLLECTION: %s", collection))
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
 	req.SetHeader("Content-Type", "application/json")
-	restoreParams := &RestoreParams{
+	restoreParams := &BackupRestoreParams{
 		Location:   location,
 		Repository: repository,
 		Collection: collection,
@@ -198,6 +198,54 @@ func (sc *SLClient) RequestStatus(asyncId string) (*Response, error) {
 		sc.log.Error(err, "Failed to send http request to request status")
 		return nil, err
 	}
+	backupResponse := &Response{
+		Code:   res.StatusCode(),
+		header: res.Header(),
+		body:   res.RawBody(),
+	}
+	return backupResponse, nil
+}
+
+func (sc *SLClient) DeleteBackup(ctx context.Context, collection string, backupName string, location string, repository string, backupId int) (*Response, error) {
+	sc.Config.log.V(5).Info(fmt.Sprintf("DELETE BACKUP ID %d of BACKUP %s", backupId, backupName))
+	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
+	req.SetHeader("Content-Type", "application/json")
+	params := map[string]string{
+		"location":   location,
+		"repository": repository,
+	}
+	req.SetQueryParams(params)
+
+	res, err := req.Delete(fmt.Sprintf("/api/backups/%s/versions/%d", backupName, backupId))
+	if err != nil {
+		sc.log.Error(err, "Failed to send http request to restore a collection")
+		return nil, err
+	}
+
+	backupResponse := &Response{
+		Code:   res.StatusCode(),
+		header: res.Header(),
+		body:   res.RawBody(),
+	}
+	return backupResponse, nil
+}
+
+func (sc *SLClient) PurgeBackup(ctx context.Context, collection string, backupName string, location string, repository string, backupId int) (*Response, error) {
+	sc.Config.log.V(5).Info(fmt.Sprintf("DELETE BACKUP ID %d of BACKUP %s", backupId, backupName))
+	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
+	req.SetHeader("Content-Type", "application/json")
+	params := &BackupRestoreParams{
+		Location:   location,
+		Repository: repository,
+	}
+	req.SetBody(params)
+
+	res, err := req.Put(fmt.Sprintf("/api/backups/%s/purgeUnused", backupName))
+	if err != nil {
+		sc.log.Error(err, "Failed to send http request to restore a collection")
+		return nil, err
+	}
+
 	backupResponse := &Response{
 		Code:   res.StatusCode(),
 		header: res.Header(),
