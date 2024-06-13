@@ -230,8 +230,8 @@ func (sc *SLClient) DeleteBackup(ctx context.Context, backupName string, locatio
 	return backupResponse, nil
 }
 
-func (sc *SLClient) PurgeBackup(ctx context.Context, backupName string, location string, repository string, backupId int) (*Response, error) {
-	sc.Config.log.V(5).Info(fmt.Sprintf("DELETE BACKUP ID %d of BACKUP %s", backupId, backupName))
+func (sc *SLClient) PurgeBackup(ctx context.Context, backupName string, location string, repository string) (*Response, error) {
+	sc.Config.log.V(5).Info(fmt.Sprintf("PURGE BACKUP ID %s", backupName))
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
 	req.SetHeader("Content-Type", "application/json")
 	params := &BackupRestoreParams{
