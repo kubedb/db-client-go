@@ -206,7 +206,7 @@ func (sc *SLClient) RequestStatus(asyncId string) (*Response, error) {
 	return backupResponse, nil
 }
 
-func (sc *SLClient) DeleteBackup(ctx context.Context, collection string, backupName string, location string, repository string, backupId int) (*Response, error) {
+func (sc *SLClient) DeleteBackup(ctx context.Context, backupName string, location string, repository string, backupId int) (*Response, error) {
 	sc.Config.log.V(5).Info(fmt.Sprintf("DELETE BACKUP ID %d of BACKUP %s", backupId, backupName))
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
 	req.SetHeader("Content-Type", "application/json")
@@ -230,7 +230,7 @@ func (sc *SLClient) DeleteBackup(ctx context.Context, collection string, backupN
 	return backupResponse, nil
 }
 
-func (sc *SLClient) PurgeBackup(ctx context.Context, collection string, backupName string, location string, repository string, backupId int) (*Response, error) {
+func (sc *SLClient) PurgeBackup(ctx context.Context, backupName string, location string, repository string, backupId int) (*Response, error) {
 	sc.Config.log.V(5).Info(fmt.Sprintf("DELETE BACKUP ID %d of BACKUP %s", backupId, backupName))
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
 	req.SetHeader("Content-Type", "application/json")
