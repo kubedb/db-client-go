@@ -19,6 +19,7 @@ package pgbouncer
 import (
 	"context"
 	"fmt"
+
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	_ "github.com/lib/pq"
