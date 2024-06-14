@@ -195,6 +195,9 @@ func (o *KubeDBClientBuilder) getTLSConfig() (*certholder.Paths, error) {
 		return nil, err
 	}
 	err = o.setCACert(certSecret)
+	if err != nil {
+		return nil, err
+	}
 
 	certs, _ := certholder.DefaultHolder.ForResource(api.SchemeGroupVersion.WithResource(api.ResourcePluralPgBouncer), o.pgbouncer.ObjectMeta)
 	paths, err := certs.Save(certSecret)
