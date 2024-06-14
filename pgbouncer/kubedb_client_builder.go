@@ -19,7 +19,6 @@ package pgbouncer
 import (
 	"context"
 	"fmt"
-
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	_ "github.com/lib/pq"
@@ -195,6 +194,7 @@ func (o *KubeDBClientBuilder) getTLSConfig() (*certholder.Paths, error) {
 		klog.Error(err, "failed to get certificate secret.", secretName)
 		return nil, err
 	}
+	err = o.setCACert(certSecret)
 
 	certs, _ := certholder.DefaultHolder.ForResource(api.SchemeGroupVersion.WithResource(api.ResourcePluralPgBouncer), o.pgbouncer.ObjectMeta)
 	paths, err := certs.Save(certSecret)
@@ -238,6 +238,18 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		connector = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s", user, pass, o.url, listeningPort, o.databaseName, sslMode)
 	}
 	return connector, nil
+}
+
+func (o *KubeDBClientBuilder) setCACert(certSecret *core.Secret) error {
+	secretName := o.pgbouncer.GetCertSecretName(api.PgBouncerClientCert)
+	secretNamespace := o.pgbouncer.Namespace
+	pgbouncerSecret := &core.Secret{}
+	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: secretNamespace, Name: secretName}, pgbouncerSecret)
+	if err != nil {
+		return err
+	}
+	certSecret.Data[core.ServiceAccountRootCAKey] = pgbouncerSecret.Data[core.ServiceAccountRootCAKey]
+	return nil
 }
 
 func GetXormClientList(kc client.Client, pb *api.PgBouncer, ctx context.Context, auth *Auth, dbName string) (*XormClientList, error) {
