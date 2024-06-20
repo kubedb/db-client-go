@@ -20,7 +20,8 @@ import (
 	"context"
 	"fmt"
 
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	"kubedb.dev/apimachinery/apis/kubedb"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1"
 
 	_ "github.com/lib/pq"
 	core "k8s.io/api/core/v1"
@@ -219,7 +220,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		o.url = o.getURL()
 	}
 
-	var listeningPort int = api.PgBouncerDatabasePort
+	var listeningPort int = kubedb.PgBouncerDatabasePort
 	if o.pgbouncer.Spec.ConnectionPool.Port != nil {
 		listeningPort = int(*o.pgbouncer.Spec.ConnectionPool.Port)
 	}
