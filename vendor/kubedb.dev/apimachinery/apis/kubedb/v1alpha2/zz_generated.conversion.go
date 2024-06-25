@@ -24,8 +24,6 @@ package v1alpha2
 import (
 	unsafe "unsafe"
 
-	v1 "kubedb.dev/apimachinery/apis/kubedb/v1"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
@@ -35,6 +33,7 @@ import (
 	monitoringagentapiapiv1 "kmodules.xyz/monitoring-agent-api/api/v1"
 	apiv1 "kmodules.xyz/offshoot-api/api/v1"
 	v2 "kmodules.xyz/offshoot-api/api/v2"
+	v1 "kubedb.dev/apimachinery/apis/kubedb/v1"
 )
 
 func init() {
@@ -124,16 +123,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*CoordinatorSpec)(nil), (*[]corev1.Container)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha2_CoordinatorSpec_To_v1_CoordinatorSpec(a.(*CoordinatorSpec), b.(*[]corev1.Container), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*[]corev1.Container)(nil), (*CoordinatorSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1_CoordinatorSpec_To_v1alpha2_CoordinatorSpec(a.(*[]corev1.Container), b.(*CoordinatorSpec), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*Database)(nil), (*v1.Database)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha2_Database_To_v1_Database(a.(*Database), b.(*v1.Database), scope)
 	}); err != nil {
@@ -171,16 +160,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddGeneratedConversionFunc((*v1.ElasticsearchList)(nil), (*ElasticsearchList)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1_ElasticsearchList_To_v1alpha2_ElasticsearchList(a.(*v1.ElasticsearchList), b.(*ElasticsearchList), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*ElasticsearchNode)(nil), (*v1.ElasticsearchNode)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha2_ElasticsearchNode_To_v1_ElasticsearchNode(a.(*ElasticsearchNode), b.(*v1.ElasticsearchNode), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1.ElasticsearchNode)(nil), (*ElasticsearchNode)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1_ElasticsearchNode_To_v1alpha2_ElasticsearchNode(a.(*v1.ElasticsearchNode), b.(*ElasticsearchNode), scope)
 	}); err != nil {
 		return err
 	}
@@ -254,6 +233,86 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddGeneratedConversionFunc((*Kafka)(nil), (*v1.Kafka)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha2_Kafka_To_v1_Kafka(a.(*Kafka), b.(*v1.Kafka), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1.Kafka)(nil), (*Kafka)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1_Kafka_To_v1alpha2_Kafka(a.(*v1.Kafka), b.(*Kafka), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*KafkaApp)(nil), (*v1.KafkaApp)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha2_KafkaApp_To_v1_KafkaApp(a.(*KafkaApp), b.(*v1.KafkaApp), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1.KafkaApp)(nil), (*KafkaApp)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1_KafkaApp_To_v1alpha2_KafkaApp(a.(*v1.KafkaApp), b.(*KafkaApp), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*KafkaBrokerCapacity)(nil), (*v1.KafkaBrokerCapacity)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha2_KafkaBrokerCapacity_To_v1_KafkaBrokerCapacity(a.(*KafkaBrokerCapacity), b.(*v1.KafkaBrokerCapacity), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1.KafkaBrokerCapacity)(nil), (*KafkaBrokerCapacity)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1_KafkaBrokerCapacity_To_v1alpha2_KafkaBrokerCapacity(a.(*v1.KafkaBrokerCapacity), b.(*KafkaBrokerCapacity), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*KafkaClusterTopology)(nil), (*v1.KafkaClusterTopology)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha2_KafkaClusterTopology_To_v1_KafkaClusterTopology(a.(*KafkaClusterTopology), b.(*v1.KafkaClusterTopology), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1.KafkaClusterTopology)(nil), (*KafkaClusterTopology)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1_KafkaClusterTopology_To_v1alpha2_KafkaClusterTopology(a.(*v1.KafkaClusterTopology), b.(*KafkaClusterTopology), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*KafkaCruiseControl)(nil), (*v1.KafkaCruiseControl)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha2_KafkaCruiseControl_To_v1_KafkaCruiseControl(a.(*KafkaCruiseControl), b.(*v1.KafkaCruiseControl), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1.KafkaCruiseControl)(nil), (*KafkaCruiseControl)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1_KafkaCruiseControl_To_v1alpha2_KafkaCruiseControl(a.(*v1.KafkaCruiseControl), b.(*KafkaCruiseControl), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*KafkaList)(nil), (*v1.KafkaList)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha2_KafkaList_To_v1_KafkaList(a.(*KafkaList), b.(*v1.KafkaList), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1.KafkaList)(nil), (*KafkaList)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1_KafkaList_To_v1alpha2_KafkaList(a.(*v1.KafkaList), b.(*KafkaList), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*KafkaSpec)(nil), (*v1.KafkaSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha2_KafkaSpec_To_v1_KafkaSpec(a.(*KafkaSpec), b.(*v1.KafkaSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1.KafkaSpec)(nil), (*KafkaSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1_KafkaSpec_To_v1alpha2_KafkaSpec(a.(*v1.KafkaSpec), b.(*KafkaSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*KafkaStatus)(nil), (*v1.KafkaStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha2_KafkaStatus_To_v1_KafkaStatus(a.(*KafkaStatus), b.(*v1.KafkaStatus), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1.KafkaStatus)(nil), (*KafkaStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1_KafkaStatus_To_v1alpha2_KafkaStatus(a.(*v1.KafkaStatus), b.(*KafkaStatus), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddGeneratedConversionFunc((*KernelSettings)(nil), (*v1.KernelSettings)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha2_KernelSettings_To_v1_KernelSettings(a.(*KernelSettings), b.(*v1.KernelSettings), scope)
 	}); err != nil {
@@ -281,16 +340,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddGeneratedConversionFunc((*v1.MariaDBList)(nil), (*MariaDBList)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1_MariaDBList_To_v1alpha2_MariaDBList(a.(*v1.MariaDBList), b.(*MariaDBList), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*MariaDBSpec)(nil), (*v1.MariaDBSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha2_MariaDBSpec_To_v1_MariaDBSpec(a.(*MariaDBSpec), b.(*v1.MariaDBSpec), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1.MariaDBSpec)(nil), (*MariaDBSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1_MariaDBSpec_To_v1alpha2_MariaDBSpec(a.(*v1.MariaDBSpec), b.(*MariaDBSpec), scope)
 	}); err != nil {
 		return err
 	}
@@ -434,16 +483,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*MongoDBSpec)(nil), (*v1.MongoDBSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha2_MongoDBSpec_To_v1_MongoDBSpec(a.(*MongoDBSpec), b.(*v1.MongoDBSpec), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1.MongoDBSpec)(nil), (*MongoDBSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1_MongoDBSpec_To_v1alpha2_MongoDBSpec(a.(*v1.MongoDBSpec), b.(*MongoDBSpec), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*MongoDBStatus)(nil), (*v1.MongoDBStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha2_MongoDBStatus_To_v1_MongoDBStatus(a.(*MongoDBStatus), b.(*v1.MongoDBStatus), scope)
 	}); err != nil {
@@ -511,16 +550,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddGeneratedConversionFunc((*v1.MySQLRouterSpec)(nil), (*MySQLRouterSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1_MySQLRouterSpec_To_v1alpha2_MySQLRouterSpec(a.(*v1.MySQLRouterSpec), b.(*MySQLRouterSpec), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*MySQLSpec)(nil), (*v1.MySQLSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha2_MySQLSpec_To_v1_MySQLSpec(a.(*MySQLSpec), b.(*v1.MySQLSpec), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1.MySQLSpec)(nil), (*MySQLSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1_MySQLSpec_To_v1alpha2_MySQLSpec(a.(*v1.MySQLSpec), b.(*MySQLSpec), scope)
 	}); err != nil {
 		return err
 	}
@@ -601,16 +630,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddGeneratedConversionFunc((*v1.PerconaXtraDBList)(nil), (*PerconaXtraDBList)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1_PerconaXtraDBList_To_v1alpha2_PerconaXtraDBList(a.(*v1.PerconaXtraDBList), b.(*PerconaXtraDBList), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*PerconaXtraDBSpec)(nil), (*v1.PerconaXtraDBSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha2_PerconaXtraDBSpec_To_v1_PerconaXtraDBSpec(a.(*PerconaXtraDBSpec), b.(*v1.PerconaXtraDBSpec), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1.PerconaXtraDBSpec)(nil), (*PerconaXtraDBSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1_PerconaXtraDBSpec_To_v1alpha2_PerconaXtraDBSpec(a.(*v1.PerconaXtraDBSpec), b.(*PerconaXtraDBSpec), scope)
 	}); err != nil {
 		return err
 	}
@@ -701,16 +720,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddGeneratedConversionFunc((*v1.PostgresReplication)(nil), (*PostgresReplication)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1_PostgresReplication_To_v1alpha2_PostgresReplication(a.(*v1.PostgresReplication), b.(*PostgresReplication), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*PostgresSpec)(nil), (*v1.PostgresSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha2_PostgresSpec_To_v1_PostgresSpec(a.(*PostgresSpec), b.(*v1.PostgresSpec), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1.PostgresSpec)(nil), (*PostgresSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1_PostgresSpec_To_v1alpha2_PostgresSpec(a.(*v1.PostgresSpec), b.(*PostgresSpec), scope)
 	}); err != nil {
 		return err
 	}
@@ -864,16 +873,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*RedisSpec)(nil), (*v1.RedisSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha2_RedisSpec_To_v1_RedisSpec(a.(*RedisSpec), b.(*v1.RedisSpec), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1.RedisSpec)(nil), (*RedisSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1_RedisSpec_To_v1alpha2_RedisSpec(a.(*v1.RedisSpec), b.(*RedisSpec), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*RedisStatus)(nil), (*v1.RedisStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha2_RedisStatus_To_v1_RedisStatus(a.(*RedisStatus), b.(*v1.RedisStatus), scope)
 	}); err != nil {
@@ -934,8 +933,98 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*[]corev1.Container)(nil), (*CoordinatorSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_Slice_v1_Container_To_v1alpha2_CoordinatorSpec(a.(*[]corev1.Container), b.(*CoordinatorSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1.ElasticsearchNode)(nil), (*ElasticsearchNode)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1_ElasticsearchNode_To_v1alpha2_ElasticsearchNode(a.(*v1.ElasticsearchNode), b.(*ElasticsearchNode), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1.KafkaNode)(nil), (*KafkaNode)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1_KafkaNode_To_v1alpha2_KafkaNode(a.(*v1.KafkaNode), b.(*KafkaNode), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1.MariaDBSpec)(nil), (*MariaDBSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1_MariaDBSpec_To_v1alpha2_MariaDBSpec(a.(*v1.MariaDBSpec), b.(*MariaDBSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1.MongoDBSpec)(nil), (*MongoDBSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1_MongoDBSpec_To_v1alpha2_MongoDBSpec(a.(*v1.MongoDBSpec), b.(*MongoDBSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1.MySQLSpec)(nil), (*MySQLSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1_MySQLSpec_To_v1alpha2_MySQLSpec(a.(*v1.MySQLSpec), b.(*MySQLSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1.PerconaXtraDBSpec)(nil), (*PerconaXtraDBSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1_PerconaXtraDBSpec_To_v1alpha2_PerconaXtraDBSpec(a.(*v1.PerconaXtraDBSpec), b.(*PerconaXtraDBSpec), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddConversionFunc((*apiv1.PodTemplateSpec)(nil), (*v2.PodTemplateSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1_PodTemplateSpec_To_v2_PodTemplateSpec(a.(*apiv1.PodTemplateSpec), b.(*v2.PodTemplateSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1.PostgresSpec)(nil), (*PostgresSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1_PostgresSpec_To_v1alpha2_PostgresSpec(a.(*v1.PostgresSpec), b.(*PostgresSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1.RedisSpec)(nil), (*RedisSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1_RedisSpec_To_v1alpha2_RedisSpec(a.(*v1.RedisSpec), b.(*RedisSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*CoordinatorSpec)(nil), (*[]corev1.Container)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha2_CoordinatorSpec_To_Slice_v1_Container(a.(*CoordinatorSpec), b.(*[]corev1.Container), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*ElasticsearchNode)(nil), (*v1.ElasticsearchNode)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha2_ElasticsearchNode_To_v1_ElasticsearchNode(a.(*ElasticsearchNode), b.(*v1.ElasticsearchNode), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*KafkaNode)(nil), (*v1.KafkaNode)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha2_KafkaNode_To_v1_KafkaNode(a.(*KafkaNode), b.(*v1.KafkaNode), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*MariaDBSpec)(nil), (*v1.MariaDBSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha2_MariaDBSpec_To_v1_MariaDBSpec(a.(*MariaDBSpec), b.(*v1.MariaDBSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*MongoDBSpec)(nil), (*v1.MongoDBSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha2_MongoDBSpec_To_v1_MongoDBSpec(a.(*MongoDBSpec), b.(*v1.MongoDBSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*MySQLSpec)(nil), (*v1.MySQLSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha2_MySQLSpec_To_v1_MySQLSpec(a.(*MySQLSpec), b.(*v1.MySQLSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*PerconaXtraDBSpec)(nil), (*v1.PerconaXtraDBSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha2_PerconaXtraDBSpec_To_v1_PerconaXtraDBSpec(a.(*PerconaXtraDBSpec), b.(*v1.PerconaXtraDBSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*PostgresSpec)(nil), (*v1.PostgresSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha2_PostgresSpec_To_v1_PostgresSpec(a.(*PostgresSpec), b.(*v1.PostgresSpec), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*RedisSpec)(nil), (*v1.RedisSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha2_RedisSpec_To_v1_RedisSpec(a.(*RedisSpec), b.(*v1.RedisSpec), scope)
 	}); err != nil {
 		return err
 	}
@@ -1208,15 +1297,87 @@ func autoConvert_v1alpha2_ElasticsearchClusterTopology_To_v1_ElasticsearchCluste
 	if err := Convert_v1alpha2_ElasticsearchNode_To_v1_ElasticsearchNode(&in.Ingest, &out.Ingest, s); err != nil {
 		return err
 	}
-	out.Data = (*v1.ElasticsearchNode)(unsafe.Pointer(in.Data))
-	out.DataContent = (*v1.ElasticsearchNode)(unsafe.Pointer(in.DataContent))
-	out.DataHot = (*v1.ElasticsearchNode)(unsafe.Pointer(in.DataHot))
-	out.DataWarm = (*v1.ElasticsearchNode)(unsafe.Pointer(in.DataWarm))
-	out.DataCold = (*v1.ElasticsearchNode)(unsafe.Pointer(in.DataCold))
-	out.DataFrozen = (*v1.ElasticsearchNode)(unsafe.Pointer(in.DataFrozen))
-	out.ML = (*v1.ElasticsearchNode)(unsafe.Pointer(in.ML))
-	out.Transform = (*v1.ElasticsearchNode)(unsafe.Pointer(in.Transform))
-	out.Coordinating = (*v1.ElasticsearchNode)(unsafe.Pointer(in.Coordinating))
+	if in.Data != nil {
+		in, out := &in.Data, &out.Data
+		*out = new(v1.ElasticsearchNode)
+		if err := Convert_v1alpha2_ElasticsearchNode_To_v1_ElasticsearchNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Data = nil
+	}
+	if in.DataContent != nil {
+		in, out := &in.DataContent, &out.DataContent
+		*out = new(v1.ElasticsearchNode)
+		if err := Convert_v1alpha2_ElasticsearchNode_To_v1_ElasticsearchNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.DataContent = nil
+	}
+	if in.DataHot != nil {
+		in, out := &in.DataHot, &out.DataHot
+		*out = new(v1.ElasticsearchNode)
+		if err := Convert_v1alpha2_ElasticsearchNode_To_v1_ElasticsearchNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.DataHot = nil
+	}
+	if in.DataWarm != nil {
+		in, out := &in.DataWarm, &out.DataWarm
+		*out = new(v1.ElasticsearchNode)
+		if err := Convert_v1alpha2_ElasticsearchNode_To_v1_ElasticsearchNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.DataWarm = nil
+	}
+	if in.DataCold != nil {
+		in, out := &in.DataCold, &out.DataCold
+		*out = new(v1.ElasticsearchNode)
+		if err := Convert_v1alpha2_ElasticsearchNode_To_v1_ElasticsearchNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.DataCold = nil
+	}
+	if in.DataFrozen != nil {
+		in, out := &in.DataFrozen, &out.DataFrozen
+		*out = new(v1.ElasticsearchNode)
+		if err := Convert_v1alpha2_ElasticsearchNode_To_v1_ElasticsearchNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.DataFrozen = nil
+	}
+	if in.ML != nil {
+		in, out := &in.ML, &out.ML
+		*out = new(v1.ElasticsearchNode)
+		if err := Convert_v1alpha2_ElasticsearchNode_To_v1_ElasticsearchNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.ML = nil
+	}
+	if in.Transform != nil {
+		in, out := &in.Transform, &out.Transform
+		*out = new(v1.ElasticsearchNode)
+		if err := Convert_v1alpha2_ElasticsearchNode_To_v1_ElasticsearchNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Transform = nil
+	}
+	if in.Coordinating != nil {
+		in, out := &in.Coordinating, &out.Coordinating
+		*out = new(v1.ElasticsearchNode)
+		if err := Convert_v1alpha2_ElasticsearchNode_To_v1_ElasticsearchNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Coordinating = nil
+	}
 	return nil
 }
 
@@ -1232,15 +1393,87 @@ func autoConvert_v1_ElasticsearchClusterTopology_To_v1alpha2_ElasticsearchCluste
 	if err := Convert_v1_ElasticsearchNode_To_v1alpha2_ElasticsearchNode(&in.Ingest, &out.Ingest, s); err != nil {
 		return err
 	}
-	out.Data = (*ElasticsearchNode)(unsafe.Pointer(in.Data))
-	out.DataContent = (*ElasticsearchNode)(unsafe.Pointer(in.DataContent))
-	out.DataHot = (*ElasticsearchNode)(unsafe.Pointer(in.DataHot))
-	out.DataWarm = (*ElasticsearchNode)(unsafe.Pointer(in.DataWarm))
-	out.DataCold = (*ElasticsearchNode)(unsafe.Pointer(in.DataCold))
-	out.DataFrozen = (*ElasticsearchNode)(unsafe.Pointer(in.DataFrozen))
-	out.ML = (*ElasticsearchNode)(unsafe.Pointer(in.ML))
-	out.Transform = (*ElasticsearchNode)(unsafe.Pointer(in.Transform))
-	out.Coordinating = (*ElasticsearchNode)(unsafe.Pointer(in.Coordinating))
+	if in.Data != nil {
+		in, out := &in.Data, &out.Data
+		*out = new(ElasticsearchNode)
+		if err := Convert_v1_ElasticsearchNode_To_v1alpha2_ElasticsearchNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Data = nil
+	}
+	if in.DataContent != nil {
+		in, out := &in.DataContent, &out.DataContent
+		*out = new(ElasticsearchNode)
+		if err := Convert_v1_ElasticsearchNode_To_v1alpha2_ElasticsearchNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.DataContent = nil
+	}
+	if in.DataHot != nil {
+		in, out := &in.DataHot, &out.DataHot
+		*out = new(ElasticsearchNode)
+		if err := Convert_v1_ElasticsearchNode_To_v1alpha2_ElasticsearchNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.DataHot = nil
+	}
+	if in.DataWarm != nil {
+		in, out := &in.DataWarm, &out.DataWarm
+		*out = new(ElasticsearchNode)
+		if err := Convert_v1_ElasticsearchNode_To_v1alpha2_ElasticsearchNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.DataWarm = nil
+	}
+	if in.DataCold != nil {
+		in, out := &in.DataCold, &out.DataCold
+		*out = new(ElasticsearchNode)
+		if err := Convert_v1_ElasticsearchNode_To_v1alpha2_ElasticsearchNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.DataCold = nil
+	}
+	if in.DataFrozen != nil {
+		in, out := &in.DataFrozen, &out.DataFrozen
+		*out = new(ElasticsearchNode)
+		if err := Convert_v1_ElasticsearchNode_To_v1alpha2_ElasticsearchNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.DataFrozen = nil
+	}
+	if in.ML != nil {
+		in, out := &in.ML, &out.ML
+		*out = new(ElasticsearchNode)
+		if err := Convert_v1_ElasticsearchNode_To_v1alpha2_ElasticsearchNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.ML = nil
+	}
+	if in.Transform != nil {
+		in, out := &in.Transform, &out.Transform
+		*out = new(ElasticsearchNode)
+		if err := Convert_v1_ElasticsearchNode_To_v1alpha2_ElasticsearchNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Transform = nil
+	}
+	if in.Coordinating != nil {
+		in, out := &in.Coordinating, &out.Coordinating
+		*out = new(ElasticsearchNode)
+		if err := Convert_v1_ElasticsearchNode_To_v1alpha2_ElasticsearchNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Coordinating = nil
+	}
 	return nil
 }
 
@@ -1296,16 +1529,11 @@ func autoConvert_v1alpha2_ElasticsearchNode_To_v1_ElasticsearchNode(in *Elastics
 	out.Suffix = in.Suffix
 	out.HeapSizePercentage = (*int32)(unsafe.Pointer(in.HeapSizePercentage))
 	out.Storage = (*corev1.PersistentVolumeClaimSpec)(unsafe.Pointer(in.Storage))
-	// TODO: out.Resources = in.Resources
+	// WARNING: in.Resources requires manual conversion: does not exist in peer-type
 	out.MaxUnavailable = (*intstr.IntOrString)(unsafe.Pointer(in.MaxUnavailable))
 	out.NodeSelector = *(*map[string]string)(unsafe.Pointer(&in.NodeSelector))
 	out.Tolerations = *(*[]corev1.Toleration)(unsafe.Pointer(&in.Tolerations))
 	return nil
-}
-
-// Convert_v1alpha2_ElasticsearchNode_To_v1_ElasticsearchNode is an autogenerated conversion function.
-func Convert_v1alpha2_ElasticsearchNode_To_v1_ElasticsearchNode(in *ElasticsearchNode, out *v1.ElasticsearchNode, s conversion.Scope) error {
-	return autoConvert_v1alpha2_ElasticsearchNode_To_v1_ElasticsearchNode(in, out, s)
 }
 
 func autoConvert_v1_ElasticsearchNode_To_v1alpha2_ElasticsearchNode(in *v1.ElasticsearchNode, out *ElasticsearchNode, s conversion.Scope) error {
@@ -1313,16 +1541,11 @@ func autoConvert_v1_ElasticsearchNode_To_v1alpha2_ElasticsearchNode(in *v1.Elast
 	out.Suffix = in.Suffix
 	out.HeapSizePercentage = (*int32)(unsafe.Pointer(in.HeapSizePercentage))
 	out.Storage = (*corev1.PersistentVolumeClaimSpec)(unsafe.Pointer(in.Storage))
-	// TODO: out.Resources = in.Resources
+	// WARNING: in.PodTemplate requires manual conversion: does not exist in peer-type
 	out.MaxUnavailable = (*intstr.IntOrString)(unsafe.Pointer(in.MaxUnavailable))
 	out.NodeSelector = *(*map[string]string)(unsafe.Pointer(&in.NodeSelector))
 	out.Tolerations = *(*[]corev1.Toleration)(unsafe.Pointer(&in.Tolerations))
 	return nil
-}
-
-// Convert_v1_ElasticsearchNode_To_v1alpha2_ElasticsearchNode is an autogenerated conversion function.
-func Convert_v1_ElasticsearchNode_To_v1alpha2_ElasticsearchNode(in *v1.ElasticsearchNode, out *ElasticsearchNode, s conversion.Scope) error {
-	return autoConvert_v1_ElasticsearchNode_To_v1alpha2_ElasticsearchNode(in, out, s)
 }
 
 func autoConvert_v1alpha2_ElasticsearchRoleMapSpec_To_v1_ElasticsearchRoleMapSpec(in *ElasticsearchRoleMapSpec, out *v1.ElasticsearchRoleMapSpec, s conversion.Scope) error {
@@ -1361,7 +1584,15 @@ func autoConvert_v1alpha2_ElasticsearchSpec_To_v1_ElasticsearchSpec(in *Elastics
 	}
 	out.Version = in.Version
 	out.Replicas = (*int32)(unsafe.Pointer(in.Replicas))
-	out.Topology = (*v1.ElasticsearchClusterTopology)(unsafe.Pointer(in.Topology))
+	if in.Topology != nil {
+		in, out := &in.Topology, &out.Topology
+		*out = new(v1.ElasticsearchClusterTopology)
+		if err := Convert_v1alpha2_ElasticsearchClusterTopology_To_v1_ElasticsearchClusterTopology(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Topology = nil
+	}
 	out.EnableSSL = in.EnableSSL
 	out.DisableSecurity = in.DisableSecurity
 	out.AuthSecret = (*v1.SecretReference)(unsafe.Pointer(in.AuthSecret))
@@ -1398,7 +1629,15 @@ func autoConvert_v1_ElasticsearchSpec_To_v1alpha2_ElasticsearchSpec(in *v1.Elast
 	}
 	out.Version = in.Version
 	out.Replicas = (*int32)(unsafe.Pointer(in.Replicas))
-	out.Topology = (*ElasticsearchClusterTopology)(unsafe.Pointer(in.Topology))
+	if in.Topology != nil {
+		in, out := &in.Topology, &out.Topology
+		*out = new(ElasticsearchClusterTopology)
+		if err := Convert_v1_ElasticsearchClusterTopology_To_v1alpha2_ElasticsearchClusterTopology(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Topology = nil
+	}
 	out.EnableSSL = in.EnableSSL
 	out.DisableSecurity = in.DisableSecurity
 	out.AuthSecret = (*SecretReference)(unsafe.Pointer(in.AuthSecret))
@@ -1585,6 +1824,334 @@ func Convert_v1_InitSpec_To_v1alpha2_InitSpec(in *v1.InitSpec, out *InitSpec, s 
 	return autoConvert_v1_InitSpec_To_v1alpha2_InitSpec(in, out, s)
 }
 
+func autoConvert_v1alpha2_Kafka_To_v1_Kafka(in *Kafka, out *v1.Kafka, s conversion.Scope) error {
+	out.ObjectMeta = in.ObjectMeta
+	if err := Convert_v1alpha2_KafkaSpec_To_v1_KafkaSpec(&in.Spec, &out.Spec, s); err != nil {
+		return err
+	}
+	if err := Convert_v1alpha2_KafkaStatus_To_v1_KafkaStatus(&in.Status, &out.Status, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Convert_v1alpha2_Kafka_To_v1_Kafka is an autogenerated conversion function.
+func Convert_v1alpha2_Kafka_To_v1_Kafka(in *Kafka, out *v1.Kafka, s conversion.Scope) error {
+	return autoConvert_v1alpha2_Kafka_To_v1_Kafka(in, out, s)
+}
+
+func autoConvert_v1_Kafka_To_v1alpha2_Kafka(in *v1.Kafka, out *Kafka, s conversion.Scope) error {
+	out.ObjectMeta = in.ObjectMeta
+	if err := Convert_v1_KafkaSpec_To_v1alpha2_KafkaSpec(&in.Spec, &out.Spec, s); err != nil {
+		return err
+	}
+	if err := Convert_v1_KafkaStatus_To_v1alpha2_KafkaStatus(&in.Status, &out.Status, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Convert_v1_Kafka_To_v1alpha2_Kafka is an autogenerated conversion function.
+func Convert_v1_Kafka_To_v1alpha2_Kafka(in *v1.Kafka, out *Kafka, s conversion.Scope) error {
+	return autoConvert_v1_Kafka_To_v1alpha2_Kafka(in, out, s)
+}
+
+func autoConvert_v1alpha2_KafkaApp_To_v1_KafkaApp(in *KafkaApp, out *v1.KafkaApp, s conversion.Scope) error {
+	if in.Kafka != nil {
+		in, out := &in.Kafka, &out.Kafka
+		*out = new(v1.Kafka)
+		if err := Convert_v1alpha2_Kafka_To_v1_Kafka(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Kafka = nil
+	}
+	return nil
+}
+
+// Convert_v1alpha2_KafkaApp_To_v1_KafkaApp is an autogenerated conversion function.
+func Convert_v1alpha2_KafkaApp_To_v1_KafkaApp(in *KafkaApp, out *v1.KafkaApp, s conversion.Scope) error {
+	return autoConvert_v1alpha2_KafkaApp_To_v1_KafkaApp(in, out, s)
+}
+
+func autoConvert_v1_KafkaApp_To_v1alpha2_KafkaApp(in *v1.KafkaApp, out *KafkaApp, s conversion.Scope) error {
+	if in.Kafka != nil {
+		in, out := &in.Kafka, &out.Kafka
+		*out = new(Kafka)
+		if err := Convert_v1_Kafka_To_v1alpha2_Kafka(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Kafka = nil
+	}
+	return nil
+}
+
+// Convert_v1_KafkaApp_To_v1alpha2_KafkaApp is an autogenerated conversion function.
+func Convert_v1_KafkaApp_To_v1alpha2_KafkaApp(in *v1.KafkaApp, out *KafkaApp, s conversion.Scope) error {
+	return autoConvert_v1_KafkaApp_To_v1alpha2_KafkaApp(in, out, s)
+}
+
+func autoConvert_v1alpha2_KafkaBrokerCapacity_To_v1_KafkaBrokerCapacity(in *KafkaBrokerCapacity, out *v1.KafkaBrokerCapacity, s conversion.Scope) error {
+	out.InBoundNetwork = in.InBoundNetwork
+	out.OutBoundNetwork = in.OutBoundNetwork
+	return nil
+}
+
+// Convert_v1alpha2_KafkaBrokerCapacity_To_v1_KafkaBrokerCapacity is an autogenerated conversion function.
+func Convert_v1alpha2_KafkaBrokerCapacity_To_v1_KafkaBrokerCapacity(in *KafkaBrokerCapacity, out *v1.KafkaBrokerCapacity, s conversion.Scope) error {
+	return autoConvert_v1alpha2_KafkaBrokerCapacity_To_v1_KafkaBrokerCapacity(in, out, s)
+}
+
+func autoConvert_v1_KafkaBrokerCapacity_To_v1alpha2_KafkaBrokerCapacity(in *v1.KafkaBrokerCapacity, out *KafkaBrokerCapacity, s conversion.Scope) error {
+	out.InBoundNetwork = in.InBoundNetwork
+	out.OutBoundNetwork = in.OutBoundNetwork
+	return nil
+}
+
+// Convert_v1_KafkaBrokerCapacity_To_v1alpha2_KafkaBrokerCapacity is an autogenerated conversion function.
+func Convert_v1_KafkaBrokerCapacity_To_v1alpha2_KafkaBrokerCapacity(in *v1.KafkaBrokerCapacity, out *KafkaBrokerCapacity, s conversion.Scope) error {
+	return autoConvert_v1_KafkaBrokerCapacity_To_v1alpha2_KafkaBrokerCapacity(in, out, s)
+}
+
+func autoConvert_v1alpha2_KafkaClusterTopology_To_v1_KafkaClusterTopology(in *KafkaClusterTopology, out *v1.KafkaClusterTopology, s conversion.Scope) error {
+	if in.Controller != nil {
+		in, out := &in.Controller, &out.Controller
+		*out = new(v1.KafkaNode)
+		if err := Convert_v1alpha2_KafkaNode_To_v1_KafkaNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Controller = nil
+	}
+	if in.Broker != nil {
+		in, out := &in.Broker, &out.Broker
+		*out = new(v1.KafkaNode)
+		if err := Convert_v1alpha2_KafkaNode_To_v1_KafkaNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Broker = nil
+	}
+	return nil
+}
+
+// Convert_v1alpha2_KafkaClusterTopology_To_v1_KafkaClusterTopology is an autogenerated conversion function.
+func Convert_v1alpha2_KafkaClusterTopology_To_v1_KafkaClusterTopology(in *KafkaClusterTopology, out *v1.KafkaClusterTopology, s conversion.Scope) error {
+	return autoConvert_v1alpha2_KafkaClusterTopology_To_v1_KafkaClusterTopology(in, out, s)
+}
+
+func autoConvert_v1_KafkaClusterTopology_To_v1alpha2_KafkaClusterTopology(in *v1.KafkaClusterTopology, out *KafkaClusterTopology, s conversion.Scope) error {
+	if in.Controller != nil {
+		in, out := &in.Controller, &out.Controller
+		*out = new(KafkaNode)
+		if err := Convert_v1_KafkaNode_To_v1alpha2_KafkaNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Controller = nil
+	}
+	if in.Broker != nil {
+		in, out := &in.Broker, &out.Broker
+		*out = new(KafkaNode)
+		if err := Convert_v1_KafkaNode_To_v1alpha2_KafkaNode(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Broker = nil
+	}
+	return nil
+}
+
+// Convert_v1_KafkaClusterTopology_To_v1alpha2_KafkaClusterTopology is an autogenerated conversion function.
+func Convert_v1_KafkaClusterTopology_To_v1alpha2_KafkaClusterTopology(in *v1.KafkaClusterTopology, out *KafkaClusterTopology, s conversion.Scope) error {
+	return autoConvert_v1_KafkaClusterTopology_To_v1alpha2_KafkaClusterTopology(in, out, s)
+}
+
+func autoConvert_v1alpha2_KafkaCruiseControl_To_v1_KafkaCruiseControl(in *KafkaCruiseControl, out *v1.KafkaCruiseControl, s conversion.Scope) error {
+	out.ConfigSecret = (*v1.SecretReference)(unsafe.Pointer(in.ConfigSecret))
+	out.Replicas = (*int32)(unsafe.Pointer(in.Replicas))
+	out.Suffix = in.Suffix
+	out.Resources = in.Resources
+	out.PodTemplate = in.PodTemplate
+	out.BrokerCapacity = (*v1.KafkaBrokerCapacity)(unsafe.Pointer(in.BrokerCapacity))
+	return nil
+}
+
+// Convert_v1alpha2_KafkaCruiseControl_To_v1_KafkaCruiseControl is an autogenerated conversion function.
+func Convert_v1alpha2_KafkaCruiseControl_To_v1_KafkaCruiseControl(in *KafkaCruiseControl, out *v1.KafkaCruiseControl, s conversion.Scope) error {
+	return autoConvert_v1alpha2_KafkaCruiseControl_To_v1_KafkaCruiseControl(in, out, s)
+}
+
+func autoConvert_v1_KafkaCruiseControl_To_v1alpha2_KafkaCruiseControl(in *v1.KafkaCruiseControl, out *KafkaCruiseControl, s conversion.Scope) error {
+	out.ConfigSecret = (*SecretReference)(unsafe.Pointer(in.ConfigSecret))
+	out.Replicas = (*int32)(unsafe.Pointer(in.Replicas))
+	out.Suffix = in.Suffix
+	out.Resources = in.Resources
+	out.PodTemplate = in.PodTemplate
+	out.BrokerCapacity = (*KafkaBrokerCapacity)(unsafe.Pointer(in.BrokerCapacity))
+	return nil
+}
+
+// Convert_v1_KafkaCruiseControl_To_v1alpha2_KafkaCruiseControl is an autogenerated conversion function.
+func Convert_v1_KafkaCruiseControl_To_v1alpha2_KafkaCruiseControl(in *v1.KafkaCruiseControl, out *KafkaCruiseControl, s conversion.Scope) error {
+	return autoConvert_v1_KafkaCruiseControl_To_v1alpha2_KafkaCruiseControl(in, out, s)
+}
+
+func autoConvert_v1alpha2_KafkaList_To_v1_KafkaList(in *KafkaList, out *v1.KafkaList, s conversion.Scope) error {
+	out.ListMeta = in.ListMeta
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]v1.Kafka, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha2_Kafka_To_v1_Kafka(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
+	return nil
+}
+
+// Convert_v1alpha2_KafkaList_To_v1_KafkaList is an autogenerated conversion function.
+func Convert_v1alpha2_KafkaList_To_v1_KafkaList(in *KafkaList, out *v1.KafkaList, s conversion.Scope) error {
+	return autoConvert_v1alpha2_KafkaList_To_v1_KafkaList(in, out, s)
+}
+
+func autoConvert_v1_KafkaList_To_v1alpha2_KafkaList(in *v1.KafkaList, out *KafkaList, s conversion.Scope) error {
+	out.ListMeta = in.ListMeta
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]Kafka, len(*in))
+		for i := range *in {
+			if err := Convert_v1_Kafka_To_v1alpha2_Kafka(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
+	return nil
+}
+
+// Convert_v1_KafkaList_To_v1alpha2_KafkaList is an autogenerated conversion function.
+func Convert_v1_KafkaList_To_v1alpha2_KafkaList(in *v1.KafkaList, out *KafkaList, s conversion.Scope) error {
+	return autoConvert_v1_KafkaList_To_v1alpha2_KafkaList(in, out, s)
+}
+
+func autoConvert_v1alpha2_KafkaNode_To_v1_KafkaNode(in *KafkaNode, out *v1.KafkaNode, s conversion.Scope) error {
+	out.Replicas = (*int32)(unsafe.Pointer(in.Replicas))
+	out.Suffix = in.Suffix
+	out.Storage = (*corev1.PersistentVolumeClaimSpec)(unsafe.Pointer(in.Storage))
+	// WARNING: in.Resources requires manual conversion: does not exist in peer-type
+	// WARNING: in.NodeSelector requires manual conversion: does not exist in peer-type
+	// WARNING: in.Tolerations requires manual conversion: does not exist in peer-type
+	return nil
+}
+
+func autoConvert_v1_KafkaNode_To_v1alpha2_KafkaNode(in *v1.KafkaNode, out *KafkaNode, s conversion.Scope) error {
+	out.Replicas = (*int32)(unsafe.Pointer(in.Replicas))
+	out.Suffix = in.Suffix
+	out.Storage = (*corev1.PersistentVolumeClaimSpec)(unsafe.Pointer(in.Storage))
+	// WARNING: in.PodTemplate requires manual conversion: does not exist in peer-type
+	return nil
+}
+
+func autoConvert_v1alpha2_KafkaSpec_To_v1_KafkaSpec(in *KafkaSpec, out *v1.KafkaSpec, s conversion.Scope) error {
+	out.Version = in.Version
+	out.Replicas = (*int32)(unsafe.Pointer(in.Replicas))
+	if in.Topology != nil {
+		in, out := &in.Topology, &out.Topology
+		*out = new(v1.KafkaClusterTopology)
+		if err := Convert_v1alpha2_KafkaClusterTopology_To_v1_KafkaClusterTopology(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Topology = nil
+	}
+	out.StorageType = v1.StorageType(in.StorageType)
+	out.Storage = (*corev1.PersistentVolumeClaimSpec)(unsafe.Pointer(in.Storage))
+	out.EnableSSL = in.EnableSSL
+	out.DisableSecurity = in.DisableSecurity
+	out.AuthSecret = (*v1.SecretReference)(unsafe.Pointer(in.AuthSecret))
+	out.ConfigSecret = (*corev1.LocalObjectReference)(unsafe.Pointer(in.ConfigSecret))
+	out.KeystoreCredSecret = (*v1.SecretReference)(unsafe.Pointer(in.KeystoreCredSecret))
+	out.TLS = (*clientgoapiv1.TLSConfig)(unsafe.Pointer(in.TLS))
+	out.PodTemplate = in.PodTemplate
+	out.ServiceTemplates = *(*[]v1.NamedServiceTemplateSpec)(unsafe.Pointer(&in.ServiceTemplates))
+	out.DeletionPolicy = v1.TerminationPolicy(in.DeletionPolicy)
+	out.HealthChecker = in.HealthChecker
+	out.CruiseControl = (*v1.KafkaCruiseControl)(unsafe.Pointer(in.CruiseControl))
+	out.Monitor = (*monitoringagentapiapiv1.AgentSpec)(unsafe.Pointer(in.Monitor))
+	return nil
+}
+
+// Convert_v1alpha2_KafkaSpec_To_v1_KafkaSpec is an autogenerated conversion function.
+func Convert_v1alpha2_KafkaSpec_To_v1_KafkaSpec(in *KafkaSpec, out *v1.KafkaSpec, s conversion.Scope) error {
+	return autoConvert_v1alpha2_KafkaSpec_To_v1_KafkaSpec(in, out, s)
+}
+
+func autoConvert_v1_KafkaSpec_To_v1alpha2_KafkaSpec(in *v1.KafkaSpec, out *KafkaSpec, s conversion.Scope) error {
+	out.Version = in.Version
+	out.Replicas = (*int32)(unsafe.Pointer(in.Replicas))
+	if in.Topology != nil {
+		in, out := &in.Topology, &out.Topology
+		*out = new(KafkaClusterTopology)
+		if err := Convert_v1_KafkaClusterTopology_To_v1alpha2_KafkaClusterTopology(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Topology = nil
+	}
+	out.StorageType = StorageType(in.StorageType)
+	out.Storage = (*corev1.PersistentVolumeClaimSpec)(unsafe.Pointer(in.Storage))
+	out.EnableSSL = in.EnableSSL
+	out.DisableSecurity = in.DisableSecurity
+	out.AuthSecret = (*SecretReference)(unsafe.Pointer(in.AuthSecret))
+	out.ConfigSecret = (*corev1.LocalObjectReference)(unsafe.Pointer(in.ConfigSecret))
+	out.KeystoreCredSecret = (*SecretReference)(unsafe.Pointer(in.KeystoreCredSecret))
+	out.TLS = (*clientgoapiv1.TLSConfig)(unsafe.Pointer(in.TLS))
+	out.PodTemplate = in.PodTemplate
+	out.ServiceTemplates = *(*[]NamedServiceTemplateSpec)(unsafe.Pointer(&in.ServiceTemplates))
+	out.DeletionPolicy = TerminationPolicy(in.DeletionPolicy)
+	out.HealthChecker = in.HealthChecker
+	out.CruiseControl = (*KafkaCruiseControl)(unsafe.Pointer(in.CruiseControl))
+	out.Monitor = (*monitoringagentapiapiv1.AgentSpec)(unsafe.Pointer(in.Monitor))
+	return nil
+}
+
+// Convert_v1_KafkaSpec_To_v1alpha2_KafkaSpec is an autogenerated conversion function.
+func Convert_v1_KafkaSpec_To_v1alpha2_KafkaSpec(in *v1.KafkaSpec, out *KafkaSpec, s conversion.Scope) error {
+	return autoConvert_v1_KafkaSpec_To_v1alpha2_KafkaSpec(in, out, s)
+}
+
+func autoConvert_v1alpha2_KafkaStatus_To_v1_KafkaStatus(in *KafkaStatus, out *v1.KafkaStatus, s conversion.Scope) error {
+	out.Phase = v1.DatabasePhase(in.Phase)
+	out.ObservedGeneration = in.ObservedGeneration
+	out.Conditions = *(*[]clientgoapiv1.Condition)(unsafe.Pointer(&in.Conditions))
+	out.Gateway = (*v1.Gateway)(unsafe.Pointer(in.Gateway))
+	return nil
+}
+
+// Convert_v1alpha2_KafkaStatus_To_v1_KafkaStatus is an autogenerated conversion function.
+func Convert_v1alpha2_KafkaStatus_To_v1_KafkaStatus(in *KafkaStatus, out *v1.KafkaStatus, s conversion.Scope) error {
+	return autoConvert_v1alpha2_KafkaStatus_To_v1_KafkaStatus(in, out, s)
+}
+
+func autoConvert_v1_KafkaStatus_To_v1alpha2_KafkaStatus(in *v1.KafkaStatus, out *KafkaStatus, s conversion.Scope) error {
+	out.Phase = KafkaPhase(in.Phase)
+	out.ObservedGeneration = in.ObservedGeneration
+	out.Conditions = *(*[]clientgoapiv1.Condition)(unsafe.Pointer(&in.Conditions))
+	out.Gateway = (*Gateway)(unsafe.Pointer(in.Gateway))
+	return nil
+}
+
+// Convert_v1_KafkaStatus_To_v1alpha2_KafkaStatus is an autogenerated conversion function.
+func Convert_v1_KafkaStatus_To_v1alpha2_KafkaStatus(in *v1.KafkaStatus, out *KafkaStatus, s conversion.Scope) error {
+	return autoConvert_v1_KafkaStatus_To_v1alpha2_KafkaStatus(in, out, s)
+}
+
 func autoConvert_v1alpha2_KernelSettings_To_v1_KernelSettings(in *KernelSettings, out *v1.KernelSettings, s conversion.Scope) error {
 	out.DisableDefaults = in.DisableDefaults
 	out.Privileged = in.Privileged
@@ -1704,18 +2271,11 @@ func autoConvert_v1alpha2_MariaDBSpec_To_v1_MariaDBSpec(in *MariaDBSpec, out *v1
 	out.TLS = (*clientgoapiv1.TLSConfig)(unsafe.Pointer(in.TLS))
 	out.Halted = in.Halted
 	out.TerminationPolicy = v1.TerminationPolicy(in.TerminationPolicy)
-	if err := Convert_v1alpha2_CoordinatorSpec_To_v1_CoordinatorSpec(&in.Coordinator, &out.PodTemplate.Spec.Containers, s); err != nil {
-		return err
-	}
+	// WARNING: in.Coordinator requires manual conversion: does not exist in peer-type
 	out.AllowedSchemas = (*v1.AllowedConsumers)(unsafe.Pointer(in.AllowedSchemas))
 	out.HealthChecker = in.HealthChecker
 	out.Archiver = (*v1.Archiver)(unsafe.Pointer(in.Archiver))
 	return nil
-}
-
-// Convert_v1alpha2_MariaDBSpec_To_v1_MariaDBSpec is an autogenerated conversion function.
-func Convert_v1alpha2_MariaDBSpec_To_v1_MariaDBSpec(in *MariaDBSpec, out *v1.MariaDBSpec, s conversion.Scope) error {
-	return autoConvert_v1alpha2_MariaDBSpec_To_v1_MariaDBSpec(in, out, s)
 }
 
 func autoConvert_v1_MariaDBSpec_To_v1alpha2_MariaDBSpec(in *v1.MariaDBSpec, out *MariaDBSpec, s conversion.Scope) error {
@@ -1739,18 +2299,10 @@ func autoConvert_v1_MariaDBSpec_To_v1alpha2_MariaDBSpec(in *v1.MariaDBSpec, out 
 	out.TLS = (*clientgoapiv1.TLSConfig)(unsafe.Pointer(in.TLS))
 	out.Halted = in.Halted
 	out.TerminationPolicy = TerminationPolicy(in.TerminationPolicy)
-	if err := Convert_v1_CoordinatorSpec_To_v1alpha2_CoordinatorSpec(&in.PodTemplate.Spec.Containers, &out.Coordinator, s); err != nil {
-		return err
-	}
 	out.AllowedSchemas = (*AllowedConsumers)(unsafe.Pointer(in.AllowedSchemas))
 	out.HealthChecker = in.HealthChecker
 	out.Archiver = (*Archiver)(unsafe.Pointer(in.Archiver))
 	return nil
-}
-
-// Convert_v1_MariaDBSpec_To_v1alpha2_MariaDBSpec is an autogenerated conversion function.
-func Convert_v1_MariaDBSpec_To_v1alpha2_MariaDBSpec(in *v1.MariaDBSpec, out *MariaDBSpec, s conversion.Scope) error {
-	return autoConvert_v1_MariaDBSpec_To_v1alpha2_MariaDBSpec(in, out, s)
 }
 
 func autoConvert_v1alpha2_MariaDBStatus_To_v1_MariaDBStatus(in *MariaDBStatus, out *v1.MariaDBStatus, s conversion.Scope) error {
@@ -2233,9 +2785,7 @@ func autoConvert_v1alpha2_MongoDBSpec_To_v1_MongoDBSpec(in *MongoDBSpec, out *v1
 	out.Halted = in.Halted
 	out.TerminationPolicy = v1.TerminationPolicy(in.TerminationPolicy)
 	out.StorageEngine = v1.StorageEngine(in.StorageEngine)
-	if err := Convert_v1alpha2_CoordinatorSpec_To_v1_CoordinatorSpec(&in.Coordinator, &out.PodTemplate.Spec.Containers, s); err != nil {
-		return err
-	}
+	// WARNING: in.Coordinator requires manual conversion: does not exist in peer-type
 	out.AllowedSchemas = (*v1.AllowedConsumers)(unsafe.Pointer(in.AllowedSchemas))
 	if in.Arbiter != nil {
 		in, out := &in.Arbiter, &out.Arbiter
@@ -2258,11 +2808,6 @@ func autoConvert_v1alpha2_MongoDBSpec_To_v1_MongoDBSpec(in *MongoDBSpec, out *v1
 	out.HealthChecker = in.HealthChecker
 	out.Archiver = (*v1.Archiver)(unsafe.Pointer(in.Archiver))
 	return nil
-}
-
-// Convert_v1alpha2_MongoDBSpec_To_v1_MongoDBSpec is an autogenerated conversion function.
-func Convert_v1alpha2_MongoDBSpec_To_v1_MongoDBSpec(in *MongoDBSpec, out *v1.MongoDBSpec, s conversion.Scope) error {
-	return autoConvert_v1alpha2_MongoDBSpec_To_v1_MongoDBSpec(in, out, s)
 }
 
 func autoConvert_v1_MongoDBSpec_To_v1alpha2_MongoDBSpec(in *v1.MongoDBSpec, out *MongoDBSpec, s conversion.Scope) error {
@@ -2305,9 +2850,6 @@ func autoConvert_v1_MongoDBSpec_To_v1alpha2_MongoDBSpec(in *v1.MongoDBSpec, out 
 	out.Halted = in.Halted
 	out.TerminationPolicy = TerminationPolicy(in.TerminationPolicy)
 	out.StorageEngine = StorageEngine(in.StorageEngine)
-	if err := Convert_v1_CoordinatorSpec_To_v1alpha2_CoordinatorSpec(&in.PodTemplate.Spec.Containers, &out.Coordinator, s); err != nil {
-		return err
-	}
 	out.AllowedSchemas = (*AllowedConsumers)(unsafe.Pointer(in.AllowedSchemas))
 	if in.Arbiter != nil {
 		in, out := &in.Arbiter, &out.Arbiter
@@ -2330,11 +2872,6 @@ func autoConvert_v1_MongoDBSpec_To_v1alpha2_MongoDBSpec(in *v1.MongoDBSpec, out 
 	out.HealthChecker = in.HealthChecker
 	out.Archiver = (*Archiver)(unsafe.Pointer(in.Archiver))
 	return nil
-}
-
-// Convert_v1_MongoDBSpec_To_v1alpha2_MongoDBSpec is an autogenerated conversion function.
-func Convert_v1_MongoDBSpec_To_v1alpha2_MongoDBSpec(in *v1.MongoDBSpec, out *MongoDBSpec, s conversion.Scope) error {
-	return autoConvert_v1_MongoDBSpec_To_v1alpha2_MongoDBSpec(in, out, s)
 }
 
 func autoConvert_v1alpha2_MongoDBStatus_To_v1_MongoDBStatus(in *MongoDBStatus, out *v1.MongoDBStatus, s conversion.Scope) error {
@@ -2585,19 +3122,12 @@ func autoConvert_v1alpha2_MySQLSpec_To_v1_MySQLSpec(in *MySQLSpec, out *v1.MySQL
 	out.Halted = in.Halted
 	out.TerminationPolicy = v1.TerminationPolicy(in.TerminationPolicy)
 	out.UseAddressType = v1.AddressType(in.UseAddressType)
-	if err := Convert_v1alpha2_CoordinatorSpec_To_v1_CoordinatorSpec(&in.Coordinator, &out.PodTemplate.Spec.Containers, s); err != nil {
-		return err
-	}
+	// WARNING: in.Coordinator requires manual conversion: does not exist in peer-type
 	out.AllowedSchemas = (*v1.AllowedConsumers)(unsafe.Pointer(in.AllowedSchemas))
 	out.AllowedReadReplicas = (*v1.AllowedConsumers)(unsafe.Pointer(in.AllowedReadReplicas))
 	out.HealthChecker = in.HealthChecker
 	out.Archiver = (*v1.Archiver)(unsafe.Pointer(in.Archiver))
 	return nil
-}
-
-// Convert_v1alpha2_MySQLSpec_To_v1_MySQLSpec is an autogenerated conversion function.
-func Convert_v1alpha2_MySQLSpec_To_v1_MySQLSpec(in *MySQLSpec, out *v1.MySQLSpec, s conversion.Scope) error {
-	return autoConvert_v1alpha2_MySQLSpec_To_v1_MySQLSpec(in, out, s)
 }
 
 func autoConvert_v1_MySQLSpec_To_v1alpha2_MySQLSpec(in *v1.MySQLSpec, out *MySQLSpec, s conversion.Scope) error {
@@ -2630,19 +3160,11 @@ func autoConvert_v1_MySQLSpec_To_v1alpha2_MySQLSpec(in *v1.MySQLSpec, out *MySQL
 	out.Halted = in.Halted
 	out.TerminationPolicy = TerminationPolicy(in.TerminationPolicy)
 	out.UseAddressType = AddressType(in.UseAddressType)
-	if err := Convert_v1_CoordinatorSpec_To_v1alpha2_CoordinatorSpec(&in.PodTemplate.Spec.Containers, &out.Coordinator, s); err != nil {
-		return err
-	}
 	out.AllowedSchemas = (*AllowedConsumers)(unsafe.Pointer(in.AllowedSchemas))
 	out.AllowedReadReplicas = (*AllowedConsumers)(unsafe.Pointer(in.AllowedReadReplicas))
 	out.HealthChecker = in.HealthChecker
 	out.Archiver = (*Archiver)(unsafe.Pointer(in.Archiver))
 	return nil
-}
-
-// Convert_v1_MySQLSpec_To_v1alpha2_MySQLSpec is an autogenerated conversion function.
-func Convert_v1_MySQLSpec_To_v1alpha2_MySQLSpec(in *v1.MySQLSpec, out *MySQLSpec, s conversion.Scope) error {
-	return autoConvert_v1_MySQLSpec_To_v1alpha2_MySQLSpec(in, out, s)
 }
 
 func autoConvert_v1alpha2_MySQLStatus_To_v1_MySQLStatus(in *MySQLStatus, out *v1.MySQLStatus, s conversion.Scope) error {
@@ -2925,18 +3447,11 @@ func autoConvert_v1alpha2_PerconaXtraDBSpec_To_v1_PerconaXtraDBSpec(in *PerconaX
 	out.TLS = (*clientgoapiv1.TLSConfig)(unsafe.Pointer(in.TLS))
 	out.Halted = in.Halted
 	out.TerminationPolicy = v1.TerminationPolicy(in.TerminationPolicy)
-	if err := Convert_v1alpha2_CoordinatorSpec_To_v1_CoordinatorSpec(&in.Coordinator, &out.PodTemplate.Spec.Containers, s); err != nil {
-		return err
-	}
+	// WARNING: in.Coordinator requires manual conversion: does not exist in peer-type
 	out.AllowedSchemas = (*v1.AllowedConsumers)(unsafe.Pointer(in.AllowedSchemas))
 	out.HealthChecker = in.HealthChecker
 	out.SystemUserSecrets = (*v1.SystemUserSecretsSpec)(unsafe.Pointer(in.SystemUserSecrets))
 	return nil
-}
-
-// Convert_v1alpha2_PerconaXtraDBSpec_To_v1_PerconaXtraDBSpec is an autogenerated conversion function.
-func Convert_v1alpha2_PerconaXtraDBSpec_To_v1_PerconaXtraDBSpec(in *PerconaXtraDBSpec, out *v1.PerconaXtraDBSpec, s conversion.Scope) error {
-	return autoConvert_v1alpha2_PerconaXtraDBSpec_To_v1_PerconaXtraDBSpec(in, out, s)
 }
 
 func autoConvert_v1_PerconaXtraDBSpec_To_v1alpha2_PerconaXtraDBSpec(in *v1.PerconaXtraDBSpec, out *PerconaXtraDBSpec, s conversion.Scope) error {
@@ -2959,18 +3474,10 @@ func autoConvert_v1_PerconaXtraDBSpec_To_v1alpha2_PerconaXtraDBSpec(in *v1.Perco
 	out.TLS = (*clientgoapiv1.TLSConfig)(unsafe.Pointer(in.TLS))
 	out.Halted = in.Halted
 	out.TerminationPolicy = TerminationPolicy(in.TerminationPolicy)
-	if err := Convert_v1_CoordinatorSpec_To_v1alpha2_CoordinatorSpec(&in.PodTemplate.Spec.Containers, &out.Coordinator, s); err != nil {
-		return err
-	}
 	out.AllowedSchemas = (*AllowedConsumers)(unsafe.Pointer(in.AllowedSchemas))
 	out.HealthChecker = in.HealthChecker
 	out.SystemUserSecrets = (*SystemUserSecretsSpec)(unsafe.Pointer(in.SystemUserSecrets))
 	return nil
-}
-
-// Convert_v1_PerconaXtraDBSpec_To_v1alpha2_PerconaXtraDBSpec is an autogenerated conversion function.
-func Convert_v1_PerconaXtraDBSpec_To_v1alpha2_PerconaXtraDBSpec(in *v1.PerconaXtraDBSpec, out *PerconaXtraDBSpec, s conversion.Scope) error {
-	return autoConvert_v1_PerconaXtraDBSpec_To_v1alpha2_PerconaXtraDBSpec(in, out, s)
 }
 
 func autoConvert_v1alpha2_PerconaXtraDBStatus_To_v1_PerconaXtraDBStatus(in *PerconaXtraDBStatus, out *v1.PerconaXtraDBStatus, s conversion.Scope) error {
@@ -3321,9 +3828,7 @@ func autoConvert_v1alpha2_PostgresSpec_To_v1_PostgresSpec(in *PostgresSpec, out 
 	out.TLS = (*clientgoapiv1.TLSConfig)(unsafe.Pointer(in.TLS))
 	out.Halted = in.Halted
 	out.TerminationPolicy = v1.TerminationPolicy(in.TerminationPolicy)
-	if err := Convert_v1alpha2_CoordinatorSpec_To_v1_CoordinatorSpec(&in.Coordinator, &out.PodTemplate.Spec.Containers, s); err != nil {
-		return err
-	}
+	// WARNING: in.Coordinator requires manual conversion: does not exist in peer-type
 	out.EnforceFsGroup = in.EnforceFsGroup
 	out.AllowedSchemas = (*v1.AllowedConsumers)(unsafe.Pointer(in.AllowedSchemas))
 	out.HealthChecker = in.HealthChecker
@@ -3331,11 +3836,6 @@ func autoConvert_v1alpha2_PostgresSpec_To_v1_PostgresSpec(in *PostgresSpec, out 
 	out.Arbiter = (*v1.ArbiterSpec)(unsafe.Pointer(in.Arbiter))
 	out.Replication = (*v1.PostgresReplication)(unsafe.Pointer(in.Replication))
 	return nil
-}
-
-// Convert_v1alpha2_PostgresSpec_To_v1_PostgresSpec is an autogenerated conversion function.
-func Convert_v1alpha2_PostgresSpec_To_v1_PostgresSpec(in *PostgresSpec, out *v1.PostgresSpec, s conversion.Scope) error {
-	return autoConvert_v1alpha2_PostgresSpec_To_v1_PostgresSpec(in, out, s)
 }
 
 func autoConvert_v1_PostgresSpec_To_v1alpha2_PostgresSpec(in *v1.PostgresSpec, out *PostgresSpec, s conversion.Scope) error {
@@ -3364,9 +3864,6 @@ func autoConvert_v1_PostgresSpec_To_v1alpha2_PostgresSpec(in *v1.PostgresSpec, o
 	out.TLS = (*clientgoapiv1.TLSConfig)(unsafe.Pointer(in.TLS))
 	out.Halted = in.Halted
 	out.TerminationPolicy = TerminationPolicy(in.TerminationPolicy)
-	if err := Convert_v1_CoordinatorSpec_To_v1alpha2_CoordinatorSpec(&in.PodTemplate.Spec.Containers, &out.Coordinator, s); err != nil {
-		return err
-	}
 	out.EnforceFsGroup = in.EnforceFsGroup
 	out.AllowedSchemas = (*AllowedConsumers)(unsafe.Pointer(in.AllowedSchemas))
 	out.HealthChecker = in.HealthChecker
@@ -3374,11 +3871,6 @@ func autoConvert_v1_PostgresSpec_To_v1alpha2_PostgresSpec(in *v1.PostgresSpec, o
 	out.Arbiter = (*ArbiterSpec)(unsafe.Pointer(in.Arbiter))
 	out.Replication = (*PostgresReplication)(unsafe.Pointer(in.Replication))
 	return nil
-}
-
-// Convert_v1_PostgresSpec_To_v1alpha2_PostgresSpec is an autogenerated conversion function.
-func Convert_v1_PostgresSpec_To_v1alpha2_PostgresSpec(in *v1.PostgresSpec, out *PostgresSpec, s conversion.Scope) error {
-	return autoConvert_v1_PostgresSpec_To_v1alpha2_PostgresSpec(in, out, s)
 }
 
 func autoConvert_v1alpha2_PostgresStatus_To_v1_PostgresStatus(in *PostgresStatus, out *v1.PostgresStatus, s conversion.Scope) error {
@@ -3912,17 +4404,10 @@ func autoConvert_v1alpha2_RedisSpec_To_v1_RedisSpec(in *RedisSpec, out *v1.Redis
 	out.TLS = (*clientgoapiv1.TLSConfig)(unsafe.Pointer(in.TLS))
 	out.Halted = in.Halted
 	out.TerminationPolicy = v1.TerminationPolicy(in.TerminationPolicy)
-	if err := Convert_v1alpha2_CoordinatorSpec_To_v1_CoordinatorSpec(&in.Coordinator, &out.PodTemplate.Spec.Containers, s); err != nil {
-		return err
-	}
+	// WARNING: in.Coordinator requires manual conversion: does not exist in peer-type
 	out.AllowedSchemas = (*v1.AllowedConsumers)(unsafe.Pointer(in.AllowedSchemas))
 	out.HealthChecker = in.HealthChecker
 	return nil
-}
-
-// Convert_v1alpha2_RedisSpec_To_v1_RedisSpec is an autogenerated conversion function.
-func Convert_v1alpha2_RedisSpec_To_v1_RedisSpec(in *RedisSpec, out *v1.RedisSpec, s conversion.Scope) error {
-	return autoConvert_v1alpha2_RedisSpec_To_v1_RedisSpec(in, out, s)
 }
 
 func autoConvert_v1_RedisSpec_To_v1alpha2_RedisSpec(in *v1.RedisSpec, out *RedisSpec, s conversion.Scope) error {
@@ -3948,17 +4433,9 @@ func autoConvert_v1_RedisSpec_To_v1alpha2_RedisSpec(in *v1.RedisSpec, out *Redis
 	out.TLS = (*clientgoapiv1.TLSConfig)(unsafe.Pointer(in.TLS))
 	out.Halted = in.Halted
 	out.TerminationPolicy = TerminationPolicy(in.TerminationPolicy)
-	if err := Convert_v1_CoordinatorSpec_To_v1alpha2_CoordinatorSpec(&in.PodTemplate.Spec.Containers, &out.Coordinator, s); err != nil {
-		return err
-	}
 	out.AllowedSchemas = (*AllowedConsumers)(unsafe.Pointer(in.AllowedSchemas))
 	out.HealthChecker = in.HealthChecker
 	return nil
-}
-
-// Convert_v1_RedisSpec_To_v1alpha2_RedisSpec is an autogenerated conversion function.
-func Convert_v1_RedisSpec_To_v1alpha2_RedisSpec(in *v1.RedisSpec, out *RedisSpec, s conversion.Scope) error {
-	return autoConvert_v1_RedisSpec_To_v1alpha2_RedisSpec(in, out, s)
 }
 
 func autoConvert_v1alpha2_RedisStatus_To_v1_RedisStatus(in *RedisStatus, out *v1.RedisStatus, s conversion.Scope) error {

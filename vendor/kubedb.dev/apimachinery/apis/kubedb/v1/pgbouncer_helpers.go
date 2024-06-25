@@ -273,7 +273,7 @@ func (p *PgBouncer) GetCertSecretName(alias PgBouncerCertificateAlias) string {
 }
 
 func (p *PgBouncer) ReplicasAreReady(lister pslister.PetSetLister) (bool, string, error) {
-	// Desire number of statefulSets
+	// Desire number of petSets
 	expectedItems := 1
 	return checkReplicas(lister.PetSets(p.Namespace), labels.SelectorFromSet(p.OffshootLabels()), expectedItems)
 }
@@ -342,13 +342,13 @@ func (p *PgBouncer) SetSecurityContext(pgBouncerVersion *catalog.PgBouncerVersio
 	if container.SecurityContext == nil {
 		container.SecurityContext = &core.SecurityContext{
 			RunAsUser: func() *int64 {
-				if p.Spec.PodTemplate.Spec.SecurityContext.RunAsUser == nil {
+				if p.Spec.PodTemplate.Spec.SecurityContext == nil || p.Spec.PodTemplate.Spec.SecurityContext.RunAsUser == nil {
 					return pgBouncerVersion.Spec.SecurityContext.RunAsUser
 				}
 				return p.Spec.PodTemplate.Spec.SecurityContext.RunAsUser
 			}(),
 			RunAsGroup: func() *int64 {
-				if p.Spec.PodTemplate.Spec.SecurityContext.RunAsGroup == nil {
+				if p.Spec.PodTemplate.Spec.SecurityContext == nil || p.Spec.PodTemplate.Spec.SecurityContext.RunAsGroup == nil {
 					return pgBouncerVersion.Spec.SecurityContext.RunAsUser
 				}
 				return p.Spec.PodTemplate.Spec.SecurityContext.RunAsGroup
@@ -382,4 +382,8 @@ func (p *PgBouncer) SetSecurityContext(pgBouncerVersion *catalog.PgBouncerVersio
 	// So that /var/pv directory have the group permission for the RunAsGroup user GID.
 	// Otherwise, We will get write permission denied.
 	p.Spec.PodTemplate.Spec.SecurityContext.FSGroup = container.SecurityContext.RunAsGroup
+	isPgbouncerContainerPresent := core_util.GetContainerByName(p.Spec.PodTemplate.Spec.Containers, kubedb.PgBouncerContainerName)
+	if isPgbouncerContainerPresent == nil {
+		core_util.UpsertContainer(p.Spec.PodTemplate.Spec.Containers, *container)
+	}
 }

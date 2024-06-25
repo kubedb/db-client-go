@@ -1,6 +1,8 @@
 module kubedb.dev/db-client-go
 
-go 1.22.0
+go 1.22.1
+
+toolchain go1.22.2
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.23.2
@@ -11,7 +13,7 @@ require (
 	github.com/elastic/go-elasticsearch/v7 v7.15.1
 	github.com/elastic/go-elasticsearch/v8 v8.4.0
 	github.com/go-resty/resty/v2 v2.11.0
-	github.com/go-sql-driver/mysql v1.7.1
+	github.com/go-sql-driver/mysql v1.8.1
 	github.com/lib/pq v1.10.7
 	github.com/michaelklishin/rabbit-hole/v2 v2.16.0
 	github.com/microsoft/go-mssqldb v1.6.0
@@ -24,14 +26,15 @@ require (
 	k8s.io/api v0.30.1
 	k8s.io/apimachinery v0.30.1
 	k8s.io/klog/v2 v2.120.1
-	kmodules.xyz/client-go v0.30.1
-	kmodules.xyz/custom-resources v0.29.1
-	kubedb.dev/apimachinery v0.46.1-0.20240612104823-ac4871c4f2ae
-	sigs.k8s.io/controller-runtime v0.18.3
+	kmodules.xyz/client-go v0.30.7
+	kmodules.xyz/custom-resources v0.30.0
+	kubedb.dev/apimachinery v0.46.1-0.20240625083434-ac100e2c321e
+	sigs.k8s.io/controller-runtime v0.18.4
 	xorm.io/xorm v1.3.6
 )
 
 require (
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/ClickHouse/ch-go v0.61.5 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -128,7 +131,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.30.1 // indirect
 	k8s.io/client-go v0.30.1 // indirect
 	k8s.io/component-base v0.30.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20240430033511-f0e62f92d13f // indirect
+	k8s.io/kube-openapi v0.0.0-20240521193020-835d969ad83a // indirect
 	k8s.io/utils v0.0.0-20240502163921-fe8a2dddb1d0 // indirect
 	kmodules.xyz/apiversion v0.2.0 // indirect
 	kmodules.xyz/monitoring-agent-api v0.29.0 // indirect
