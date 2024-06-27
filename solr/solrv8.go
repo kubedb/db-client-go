@@ -191,7 +191,7 @@ func (sc *SLClientV8) FlushStatus(asyncId string) (*Response, error) {
 	req.SetHeader("Content-Type", "application/json")
 
 	params := map[string]string{
-		"action":    "REQUESTSTATUS",
+		"action":    "DELETESTATUS",
 		"requestid": asyncId,
 	}
 	req.SetQueryParams(params)
