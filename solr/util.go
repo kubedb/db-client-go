@@ -95,6 +95,8 @@ func (sc *Client) DecodeCollectionHealth(responseBody map[string]interface{}) er
 			return errors.New("didn't find health")
 		}
 		if health != "GREEN" {
+			config := sc.GetConfig()
+			config.log.Error(errors.New(""), fmt.Sprintf("Health of collection %s IS NOT GREEN", name))
 			return errors.New(fmt.Sprintf("health for collection %s is not green", name))
 		}
 	}

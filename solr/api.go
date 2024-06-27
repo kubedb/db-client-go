@@ -2,6 +2,8 @@ package solr
 
 import (
 	"context"
+	"github.com/go-logr/logr"
+	"github.com/go-resty/resty/v2"
 )
 
 type SLClient interface {
@@ -16,4 +18,7 @@ type SLClient interface {
 	RequestStatus(asyncId string) (*Response, error)
 	DeleteBackup(ctx context.Context, backupName string, location string, repository string, backupId int) (*Response, error)
 	PurgeBackup(ctx context.Context, backupName string, location string, repository string) (*Response, error)
+	GetConfig() *Config
+	GetClient() *resty.Client
+	GetLog() logr.Logger
 }
