@@ -2,9 +2,12 @@ package solr
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/go-logr/logr"
 	"github.com/go-resty/resty/v2"
+	"k8s.io/klog/v2"
 )
 
 type SLClientV9 struct {
@@ -272,4 +275,21 @@ func (sc *SLClientV9) GetClient() *resty.Client {
 
 func (sc *SLClientV9) GetLog() logr.Logger {
 	return sc.log
+}
+
+func (sc *SLClientV9) DecodeBackupResponse(data map[string]interface{}, collection string) ([]byte, error) {
+	sc.Config.log.V(5).Info("Decode Backup Data")
+	backupResponse, ok := data["response"].(map[string]interface{})
+	if !ok {
+		err := errors.New(fmt.Sprintf("didn't find status for collection %s\n", collection))
+		return nil, err
+	}
+	klog.Info("backup response ", backupResponse)
+	b, err := json.Marshal(backupResponse)
+	if err != nil {
+		klog.Error(fmt.Sprintf("Could not format response for collection %s into json", collection))
+		return nil, err
+	}
+	klog.Info(fmt.Sprintf("Response for collection %s\n%v", collection, string(b)))
+	return b, nil
 }

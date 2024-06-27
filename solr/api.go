@@ -21,4 +21,5 @@ type SLClient interface {
 	GetConfig() *Config
 	GetClient() *resty.Client
 	GetLog() logr.Logger
+	DecodeBackupResponse(data map[string]interface{}, collection string) ([]byte, error)
 }
