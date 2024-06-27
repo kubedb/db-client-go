@@ -138,7 +138,7 @@ func (sc *SLClientV8) BackupCollection(ctx context.Context, collection string, b
 
 	req.SetQueryParams(params)
 
-	res, err := req.Post("/solr/admin/collection")
+	res, err := req.Post("/solr/admin/collections")
 	if err != nil {
 		sc.log.Error(err, "Failed to send http request to backup a collection")
 		return nil, err
@@ -168,7 +168,7 @@ func (sc *SLClientV8) RestoreCollection(ctx context.Context, collection string, 
 
 	req.SetQueryParams(params)
 
-	res, err := req.Post("/solr/admin/collection")
+	res, err := req.Post("/solr/admin/collections")
 	if err != nil {
 		sc.log.Error(err, "Failed to send http request to restore a collection")
 		return nil, err
