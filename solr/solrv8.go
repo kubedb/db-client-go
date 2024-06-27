@@ -187,7 +187,12 @@ func (sc *SLClientV8) FlushStatus(asyncId string) (*Response, error) {
 	req := sc.Client.R().SetDoNotParseResponse(true)
 	req.SetHeader("Content-Type", "application/json")
 
-	res, err := req.Delete(fmt.Sprintf("/api/cluster/command-status/%s", asyncId))
+	params := map[string]string{
+		"action":    "REQUESTSTATUS",
+		"requestid": asyncId,
+	}
+	req.SetQueryParams(params)
+	res, err := req.Get("/solr/admin/collections")
 	if err != nil {
 		sc.log.Error(err, "Failed to send http request to flush status")
 		return nil, err
@@ -205,7 +210,12 @@ func (sc *SLClientV8) RequestStatus(asyncId string) (*Response, error) {
 	sc.Config.log.V(5).Info("Request Status")
 	req := sc.Client.R().SetDoNotParseResponse(true)
 	req.SetHeader("Content-Type", "application/json")
-	res, err := req.Get(fmt.Sprintf("/api/cluster/command-status/%s", asyncId))
+	params := map[string]string{
+		"action":    "REQUESTSTATUS",
+		"requestid": asyncId,
+	}
+	req.SetQueryParams(params)
+	res, err := req.Get("/solr/admin/collections")
 	if err != nil {
 		sc.log.Error(err, "Failed to send http request to request status")
 		return nil, err
