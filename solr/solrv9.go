@@ -3,9 +3,17 @@ package solr
 import (
 	"context"
 	"fmt"
+	"github.com/go-logr/logr"
+	"github.com/go-resty/resty/v2"
 )
 
-func (sc *SLClient) GetClusterStatus() (*Response, error) {
+type SLClientV9 struct {
+	Client *resty.Client
+	log    logr.Logger
+	Config *Config
+}
+
+func (sc *SLClientV9) GetClusterStatus() (*Response, error) {
 	sc.Config.log.V(5).Info("GETTING CLUSTER STATUS")
 	req := sc.Client.R().SetDoNotParseResponse(true)
 	res, err := req.Get("/api/cluster")
@@ -22,7 +30,7 @@ func (sc *SLClient) GetClusterStatus() (*Response, error) {
 	return clusterResponse, nil
 }
 
-func (sc *SLClient) ListCollection() (*Response, error) {
+func (sc *SLClientV9) ListCollection() (*Response, error) {
 	sc.Config.log.V(5).Info("SEARCHING COLLECTION: kubedb-system")
 	req := sc.Client.R().SetDoNotParseResponse(true)
 	res, err := req.Get("/api/collections")
@@ -38,7 +46,7 @@ func (sc *SLClient) ListCollection() (*Response, error) {
 	return response, nil
 }
 
-func (sc *SLClient) CreateCollection() (*Response, error) {
+func (sc *SLClientV9) CreateCollection() (*Response, error) {
 	sc.Config.log.V(5).Info("CREATING COLLECTION: kubedb-system")
 	req := sc.Client.R().SetDoNotParseResponse(true)
 	req.SetHeader("Content-Type", "application/json")
@@ -65,7 +73,7 @@ func (sc *SLClient) CreateCollection() (*Response, error) {
 
 type ADDList []ADD
 
-func (sc *SLClient) WriteCollection() (*Response, error) {
+func (sc *SLClientV9) WriteCollection() (*Response, error) {
 	sc.Config.log.V(5).Info("WRITING COLLECTION: kubedb-system")
 	req := sc.Client.R().SetDoNotParseResponse(true)
 	req.SetHeader("Content-Type", "application/json")
@@ -95,7 +103,7 @@ func (sc *SLClient) WriteCollection() (*Response, error) {
 	return writeResponse, nil
 }
 
-func (sc *SLClient) ReadCollection() (*Response, error) {
+func (sc *SLClientV9) ReadCollection() (*Response, error) {
 	sc.Config.log.V(5).Info("READING COLLECTION: kubedb-system")
 	req := sc.Client.R().SetDoNotParseResponse(true)
 	req.SetHeader("Content-Type", "application/json")
@@ -118,7 +126,7 @@ func (sc *SLClient) ReadCollection() (*Response, error) {
 	return writeResponse, nil
 }
 
-func (sc *SLClient) BackupCollection(ctx context.Context, collection string, backupName string, location string, repository string) (*Response, error) {
+func (sc *SLClientV9) BackupCollection(ctx context.Context, collection string, backupName string, location string, repository string) (*Response, error) {
 	sc.Config.log.V(5).Info(fmt.Sprintf("BACKUP COLLECTION: %s", collection))
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
 	req.SetHeader("Content-Type", "application/json")
@@ -143,7 +151,7 @@ func (sc *SLClient) BackupCollection(ctx context.Context, collection string, bac
 	return backupResponse, nil
 }
 
-func (sc *SLClient) RestoreCollection(ctx context.Context, collection string, backupName string, location string, repository string, backupId int) (*Response, error) {
+func (sc *SLClientV9) RestoreCollection(ctx context.Context, collection string, backupName string, location string, repository string, backupId int) (*Response, error) {
 	sc.Config.log.V(5).Info(fmt.Sprintf("RESTORE COLLECTION: %s", collection))
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
 	req.SetHeader("Content-Type", "application/json")
@@ -170,7 +178,7 @@ func (sc *SLClient) RestoreCollection(ctx context.Context, collection string, ba
 	return backupResponse, nil
 }
 
-func (sc *SLClient) FlushStatus(asyncId string) (*Response, error) {
+func (sc *SLClientV9) FlushStatus(asyncId string) (*Response, error) {
 	sc.Config.log.V(5).Info("Flush Status")
 	req := sc.Client.R().SetDoNotParseResponse(true)
 	req.SetHeader("Content-Type", "application/json")
@@ -189,7 +197,7 @@ func (sc *SLClient) FlushStatus(asyncId string) (*Response, error) {
 	return backupResponse, nil
 }
 
-func (sc *SLClient) RequestStatus(asyncId string) (*Response, error) {
+func (sc *SLClientV9) RequestStatus(asyncId string) (*Response, error) {
 	sc.Config.log.V(5).Info("Request Status")
 	req := sc.Client.R().SetDoNotParseResponse(true)
 	req.SetHeader("Content-Type", "application/json")
@@ -206,7 +214,7 @@ func (sc *SLClient) RequestStatus(asyncId string) (*Response, error) {
 	return backupResponse, nil
 }
 
-func (sc *SLClient) DeleteBackup(ctx context.Context, backupName string, location string, repository string, backupId int) (*Response, error) {
+func (sc *SLClientV9) DeleteBackup(ctx context.Context, backupName string, location string, repository string, backupId int) (*Response, error) {
 	sc.Config.log.V(5).Info(fmt.Sprintf("DELETE BACKUP ID %d of BACKUP %s", backupId, backupName))
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
 	req.SetHeader("Content-Type", "application/json")
@@ -230,7 +238,7 @@ func (sc *SLClient) DeleteBackup(ctx context.Context, backupName string, locatio
 	return backupResponse, nil
 }
 
-func (sc *SLClient) PurgeBackup(ctx context.Context, backupName string, location string, repository string) (*Response, error) {
+func (sc *SLClientV9) PurgeBackup(ctx context.Context, backupName string, location string, repository string) (*Response, error) {
 	sc.Config.log.V(5).Info(fmt.Sprintf("PURGE BACKUP ID %s", backupName))
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
 	req.SetHeader("Content-Type", "application/json")
@@ -252,4 +260,16 @@ func (sc *SLClient) PurgeBackup(ctx context.Context, backupName string, location
 		body:   res.RawBody(),
 	}
 	return backupResponse, nil
+}
+
+func (sc *SLClientV9) GetConfig() *Config {
+	return sc.Config
+}
+
+func (sc *SLClientV9) GetClient() *resty.Client {
+	return sc.Client
+}
+
+func (sc *SLClientV9) GetLog() logr.Logger {
+	return sc.log
 }

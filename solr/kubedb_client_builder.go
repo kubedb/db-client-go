@@ -3,6 +3,10 @@ package solr
 import (
 	"context"
 	"errors"
+	"github.com/Masterminds/semver/v3"
+	gerr "github.com/pkg/errors"
+	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"net"
 	"net/http"
 	"time"
@@ -11,8 +15,6 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/go-resty/resty/v2"
-	core "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -53,7 +55,7 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 	return o
 }
 
-func (o *KubeDBClientBuilder) GetSolrClient() (SLClient, error) {
+func (o *KubeDBClientBuilder) GetSolrClient() (*Client, error) {
 	if o.podName != "" {
 		o.url = o.GetHostPath(o.db)
 	}
@@ -61,7 +63,7 @@ func (o *KubeDBClientBuilder) GetSolrClient() (SLClient, error) {
 		o.url = o.GetHostPath(o.db)
 	}
 	if o.db == nil {
-		return SLClient{}, errors.New("db is empty")
+		return nil, errors.New("db is empty")
 	}
 	config := Config{
 		host: o.url,
@@ -79,30 +81,40 @@ func (o *KubeDBClientBuilder) GetSolrClient() (SLClient, error) {
 		log:              o.log,
 	}
 
-	newClient := resty.New()
-	newClient.SetScheme(config.connectionScheme).SetBaseURL(config.host).SetTransport(config.transport)
-	newClient.SetTimeout(6 * time.Minute)
-	newClient.SetHeader("Accept", "application/json")
-	newClient.SetDisableWarn(true)
-
+	var authSecret core.Secret
 	if !o.db.Spec.DisableSecurity {
-		var authSecret core.Secret
 		err := o.kc.Get(o.ctx, types.NamespacedName{
 			Name:      o.db.Spec.AuthSecret.Name,
 			Namespace: o.db.Namespace,
 		}, &authSecret)
 		if err != nil {
 			config.log.Error(err, "failed to get auth secret to get solr client")
-			return SLClient{}, err
+			return nil, err
 		}
-		newClient.SetBasicAuth(string(authSecret.Data[core.BasicAuthUsernameKey]), string(authSecret.Data[core.BasicAuthPasswordKey]))
+	}
+	version, err := semver.NewVersion(o.db.Spec.Version)
+	if err != nil {
+		return nil, gerr.Wrap(err, "failed to parse version")
 	}
 
-	return SLClient{
-		Client: newClient,
-		log:    config.log,
-		Config: &config,
-	}, nil
+	switch {
+	case version.Major() == 9:
+		newClient := resty.New()
+		newClient.SetScheme(config.connectionScheme).SetBaseURL(config.host).SetTransport(config.transport)
+		newClient.SetTimeout(6 * time.Minute)
+		newClient.SetHeader("Accept", "application/json")
+		newClient.SetDisableWarn(true)
+		newClient.SetBasicAuth(string(authSecret.Data[core.BasicAuthUsernameKey]), string(authSecret.Data[core.BasicAuthPasswordKey]))
+		return &Client{
+			&SLClientV9{
+				Client: newClient,
+				log:    config.log,
+				Config: &config,
+			},
+		}, nil
+	}
+
+	return nil, fmt.Errorf("unknown version: %s", o.db.Spec.Version)
 
 }
 

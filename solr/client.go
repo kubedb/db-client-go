@@ -6,15 +6,12 @@ import (
 	"net/http"
 
 	"github.com/go-logr/logr"
-	"github.com/go-resty/resty/v2"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type SLClient struct {
-	Client *resty.Client
-	log    logr.Logger
-	Config *Config
+type Client struct {
+	SLClient
 }
 
 type ClientOptions struct {
