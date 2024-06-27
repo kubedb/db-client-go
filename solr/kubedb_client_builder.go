@@ -112,6 +112,20 @@ func (o *KubeDBClientBuilder) GetSolrClient() (*Client, error) {
 				Config: &config,
 			},
 		}, nil
+	case version.Major() == 8:
+		newClient := resty.New()
+		newClient.SetScheme(config.connectionScheme).SetBaseURL(config.host).SetTransport(config.transport)
+		newClient.SetTimeout(6 * time.Minute)
+		newClient.SetHeader("Accept", "application/json")
+		newClient.SetDisableWarn(true)
+		newClient.SetBasicAuth(string(authSecret.Data[core.BasicAuthUsernameKey]), string(authSecret.Data[core.BasicAuthPasswordKey]))
+		return &Client{
+			&SLClientV8{
+				Client: newClient,
+				log:    config.log,
+				Config: &config,
+			},
+		}, nil
 	}
 
 	return nil, fmt.Errorf("unknown version: %s", o.db.Spec.Version)
