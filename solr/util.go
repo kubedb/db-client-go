@@ -82,7 +82,7 @@ func (sc *Client) GetAsyncStatus(responseBody map[string]interface{}) (string, e
 func (sc *Client) DecodeCollectionHealth(responseBody map[string]interface{}) error {
 	clusterInfo, ok := responseBody["cluster"].(map[string]interface{})
 	if !ok {
-		return errors.New("didn't find cluster")
+		return errors.New(fmt.Sprintf("did not find cluster %v\n", responseBody))
 	}
 	collections, ok := clusterInfo["collections"].(map[string]interface{})
 	if !ok {
