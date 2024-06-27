@@ -306,9 +306,9 @@ func (sc *SLClientV8) DecodeBackupResponse(data map[string]interface{}, collecti
 		err := errors.New(fmt.Sprintf("didn't find status for collection %s\n", collection))
 		return nil, err
 	}
-	mp := make(map[interface{}]interface{})
+	mp := make(map[string]interface{})
 	for i := 0; i < len(backupResponse); i += 2 {
-		a := backupResponse[i]
+		a := backupResponse[i].(string)
 		b := backupResponse[i+1]
 		mp[a] = b
 	}
