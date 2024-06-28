@@ -160,7 +160,7 @@ func (sc *SLClientV8) RestoreCollection(ctx context.Context, collection string, 
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
 	req.SetHeader("Content-Type", "application/json")
 	params := map[string]string{
-		"action":     "Restore",
+		"action":     "RESTORE",
 		"name":       backupName,
 		"collection": collection,
 		"location":   location,
