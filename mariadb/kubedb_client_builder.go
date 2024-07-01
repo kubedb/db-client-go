@@ -23,7 +23,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	"kubedb.dev/apimachinery/apis/kubedb"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1"
 
 	sql_driver "github.com/go-sql-driver/mysql"
 	core "k8s.io/api/core/v1"
@@ -191,14 +192,14 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		}
 		var clientCert []tls.Certificate
 		clientCert = append(clientCert, cert)
-		err = sql_driver.RegisterTLSConfig(api.MariaDBTLSConfigCustom, &tls.Config{
+		err = sql_driver.RegisterTLSConfig(kubedb.MariaDBTLSConfigCustom, &tls.Config{
 			RootCAs:      certPool,
 			Certificates: clientCert,
 		})
 		if err != nil {
 			return "", err
 		}
-		tlsConfig = fmt.Sprintf("tls=%s", api.MariaDBTLSConfigCustom)
+		tlsConfig = fmt.Sprintf("tls=%s", kubedb.MariaDBTLSConfigCustom)
 	}
 	connector := fmt.Sprintf("%v:%v@tcp(%s:%d)/%s?%s", user, pass, o.url, 3306, "mysql", tlsConfig)
 	return connector, nil

@@ -20,7 +20,7 @@ import (
 	"context"
 	"encoding/json"
 
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1"
 
 	esv5 "github.com/elastic/go-elasticsearch/v5"
 	"github.com/pkg/errors"
