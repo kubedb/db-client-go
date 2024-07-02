@@ -16,8 +16,8 @@ type SLClient interface {
 	RestoreCollection(ctx context.Context, collection string, backupName string, location string, repository string, backupId int) (*Response, error)
 	FlushStatus(asyncId string) (*Response, error)
 	RequestStatus(asyncId string) (*Response, error)
-	DeleteBackup(ctx context.Context, backupName string, location string, repository string, backupId int) (*Response, error)
-	PurgeBackup(ctx context.Context, backupName string, location string, repository string) (*Response, error)
+	DeleteBackup(ctx context.Context, backupName string, collection string, location string, repository string, backupId int) (*Response, error)
+	PurgeBackup(ctx context.Context, backupName string, collection string, location string, repository string) (*Response, error)
 	GetConfig() *Config
 	GetClient() *resty.Client
 	GetLog() logr.Logger
