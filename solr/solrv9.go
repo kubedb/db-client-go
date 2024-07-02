@@ -217,13 +217,14 @@ func (sc *SLClientV9) RequestStatus(asyncId string) (*Response, error) {
 	return backupResponse, nil
 }
 
-func (sc *SLClientV9) DeleteBackup(ctx context.Context, backupName string, location string, repository string, backupId int) (*Response, error) {
+func (sc *SLClientV9) DeleteBackup(ctx context.Context, backupName string, collection string, location string, repository string, backupId int) (*Response, error) {
 	sc.Config.log.V(5).Info(fmt.Sprintf("DELETE BACKUP ID %d of BACKUP %s", backupId, backupName))
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
 	req.SetHeader("Content-Type", "application/json")
 	params := map[string]string{
 		"location":   location,
 		"repository": repository,
+		"async":      collection + "-backup",
 	}
 	req.SetQueryParams(params)
 
@@ -241,13 +242,14 @@ func (sc *SLClientV9) DeleteBackup(ctx context.Context, backupName string, locat
 	return backupResponse, nil
 }
 
-func (sc *SLClientV9) PurgeBackup(ctx context.Context, backupName string, location string, repository string) (*Response, error) {
+func (sc *SLClientV9) PurgeBackup(ctx context.Context, backupName string, collection string, location string, repository string) (*Response, error) {
 	sc.Config.log.V(5).Info(fmt.Sprintf("PURGE BACKUP ID %s", backupName))
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
 	req.SetHeader("Content-Type", "application/json")
 	params := &BackupRestoreParams{
 		Location:   location,
 		Repository: repository,
+		Async:      collection + "-backup",
 	}
 	req.SetBody(params)
 
