@@ -224,7 +224,7 @@ func (sc *SLClientV9) DeleteBackup(ctx context.Context, backupName string, colle
 	params := map[string]string{
 		"location":   location,
 		"repository": repository,
-		"async":      collection + "-backup",
+		"async":      collection + "-delete",
 	}
 	req.SetQueryParams(params)
 
@@ -249,7 +249,7 @@ func (sc *SLClientV9) PurgeBackup(ctx context.Context, backupName string, collec
 	params := &BackupRestoreParams{
 		Location:   location,
 		Repository: repository,
-		Async:      collection + "-backup",
+		Async:      collection + "-purge",
 	}
 	req.SetBody(params)
 
