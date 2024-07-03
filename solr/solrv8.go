@@ -268,7 +268,7 @@ func (sc *SLClientV8) PurgeBackup(ctx context.Context, backupName string, collec
 	sc.Config.log.V(5).Info(fmt.Sprintf("PURGE BACKUP ID %s", backupName))
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
 	req.SetHeader("Content-Type", "application/json")
-	async := fmt.Sprintf("%s-delete", collection)
+	async := fmt.Sprintf("%s-purge", collection)
 	if snap != "" {
 		async = fmt.Sprintf("%s-%s", async, snap)
 	}
