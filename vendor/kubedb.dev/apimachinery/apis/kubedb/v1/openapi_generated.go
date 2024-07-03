@@ -24259,46 +24259,11 @@ func schema_apimachinery_apis_kubedb_v1_ElasticsearchNode(ref common.ReferenceCa
 							Ref:         ref("k8s.io/apimachinery/pkg/util/intstr.IntOrString"),
 						},
 					},
-					"nodeSelector": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-map-type": "atomic",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "NodeSelector is a selector which must be true for the pod to fit on a node. Selector which must match a node's labels for the pod to be scheduled on that node. More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/",
-							Type:        []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"tolerations": {
-						SchemaProps: spec.SchemaProps{
-							Description: "If specified, the pod's tolerations.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/api/core/v1.Toleration"),
-									},
-								},
-							},
-						},
-					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.PersistentVolumeClaimSpec", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/util/intstr.IntOrString", "kmodules.xyz/offshoot-api/api/v2.PodTemplateSpec"},
+			"k8s.io/api/core/v1.PersistentVolumeClaimSpec", "k8s.io/apimachinery/pkg/util/intstr.IntOrString", "kmodules.xyz/offshoot-api/api/v2.PodTemplateSpec"},
 	}
 }
 
@@ -24550,9 +24515,9 @@ func schema_apimachinery_apis_kubedb_v1_ElasticsearchSpec(ref common.ReferenceCa
 							Format:      "",
 						},
 					},
-					"terminationPolicy": {
+					"deletionPolicy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "TerminationPolicy controls the delete operation for database",
+							Description: "DeletionPolicy controls the delete operation for database",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25646,9 +25611,9 @@ func schema_apimachinery_apis_kubedb_v1_MariaDBSpec(ref common.ReferenceCallback
 							Format:      "",
 						},
 					},
-					"terminationPolicy": {
+					"deletionPolicy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "TerminationPolicy controls the delete operation for database",
+							Description: "DeletionPolicy controls the delete operation for database",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25900,9 +25865,9 @@ func schema_apimachinery_apis_kubedb_v1_MemcachedSpec(ref common.ReferenceCallba
 							Format:      "",
 						},
 					},
-					"terminationPolicy": {
+					"deletionPolicy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "TerminationPolicy controls the delete operation for database",
+							Description: "DeletionPolicy controls the delete operation for database",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25985,7 +25950,6 @@ func schema_apimachinery_apis_kubedb_v1_MongoArbiterNode(ref common.ReferenceCal
 					"podTemplate": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PodTemplate is an optional configuration for pods used to expose database",
-							Default:     map[string]interface{}{},
 							Ref:         ref("kmodules.xyz/offshoot-api/api/v2.PodTemplateSpec"),
 						},
 					},
@@ -26073,7 +26037,6 @@ func schema_apimachinery_apis_kubedb_v1_MongoDBConfigNode(ref common.ReferenceCa
 					"podTemplate": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PodTemplate is an optional configuration for pods used to expose database",
-							Default:     map[string]interface{}{},
 							Ref:         ref("kmodules.xyz/offshoot-api/api/v2.PodTemplateSpec"),
 						},
 					},
@@ -26176,7 +26139,6 @@ func schema_apimachinery_apis_kubedb_v1_MongoDBMongosNode(ref common.ReferenceCa
 					"podTemplate": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PodTemplate is an optional configuration for pods used to expose database",
-							Default:     map[string]interface{}{},
 							Ref:         ref("kmodules.xyz/offshoot-api/api/v2.PodTemplateSpec"),
 						},
 					},
@@ -26219,7 +26181,6 @@ func schema_apimachinery_apis_kubedb_v1_MongoDBNode(ref common.ReferenceCallback
 					"podTemplate": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PodTemplate is an optional configuration for pods used to expose database",
-							Default:     map[string]interface{}{},
 							Ref:         ref("kmodules.xyz/offshoot-api/api/v2.PodTemplateSpec"),
 						},
 					},
@@ -26291,7 +26252,6 @@ func schema_apimachinery_apis_kubedb_v1_MongoDBShardNode(ref common.ReferenceCal
 					"podTemplate": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PodTemplate is an optional configuration for pods used to expose database",
-							Default:     map[string]interface{}{},
 							Ref:         ref("kmodules.xyz/offshoot-api/api/v2.PodTemplateSpec"),
 						},
 					},
@@ -26488,9 +26448,9 @@ func schema_apimachinery_apis_kubedb_v1_MongoDBSpec(ref common.ReferenceCallback
 							Format:      "",
 						},
 					},
-					"terminationPolicy": {
+					"deletionPolicy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "TerminationPolicy controls the delete operation for database",
+							Description: "DeletionPolicy controls the delete operation for database",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -26609,7 +26569,6 @@ func schema_apimachinery_apis_kubedb_v1_MongoHiddenNode(ref common.ReferenceCall
 					"podTemplate": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PodTemplate is an optional configuration for pods used to expose database",
-							Default:     map[string]interface{}{},
 							Ref:         ref("kmodules.xyz/offshoot-api/api/v2.PodTemplateSpec"),
 						},
 					},
@@ -26921,9 +26880,9 @@ func schema_apimachinery_apis_kubedb_v1_MySQLSpec(ref common.ReferenceCallback) 
 							Format:      "",
 						},
 					},
-					"terminationPolicy": {
+					"deletionPolicy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "TerminationPolicy controls the delete operation for database",
+							Description: "DeletionPolicy controls the delete operation for database",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -27474,9 +27433,9 @@ func schema_apimachinery_apis_kubedb_v1_PerconaXtraDBSpec(ref common.ReferenceCa
 							Format:      "",
 						},
 					},
-					"terminationPolicy": {
+					"deletionPolicy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "TerminationPolicy controls the delete operation for database",
+							Description: "DeletionPolicy controls the delete operation for database",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -27748,9 +27707,9 @@ func schema_apimachinery_apis_kubedb_v1_PgBouncerSpec(ref common.ReferenceCallba
 							Ref:         ref("kmodules.xyz/client-go/api/v1.TLSConfig"),
 						},
 					},
-					"terminationPolicy": {
+					"deletionPolicy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "TerminationPolicy controls the delete operation for database",
+							Description: "DeletionPolicy controls the delete operation for database",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -28173,9 +28132,9 @@ func schema_apimachinery_apis_kubedb_v1_PostgresSpec(ref common.ReferenceCallbac
 							Format:      "",
 						},
 					},
-					"terminationPolicy": {
+					"deletionPolicy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "TerminationPolicy controls the delete operation for database",
+							Description: "DeletionPolicy controls the delete operation for database",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -28513,9 +28472,9 @@ func schema_apimachinery_apis_kubedb_v1_ProxySQLSpec(ref common.ReferenceCallbac
 							Ref:         ref("kmodules.xyz/client-go/api/v1.TLSConfig"),
 						},
 					},
-					"terminationPolicy": {
+					"deletionPolicy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "TerminationPolicy controls the delete operation for database",
+							Description: "DeletionPolicy controls the delete operation for database",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -28962,9 +28921,9 @@ func schema_apimachinery_apis_kubedb_v1_RedisSentinelSpec(ref common.ReferenceCa
 							Ref:         ref("kmodules.xyz/monitoring-agent-api/api/v1.AgentSpec"),
 						},
 					},
-					"terminationPolicy": {
+					"deletionPolicy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "TerminationPolicy controls the delete operation for database",
+							Description: "DeletionPolicy controls the delete operation for database",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -29156,9 +29115,9 @@ func schema_apimachinery_apis_kubedb_v1_RedisSpec(ref common.ReferenceCallback) 
 							Format:      "",
 						},
 					},
-					"terminationPolicy": {
+					"deletionPolicy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "TerminationPolicy controls the delete operation for database",
+							Description: "DeletionPolicy controls the delete operation for database",
 							Type:        []string{"string"},
 							Format:      "",
 						},
