@@ -29,13 +29,13 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	"kubedb.dev/apimachinery/apis/kubedb"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type KubeDBClientBuilder struct {
 	kc                client.Client
-	db                *api.RabbitMQ
+	db                *olddbapi.RabbitMQ
 	ctx               context.Context
 	amqpURL           string
 	httpURL           string
@@ -51,7 +51,7 @@ const (
 )
 
 // NewKubeDBClientBuilder returns a client builder only for amqp client
-func NewKubeDBClientBuilder(kc client.Client, db *api.RabbitMQ) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *olddbapi.RabbitMQ) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc: kc,
 		db: db,
@@ -59,7 +59,7 @@ func NewKubeDBClientBuilder(kc client.Client, db *api.RabbitMQ) *KubeDBClientBui
 }
 
 // NewKubeDBClientBuilderForHTTP returns a KubeDB client builder only for http client
-func NewKubeDBClientBuilderForHTTP(kc client.Client, db *api.RabbitMQ) *KubeDBClientBuilder {
+func NewKubeDBClientBuilderForHTTP(kc client.Client, db *olddbapi.RabbitMQ) *KubeDBClientBuilder {
 	return NewKubeDBClientBuilder(kc, db).
 		WithContext(context.TODO()).
 		WithAMQPClientDisabled().

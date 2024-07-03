@@ -21,7 +21,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	_ "github.com/ClickHouse/clickhouse-go/v2"
 	core "k8s.io/api/core/v1"
@@ -31,14 +31,14 @@ import (
 
 type KubeDBClientBuilder struct {
 	kc      client.Client
-	db      *api.ClickHouse
+	db      *olddbapi.ClickHouse
 	url     string
 	podName string
 	port    *int
 	ctx     context.Context
 }
 
-func NewKubeDBClientBuilder(kc client.Client, db *api.ClickHouse) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *olddbapi.ClickHouse) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc: kc,
 		db: db,

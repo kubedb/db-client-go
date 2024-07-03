@@ -22,7 +22,7 @@ import (
 	"errors"
 	"fmt"
 
-	api "kubedb.dev/apimachinery/apis/kubedb/v1"
+	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 
 	core "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
@@ -37,14 +37,14 @@ const (
 
 type KubeDBClientBuilder struct {
 	kc         client.Client
-	db         *api.Postgres
+	db         *dbapi.Postgres
 	url        string
 	podName    string
 	postgresDB string
 	ctx        context.Context
 }
 
-func NewKubeDBClientBuilder(kc client.Client, db *api.Postgres) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *dbapi.Postgres) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc: kc,
 		db: db,
@@ -161,7 +161,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		sslMode = "require"
 	}
 	if o.db.Spec.TLS != nil {
-		secretName := o.db.GetCertSecretName(api.PostgresClientCert)
+		secretName := o.db.GetCertSecretName(dbapi.PostgresClientCert)
 
 		var certSecret core.Secret
 		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: secretName}, &certSecret)
@@ -170,13 +170,13 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 			return "", err
 		}
 
-		certs, _ := certholder.DefaultHolder.ForResource(api.SchemeGroupVersion.WithResource(api.ResourcePluralPostgres), o.db.ObjectMeta)
+		certs, _ := certholder.DefaultHolder.ForResource(dbapi.SchemeGroupVersion.WithResource(dbapi.ResourcePluralPostgres), o.db.ObjectMeta)
 		paths, err := certs.Save(&certSecret)
 		if err != nil {
 			klog.Error(err, "failed to save certificate")
 			return "", err
 		}
-		if o.db.Spec.ClientAuthMode == api.ClientAuthModeCert {
+		if o.db.Spec.ClientAuthMode == dbapi.ClientAuthModeCert {
 			cnnstr = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s sslrootcert=%s sslcert=%s sslkey=%s", user, pass, dnsName, port, o.postgresDB, sslMode, paths.CACert, paths.Cert, paths.Key)
 		} else {
 			cnnstr = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s sslrootcert=%s", user, pass, dnsName, port, o.postgresDB, sslMode, paths.CACert)

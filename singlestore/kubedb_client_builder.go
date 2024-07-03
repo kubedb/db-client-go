@@ -27,20 +27,20 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 	"kubedb.dev/apimachinery/apis/kubedb"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"xorm.io/xorm"
 )
 
 type KubeDBClientBuilder struct {
 	kc      client.Client
-	db      *api.Singlestore
+	db      *olddbapi.Singlestore
 	url     string
 	podName string
 	ctx     context.Context
 }
 
-func NewKubeDBClientBuilder(kc client.Client, db *api.Singlestore) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *olddbapi.Singlestore) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc: kc,
 		db: db,
@@ -153,7 +153,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	if o.db.Spec.TLS != nil {
 		// get client-secret
 		var clientSecret core.Secret
-		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.GetNamespace(), Name: o.db.GetCertSecretName(api.SinglestoreClientCert)}, &clientSecret)
+		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.GetNamespace(), Name: o.db.GetCertSecretName(olddbapi.SinglestoreClientCert)}, &clientSecret)
 		if err != nil {
 			return "", err
 		}

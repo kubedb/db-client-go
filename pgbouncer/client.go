@@ -21,7 +21,7 @@ import (
 	"database/sql"
 	"sync"
 
-	api "kubedb.dev/apimachinery/apis/kubedb/v1"
+	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 
 	"xorm.io/xorm"
 )
@@ -40,7 +40,7 @@ type XormClientList struct {
 	WG    sync.WaitGroup
 
 	context context.Context
-	pb      *api.PgBouncer
+	pb      *dbapi.PgBouncer
 	auth    *Auth
 	dbName  string
 }

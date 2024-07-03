@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"kubedb.dev/apimachinery/apis/kubedb"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1"
+	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 
 	rd "github.com/redis/go-redis/v9"
 	core "k8s.io/api/core/v1"
@@ -41,12 +41,12 @@ const (
 
 type KubeDBClientBuilder struct {
 	kc      client.Client
-	db      *api.RedisSentinel
+	db      *dbapi.RedisSentinel
 	podName string
 	url     string
 }
 
-func NewKubeDBClientBuilder(kc client.Client, db *api.RedisSentinel) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *dbapi.RedisSentinel) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc: kc,
 		db: db,
@@ -119,7 +119,7 @@ func (o *KubeDBClientBuilder) getClientPassword(ctx context.Context) (string, er
 
 func (o *KubeDBClientBuilder) getTLSConfig(ctx context.Context) (*tls.Config, error) {
 	var sec core.Secret
-	err := o.kc.Get(ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.CertificateName(api.RedisClientCert)}, &sec)
+	err := o.kc.Get(ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.CertificateName(dbapi.RedisClientCert)}, &sec)
 	if err != nil {
 		klog.Error(err, "error in getting the secret")
 		return nil, err

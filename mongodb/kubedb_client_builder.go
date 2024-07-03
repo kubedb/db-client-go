@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"kubedb.dev/apimachinery/apis/kubedb"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1"
+	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	mgoptions "go.mongodb.org/mongo-driver/mongo/options"
@@ -36,7 +36,7 @@ import (
 
 type KubeDBClientBuilder struct {
 	kc         client.Client
-	db         *api.MongoDB
+	db         *dbapi.MongoDB
 	url        string
 	podName    string
 	repSetName string
@@ -47,7 +47,7 @@ type KubeDBClientBuilder struct {
 	authDB     string
 }
 
-func NewKubeDBClientBuilder(kc client.Client, db *api.MongoDB) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *dbapi.MongoDB) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc:     kc,
 		db:     db,
@@ -178,7 +178,7 @@ func (o *KubeDBClientBuilder) getMongoDBClientOpts() (*mgoptions.ClientOptions, 
 		if o.authDB != "" {
 			authDatabase = "&" + authDatabase
 		}
-		secretName := db.GetCertSecretName(api.MongoDBClientCert, "")
+		secretName := db.GetCertSecretName(dbapi.MongoDBClientCert, "")
 		var (
 			paths *certholder.Paths
 			err   error
@@ -192,7 +192,7 @@ func (o *KubeDBClientBuilder) getMongoDBClientOpts() (*mgoptions.ClientOptions, 
 			}
 
 			certs, _ := certholder.DefaultHolder.
-				ForResource(api.SchemeGroupVersion.WithResource(api.ResourcePluralMongoDB), db.ObjectMeta)
+				ForResource(dbapi.SchemeGroupVersion.WithResource(dbapi.ResourcePluralMongoDB), db.ObjectMeta)
 			_, err = certs.Save(&certSecret)
 			if err != nil {
 				klog.Error(err, "failed to save certificate")

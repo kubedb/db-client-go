@@ -24,7 +24,7 @@ import (
 	"fmt"
 
 	"kubedb.dev/apimachinery/apis/kubedb"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1"
+	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 
 	sql_driver "github.com/go-sql-driver/mysql"
 	core "k8s.io/api/core/v1"
@@ -39,13 +39,13 @@ const (
 
 type KubeDBClientBuilder struct {
 	kc      client.Client
-	db      *api.MariaDB
+	db      *dbapi.MariaDB
 	url     string
 	podName string
 	ctx     context.Context
 }
 
-func NewKubeDBClientBuilder(kc client.Client, db *api.MariaDB) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *dbapi.MariaDB) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc: kc,
 		db: db,
@@ -161,7 +161,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	if o.SSLEnabledMariaDB() {
 		// get client-secret
 		var clientSecret core.Secret
-		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.GetCertSecretName(api.MariaDBClientCert)}, &clientSecret)
+		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.GetCertSecretName(dbapi.MariaDBClientCert)}, &clientSecret)
 		if err != nil {
 			return "", err
 		}

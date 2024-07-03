@@ -24,7 +24,7 @@ import (
 	"fmt"
 
 	"kubedb.dev/apimachinery/apis/kubedb"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1"
+	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 
 	sql_driver "github.com/go-sql-driver/mysql"
 	core "k8s.io/api/core/v1"
@@ -35,13 +35,13 @@ import (
 
 type KubeDBClientBuilder struct {
 	kc      client.Client
-	db      *api.PerconaXtraDB
+	db      *dbapi.PerconaXtraDB
 	url     string
 	podName string
 	ctx     context.Context
 }
 
-func NewKubeDBClientBuilder(kc client.Client, db *api.PerconaXtraDB) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *dbapi.PerconaXtraDB) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc: kc,
 		db: db,
@@ -154,7 +154,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	if o.db.Spec.RequireSSL && o.db.Spec.TLS != nil {
 		// get client-secret
 		var clientSecret core.Secret
-		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.GetNamespace(), Name: o.db.GetCertSecretName(api.PerconaXtraDBClientCert)}, &clientSecret)
+		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.GetNamespace(), Name: o.db.GetCertSecretName(dbapi.PerconaXtraDBClientCert)}, &clientSecret)
 		if err != nil {
 			return "", err
 		}
