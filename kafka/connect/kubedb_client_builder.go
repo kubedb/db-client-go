@@ -31,7 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	kapi "kubedb.dev/apimachinery/apis/kafka/v1alpha1"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	"kubedb.dev/apimachinery/apis/kubedb"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -107,8 +107,8 @@ func (o *KubeDBClientBuilder) GetConnectClusterClient() (*Client, error) {
 			klog.Error(err, "failed to create certificate for TLS config")
 			return nil, err
 		}
-		clientCA.AppendCertsFromPEM(certSecret.Data[api.CACert])
-		rootCA.AppendCertsFromPEM(certSecret.Data[api.CACert])
+		clientCA.AppendCertsFromPEM(certSecret.Data[kubedb.CACert])
+		rootCA.AppendCertsFromPEM(certSecret.Data[kubedb.CACert])
 
 		config.transport.TLSClientConfig = &tls.Config{
 			Certificates: []tls.Certificate{crt},

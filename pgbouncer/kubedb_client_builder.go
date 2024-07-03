@@ -20,7 +20,8 @@ import (
 	"context"
 	"fmt"
 
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	"kubedb.dev/apimachinery/apis/kubedb"
+	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 
 	_ "github.com/lib/pq"
 	core "k8s.io/api/core/v1"
@@ -43,16 +44,16 @@ type Auth struct {
 
 type KubeDBClientBuilder struct {
 	kc            client.Client
-	pgbouncer     *api.PgBouncer
+	pgbouncer     *dbapi.PgBouncer
 	url           string
 	podName       string
 	backendDBName string
 	ctx           context.Context
-	databaseRef   *api.Database
+	databaseRef   *dbapi.Database
 	auth          *Auth
 }
 
-func NewKubeDBClientBuilder(kc client.Client, pb *api.PgBouncer) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, pb *dbapi.PgBouncer) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc:        kc,
 		pgbouncer: pb,
@@ -76,7 +77,7 @@ func (o *KubeDBClientBuilder) WithPod(podName string) *KubeDBClientBuilder {
 	return o
 }
 
-func (o *KubeDBClientBuilder) WithDatabaseRef(db *api.Database) *KubeDBClientBuilder {
+func (o *KubeDBClientBuilder) WithDatabaseRef(db *dbapi.Database) *KubeDBClientBuilder {
 	o.databaseRef = db
 	return o
 }
@@ -174,7 +175,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		o.url = o.getURL()
 	}
 
-	var listeningPort int = api.PgBouncerDatabasePort
+	var listeningPort int = kubedb.PgBouncerDatabasePort
 	if o.pgbouncer.Spec.ConnectionPool.Port != nil {
 		listeningPort = int(*o.pgbouncer.Spec.ConnectionPool.Port)
 	}
@@ -183,7 +184,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	return connector, nil
 }
 
-func GetXormClientList(kc client.Client, pb *api.PgBouncer, ctx context.Context, auth *Auth, dbName string) (*XormClientList, error) {
+func GetXormClientList(kc client.Client, pb *dbapi.PgBouncer, ctx context.Context, auth *Auth, dbName string) (*XormClientList, error) {
 	clientlist := &XormClientList{
 		List: []*XormClient{},
 	}

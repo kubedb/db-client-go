@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	_ "github.com/lib/pq"
 	core "k8s.io/api/core/v1"
@@ -39,14 +39,14 @@ const (
 
 type KubeDBClientBuilder struct {
 	kc            client.Client
-	pgpool        *api.Pgpool
+	pgpool        *olddbapi.Pgpool
 	url           string
 	podName       string
 	backendDBName string
 	ctx           context.Context
 }
 
-func NewKubeDBClientBuilder(kc client.Client, pp *api.Pgpool) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, pp *olddbapi.Pgpool) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc:     kc,
 		pgpool: pp,
@@ -159,11 +159,11 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	//  sslMode == "prefer" and sslMode == "allow"  don't have support for github.com/lib/pq postgres client. as we are using
 	// github.com/lib/pq postgres client utils for connecting our server we need to access with  any of require , verify-ca, verify-full or disable.
 	// here we have chosen "require" sslmode to connect postgres as a client
-	if sslMode == api.PgpoolSSLModePrefer || sslMode == api.PgpoolSSLModeAllow {
-		sslMode = api.PgpoolSSLModeRequire
+	if sslMode == olddbapi.PgpoolSSLModePrefer || sslMode == olddbapi.PgpoolSSLModeAllow {
+		sslMode = olddbapi.PgpoolSSLModeRequire
 	}
 	if o.pgpool.Spec.TLS != nil {
-		secretName := o.pgpool.GetCertSecretName(api.PgpoolClientCert)
+		secretName := o.pgpool.GetCertSecretName(olddbapi.PgpoolClientCert)
 
 		var certSecret core.Secret
 		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.pgpool.Namespace, Name: secretName}, &certSecret)
@@ -172,13 +172,13 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 			return "", err
 		}
 
-		certs, _ := certholder.DefaultHolder.ForResource(api.SchemeGroupVersion.WithResource(api.ResourcePluralPgpool), o.pgpool.ObjectMeta)
+		certs, _ := certholder.DefaultHolder.ForResource(olddbapi.SchemeGroupVersion.WithResource(olddbapi.ResourcePluralPgpool), o.pgpool.ObjectMeta)
 		paths, err := certs.Save(&certSecret)
 		if err != nil {
 			klog.Error(err, "failed to save certificate")
 			return "", err
 		}
-		if o.pgpool.Spec.ClientAuthMode == api.PgpoolClientAuthModeCert {
+		if o.pgpool.Spec.ClientAuthMode == olddbapi.PgpoolClientAuthModeCert {
 			cnnstr = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s sslrootcert=%s sslcert=%s sslkey=%s", user, pass, dnsName, DefaultPgpoolPort, o.backendDBName, sslMode, paths.CACert, paths.Cert, paths.Key)
 		} else {
 			cnnstr = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s sslrootcert=%s", user, pass, dnsName, DefaultPgpoolPort, o.backendDBName, sslMode, paths.CACert)

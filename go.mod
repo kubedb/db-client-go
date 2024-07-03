@@ -1,6 +1,8 @@
 module kubedb.dev/db-client-go
 
-go 1.22.0
+go 1.22.1
+
+toolchain go1.22.2
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.23.2
@@ -11,7 +13,7 @@ require (
 	github.com/elastic/go-elasticsearch/v7 v7.15.1
 	github.com/elastic/go-elasticsearch/v8 v8.4.0
 	github.com/go-resty/resty/v2 v2.11.0
-	github.com/go-sql-driver/mysql v1.7.1
+	github.com/go-sql-driver/mysql v1.8.1
 	github.com/lib/pq v1.10.7
 	github.com/michaelklishin/rabbit-hole/v2 v2.16.0
 	github.com/microsoft/go-mssqldb v1.6.0
@@ -24,20 +26,21 @@ require (
 	k8s.io/api v0.30.1
 	k8s.io/apimachinery v0.30.1
 	k8s.io/klog/v2 v2.120.1
-	kmodules.xyz/client-go v0.30.1
-	kmodules.xyz/custom-resources v0.29.1
-	kubedb.dev/apimachinery v0.46.0
-	sigs.k8s.io/controller-runtime v0.18.3
+	kmodules.xyz/client-go v0.30.9-0.20240624102451-7ed2c992c3e1
+	kmodules.xyz/custom-resources v0.30.0
+	kubedb.dev/apimachinery v0.46.1-0.20240703091558-01fcb66832d9
+	sigs.k8s.io/controller-runtime v0.18.4
 	xorm.io/xorm v1.3.6
 )
 
 require (
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/ClickHouse/ch-go v0.61.5 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
-	github.com/cert-manager/cert-manager v1.14.5 // indirect
-	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/cert-manager/cert-manager v1.15.0 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/eapache/go-resiliency v1.4.0 // indirect
@@ -80,7 +83,6 @@ require (
 	github.com/klauspost/compress v1.17.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -90,9 +92,9 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.74.0 // indirect
 	github.com/prometheus/client_golang v1.18.0 // indirect
-	github.com/prometheus/client_model v0.5.0 // indirect
-	github.com/prometheus/common v0.45.0 // indirect
-	github.com/prometheus/procfs v0.12.0 // indirect
+	github.com/prometheus/client_model v0.6.1 // indirect
+	github.com/prometheus/common v0.46.0 // indirect
+	github.com/prometheus/procfs v0.15.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
@@ -103,34 +105,33 @@ require (
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
-	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
+	github.com/youmark/pkcs8 v0.0.0-20240424034433-3c2c7870ae76 // indirect
 	github.com/yudai/gojsondiff v1.0.0 // indirect
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
-	go.opentelemetry.io/otel v1.24.0 // indirect
-	go.opentelemetry.io/otel/trace v1.24.0 // indirect
-	golang.org/x/crypto v0.23.0 // indirect
-	golang.org/x/exp v0.0.0-20231226003508-02704c960a9b // indirect
-	golang.org/x/net v0.25.0 // indirect
-	golang.org/x/oauth2 v0.18.0 // indirect
+	go.opentelemetry.io/otel v1.26.0 // indirect
+	go.opentelemetry.io/otel/trace v1.26.0 // indirect
+	golang.org/x/crypto v0.24.0 // indirect
+	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842 // indirect
+	golang.org/x/net v0.26.0 // indirect
+	golang.org/x/oauth2 v0.20.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.20.0 // indirect
-	golang.org/x/term v0.20.0 // indirect
-	golang.org/x/text v0.15.0 // indirect
+	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/term v0.21.0 // indirect
+	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	gomodules.xyz/mergo v0.3.13 // indirect
 	gomodules.xyz/pointer v0.1.0 // indirect
 	gomodules.xyz/x v0.0.17 // indirect
-	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/protobuf v1.33.0 // indirect
+	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiextensions-apiserver v0.30.1 // indirect
 	k8s.io/client-go v0.30.1 // indirect
 	k8s.io/component-base v0.30.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20240430033511-f0e62f92d13f // indirect
+	k8s.io/kube-openapi v0.0.0-20240521193020-835d969ad83a // indirect
 	k8s.io/utils v0.0.0-20240502163921-fe8a2dddb1d0 // indirect
 	kmodules.xyz/apiversion v0.2.0 // indirect
 	kmodules.xyz/monitoring-agent-api v0.29.0 // indirect
@@ -138,7 +139,7 @@ require (
 	kubeops.dev/petset v0.0.6 // indirect
 	modernc.org/memory v1.5.0 // indirect
 	modernc.org/token v1.1.0 // indirect
-	sigs.k8s.io/gateway-api v1.0.0 // indirect
+	sigs.k8s.io/gateway-api v1.1.0 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect

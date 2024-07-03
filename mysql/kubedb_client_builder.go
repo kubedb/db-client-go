@@ -23,7 +23,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	"kubedb.dev/apimachinery/apis/kubedb"
+	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 
 	sql_driver "github.com/go-sql-driver/mysql"
 	core "k8s.io/api/core/v1"
@@ -34,13 +35,13 @@ import (
 
 type KubeDBClientBuilder struct {
 	kc      client.Client
-	db      *api.MySQL
+	db      *dbapi.MySQL
 	url     string
 	podName string
 	ctx     context.Context
 }
 
-func NewKubeDBClientBuilder(kc client.Client, db *api.MySQL) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *dbapi.MySQL) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc: kc,
 		db: db,
@@ -153,7 +154,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	if o.db.Spec.RequireSSL && o.db.Spec.TLS != nil {
 		// get client-secret
 		var clientSecret core.Secret
-		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.GetNamespace(), Name: o.db.GetCertSecretName(api.MySQLClientCert)}, &clientSecret)
+		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.GetNamespace(), Name: o.db.GetCertSecretName(dbapi.MySQLClientCert)}, &clientSecret)
 		if err != nil {
 			return "", err
 		}
@@ -172,16 +173,16 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 
 		// tls custom setup
 		if o.db.Spec.RequireSSL {
-			err = sql_driver.RegisterTLSConfig(api.MySQLTLSConfigCustom, &tls.Config{
+			err = sql_driver.RegisterTLSConfig(kubedb.MySQLTLSConfigCustom, &tls.Config{
 				RootCAs:      certPool,
 				Certificates: clientCert,
 			})
 			if err != nil {
 				return "", err
 			}
-			tlsConfig = fmt.Sprintf("tls=%s", api.MySQLTLSConfigCustom)
+			tlsConfig = fmt.Sprintf("tls=%s", kubedb.MySQLTLSConfigCustom)
 		} else {
-			tlsConfig = fmt.Sprintf("tls=%s", api.MySQLTLSConfigSkipVerify)
+			tlsConfig = fmt.Sprintf("tls=%s", kubedb.MySQLTLSConfigSkipVerify)
 		}
 	}
 

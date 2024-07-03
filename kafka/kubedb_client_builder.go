@@ -28,19 +28,19 @@ import (
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type KubeDBClientBuilder struct {
 	kc      client.Client
-	db      *api.Kafka
+	db      *dbapi.Kafka
 	url     string
 	podName string
 	ctx     context.Context
 }
 
-func NewKubeDBClientBuilder(kc client.Client, db *api.Kafka) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *dbapi.Kafka) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc: kc,
 		db: db,
@@ -92,7 +92,7 @@ func (o *KubeDBClientBuilder) GetConfig() (*kafkago.Config, error) {
 			certSecret := &core.Secret{}
 			err := o.kc.Get(o.ctx, types.NamespacedName{
 				Namespace: o.db.Namespace,
-				Name:      o.db.GetCertSecretName(api.KafkaClientCert),
+				Name:      o.db.GetCertSecretName(dbapi.KafkaClientCert),
 			}, certSecret)
 			if err != nil {
 				if kerr.IsNotFound(err) {
@@ -112,8 +112,8 @@ func (o *KubeDBClientBuilder) GetConfig() (*kafkago.Config, error) {
 				klog.Error(err, "Failed to parse private key pair")
 				return nil, err
 			}
-			clientCA.AppendCertsFromPEM(certSecret.Data[api.TLSCACertFileName])
-			rootCA.AppendCertsFromPEM(certSecret.Data[api.TLSCACertFileName])
+			clientCA.AppendCertsFromPEM(certSecret.Data[dbapi.TLSCACertFileName])
+			rootCA.AppendCertsFromPEM(certSecret.Data[dbapi.TLSCACertFileName])
 			clientConfig.Net.TLS.Enable = true
 			clientConfig.Net.TLS.Config = &tls.Config{
 				Certificates: []tls.Certificate{crt},

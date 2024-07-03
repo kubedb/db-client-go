@@ -21,7 +21,7 @@ import (
 	"fmt"
 
 	_ "github.com/microsoft/go-mssqldb"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	core "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -30,13 +30,13 @@ import (
 
 type KubeDBClientBuilder struct {
 	kc      client.Client
-	db      *api.MSSQLServer
+	db      *olddbapi.MSSQLServer
 	url     string
 	podName string
 	ctx     context.Context
 }
 
-func NewKubeDBClientBuilder(kc client.Client, db *api.MSSQLServer) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *olddbapi.MSSQLServer) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
 		kc: kc,
 		db: db,
