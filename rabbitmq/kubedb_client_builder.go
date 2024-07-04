@@ -19,6 +19,7 @@ package rabbitmq
 import (
 	"context"
 	"errors"
+
 	"fmt"
 	"strings"
 
