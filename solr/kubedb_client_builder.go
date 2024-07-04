@@ -3,14 +3,15 @@ package solr
 import (
 	"context"
 	"errors"
+	"net"
+	"net/http"
+	"time"
+
 	"github.com/Masterminds/semver/v3"
 	gerr "github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"kubedb.dev/apimachinery/apis/kubedb"
-	"net"
-	"net/http"
-	"time"
 
 	"fmt"
 

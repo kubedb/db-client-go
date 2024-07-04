@@ -2,6 +2,7 @@ package solr
 
 import (
 	"context"
+
 	"github.com/go-logr/logr"
 	"github.com/go-resty/resty/v2"
 )
