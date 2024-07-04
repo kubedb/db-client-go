@@ -3,12 +3,12 @@ package solr
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"strconv"
+
 	"github.com/go-logr/logr"
 	"github.com/go-resty/resty/v2"
 	"k8s.io/klog/v2"
-	"strconv"
 )
 
 type SLClientV8 struct {
@@ -311,7 +311,7 @@ func (sc *SLClientV8) DecodeBackupResponse(data map[string]interface{}, collecti
 	sc.Config.log.V(5).Info("Decode Backup Data")
 	backupResponse, ok := data["response"].([]interface{})
 	if !ok {
-		err := errors.New(fmt.Sprintf("didn't find status for collection %s\n", collection))
+		err := fmt.Errorf("didn't find status for collection %s\n", collection)
 		return nil, err
 	}
 	mp := make(map[string]interface{})
