@@ -7,6 +7,7 @@ import (
 	gerr "github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"kubedb.dev/apimachinery/apis/kubedb"
 	"net"
 	"net/http"
 	"time"
@@ -133,5 +134,5 @@ func (o *KubeDBClientBuilder) GetSolrClient() (*Client, error) {
 }
 
 func (o *KubeDBClientBuilder) GetHostPath(db *api.Solr) string {
-	return fmt.Sprintf("%v://%s.%s.svc.cluster.local:%d", db.GetConnectionScheme(), db.ServiceName(), db.GetNamespace(), api.SolrRestPort)
+	return fmt.Sprintf("%v://%s.%s.svc.cluster.local:%d", db.GetConnectionScheme(), db.ServiceName(), db.GetNamespace(), kubedb.SolrRestPort)
 }
