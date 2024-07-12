@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/go-logr/logr"
 	"github.com/go-resty/resty/v2"
@@ -130,7 +131,7 @@ func (sc *SLClientV9) ReadCollection() (*Response, error) {
 }
 
 func (sc *SLClientV9) BackupCollection(ctx context.Context, collection string, backupName string, location string, repository string) (*Response, error) {
-	sc.Config.log.V(5).Info(fmt.Sprintf("BACKUP COLLECTION: %s", collection))
+	sc.Config.log.V(5).Info(fmt.Sprintf("BACKUP COLLECTION v11111111111111111: %s", collection))
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
 	req.SetHeader("Content-Type", "application/json")
 	backupParams := map[string]string{
@@ -228,13 +229,16 @@ func (sc *SLClientV9) DeleteBackup(ctx context.Context, backupName string, colle
 		async = fmt.Sprintf("%s-%s", async, snap)
 	}
 	params := map[string]string{
+		"action":     "DELETEBACKUP",
+		"name":       backupName,
 		"location":   location,
 		"repository": repository,
+		"backupId":   strconv.Itoa(backupId),
 		"async":      async,
 	}
 	req.SetQueryParams(params)
 
-	res, err := req.Delete(fmt.Sprintf("/api/backups/%s/versions/%d", backupName, backupId))
+	res, err := req.Delete("/solr/admin/collections")
 	if err != nil {
 		sc.log.Error(err, "Failed to send http request to restore a collection")
 		return nil, err
@@ -256,14 +260,17 @@ func (sc *SLClientV9) PurgeBackup(ctx context.Context, backupName string, collec
 	if snap != "" {
 		async = fmt.Sprintf("%s-%s", async, snap)
 	}
-	params := &BackupRestoreParams{
-		Location:   location,
-		Repository: repository,
-		Async:      async,
+	params := map[string]string{
+		"action":      "DELETEBACKUP",
+		"name":        backupName,
+		"location":    location,
+		"repository":  repository,
+		"purgeUnused": "true",
+		"async":       async,
 	}
-	req.SetBody(params)
+	req.SetQueryParams(params)
 
-	res, err := req.Put(fmt.Sprintf("/api/backups/%s/purgeUnused", backupName))
+	res, err := req.Delete("/solr/admin/collections")
 	if err != nil {
 		sc.log.Error(err, "Failed to send http request to restore a collection")
 		return nil, err
