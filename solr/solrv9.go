@@ -240,7 +240,7 @@ func (sc *SLClientV9) DeleteBackup(ctx context.Context, backupName string, colle
 	}
 	req.SetQueryParams(params)
 
-	res, err := req.Delete("/solr/admin/collections")
+	res, err := req.Get("/solr/admin/collections")
 	if err != nil {
 		sc.log.Error(err, "Failed to send http request to restore a collection")
 		return nil, err
@@ -272,7 +272,7 @@ func (sc *SLClientV9) PurgeBackup(ctx context.Context, backupName string, collec
 	}
 	req.SetQueryParams(params)
 
-	res, err := req.Delete("/solr/admin/collections")
+	res, err := req.Get("/solr/admin/collections")
 	if err != nil {
 		sc.log.Error(err, "Failed to send http request to restore a collection")
 		return nil, err
