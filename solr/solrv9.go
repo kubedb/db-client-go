@@ -137,6 +137,7 @@ func (sc *SLClientV9) BackupCollection(ctx context.Context, collection string, b
 	backupParams := map[string]string{
 		"action":     "BACKUP",
 		"name":       backupName,
+		"collection": collection,
 		"location":   location,
 		"repository": repository,
 		"async":      fmt.Sprintf("%s-backup", collection),
@@ -165,6 +166,7 @@ func (sc *SLClientV9) RestoreCollection(ctx context.Context, collection string, 
 		"action":     "RESTORE",
 		"name":       backupName,
 		"location":   location,
+		"collection": collection,
 		"repository": repository,
 		"async":      fmt.Sprintf("%s-restore", collection),
 	}
