@@ -14,6 +14,8 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.4.0
 	github.com/go-resty/resty/v2 v2.11.0
 	github.com/go-sql-driver/mysql v1.8.1
+	github.com/grafadruid/go-druid v0.0.6
+	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/lib/pq v1.10.7
 	github.com/michaelklishin/rabbit-hole/v2 v2.16.0
 	github.com/microsoft/go-mssqldb v1.6.0
@@ -67,9 +69,11 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
@@ -82,6 +86,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.17.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
+	github.com/magefile/mage v1.11.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
