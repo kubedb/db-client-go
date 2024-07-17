@@ -12,8 +12,9 @@ const (
 	Action              = "action"
 	ActionBackup        = "BACKUP"
 	ActionRestore       = "RESTORE"
+	ActionCreate        = "CREATE"
 	ActionDeleteBackup  = "DELETEBACKUP"
-	BackupName          = "name"
+	Name                = "name"
 	Location            = "location"
 	Repository          = "repository"
 	Collection          = "collection"
@@ -23,6 +24,8 @@ const (
 	DeleteStatus        = "DELETESTATUS"
 	RequestStatus       = "REQUESTSTATUS"
 	RequestId           = "requestid"
+	NumShards           = "numShards"
+	ReplicationFactor   = "replicationFactor"
 )
 
 type SLClient interface {

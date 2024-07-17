@@ -135,7 +135,7 @@ func (sc *SLClientV9) BackupCollection(ctx context.Context, collection string, b
 	req.SetHeader("Content-Type", "application/json")
 	backupParams := map[string]string{
 		Action:     ActionBackup,
-		BackupName: backupName,
+		Name:       backupName,
 		Collection: collection,
 		Location:   location,
 		Repository: repository,
@@ -163,7 +163,7 @@ func (sc *SLClientV9) RestoreCollection(ctx context.Context, collection string, 
 	req.SetHeader("Content-Type", "application/json")
 	restoreParams := map[string]string{
 		Action:     ActionRestore,
-		BackupName: backupName,
+		Name:       backupName,
 		Location:   location,
 		Collection: collection,
 		Repository: repository,
@@ -232,7 +232,7 @@ func (sc *SLClientV9) DeleteBackup(ctx context.Context, backupName string, colle
 	}
 	params := map[string]string{
 		Action:     ActionDeleteBackup,
-		BackupName: backupName,
+		Name:       backupName,
 		Location:   location,
 		Repository: repository,
 		BackupId:   strconv.Itoa(backupId),
@@ -264,7 +264,7 @@ func (sc *SLClientV9) PurgeBackup(ctx context.Context, backupName string, collec
 	}
 	params := map[string]string{
 		Action:      ActionDeleteBackup,
-		BackupName:  backupName,
+		Name:        backupName,
 		Location:    location,
 		Repository:  repository,
 		PurgeUnused: "true",
