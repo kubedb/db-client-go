@@ -70,14 +70,14 @@ func (o *KubeDBClientBuilder) GetSolrClient() (*Client, error) {
 	config := Config{
 		host: o.url,
 		transport: &http.Transport{
-			IdleConnTimeout: time.Minute * 6,
+			IdleConnTimeout: time.Second * 10,
 			DialContext: (&net.Dialer{
-				Timeout:   time.Minute * 6,
-				KeepAlive: time.Minute * 6,
+				Timeout:   time.Second * 30,
+				KeepAlive: time.Second * 30,
 			}).DialContext,
-			TLSHandshakeTimeout:   time.Minute * 6,
-			ResponseHeaderTimeout: time.Minute * 6,
-			ExpectContinueTimeout: time.Minute * 6,
+			TLSHandshakeTimeout:   time.Second * 20,
+			ResponseHeaderTimeout: time.Second * 20,
+			ExpectContinueTimeout: time.Second * 20,
 		},
 		connectionScheme: o.db.GetConnectionScheme(),
 		log:              o.log,
@@ -103,28 +103,26 @@ func (o *KubeDBClientBuilder) GetSolrClient() (*Client, error) {
 	case version.Major() == 9:
 		newClient := resty.New()
 		newClient.SetScheme(config.connectionScheme).SetBaseURL(config.host).SetTransport(config.transport)
-		newClient.SetTimeout(6 * time.Minute)
+		newClient.SetTimeout(time.Second * 30)
 		newClient.SetHeader("Accept", "application/json")
 		newClient.SetDisableWarn(true)
 		newClient.SetBasicAuth(string(authSecret.Data[core.BasicAuthUsernameKey]), string(authSecret.Data[core.BasicAuthPasswordKey]))
 		return &Client{
 			&SLClientV9{
 				Client: newClient,
-				log:    config.log,
 				Config: &config,
 			},
 		}, nil
 	case version.Major() == 8:
 		newClient := resty.New()
 		newClient.SetScheme(config.connectionScheme).SetBaseURL(config.host).SetTransport(config.transport)
-		newClient.SetTimeout(6 * time.Minute)
+		newClient.SetTimeout(time.Second * 30)
 		newClient.SetHeader("Accept", "application/json")
 		newClient.SetDisableWarn(true)
 		newClient.SetBasicAuth(string(authSecret.Data[core.BasicAuthUsernameKey]), string(authSecret.Data[core.BasicAuthPasswordKey]))
 		return &Client{
 			&SLClientV8{
 				Client: newClient,
-				log:    config.log,
 				Config: &config,
 			},
 		}, nil

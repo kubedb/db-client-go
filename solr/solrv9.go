@@ -13,7 +13,6 @@ import (
 
 type SLClientV9 struct {
 	Client *resty.Client
-	log    logr.Logger
 	Config *Config
 }
 
@@ -22,7 +21,7 @@ func (sc *SLClientV9) GetClusterStatus() (*Response, error) {
 	req := sc.Client.R().SetDoNotParseResponse(true)
 	res, err := req.Get("/api/cluster")
 	if err != nil {
-		sc.log.Error(err, "Failed to send http request")
+		sc.Config.log.Error(err, "Failed to send http request")
 		return nil, err
 	}
 
@@ -35,11 +34,11 @@ func (sc *SLClientV9) GetClusterStatus() (*Response, error) {
 }
 
 func (sc *SLClientV9) ListCollection() (*Response, error) {
-	sc.Config.log.V(5).Info("SEARCHING COLLECTION: kubedb-system")
+	sc.Config.log.V(5).Info(fmt.Sprintf("SEARCHING COLLECTION: %s", writeCollectionName))
 	req := sc.Client.R().SetDoNotParseResponse(true)
 	res, err := req.Get("/api/collections")
 	if err != nil {
-		sc.log.Error(err, "Failed to send http request while getting colection list")
+		sc.Config.log.Error(err, "Failed to send http request while getting colection list")
 		return nil, err
 	}
 	response := &Response{
@@ -51,11 +50,11 @@ func (sc *SLClientV9) ListCollection() (*Response, error) {
 }
 
 func (sc *SLClientV9) CreateCollection() (*Response, error) {
-	sc.Config.log.V(5).Info("CREATING COLLECTION: kubedb-system")
+	sc.Config.log.V(5).Info(fmt.Sprintf("CREATING COLLECTION: %s", writeCollectionName))
 	req := sc.Client.R().SetDoNotParseResponse(true)
 	req.SetHeader("Content-Type", "application/json")
 	createParams := &CreateParams{
-		Name:              "kubedb-system",
+		Name:              writeCollectionName,
 		NumShards:         1,
 		ReplicationFactor: 1,
 	}
@@ -63,7 +62,7 @@ func (sc *SLClientV9) CreateCollection() (*Response, error) {
 	req.SetBody(createParams)
 	res, err := req.Post("/api/collections")
 	if err != nil {
-		sc.log.Error(err, "Failed to send http request to create a collection")
+		sc.Config.log.Error(err, "Failed to send http request to create a collection")
 		return nil, err
 	}
 
@@ -78,7 +77,7 @@ func (sc *SLClientV9) CreateCollection() (*Response, error) {
 type ADDList []ADD
 
 func (sc *SLClientV9) WriteCollection() (*Response, error) {
-	sc.Config.log.V(5).Info("WRITING COLLECTION: kubedb-system")
+	sc.Config.log.V(5).Info(fmt.Sprintf("WRITING COLLECTION: %s", writeCollectionName))
 	req := sc.Client.R().SetDoNotParseResponse(true)
 	req.SetHeader("Content-Type", "application/json")
 	data1 := &Data{
@@ -93,9 +92,9 @@ func (sc *SLClientV9) WriteCollection() (*Response, error) {
 		Add: data1,
 	}
 	req.SetBody(add)
-	res, err := req.Post("/solr/kubedb-system/update")
+	res, err := req.Post(fmt.Sprintf("/solr/%s/update", writeCollectionName))
 	if err != nil {
-		sc.log.Error(err, "Failed to send http request to add document in collect")
+		sc.Config.log.Error(err, "Failed to send http request to add document in collect")
 		return nil, err
 	}
 
@@ -108,7 +107,7 @@ func (sc *SLClientV9) WriteCollection() (*Response, error) {
 }
 
 func (sc *SLClientV9) ReadCollection() (*Response, error) {
-	sc.Config.log.V(5).Info("READING COLLECTION: kubedb-system")
+	sc.Config.log.V(5).Info(fmt.Sprintf("READING COLLECTION: %s", writeCollectionName))
 	req := sc.Client.R().SetDoNotParseResponse(true)
 	req.SetHeader("Content-Type", "application/json")
 	queryParams := QueryParams{
@@ -116,9 +115,9 @@ func (sc *SLClientV9) ReadCollection() (*Response, error) {
 		Limit: 10,
 	}
 	req.SetBody(queryParams)
-	res, err := req.Get("/solr/kubedb-system/select")
+	res, err := req.Get(fmt.Sprintf("/solr/%s/select", writeCollectionName))
 	if err != nil {
-		sc.log.Error(err, "Failed to send http request to read a collection")
+		sc.Config.log.Error(err, "Failed to send http request to read a collection")
 		return nil, err
 	}
 
@@ -131,22 +130,22 @@ func (sc *SLClientV9) ReadCollection() (*Response, error) {
 }
 
 func (sc *SLClientV9) BackupCollection(ctx context.Context, collection string, backupName string, location string, repository string) (*Response, error) {
-	sc.Config.log.V(5).Info(fmt.Sprintf("BACKUP COLLECTION v11111111111111111: %s", collection))
+	sc.Config.log.V(5).Info(fmt.Sprintf("BACKUP COLLECTION: %s", collection))
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
 	req.SetHeader("Content-Type", "application/json")
 	backupParams := map[string]string{
-		"action":     "BACKUP",
-		"name":       backupName,
-		"collection": collection,
-		"location":   location,
-		"repository": repository,
-		"async":      fmt.Sprintf("%s-backup", collection),
+		Action:     ActionBackup,
+		BackupName: backupName,
+		Collection: collection,
+		Location:   location,
+		Repository: repository,
+		Async:      fmt.Sprintf("%s-backup", collection),
 	}
 	req.SetQueryParams(backupParams)
 
 	res, err := req.Post("/solr/admin/collections")
 	if err != nil {
-		sc.log.Error(err, "Failed to send http request to backup a collection")
+		sc.Config.log.Error(err, "Failed to send http request to backup a collection")
 		return nil, err
 	}
 
@@ -163,18 +162,19 @@ func (sc *SLClientV9) RestoreCollection(ctx context.Context, collection string, 
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
 	req.SetHeader("Content-Type", "application/json")
 	restoreParams := map[string]string{
-		"action":     "RESTORE",
-		"name":       backupName,
-		"location":   location,
-		"collection": collection,
-		"repository": repository,
-		"async":      fmt.Sprintf("%s-restore", collection),
+		Action:     ActionRestore,
+		BackupName: backupName,
+		Location:   location,
+		Collection: collection,
+		Repository: repository,
+		BackupId:   strconv.Itoa(backupId),
+		Async:      fmt.Sprintf("%s-restore", collection),
 	}
 	req.SetQueryParams(restoreParams)
 
 	res, err := req.Post("/solr/admin/collections")
 	if err != nil {
-		sc.log.Error(err, "Failed to send http request to restore a collection")
+		sc.Config.log.Error(err, "Failed to send http request to restore a collection")
 		return nil, err
 	}
 
@@ -193,7 +193,7 @@ func (sc *SLClientV9) FlushStatus(asyncId string) (*Response, error) {
 
 	res, err := req.Delete(fmt.Sprintf("/api/cluster/command-status/%s", asyncId))
 	if err != nil {
-		sc.log.Error(err, "Failed to send http request to flush status")
+		sc.Config.log.Error(err, "Failed to send http request to flush status")
 		return nil, err
 	}
 
@@ -211,7 +211,7 @@ func (sc *SLClientV9) RequestStatus(asyncId string) (*Response, error) {
 	req.SetHeader("Content-Type", "application/json")
 	res, err := req.Get(fmt.Sprintf("/api/cluster/command-status/%s", asyncId))
 	if err != nil {
-		sc.log.Error(err, "Failed to send http request to request status")
+		sc.Config.log.Error(err, "Failed to send http request to request status")
 		return nil, err
 	}
 	backupResponse := &Response{
@@ -231,18 +231,18 @@ func (sc *SLClientV9) DeleteBackup(ctx context.Context, backupName string, colle
 		async = fmt.Sprintf("%s-%s", async, snap)
 	}
 	params := map[string]string{
-		"action":     "DELETEBACKUP",
-		"name":       backupName,
-		"location":   location,
-		"repository": repository,
-		"backupId":   strconv.Itoa(backupId),
-		"async":      async,
+		Action:     ActionDeleteBackup,
+		BackupName: backupName,
+		Location:   location,
+		Repository: repository,
+		BackupId:   strconv.Itoa(backupId),
+		Async:      async,
 	}
 	req.SetQueryParams(params)
 
 	res, err := req.Get("/solr/admin/collections")
 	if err != nil {
-		sc.log.Error(err, "Failed to send http request to restore a collection")
+		sc.Config.log.Error(err, "Failed to send http request to restore a collection")
 		return nil, err
 	}
 
@@ -263,18 +263,18 @@ func (sc *SLClientV9) PurgeBackup(ctx context.Context, backupName string, collec
 		async = fmt.Sprintf("%s-%s", async, snap)
 	}
 	params := map[string]string{
-		"action":      "DELETEBACKUP",
-		"name":        backupName,
-		"location":    location,
-		"repository":  repository,
-		"purgeUnused": "true",
-		"async":       async,
+		Action:      ActionDeleteBackup,
+		BackupName:  backupName,
+		Location:    location,
+		Repository:  repository,
+		PurgeUnused: "true",
+		Async:       async,
 	}
 	req.SetQueryParams(params)
 
 	res, err := req.Get("/solr/admin/collections")
 	if err != nil {
-		sc.log.Error(err, "Failed to send http request to restore a collection")
+		sc.Config.log.Error(err, "Failed to send http request to restore a collection")
 		return nil, err
 	}
 
@@ -295,7 +295,7 @@ func (sc *SLClientV9) GetClient() *resty.Client {
 }
 
 func (sc *SLClientV9) GetLog() logr.Logger {
-	return sc.log
+	return sc.Config.log
 }
 
 func (sc *SLClientV9) DecodeBackupResponse(data map[string]interface{}, collection string) ([]byte, error) {

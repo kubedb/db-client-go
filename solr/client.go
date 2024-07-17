@@ -54,20 +54,6 @@ type QueryParams struct {
 	Limit int    `json:"limit,omitempty" yaml:"limit,omitempty"`
 }
 
-type BackupParams struct {
-	Location   string `json:"location,omitempty" yaml:"location,omitempty"`
-	Repository string `json:"repository,omitempty" yaml:"repository,omitempty"`
-	Async      string `json:"async,omitempty" yaml:"async,omitempty"`
-}
-
-type BackupRestoreParams struct {
-	Location   string `json:"location,omitempty" yaml:"location,omitempty"`
-	Repository string `json:"repository,omitempty" yaml:"repository,omitempty"`
-	Collection string `json:"collection,omitempty" yaml:"collection,omitempty"`
-	Async      string `json:"async,omitempty" yaml:"async,omitempty"`
-	BackupId   int    `json:"backupId,omitempty" yaml:"backupId,omitempty"`
-}
-
 type CreateParams struct {
 	Name              string `json:"name,omitempty" yaml:"name,omitempty"`
 	Config            string `json:"config,omitempty" yaml:"config,omitempty"`

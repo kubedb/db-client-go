@@ -7,6 +7,24 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
+const (
+	writeCollectionName = "kubedb-system"
+	Action              = "action"
+	ActionBackup        = "BACKUP"
+	ActionRestore       = "RESTORE"
+	ActionDeleteBackup  = "DELETEBACKUP"
+	BackupName          = "name"
+	Location            = "location"
+	Repository          = "repository"
+	Collection          = "collection"
+	Async               = "async"
+	PurgeUnused         = "purgeUnused"
+	BackupId            = "backupId"
+	DeleteStatus        = "DELETESTATUS"
+	RequestStatus       = "REQUESTSTATUS"
+	RequestId           = "requestid"
+)
+
 type SLClient interface {
 	GetClusterStatus() (*Response, error)
 	ListCollection() (*Response, error)
