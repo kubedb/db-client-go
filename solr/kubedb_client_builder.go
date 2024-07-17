@@ -100,7 +100,7 @@ func (o *KubeDBClientBuilder) GetSolrClient() (*Client, error) {
 	}
 
 	switch {
-	case version.Major() == 9:
+	case version.Major() >= 9:
 		newClient := resty.New()
 		newClient.SetScheme(config.connectionScheme).SetBaseURL(config.host).SetTransport(config.transport)
 		newClient.SetTimeout(time.Second * 30)
