@@ -39,8 +39,7 @@ type Response struct {
 }
 
 type ResponseBody struct {
-	Status  string `json:"status"`
-	Brokers []int  `json:"checks"`
+	Brokers []int `json:"brokers"`
 }
 
 type Config struct {
