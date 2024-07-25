@@ -763,6 +763,9 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
+# github.com/google/go-querystring v1.1.0
+## explicit; go 1.10
+github.com/google/go-querystring/query
 # github.com/google/gofuzz v1.2.0
 ## explicit; go 1.12
 github.com/google/gofuzz
@@ -770,12 +773,40 @@ github.com/google/gofuzz/bytesource
 # github.com/google/uuid v1.6.0
 ## explicit
 github.com/google/uuid
+# github.com/grafadruid/go-druid v0.0.6
+## explicit; go 1.14
+github.com/grafadruid/go-druid
+github.com/grafadruid/go-druid/builder
+github.com/grafadruid/go-druid/builder/aggregation
+github.com/grafadruid/go-druid/builder/bound
+github.com/grafadruid/go-druid/builder/datasource
+github.com/grafadruid/go-druid/builder/dimension
+github.com/grafadruid/go-druid/builder/extractionfn
+github.com/grafadruid/go-druid/builder/filter
+github.com/grafadruid/go-druid/builder/granularity
+github.com/grafadruid/go-druid/builder/havingspec
+github.com/grafadruid/go-druid/builder/intervals
+github.com/grafadruid/go-druid/builder/limitspec
+github.com/grafadruid/go-druid/builder/lookup
+github.com/grafadruid/go-druid/builder/postaggregation
+github.com/grafadruid/go-druid/builder/query
+github.com/grafadruid/go-druid/builder/searchqueryspec
+github.com/grafadruid/go-druid/builder/toinclude
+github.com/grafadruid/go-druid/builder/topnmetric
+github.com/grafadruid/go-druid/builder/types
+github.com/grafadruid/go-druid/builder/virtualcolumn
 # github.com/hashicorp/errwrap v1.1.0
 ## explicit
 github.com/hashicorp/errwrap
+# github.com/hashicorp/go-cleanhttp v0.5.2
+## explicit; go 1.13
+github.com/hashicorp/go-cleanhttp
 # github.com/hashicorp/go-multierror v1.1.1
 ## explicit; go 1.13
 github.com/hashicorp/go-multierror
+# github.com/hashicorp/go-retryablehttp v0.7.7
+## explicit; go 1.19
+github.com/hashicorp/go-retryablehttp
 # github.com/hashicorp/go-uuid v1.0.3
 ## explicit
 github.com/hashicorp/go-uuid
@@ -853,6 +884,10 @@ github.com/klauspost/cpuid/v2
 github.com/lib/pq
 github.com/lib/pq/oid
 github.com/lib/pq/scram
+# github.com/magefile/mage v1.11.0
+## explicit; go 1.12
+github.com/magefile/mage/mg
+github.com/magefile/mage/sh
 # github.com/mailru/easyjson v0.7.7
 ## explicit; go 1.12
 github.com/mailru/easyjson/buffer
@@ -1499,6 +1534,7 @@ kmodules.xyz/client-go/discovery
 kmodules.xyz/client-go/meta
 kmodules.xyz/client-go/policy/secomp
 kmodules.xyz/client-go/tools/certholder
+kmodules.xyz/client-go/tools/healthchecker
 # kmodules.xyz/custom-resources v0.30.0
 ## explicit; go 1.22.0
 kmodules.xyz/custom-resources/apis/appcatalog
