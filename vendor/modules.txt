@@ -1552,11 +1552,7 @@ kmodules.xyz/offshoot-api/api/v1
 kmodules.xyz/offshoot-api/api/v1/conversion
 kmodules.xyz/offshoot-api/api/v2
 kmodules.xyz/offshoot-api/util
-<<<<<<< HEAD
-# kubedb.dev/apimachinery v0.47.0-rc.1.0.20240717082707-f8438b7e77c7
-=======
-# kubedb.dev/apimachinery v0.47.0-rc.1.0.20240718040433-0ab49fcf1584
->>>>>>> 298cc3fb (Add Kafka Rest Proxy)
+# kubedb.dev/apimachinery v0.47.0-rc.1.0.20240726122410-88b60875b260
 ## explicit; go 1.22.1
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog
