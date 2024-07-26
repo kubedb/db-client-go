@@ -1,0 +1,39 @@
+run:
+  timeout: 5m
+
+linters-settings:
+  gofmt:
+    simplify: true
+  gci:
+    sections:
+    - Standard
+    - Default
+    - Prefix(github.com/Shopify/zk)
+  revive:
+    rules:
+      - name: empty-block
+        severity: warning
+        disabled: true
+      - name: unused-parameter
+        severity: warning
+        disabled: true
+
+linters:
+  disable-all: true
+  enable:
+  # Defaults
+  - errcheck
+  - gosimple
+  - govet
+  - ineffassign
+  - staticcheck
+  - typecheck
+  - unused
+
+  # Extras
+  - gofmt
+  - unconvert
+  - gci
+  - revive
+  - stylecheck
+  - whitespace
