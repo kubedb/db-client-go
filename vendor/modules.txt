@@ -23,6 +23,9 @@ github.com/IBM/sarama
 # github.com/Masterminds/semver/v3 v3.2.1
 ## explicit; go 1.18
 github.com/Masterminds/semver/v3
+# github.com/Shopify/zk v1.0.12
+## explicit; go 1.22
+github.com/Shopify/zk
 # github.com/andybalholm/brotli v1.1.0
 ## explicit; go 1.13
 github.com/andybalholm/brotli

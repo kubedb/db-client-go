@@ -8,6 +8,7 @@ require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.23.2
 	github.com/IBM/sarama v1.42.1
 	github.com/Masterminds/semver/v3 v3.2.1
+	github.com/Shopify/zk v1.0.12
 	github.com/elastic/go-elasticsearch/v5 v5.6.1
 	github.com/elastic/go-elasticsearch/v6 v6.8.10
 	github.com/elastic/go-elasticsearch/v7 v7.15.1
