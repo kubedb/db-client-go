@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package schemaregistry
+package restproxy
 
 import (
 	"encoding/json"
@@ -39,14 +39,7 @@ type Response struct {
 }
 
 type ResponseBody struct {
-	Status string  `json:"status"`
-	Checks []Check `json:"checks"`
-}
-
-type Check struct {
-	Name   string                 `json:"name"`
-	Status string                 `json:"status"`
-	Data   map[string]interface{} `json:"data,omitempty"`
+	Brokers []int `json:"brokers"`
 }
 
 type Config struct {
@@ -56,7 +49,7 @@ type Config struct {
 	transport        *http.Transport
 }
 
-func (cc *Client) GetSchemaRegistryHealth() (*Response, error) {
+func (cc *Client) GetKafkaBrokerList() (*Response, error) {
 	req := cc.Client.R().SetDoNotParseResponse(true)
 	res, err := req.Get(cc.Config.api)
 	if err != nil {
@@ -69,12 +62,16 @@ func (cc *Client) GetSchemaRegistryHealth() (*Response, error) {
 		Body:   res.RawBody(),
 	}
 
+	if response.Code != http.StatusOK {
+		return response, fmt.Errorf("failed to get broker list from rest proxy")
+	}
+
 	return response, nil
 }
 
-// IsSchemaRegistryHealthy parse health response in json from server and
+// IsBrokerAvailableForRequest parse health response in json from server and
 // return overall status of the server
-func (cc *Client) IsSchemaRegistryHealthy(response *Response) (bool, error) {
+func (cc *Client) IsBrokerAvailableForRequest(response *Response) (bool, error) {
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
@@ -93,8 +90,8 @@ func (cc *Client) IsSchemaRegistryHealthy(response *Response) (bool, error) {
 		return false, errors.Wrap(err, "Failed to parse response body")
 	}
 
-	if responseBody.Status != "UP" {
-		return false, fmt.Errorf("schema registry is not healthy")
+	if len(responseBody.Brokers) == 0 {
+		return false, fmt.Errorf("no brokers found to serve request with rest proxy")
 	}
 
 	return true, nil

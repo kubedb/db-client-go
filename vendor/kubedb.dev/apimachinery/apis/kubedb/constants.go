@@ -689,10 +689,6 @@ const (
 	DatabaseWriteAccess = "DatabaseWriteAccess"
 	// check dependencies are ready
 	DatabaseDependencyReady = "DatabaseDependencyReady"
-	// update config secret for backup in solr
-	PatchConfigSecretUpdateForBackup = "PatchConfigSecretUpdatesForBackup"
-	// sync db to update configuration
-	SyncDatabaseForConfigurationUpdate = "SyncDatabaseForConfigurationUpdate"
 
 	// Condition reasons
 	DataRestoreStartedByExternalInitializer    = "DataRestoreStartedByExternalInitializer"
