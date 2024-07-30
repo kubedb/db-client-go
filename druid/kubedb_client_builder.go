@@ -1,0 +1,114 @@
+/*
+Copyright AppsCode Inc. and Contributors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package druid
+
+import (
+	"context"
+	"errors"
+	"fmt"
+
+	druidgo "github.com/grafadruid/go-druid"
+	_ "github.com/lib/pq"
+	core "k8s.io/api/core/v1"
+	kerr "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog/v2"
+	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+type KubeDBClientBuilder struct {
+	kc       client.Client
+	db       *olddbapi.Druid
+	url      string
+	podName  string
+	nodeRole olddbapi.DruidNodeRoleType
+	ctx      context.Context
+}
+
+func NewKubeDBClientBuilder(kc client.Client, druid *olddbapi.Druid) *KubeDBClientBuilder {
+	return &KubeDBClientBuilder{
+		kc: kc,
+		db: druid,
+	}
+}
+
+// WithURL must be called after initializing NodeRole
+// by calling WithNodeRole function
+func (o *KubeDBClientBuilder) WithURL(url string) *KubeDBClientBuilder {
+	if url == "" {
+		url = o.GetNodesAddress()
+	}
+	o.url = url
+	return o
+}
+
+func (o *KubeDBClientBuilder) WithPod(podName string) *KubeDBClientBuilder {
+	o.podName = podName
+	return o
+}
+
+func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
+	o.ctx = ctx
+	return o
+}
+
+func (o *KubeDBClientBuilder) WithNodeRole(nodeRole olddbapi.DruidNodeRoleType) *KubeDBClientBuilder {
+	o.nodeRole = nodeRole
+	return o
+}
+
+func (o *KubeDBClientBuilder) GetDruidClient() (*Client, error) {
+	var druidOpts []druidgo.ClientOption
+	if !*o.db.Spec.DisableSecurity {
+		if o.db.Spec.AuthSecret == nil {
+			klog.Error("AuthSecret not set")
+			return nil, errors.New("auth-secret is not set")
+		}
+
+		authSecret := &core.Secret{}
+		err := o.kc.Get(o.ctx, types.NamespacedName{
+			Namespace: o.db.Namespace,
+			Name:      o.db.Spec.AuthSecret.Name,
+		}, authSecret)
+		if err != nil {
+			if kerr.IsNotFound(err) {
+				klog.Error(err, "AuthSecret not found")
+				return nil, errors.New("auth-secret not found")
+			}
+			return nil, err
+		}
+		userName := string(authSecret.Data[core.BasicAuthUsernameKey])
+		password := string(authSecret.Data[core.BasicAuthPasswordKey])
+
+		druidOpts = append(druidOpts, druidgo.WithBasicAuth(userName, password))
+	}
+
+	druidClient, err := druidgo.NewClient(o.url, druidOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return &Client{
+		Client: druidClient,
+	}, nil
+}
+
+// GetNodesAddress returns DNS for the nodes based on type of the node
+func (o *KubeDBClientBuilder) GetNodesAddress() string {
+	baseUrl := fmt.Sprintf("http://%s-0.%s.%s.svc.cluster.local:%d", o.db.PetSetName(o.nodeRole), o.db.GoverningServiceName(), o.db.Namespace, o.db.DruidNodeContainerPort(o.nodeRole))
+	return baseUrl
+}
