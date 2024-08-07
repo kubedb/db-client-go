@@ -198,7 +198,7 @@ func CheckDBReadWriteAccess(druidCoordinatorsClient *Client, druidBrokersClient 
 		if err != nil {
 			return err, false
 		}
-		klog.Info("Successfully updated coordinators config to stop waiting before deleting segment")
+		klog.V(5).Info("Successfully updated coordinators config to stop waiting before deleting segment")
 		oldData = DruidHealthDataZero
 		newData = DruidHealthDataOne
 	}
@@ -321,7 +321,7 @@ func (c *Client) SubmitTaskRecurrently(taskType DruidTaskType, dataSource string
 			return err
 		}
 		if taskStatus {
-			klog.Info("Task successful")
+			klog.V(5).Info("Task successful")
 			return nil
 		}
 		time.Sleep(6 * time.Second)
@@ -438,9 +438,8 @@ func (c *Client) CheckTaskStatus(taskID string) (bool, error) {
 }
 
 func (c *Client) checkDBReadAccess(oldData string) error {
-	klog.Info("waiting for the segments to be available for query...")
-
 	for i := 0; i < 5; i++ {
+		klog.V(5).Info("waiting for the segments to be available for query...")
 		time.Sleep(6 * time.Second)
 
 		data, err := c.GetData()
@@ -449,7 +448,7 @@ func (c *Client) checkDBReadAccess(oldData string) error {
 			return err
 		}
 		if data != oldData {
-			klog.Info("successfully read ingested data")
+			klog.V(5).Info("successfully read ingested data")
 			return nil
 		}
 	}
