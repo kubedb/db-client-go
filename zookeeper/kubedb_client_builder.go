@@ -33,10 +33,13 @@ const (
 )
 
 type KubeDBClientBuilder struct {
-	kc      client.Client
-	db      *dbapi.ZooKeeper
-	podName string
-	url     string
+	kc                client.Client
+	db                *dbapi.ZooKeeper
+	ctx               context.Context
+	podName           string
+	url               string
+	enableHTTPClient  bool
+	disableAMQPClient bool
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *dbapi.ZooKeeper) *KubeDBClientBuilder {
@@ -44,6 +47,14 @@ func NewKubeDBClientBuilder(kc client.Client, db *dbapi.ZooKeeper) *KubeDBClient
 		kc: kc,
 		db: db,
 	}
+}
+
+// NewKubeDBClientBuilderForHTTP returns a KubeDB client builder only for http client
+func NewKubeDBClientBuilderForHTTP(kc client.Client, db *dbapi.ZooKeeper) *KubeDBClientBuilder {
+	return NewKubeDBClientBuilder(kc, db).
+		WithContext(context.TODO()).
+		WithAMQPClientDisabled().
+		WithHTTPClientEnabled()
 }
 
 func (o *KubeDBClientBuilder) WithPod(podName string) *KubeDBClientBuilder {
@@ -56,7 +67,22 @@ func (o *KubeDBClientBuilder) WithURL(url string) *KubeDBClientBuilder {
 	return o
 }
 
-func (o *KubeDBClientBuilder) GetZooKeeperClient(ctx context.Context) (*Client, error) {
+func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
+	o.ctx = ctx
+	return o
+}
+
+func (o *KubeDBClientBuilder) WithHTTPClientEnabled() *KubeDBClientBuilder {
+	o.enableHTTPClient = true
+	return o
+}
+
+func (o *KubeDBClientBuilder) WithAMQPClientDisabled() *KubeDBClientBuilder {
+	o.disableAMQPClient = true
+	return o
+}
+
+func (o *KubeDBClientBuilder) GetZooKeeperClient() (*Client, error) {
 	var err error
 	if o.podName != "" {
 		o.url = o.getPodURL()
