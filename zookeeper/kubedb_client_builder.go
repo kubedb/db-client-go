@@ -35,6 +35,7 @@ const (
 type KubeDBClientBuilder struct {
 	kc      client.Client
 	db      *dbapi.ZooKeeper
+	ctx     context.Context
 	podName string
 	url     string
 }
@@ -53,6 +54,11 @@ func (o *KubeDBClientBuilder) WithPod(podName string) *KubeDBClientBuilder {
 
 func (o *KubeDBClientBuilder) WithURL(url string) *KubeDBClientBuilder {
 	o.url = url
+	return o
+}
+
+func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
+	o.ctx = ctx
 	return o
 }
 
