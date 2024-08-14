@@ -4,28 +4,25 @@ metadata:
   creationTimestamp: null
   labels:
     app.kubernetes.io/name: kubedb
-  name: connectors.kafka.kubedb.com
+  name: zookeeperopsrequests.ops.kubedb.com
 spec:
-  group: kafka.kubedb.com
+  group: ops.kubedb.com
   names:
     categories:
-    - kfstore
+    - ops
     - kubedb
     - appscode
-    kind: Connector
-    listKind: ConnectorList
-    plural: connectors
+    kind: ZooKeeperOpsRequest
+    listKind: ZooKeeperOpsRequestList
+    plural: zookeeperopsrequests
     shortNames:
-    - kc
-    singular: connector
+    - zkops
+    singular: zookeeperopsrequest
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .apiVersion
+    - jsonPath: .spec.type
       name: Type
-      type: string
-    - jsonPath: .spec.connectClusterRef.name
-      name: ConnectCluster
       type: string
     - jsonPath: .status.phase
       name: Status
@@ -45,32 +42,30 @@ spec:
             type: object
           spec:
             properties:
-              configSecret:
+              apply:
+                default: IfReady
+                enum:
+                - IfReady
+                - Always
+                type: string
+              databaseRef:
                 properties:
                   name:
                     default: ""
                     type: string
                 type: object
                 x-kubernetes-map-type: atomic
-              connectClusterRef:
-                properties:
-                  name:
-                    type: string
-                  namespace:
-                    type: string
-                required:
-                - name
+              restart:
                 type: object
-              deletionPolicy:
+              timeout:
+                type: string
+              type:
                 enum:
-                - Halt
-                - Delete
-                - WipeOut
-                - DoNotTerminate
+                - Restart
                 type: string
             required:
-            - configSecret
-            - connectClusterRef
+            - databaseRef
+            - type
             type: object
           status:
             properties:
@@ -102,17 +97,31 @@ spec:
               observedGeneration:
                 format: int64
                 type: integer
+              pausedBackups:
+                items:
+                  properties:
+                    apiGroup:
+                      type: string
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
               phase:
                 enum:
                 - Pending
-                - Unassigned
-                - Running
-                - Paused
+                - Progressing
+                - Successful
+                - WaitingForApproval
                 - Failed
-                - Restarting
-                - Stopped
-                - Destroyed
-                - Unknown
+                - Approved
+                - Denied
+                - Skipped
                 type: string
             type: object
         type: object
