@@ -3,19 +3,20 @@ package cassandra
 import (
 	"context"
 	"fmt"
+
+	"strconv"
+
 	"github.com/gocql/gocql"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strconv"
 )
 
 type KubeDBClientBuilder struct {
-	kc      client.Client
-	db      *api.Cassandra
-	url     string
-	podName string
-	port    *int
-	ctx     context.Context
+	kc   client.Client
+	db   *api.Cassandra
+	url  string
+	port *int
+	ctx  context.Context
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *api.Cassandra) *KubeDBClientBuilder {
