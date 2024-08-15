@@ -39,12 +39,9 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 	o.ctx = ctx
 	return o
 }
-func (o *KubeDBClientBuilder) GetCassandraClient() (*Client, error) {
-	host := "127.0.0.1"
+func (o *KubeDBClientBuilder) GetCassandraClient(dns string) (*Client, error) {
+	host := dns
 	port := "9042"
-	username := "cluster1-superuser"
-	password := "X-XLZ0jxouJbAbg0KAsPW0a1E0GofwK12cWOA9WyHYCjdede2UBImQ"
-
 	cluster := gocql.NewCluster(host)
 	p, err := strconv.Atoi(port)
 	if err != nil {
@@ -54,10 +51,7 @@ func (o *KubeDBClientBuilder) GetCassandraClient() (*Client, error) {
 	cluster.Keyspace = "system"
 	//cluster.Consistency = gocql.Any  //ANY ConsistencyLevel is only supported for writes
 	cluster.Consistency = gocql.Quorum
-	cluster.Authenticator = gocql.PasswordAuthenticator{
-		Username: username,
-		Password: password,
-	}
+
 	session, err := cluster.CreateSession()
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to Cassandra cluster: %v", err)
