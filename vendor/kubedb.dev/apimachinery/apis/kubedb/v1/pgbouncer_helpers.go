@@ -197,7 +197,7 @@ func (p *PgBouncer) SetDefaults(pgBouncerVersion *catalog.PgBouncerVersion, uses
 	}
 
 	if p.Spec.DeletionPolicy == "" {
-		p.Spec.DeletionPolicy = DeletionPolicyDelete
+		p.Spec.DeletionPolicy = PgBouncerDeletionPolicyDelete
 	}
 
 	p.setConnectionPoolConfigDefaults()

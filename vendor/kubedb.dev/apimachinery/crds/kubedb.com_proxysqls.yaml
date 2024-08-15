@@ -83,8 +83,6 @@ spec:
                 - WipeOut
                 - DoNotTerminate
                 type: string
-              halted:
-                type: boolean
               healthChecker:
                 default:
                   failureThreshold: 1
@@ -3703,8 +3701,6 @@ spec:
                     type: string
                 type: object
                 x-kubernetes-map-type: atomic
-              halted:
-                type: boolean
               healthChecker:
                 default:
                   failureThreshold: 1

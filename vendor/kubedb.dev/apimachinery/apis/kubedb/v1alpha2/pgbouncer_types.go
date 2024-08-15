@@ -105,10 +105,6 @@ type PgBouncerSpec struct {
 	// +optional
 	// +kubebuilder:default={periodSeconds: 10, timeoutSeconds: 10, failureThreshold: 1}
 	HealthChecker kmapi.HealthCheckSpec `json:"healthChecker"`
-
-	// Indicates that the database is halted and all offshoot Kubernetes resources are deleted.
-	// +optional
-	Halted bool `json:"halted,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=server;archiver;metrics-exporter
@@ -266,12 +262,10 @@ const (
 	PgBouncerClientAuthModeCert PgBouncerClientAuthMode = "cert"
 )
 
-// +kubebuilder:validation:Enum=Halt;Delete;WipeOut;DoNotTerminate
+// +kubebuilder:validation:Enum=Delete;WipeOut;DoNotTerminate
 type PgBouncerTerminationPolicy string
 
 const (
-	// Deletes database pods, service but leave the PVCs and stash backup data intact.
-	PgBouncerDeletionPolicyHalt PgBouncerTerminationPolicy = "Halt"
 	// Deletes database pods, service, pvcs but leave the stash backup data intact.
 	PgBouncerTerminationPolicyDelete PgBouncerTerminationPolicy = "Delete"
 	// Deletes database pods, service, pvcs and stash backup data.
