@@ -144,7 +144,7 @@ require (
 	kmodules.xyz/apiversion v0.2.0 // indirect
 	kmodules.xyz/monitoring-agent-api v0.29.0 // indirect
 	kmodules.xyz/offshoot-api v0.30.0 // indirect
-	kubeops.dev/petset v0.0.6 // indirect
+	kubeops.dev/petset v0.0.5-0.20240603165102-e2d9decb8abe // indirect
 	modernc.org/memory v1.5.0 // indirect
 	modernc.org/token v1.1.0 // indirect
 	sigs.k8s.io/gateway-api v1.1.0 // indirect

@@ -804,8 +804,8 @@ kmodules.xyz/offshoot-api v0.30.0 h1:dq9F93pu4Q8rL9oTcCk+vGGy8vpS7RNt0GSwx7Bvhec
 kmodules.xyz/offshoot-api v0.30.0/go.mod h1:o9VoA3ImZMDBp3lpLb8+kc2d/KBxioRwCpaKDfLIyDw=
 kubedb.dev/apimachinery v0.47.0-rc.2.0.20240815122515-e51cacc5e58f h1:nZ4JJb4hSJPNqHqbKL1jamBbroUQB+0bwha4xwaFnmU=
 kubedb.dev/apimachinery v0.47.0-rc.2.0.20240815122515-e51cacc5e58f/go.mod h1:rBcbP9564zy6gla7nMmQs7NsFS0OwB958AJijeAO2zY=
-kubeops.dev/petset v0.0.6 h1:pmDrb29zrG1TLMV3mEi18VTP7hKcgDbiP1+MPXc5M+M=
-kubeops.dev/petset v0.0.6/go.mod h1:A15vh0r979NsvL65DTIZKWsa/NoX9VapHBAEw1ZsdYI=
+kubeops.dev/petset v0.0.5-0.20240603165102-e2d9decb8abe h1:uWyps3VIDFwGuL0yQa0eMGaLg4ofVwpy59U14Trxnz8=
+kubeops.dev/petset v0.0.5-0.20240603165102-e2d9decb8abe/go.mod h1:A15vh0r979NsvL65DTIZKWsa/NoX9VapHBAEw1ZsdYI=
 lukechampine.com/uint128 v1.1.1/go.mod h1:c4eWIwlEGaxC/+H1VguhU4PHXNWDCDMUlWdIWl2j1gk=
 lukechampine.com/uint128 v1.2.0 h1:mBi/5l91vocEN8otkC5bDLhi2KdCticRiwbdB0O+rjI=
 lukechampine.com/uint128 v1.2.0/go.mod h1:c4eWIwlEGaxC/+H1VguhU4PHXNWDCDMUlWdIWl2j1gk=
