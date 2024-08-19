@@ -165,7 +165,7 @@ func (o *KubeDBClientBuilder) GetRabbitMQClient() (*Client, error) {
 }
 
 func (o *KubeDBClientBuilder) GetAMQPconnURL(username string, password string) string {
-	return fmt.Sprintf("amqp://%s:%s@%s.%s.svc.cluster.local:%d/", username, password, o.db.OffshootName(), o.db.Namespace, kubedb.RabbitMQAMQPPort)
+	return fmt.Sprintf("amqp://%s:%s@%s.%s.svc.cluster.local:%d/", username, password, o.db.ServiceName(), o.db.Namespace, kubedb.RabbitMQAMQPPort)
 }
 
 func (o *KubeDBClientBuilder) GetHTTPconnURL() string {
@@ -173,7 +173,7 @@ func (o *KubeDBClientBuilder) GetHTTPconnURL() string {
 	if o.podName != "" {
 		return fmt.Sprintf("%s://%s.%s.%s.svc:%d", protocolScheme, o.podName, o.db.GoverningServiceName(), o.db.Namespace, kubedb.RabbitMQManagementUIPort)
 	}
-	return fmt.Sprintf("%s://%s.%s.svc.cluster.local:%d", protocolScheme, o.db.ServiceName(), o.db.Namespace, kubedb.RabbitMQManagementUIPort)
+	return fmt.Sprintf("%s://%s.%s.svc.cluster.local:%d", protocolScheme, o.db.DashboardServiceName(), o.db.Namespace, kubedb.RabbitMQManagementUIPort)
 }
 
 // RabbitMQ server have a default virtual host "/"
