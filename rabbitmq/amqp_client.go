@@ -35,6 +35,12 @@ func (c *AMQPClient) GetMessagingChannel() *Channel {
 }
 
 func (ch *Channel) GetNewQueue(name string, isDurable bool, isTypeQuoeum bool) (*amqp.Queue, error) {
+	var args amqp.Table
+	if isTypeQuoeum {
+		args = amqp.Table{ // queue args
+			amqp.QueueTypeArg: amqp.QueueTypeQuorum,
+		}
+	}
 	// Declare a non-persistent queue, where messages will be sent
 	q, err := ch.QueueDeclare(
 		name,      // name
@@ -42,7 +48,7 @@ func (ch *Channel) GetNewQueue(name string, isDurable bool, isTypeQuoeum bool) (
 		false,     // delete when unused
 		false,     // exclusive
 		false,     // no-wait
-		nil,       // arguments
+		args,      // arguments
 	)
 	if err != nil {
 		klog.Error(err, "Failed to create a queue for publishing message")
