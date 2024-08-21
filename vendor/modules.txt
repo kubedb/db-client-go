@@ -957,7 +957,7 @@ github.com/pierrec/lz4/v4/internal/xxh32
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
-# github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.75.1
+# github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.75.2
 ## explicit; go 1.22.0
 github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
 github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1
@@ -1525,7 +1525,7 @@ k8s.io/utils/trace
 # kmodules.xyz/apiversion v0.2.0
 ## explicit; go 1.14
 kmodules.xyz/apiversion
-# kmodules.xyz/client-go v0.30.9
+# kmodules.xyz/client-go v0.30.13
 ## explicit; go 1.22.0
 kmodules.xyz/client-go
 kmodules.xyz/client-go/api/v1
@@ -1552,7 +1552,7 @@ kmodules.xyz/offshoot-api/api/v1
 kmodules.xyz/offshoot-api/api/v1/conversion
 kmodules.xyz/offshoot-api/api/v2
 kmodules.xyz/offshoot-api/util
-# kubedb.dev/apimachinery v0.47.0-rc.3
+# kubedb.dev/apimachinery v0.47.0
 ## explicit; go 1.22.1
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog

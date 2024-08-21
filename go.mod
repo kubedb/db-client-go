@@ -30,9 +30,9 @@ require (
 	k8s.io/api v0.30.2
 	k8s.io/apimachinery v0.30.2
 	k8s.io/klog/v2 v2.130.1
-	kmodules.xyz/client-go v0.30.9
+	kmodules.xyz/client-go v0.30.13
 	kmodules.xyz/custom-resources v0.30.0
-	kubedb.dev/apimachinery v0.47.0-rc.3
+	kubedb.dev/apimachinery v0.47.0
 	sigs.k8s.io/controller-runtime v0.18.4
 	xorm.io/xorm v1.3.6
 )
@@ -96,7 +96,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/paulmach/orb v0.11.1 // indirect
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.75.1 // indirect
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.75.2 // indirect
 	github.com/prometheus/client_golang v1.18.0 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.46.0 // indirect
