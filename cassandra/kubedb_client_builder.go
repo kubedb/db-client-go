@@ -46,7 +46,7 @@ func (o *KubeDBClientBuilder) GetCassandraClient(dns string) (*Client, error) {
 	cluster := gocql.NewCluster(host)
 	p, err := strconv.Atoi(port)
 	if err != nil {
-		return nil, fmt.Errorf("invalid port: %v", err)
+		return nil, fmt.Errorf("invalid port : %v", err)
 	}
 	cluster.Port = p
 	cluster.Keyspace = "system"
