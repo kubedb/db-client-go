@@ -107,6 +107,7 @@ func (o *KubeDBClientBuilder) GetRabbitMQClient() (*Client, error) {
 		o.ctx = context.TODO()
 	}
 	authSecret := &core.Secret{}
+	var username, password string
 	if !o.db.Spec.DisableSecurity {
 		if o.db.Spec.AuthSecret == nil {
 			klog.Info("Auth-secret not set")
@@ -124,13 +125,16 @@ func (o *KubeDBClientBuilder) GetRabbitMQClient() (*Client, error) {
 			klog.Error(err, "Failed to get auth-secret")
 			return nil, err
 		}
+		username, password = string(authSecret.Data[core.BasicAuthUsernameKey]), string(authSecret.Data[core.BasicAuthPasswordKey])
+	} else {
+		username, password = "guest", "guest"
 	}
 
 	rmqClient := &Client{}
 
 	if !o.disableAMQPClient {
 		if o.amqpURL == "" {
-			o.amqpURL = o.GetAMQPconnURL(string(authSecret.Data[core.BasicAuthUsernameKey]), string(authSecret.Data[core.BasicAuthPasswordKey]))
+			o.amqpURL = o.GetAMQPconnURL(username, password)
 		}
 
 		if o.vhost == "" {
@@ -153,7 +157,7 @@ func (o *KubeDBClientBuilder) GetRabbitMQClient() (*Client, error) {
 		if o.httpURL == "" {
 			o.httpURL = o.GetHTTPconnURL()
 		}
-		httpClient, err := rmqhttp.NewClient(o.httpURL, string(authSecret.Data[core.BasicAuthUsernameKey]), string(authSecret.Data[core.BasicAuthPasswordKey]))
+		httpClient, err := rmqhttp.NewClient(o.httpURL, username, password)
 		if err != nil {
 			klog.Error(err, "Failed to get http client for rabbitmq")
 			return nil, err
