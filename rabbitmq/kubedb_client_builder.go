@@ -19,12 +19,12 @@ package rabbitmq
 import (
 	"context"
 	"errors"
+	amqp "github.com/rabbitmq/amqp091-go"
 
 	"fmt"
 	"strings"
 
 	rmqhttp "github.com/michaelklishin/rabbit-hole/v2"
-	amqp "github.com/rabbitmq/amqp091-go"
 	core "k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -131,14 +131,34 @@ func (o *KubeDBClientBuilder) GetRabbitMQClient() (*Client, error) {
 	}
 
 	rmqClient := &Client{}
+	defaultVhost := "/"
+
+	if o.enableHTTPClient {
+		if o.httpURL == "" {
+			o.httpURL = o.GetHTTPconnURL()
+		}
+		httpClient, err := rmqhttp.NewClient(o.httpURL, username, password)
+		if err != nil {
+			klog.Error(err, "Failed to get http client for rabbitmq")
+			return nil, err
+		}
+
+		vhosts, err := httpClient.ListVhosts()
+		for _, vhost := range vhosts {
+			if vhost.Description == "Default virtual host" {
+				defaultVhost = vhost.Name
+				break
+			}
+		}
+		rmqClient.HTTPClient = HTTPClient{httpClient}
+	}
 
 	if !o.disableAMQPClient {
 		if o.amqpURL == "" {
-			o.amqpURL = o.GetAMQPconnURL(username, password)
-		}
-
-		if o.vhost == "" {
-			o.vhost = o.GetVirtualHostFromURL(o.amqpURL)
+			if o.vhost == "" {
+				o.vhost = defaultVhost
+			}
+			o.amqpURL = o.GetAMQPconnURL(username, password, o.vhost)
 		}
 
 		rabbitConnection, err := amqp.DialConfig(o.amqpURL, amqp.Config{
@@ -153,23 +173,11 @@ func (o *KubeDBClientBuilder) GetRabbitMQClient() (*Client, error) {
 		rmqClient.AMQPClient = AMQPClient{rabbitConnection}
 	}
 
-	if o.enableHTTPClient {
-		if o.httpURL == "" {
-			o.httpURL = o.GetHTTPconnURL()
-		}
-		httpClient, err := rmqhttp.NewClient(o.httpURL, username, password)
-		if err != nil {
-			klog.Error(err, "Failed to get http client for rabbitmq")
-			return nil, err
-		}
-		rmqClient.HTTPClient = HTTPClient{httpClient}
-	}
-
 	return rmqClient, nil
 }
 
-func (o *KubeDBClientBuilder) GetAMQPconnURL(username string, password string) string {
-	return fmt.Sprintf("amqp://%s:%s@%s.%s.svc.cluster.local:%d/", username, password, o.db.ServiceName(), o.db.Namespace, kubedb.RabbitMQAMQPPort)
+func (o *KubeDBClientBuilder) GetAMQPconnURL(username string, password string, vhost string) string {
+	return fmt.Sprintf("amqp://%s:%s@%s.%s.svc.cluster.local:%d%s", username, password, o.db.ServiceName(), o.db.Namespace, kubedb.RabbitMQAMQPPort, vhost)
 }
 
 func (o *KubeDBClientBuilder) GetHTTPconnURL() string {
