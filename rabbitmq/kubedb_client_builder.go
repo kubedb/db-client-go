@@ -19,12 +19,11 @@ package rabbitmq
 import (
 	"context"
 	"errors"
-	amqp "github.com/rabbitmq/amqp091-go"
-
 	"fmt"
 	"strings"
 
 	rmqhttp "github.com/michaelklishin/rabbit-hole/v2"
+	amqp "github.com/rabbitmq/amqp091-go"
 	core "k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -144,6 +143,10 @@ func (o *KubeDBClientBuilder) GetRabbitMQClient() (*Client, error) {
 		}
 
 		vhosts, err := httpClient.ListVhosts()
+		if err != nil {
+			klog.Error(err, "Failed to list virtual hosts")
+			return nil, err
+		}
 		for _, vhost := range vhosts {
 			if vhost.Description == "Default virtual host" {
 				defaultVhost = vhost.Name
