@@ -19,7 +19,6 @@ package rabbitmq
 import (
 	"context"
 	"errors"
-
 	"fmt"
 	"strings"
 
@@ -107,6 +106,7 @@ func (o *KubeDBClientBuilder) GetRabbitMQClient() (*Client, error) {
 		o.ctx = context.TODO()
 	}
 	authSecret := &core.Secret{}
+	var username, password string
 	if !o.db.Spec.DisableSecurity {
 		if o.db.Spec.AuthSecret == nil {
 			klog.Info("Auth-secret not set")
@@ -124,17 +124,44 @@ func (o *KubeDBClientBuilder) GetRabbitMQClient() (*Client, error) {
 			klog.Error(err, "Failed to get auth-secret")
 			return nil, err
 		}
+		username, password = string(authSecret.Data[core.BasicAuthUsernameKey]), string(authSecret.Data[core.BasicAuthPasswordKey])
+	} else {
+		username, password = "guest", "guest"
 	}
 
 	rmqClient := &Client{}
+	defaultVhost := "/"
+
+	if o.enableHTTPClient {
+		if o.httpURL == "" {
+			o.httpURL = o.GetHTTPconnURL()
+		}
+		httpClient, err := rmqhttp.NewClient(o.httpURL, username, password)
+		if err != nil {
+			klog.Error(err, "Failed to get http client for rabbitmq")
+			return nil, err
+		}
+
+		vhosts, err := httpClient.ListVhosts()
+		if err != nil {
+			klog.Error(err, "Failed to list virtual hosts")
+			return nil, err
+		}
+		for _, vhost := range vhosts {
+			if vhost.Description == "Default virtual host" {
+				defaultVhost = vhost.Name
+				break
+			}
+		}
+		rmqClient.HTTPClient = HTTPClient{httpClient}
+	}
 
 	if !o.disableAMQPClient {
 		if o.amqpURL == "" {
-			o.amqpURL = o.GetAMQPconnURL(string(authSecret.Data[core.BasicAuthUsernameKey]), string(authSecret.Data[core.BasicAuthPasswordKey]))
-		}
-
-		if o.vhost == "" {
-			o.vhost = o.GetVirtualHostFromURL(o.amqpURL)
+			if o.vhost == "" {
+				o.vhost = defaultVhost
+			}
+			o.amqpURL = o.GetAMQPconnURL(username, password, o.vhost)
 		}
 
 		rabbitConnection, err := amqp.DialConfig(o.amqpURL, amqp.Config{
@@ -149,23 +176,11 @@ func (o *KubeDBClientBuilder) GetRabbitMQClient() (*Client, error) {
 		rmqClient.AMQPClient = AMQPClient{rabbitConnection}
 	}
 
-	if o.enableHTTPClient {
-		if o.httpURL == "" {
-			o.httpURL = o.GetHTTPconnURL()
-		}
-		httpClient, err := rmqhttp.NewClient(o.httpURL, string(authSecret.Data[core.BasicAuthUsernameKey]), string(authSecret.Data[core.BasicAuthPasswordKey]))
-		if err != nil {
-			klog.Error(err, "Failed to get http client for rabbitmq")
-			return nil, err
-		}
-		rmqClient.HTTPClient = HTTPClient{httpClient}
-	}
-
 	return rmqClient, nil
 }
 
-func (o *KubeDBClientBuilder) GetAMQPconnURL(username string, password string) string {
-	return fmt.Sprintf("amqp://%s:%s@%s.%s.svc.cluster.local:%d/", username, password, o.db.OffshootName(), o.db.Namespace, kubedb.RabbitMQAMQPPort)
+func (o *KubeDBClientBuilder) GetAMQPconnURL(username string, password string, vhost string) string {
+	return fmt.Sprintf("amqp://%s:%s@%s.%s.svc.cluster.local:%d%s", username, password, o.db.ServiceName(), o.db.Namespace, kubedb.RabbitMQAMQPPort, vhost)
 }
 
 func (o *KubeDBClientBuilder) GetHTTPconnURL() string {
@@ -173,7 +188,7 @@ func (o *KubeDBClientBuilder) GetHTTPconnURL() string {
 	if o.podName != "" {
 		return fmt.Sprintf("%s://%s.%s.%s.svc:%d", protocolScheme, o.podName, o.db.GoverningServiceName(), o.db.Namespace, kubedb.RabbitMQManagementUIPort)
 	}
-	return fmt.Sprintf("%s://%s.%s.svc.cluster.local:%d", protocolScheme, o.db.ServiceName(), o.db.Namespace, kubedb.RabbitMQManagementUIPort)
+	return fmt.Sprintf("%s://%s.%s.svc.cluster.local:%d", protocolScheme, o.db.DashboardServiceName(), o.db.Namespace, kubedb.RabbitMQManagementUIPort)
 }
 
 // RabbitMQ server have a default virtual host "/"
