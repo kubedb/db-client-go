@@ -84,9 +84,11 @@ func (h *EDClientV8) GetStateFromHealthResponse(health *Health) (esapi.Dashboard
 		if overallState, ok := overallStatus["level"].(string); ok {
 			health.OverallState = overallState
 		} else {
+			klog.Error("state", responseBody)
 			return "", errors.New("Failed to parse overallState")
 		}
 	} else {
+		klog.Error("status", responseBody)
 		return "", errors.New("Failed to parse overallStatus")
 	}
 
