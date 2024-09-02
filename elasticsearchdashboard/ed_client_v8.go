@@ -82,6 +82,7 @@ func (h *EDClientV8) GetStateFromHealthResponse(health *Health) (esapi.Dashboard
 
 	if overallStatus, ok := responseBody.Status["overall"].(map[string]interface{}); ok {
 		if overallState, ok := overallStatus["level"].(string); ok {
+			klog.Info("state", responseBody)
 			health.OverallState = overallState
 		} else {
 			klog.Error("state", responseBody)
