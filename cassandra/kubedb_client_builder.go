@@ -2,8 +2,12 @@ package cassandra
 
 import (
 	"context"
+	"errors"
 	"fmt"
-
+	core "k8s.io/api/core/v1"
+	kerr "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog/v2"
 	"strconv"
 
 	"github.com/gocql/gocql"
@@ -52,7 +56,33 @@ func (o *KubeDBClientBuilder) GetCassandraClient(dns string) (*Client, error) {
 	cluster.Keyspace = "system"
 	//cluster.Consistency = gocql.Any  //ANY ConsistencyLevel is only supported for writes
 	cluster.Consistency = gocql.Quorum
+	//
+	if !o.db.Spec.DisableSecurity {
+		if o.db.Spec.AuthSecret == nil {
+			klog.Error("AuthSecret not set")
+			return nil, errors.New("auth-secret is not set")
+		}
 
+		authSecret := &core.Secret{}
+		err := o.kc.Get(o.ctx, types.NamespacedName{
+			Namespace: o.db.Namespace,
+			Name:      o.db.Spec.AuthSecret.Name,
+		}, authSecret)
+		if err != nil {
+			if kerr.IsNotFound(err) {
+				klog.Error(err, "AuthSecret not found")
+				return nil, errors.New("auth-secret not found")
+			}
+			return nil, err
+		}
+		userName := string(authSecret.Data[core.BasicAuthUsernameKey])
+		password := string(authSecret.Data[core.BasicAuthPasswordKey])
+		cluster.Authenticator = gocql.PasswordAuthenticator{
+			Username: userName,
+			Password: password,
+		}
+	}
+	//
 	session, err := cluster.CreateSession()
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to Cassandra cluster: %v", err)
