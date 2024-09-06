@@ -27,7 +27,7 @@ const (
 	ResourceKindCassandra     = "Cassandra"
 	ResourceSingularCassandra = "cassandra"
 	ResourcePluralCassandra   = "cassandras"
-	ResourceCodeCassandra     = "cs"
+	ResourceCodeCassandra     = "cas"
 )
 
 // +genclient
@@ -36,7 +36,7 @@ const (
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:path=cassandras,singular=cassandra,shortName=cs,categories={datastore,kubedb,appscode,all}
+// +kubebuilder:resource:path=cassandras,singular=cassandra,shortName=cas,categories={datastore,kubedb,appscode,all}
 // +kubebuilder:printcolumn:name="Type",type="string",JSONPath=".apiVersion"
 // +kubebuilder:printcolumn:name="Version",type="string",JSONPath=".spec.version"
 // +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.phase"
@@ -54,11 +54,11 @@ type CassandraSpec struct {
 	// Version of Cassandra to be deployed.
 	Version string `json:"version"`
 
-	// Number of instances to deploy for a Cassandra database.
+	// Number of replicas for  Cassandra database.
 	// +optional
 	Replicas *int32 `json:"replicas,omitempty"`
 
-	// rack
+	// Cassandra Topology for Racks
 	// +optional
 	Topology *Topology `json:"topology,omitempty"`
 
@@ -96,12 +96,12 @@ type CassandraSpec struct {
 
 	// HealthChecker defines attributes of the health checker
 	// +optional
-	// +kubebuilder:default={periodSeconds: 20, timeoutSeconds: 10, failureThreshold: 3}
+	// +kubebuilder:default={periodSeconds: 30, timeoutSeconds: 10, failureThreshold: 3}
 	HealthChecker kmapi.HealthCheckSpec `json:"healthChecker"`
 }
 
 type Topology struct {
-	// cassandra rack Structure
+	// cassandra rack structure
 	Rack []RackSpec `json:"rack,omitempty"`
 }
 

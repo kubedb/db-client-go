@@ -1348,14 +1348,54 @@ const (
 // =========================== Cassandra Constants ============================
 
 const (
-	CassandraNativeTCP         = 9042
+	CassandraNativeTcpPort = 9042
+	CassandraInterNodePort = 7000
+	CassandraJmxPort       = 7199
+
+	CassandraUserAdmin = "admin"
+
+	CassandraOperatorConfigDir = "/tmp/config/operator-config"
+	CassandraMainConfigDir     = "/etc/cassandra"
+	CassandraCustomConfigDir   = "/tmp/config/custom-config"
+	CassandraScriptDir         = "/tmp/sc"
+
+	CassandraVolumeOperatorConfig = "operator-config-volume"
+	CassandraVolumeMainConfig     = "main-config-volume"
+	CassandraVolumeCustomConfig   = "custom-config"
+	CassandraVolumeScript         = "script-volume"
+
 	CassandraVolumeData        = "data"
 	CassandraDataDir           = "/var/lib/cassandra"
+	CassandraServerLogDir      = "var/log/cassandra-server/cassandra-server.log"
+	CassandraServerErrorLogDir = "var/log/cassandra-server/cassandra-server.err.log"
 	CassandraContainerName     = "cassandra"
 	CassandraInitContainerName = "cassandra-init"
+	CassandraMainConfigFile    = "cassandra.yaml"
 	CassandraRackConfigFile    = "rack-config.yaml"
 	CassandraStandalone        = "standalone"
 	CassandraServerConfigFile  = "server-config.yaml"
+
+	EnvNameCassandraEndpointSnitch = "CASSANDRA_ENDPOINT_SNITCH"
+	EnvValCassandraEndpointSnitch  = "GossipingPropertyFileSnitch"
+
+	EnvNameCassandraRack             = "CASSANDRA_RACK"
+	EnvNameCassandraPodNamespace     = "CASSANDRA_POD_NAMESPACE"
+	EnvNameCassandraService          = "CASSANDRA_SERVICE"
+	EnvNameCassandraMaxHeapSize      = "MAX_HEAP_SIZE"
+	EnvValCassandraMaxHeapSize       = "512M"
+	EnvNameCassandraHeapNewSize      = "HEAP_NEWSIZE"
+	EnvValCassandraHeapNewSize       = "100M"
+	EnvNameCassandraListenAddress    = "CASSANDRA_LISTEN_ADDRESS"
+	EnvNameCassandraBroadcastAddress = "CASSANDRA_BROADCAST_ADDRESS"
+	EnvNameCassandraRpcAddress       = "CASSANDRA_RPC_ADDRESS"
+	EnvValCassandraRpcAddress        = "0.0.0.0"
+	EnvNameCassandraNumTokens        = "CASSANDRA_NUM_TOKENS"
+	EnvValCassandraNumTokens         = "256"
+	EnvNameCassandraStartRpc         = "CASSANDRA_START_RPC"
+	EnvNameCassandraSeeds            = "CASSANDRA_SEEDS"
+	EnvNameCassandraPodName          = "CASSANDRA_POD_NAME"
+	EnvNameCassandraUser             = "CASSANDRA_USER"
+	EnvNameCassandraPassword         = "CASSANDRA_PASSWORD"
 )
 
 // Resource kind related constants
