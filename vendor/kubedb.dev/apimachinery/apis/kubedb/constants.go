@@ -1313,36 +1313,71 @@ const (
 	ClickHouseNativeTCP   = 9000
 	ClickHouseNativeTLS   = 9440
 	ClickhousePromethues  = 9363
+	ClickHouseRaftPort    = 9234
 
-	ClickHouseVolumeData         = "data"
-	ClickHouseDataDir            = "/var/lib/clickhouse"
-	ClickHouseConfigVolName      = "clickhouse-config"
-	ClickHouseConfigDir          = "/etc/clickhouse-server/config.d"
+	ClickHousePromethusEndpoint           = "/metrics"
+	ClickHouseDataDir                     = "/var/lib/clickhouse"
+	ClickHouseKeeperDataDir               = "/var/lib/clickhouse_keeper"
+	ClickHouseConfigDir                   = "/etc/clickhouse-server/config.d"
+	ClickHouseKeeperConfigDir             = "/etc/clickhouse-keeper"
+	ClickHouseCommonConfigDir             = "/etc/clickhouse-server/conf.d"
+	ClickHouseTempConfigDir               = "/ch-tmp"
+	ClickHouseInternalKeeperTempConfigDir = "/keeper"
+	ClickHouseTempDir                     = "/ch-tmp"
+	ClickHouseKeeperTempDir               = "/ch-tmp"
+	ClickHouseKeeperConfigPath            = "/etc/clickhouse-keeper"
+	ClickHouseUserConfigDir               = "/etc/clickhouse-server/user.d"
+	ClickHouseLogPath                     = "/var/log/clickhouse-server/clickhouse-server.log"
+	ClickHouseErrorLogPath                = "/var/log/clickhouse-server/clickhouse-server.err.log"
+
+	// keeper
+	ClickHouseKeeperDataPath     = "/var/lib/clickhouse_keeper"
+	ClickHouseKeeperLogPath      = "/var/lib/clickhouse_keeper/coordination/logs"
+	ClickHouseKeeperSnapshotPath = "/var/lib/clickhouse_keeper/coordination/snapshots"
+
+	ClickHouseInternalKeeperDataPath     = "/var/lib/clickhouse/coordination/log"
+	ClickHouseInternalKeeperSnapshotPath = "/var/lib/clickhouse/coordination/snapshots"
+
+	ComponentCoOrdinator  = "co-ordinator"
+	ClickHouseVolumeData  = "data"
+	ClickHouseDefaultUser = "default"
+
+	ClickHouseConfigVolumeName               = "clickhouse-config"
+	ClickHouseKeeperConfigVolumeName         = "clickhouse-keeper-config"
+	ClickHouseInternalKeeperConfigVolumeName = "clickhouse-internal-keeper-config"
+
 	ClickHouseDefaultStorageSize = "2Gi"
 
 	ClickHouseClusterConfigVolName = "cluster-config"
-	ClickHouseClusterConfigDir     = "/etc/clickhouse-server/conf.d"
 
-	ClickHouseTempClusterConfigVolName = "temp-cluster-config"
+	ClickHouseClusterTempConfigVolName = "temp-cluster-config"
 
 	ClickHouseContainerName     = "clickhouse"
 	ClickHouseInitContainerName = "clickhouse-init"
 
 	ClickHouseClusterConfigFile = "cluster-config.yaml"
-	ClickHouseTempConfigDir     = "/ch-tmp/config"
-	ClickHouseTempDir           = "/ch-tmp"
 
-	ClickHouseUserConfigDir  = "/etc/clickhouse-server/user.d"
 	ClickHouseMacrosFileName = "macros.yaml"
 
 	ClickHouseStandalone = "standalone"
 	ClickHouseCluster    = "cluster"
 
-	ClickHouseHealthCheckerDatabase = "kubedb_system_db"
-	ClickHouseHealthCheckerTable    = "kubedb_system_table"
+	ClickHouseHealthCheckerDatabase = "kubedb_system"
+	ClickHouseHealthCheckerTable    = "kubedb_write_check"
 
-	ClickHouseServerConfigFile = "server-config.yaml"
-	ClickHouseKeeperFileConfig = "keeper-config.yaml"
+	ClickHouseServerConfigFile   = "server-config.yaml"
+	ClickHouseKeeperFileConfig   = "keeper_config.yaml"
+	ClickHouseVolumeCustomConfig = "custom-config"
+
+	// keeper
+	ClickHouseKeeperContainerName        = "clickhouse-keeper"
+	ClickHouseKeeeprConfigFileName       = "keeper_config.xml"
+	ClickHOuseKeeeprConfigFileVolumeName = "keeper-config"
+	ClickHouseKeeperInitContainerName    = "clickhouse-keeper-init"
+	ClickHouseKeeperConfig               = "etc-clickhouse-keeper"
+	ClickHouseInternalServerListFile     = "server_list.yaml"
+	ClickHouseKeeperServerIdNo           = "serverid"
+	ClickHouseKeeperServerID             = "KEEPERID"
 )
 
 // =========================== Cassandra Constants ============================
@@ -1437,6 +1472,15 @@ var (
 		},
 		Limits: core.ResourceList{
 			core.ResourceMemory: resource.MustParse("1024Mi"),
+		},
+	}
+	ClickHouseDefaultResources = core.ResourceRequirements{
+		Requests: core.ResourceList{
+			core.ResourceCPU:    resource.MustParse("1"),
+			core.ResourceMemory: resource.MustParse("3Gi"),
+		},
+		Limits: core.ResourceList{
+			core.ResourceMemory: resource.MustParse("6Gi"),
 		},
 	}
 	// CoordinatorDefaultResources must be used for raft backed coordinators to avoid unintended leader switches
