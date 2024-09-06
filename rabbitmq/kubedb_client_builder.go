@@ -114,13 +114,9 @@ func (o *KubeDBClientBuilder) GetRabbitMQClient() (*Client, error) {
 	authSecret := &core.Secret{}
 	var username, password string
 	if !o.db.Spec.DisableSecurity {
-		if o.db.Spec.AuthSecret == nil {
-			klog.Info("Auth-secret not set")
-			return nil, errors.New("auth-secret is not set")
-		}
 		err := o.kc.Get(o.ctx, types.NamespacedName{
 			Namespace: o.db.Namespace,
-			Name:      o.db.Spec.AuthSecret.Name,
+			Name:      o.db.GetAuthSecretName(),
 		}, authSecret)
 		if err != nil {
 			if kerr.IsNotFound(err) {
@@ -136,7 +132,7 @@ func (o *KubeDBClientBuilder) GetRabbitMQClient() (*Client, error) {
 	}
 
 	var tlsConfig *tls.Config
-	if o.db.Spec.EnableSSL {
+	if o.db.Spec.EnableSSL && !o.db.Spec.DisableSecurity {
 		certSecret := &core.Secret{}
 		err := o.kc.Get(o.ctx, types.NamespacedName{
 			Namespace: o.db.Namespace,
@@ -191,7 +187,7 @@ func (o *KubeDBClientBuilder) GetRabbitMQClient() (*Client, error) {
 				})
 			}
 			return rmqhttp.NewClient(o.httpURL, username, password)
-		}(o.db.Spec.EnableSSL)
+		}(o.db.Spec.EnableSSL && !o.db.Spec.DisableSecurity)
 		if err != nil {
 			klog.Error(err, "Failed to get http client for rabbitmq")
 			return nil, err
@@ -241,7 +237,7 @@ func (o *KubeDBClientBuilder) GetAMQPconnURL(username string, password string, v
 func (o *KubeDBClientBuilder) GetHTTPconnURL() string {
 	protocolScheme := o.db.GetConnectionScheme()
 	connectionPort := func(scheme string) int {
-		if scheme == "http" {
+		if scheme == "http" || o.db.Spec.DisableSecurity {
 			return kubedb.RabbitMQManagementUIPort
 		} else {
 			return kubedb.RabbitMQManagementUIPortWithSSL
