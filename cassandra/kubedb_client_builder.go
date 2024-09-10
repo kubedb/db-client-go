@@ -4,12 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
-
 	core "k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
+	"kubedb.dev/apimachinery/apis/kubedb"
 
 	"github.com/gocql/gocql"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
@@ -47,15 +46,14 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 }
 func (o *KubeDBClientBuilder) GetCassandraClient(dns string) (*Client, error) {
 	host := dns
-	port := "9042"
 	cluster := gocql.NewCluster(host)
-	p, err := strconv.Atoi(port)
-	if err != nil {
-		return nil, fmt.Errorf("invalid port : %v", err)
-	}
-	cluster.Port = p
+	cluster.Port = kubedb.CassandraNativeTcpPort
 	cluster.Keyspace = "system"
-	cluster.Consistency = gocql.Quorum
+	if o.db.Spec.Topology == nil {
+		cluster.Consistency = gocql.One
+	} else {
+		cluster.Consistency = gocql.Quorum
+	}
 	if !o.db.Spec.DisableSecurity {
 		if o.db.Spec.AuthSecret == nil {
 			klog.Error("AuthSecret not set")
