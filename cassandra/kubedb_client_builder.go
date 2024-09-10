@@ -55,9 +55,7 @@ func (o *KubeDBClientBuilder) GetCassandraClient(dns string) (*Client, error) {
 	}
 	cluster.Port = p
 	cluster.Keyspace = "system"
-	//cluster.Consistency = gocql.Any  //ANY ConsistencyLevel is only supported for writes
 	cluster.Consistency = gocql.Quorum
-	//
 	if !o.db.Spec.DisableSecurity {
 		if o.db.Spec.AuthSecret == nil {
 			klog.Error("AuthSecret not set")
@@ -83,7 +81,6 @@ func (o *KubeDBClientBuilder) GetCassandraClient(dns string) (*Client, error) {
 			Password: password,
 		}
 	}
-	//
 	session, err := cluster.CreateSession()
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to Cassandra cluster: %v", err)
