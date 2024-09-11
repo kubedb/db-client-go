@@ -81,7 +81,7 @@ func (c *Client) PingCassandra() error {
 	return nil
 }
 
-func (c *Client) closeCassandraClient(hcf *health.HealthCard) {
+func (c *Client) CloseCassandraClient(hcf *health.HealthCard) {
 	if c != nil {
 		c.Close()
 	}
