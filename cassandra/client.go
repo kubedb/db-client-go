@@ -2,8 +2,9 @@ package cassandra
 
 import (
 	"fmt"
-	"github.com/gocql/gocql"
 	"log"
+
+	"github.com/gocql/gocql"
 )
 
 type Client struct {
