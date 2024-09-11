@@ -2,8 +2,9 @@ package cassandra
 
 import (
 	"fmt"
-	health "kmodules.xyz/client-go/tools/healthchecker"
 	"log"
+
+	health "kmodules.xyz/client-go/tools/healthchecker"
 
 	"github.com/gocql/gocql"
 )
