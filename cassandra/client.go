@@ -71,7 +71,7 @@ func (c *Client) CheckDbReadWrite() error {
 	return err
 }
 
-func (c *Client) pingCassandra() error {
+func (c *Client) PingCassandra() error {
 	query := c.Query("SELECT now() FROM system.local")
 	if err := query.Exec(); err != nil {
 		return err
