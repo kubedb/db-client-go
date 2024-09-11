@@ -2,6 +2,7 @@ package cassandra
 
 import (
 	"fmt"
+	health "kmodules.xyz/client-go/tools/healthchecker"
 	"log"
 
 	"github.com/gocql/gocql"
@@ -78,4 +79,11 @@ func (c *Client) PingCassandra() error {
 		return err
 	}
 	return nil
+}
+
+func (c *Client) closeCassandraClient(hcf *health.HealthCard) {
+	if c != nil {
+		c.Close()
+	}
+	hcf.ClientClosed()
 }
