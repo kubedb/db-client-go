@@ -17,14 +17,11 @@ limitations under the License.
 package druid
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	druidgo "github.com/grafadruid/go-druid"
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 	"k8s.io/klog/v2"
 	health "kmodules.xyz/client-go/tools/healthchecker"
@@ -117,55 +114,15 @@ func (c *Client) CheckDataSourceExistence() (bool, error) {
 		return false, errors.Wrap(err, "failed to marshal json response")
 	}
 	rawMessage := json.RawMessage(jsonData)
-	response, err := c.SubmitRequest(method, path, rawMessage)
+
+	var result []map[string]interface{}
+	_, err = c.ExecuteRequest(method, path, rawMessage, &result)
 	if err != nil {
+		klog.Error("Failed to execute request", err)
 		return false, err
 	}
 
-	exists, err := parseDatasourceExistenceQueryResponse(response)
-	if err != nil {
-		return false, errors.Wrap(err, "Failed to parse response of datasource existence request")
-	}
-
-	if err := closeResponse(response); err != nil {
-		return exists, err
-	}
-	return exists, nil
-}
-
-func (c *Client) SubmitRequest(method, path string, opts interface{}) (*druidgo.Response, error) {
-	res, err := c.NewRequest(method, path, opts)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to submit API request")
-	}
-	http := retryablehttp.NewClient()
-
-	var b []byte
-	buf := bytes.NewBuffer(b)
-	http.Logger = log.New(buf, "", 0)
-
-	resp, err := http.Do(res)
-	if err != nil {
-		return nil, err
-	}
-	response := &druidgo.Response{Response: resp}
-	return response, nil
-}
-
-func parseDatasourceExistenceQueryResponse(res *druidgo.Response) (bool, error) {
-	var responseBody []map[string]interface{}
-	if err := json.NewDecoder(res.Body).Decode(&responseBody); err != nil {
-		return false, errors.Wrap(err, "failed to deserialize the response")
-	}
-	return len(responseBody) != 0, nil
-}
-
-func closeResponse(response *druidgo.Response) error {
-	err := response.Body.Close()
-	if err != nil {
-		return errors.Wrap(err, "Failed to close the response body")
-	}
-	return nil
+	return len(result) > 0, nil
 }
 
 // CheckDBReadWriteAccess checks read and write access in the DB
@@ -238,41 +195,25 @@ func (c *Client) GetData() (string, error) {
 func (c *Client) runSelectQuery() (string, error) {
 	method := "POST"
 	path := "druid/v2/sql"
-
 	data := map[string]interface{}{
 		"query": "SELECT * FROM \"kubedb-datasource\"",
 	}
+
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to marshal query json data")
 	}
 	rawMessage := json.RawMessage(jsonData)
-	response, err := c.SubmitRequest(method, path, rawMessage)
+
+	var result []map[string]interface{}
+	_, err = c.ExecuteRequest(method, path, rawMessage, &result)
 	if err != nil {
+		klog.Error("Failed to execute POST query request", err)
 		return "", err
 	}
-	if response == nil {
-		return "", errors.New("response body is empty")
-	}
+	id := result[0]["id"]
 
-	id, err := parseSelectQueryResponse(response, "id")
-	if err != nil {
-		return "", errors.Wrap(err, "failed to parse the response body")
-	}
-
-	if err := closeResponse(response); err != nil {
-		return "", err
-	}
 	return id.(string), nil
-}
-
-func parseSelectQueryResponse(res *druidgo.Response, key string) (interface{}, error) {
-	var responseBody []map[string]interface{}
-	if err := json.NewDecoder(res.Body).Decode(&responseBody); err != nil {
-		return "", errors.Wrap(err, "failed to deserialize the response")
-	}
-	value := responseBody[0][key]
-	return value, nil
 }
 
 func (c *Client) updateCoordinatorsWaitBeforeDeletingConfig(value int32) error {
@@ -296,11 +237,9 @@ func (c *Client) updateCoordinatorDynamicConfig(data map[string]interface{}) err
 	}
 	rawMessage := json.RawMessage(jsonData)
 
-	response, err := c.SubmitRequest(method, path, rawMessage)
+	_, err = c.ExecuteRequest(method, path, rawMessage, nil)
 	if err != nil {
-		return err
-	}
-	if err := closeResponse(response); err != nil {
+		klog.Error("Failed to execute coordinator config update request", err)
 		return err
 	}
 	return nil
@@ -336,33 +275,19 @@ func (c *Client) submitTask(taskType DruidTaskType, dataSource string, data stri
 	} else {
 		task = GetKillTaskDefinition()
 	}
-
 	rawMessage := json.RawMessage(task)
 	method := "POST"
 	path := "druid/indexer/v1/task"
 
-	response, err := c.SubmitRequest(method, path, rawMessage)
+	var result map[string]interface{}
+	_, err := c.ExecuteRequest(method, path, rawMessage, &result)
 	if err != nil {
+		klog.Error("Failed to execute POST ingestion or kill task request", err)
 		return "", err
 	}
 
-	taskID, err := GetValueFromClusterResponse(response, "task")
-	if err != nil {
-		return "", errors.Wrap(err, "failed to parse response of task api request")
-	}
-	if err = closeResponse(response); err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%v", taskID), nil
-}
-
-func GetValueFromClusterResponse(res *druidgo.Response, key string) (interface{}, error) {
-	responseBody := make(map[string]interface{})
-	if err := json.NewDecoder(res.Body).Decode(&responseBody); err != nil {
-		return "", errors.Wrap(err, "failed to deserialize the response")
-	}
-	value := responseBody[key]
-	return value, nil
+	taskID := result["task"]
+	return taskID.(string), nil
 }
 
 func GetIngestionTaskDefinition(dataSource string, data string) string {
@@ -419,21 +344,18 @@ func GetKillTaskDefinition() string {
 func (c *Client) CheckTaskStatus(taskID string) (bool, error) {
 	method := "GET"
 	path := fmt.Sprintf("druid/indexer/v1/task/%s/status", taskID)
-	response, err := c.SubmitRequest(method, path, nil)
+
+	var result map[string]interface{}
+	_, err := c.ExecuteRequest(method, path, nil, &result)
 	if err != nil {
-		return false, errors.Wrap(err, "failed to check task status")
+		klog.Error("Failed to execute GET task status request", err)
+		return false, err
 	}
 
-	statusRes, err := GetValueFromClusterResponse(response, "status")
-	if err != nil {
-		return false, errors.Wrap(err, "failed to parse respons of task ingestion request")
-	}
+	statusRes := result["status"]
 	statusMap := statusRes.(map[string]interface{})
 	status := statusMap["status"].(string)
 
-	if err = closeResponse(response); err != nil {
-		return false, err
-	}
 	return status == "SUCCESS", nil
 }
 
