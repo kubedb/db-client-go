@@ -18,8 +18,11 @@ package druid
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
+	"net/http"
 
 	druidgo "github.com/grafadruid/go-druid"
 	_ "github.com/lib/pq"
@@ -27,6 +30,7 @@ import (
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
+	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -74,28 +78,24 @@ func (o *KubeDBClientBuilder) WithNodeRole(nodeRole olddbapi.DruidNodeRoleType) 
 
 func (o *KubeDBClientBuilder) GetDruidClient() (*Client, error) {
 	var druidOpts []druidgo.ClientOption
-	if !*o.db.Spec.DisableSecurity {
-		if o.db.Spec.AuthSecret == nil {
-			klog.Error("AuthSecret not set")
-			return nil, errors.New("auth-secret is not set")
-		}
-
-		authSecret := &core.Secret{}
-		err := o.kc.Get(o.ctx, types.NamespacedName{
-			Namespace: o.db.Namespace,
-			Name:      o.db.Spec.AuthSecret.Name,
-		}, authSecret)
+	// Add druid auth credential to the client
+	if !o.db.Spec.DisableSecurity {
+		authOpts, err := o.getClientAuthOpts()
 		if err != nil {
-			if kerr.IsNotFound(err) {
-				klog.Error(err, "AuthSecret not found")
-				return nil, errors.New("auth-secret not found")
-			}
+			klog.Error(err, "failed to get client auth options")
 			return nil, err
 		}
-		userName := string(authSecret.Data[core.BasicAuthUsernameKey])
-		password := string(authSecret.Data[core.BasicAuthPasswordKey])
+		druidOpts = append(druidOpts, *authOpts)
+	}
 
-		druidOpts = append(druidOpts, druidgo.WithBasicAuth(userName, password))
+	// Add druid ssl configs to the client
+	if o.db.Spec.EnableSSL {
+		sslOpts, err := o.getClientSSLConfig()
+		if err != nil {
+			klog.Error(err, "failed to get client ssl options")
+			return nil, err
+		}
+		druidOpts = append(druidOpts, *sslOpts)
 	}
 
 	druidClient, err := druidgo.NewClient(o.url, druidOpts...)
@@ -107,8 +107,82 @@ func (o *KubeDBClientBuilder) GetDruidClient() (*Client, error) {
 	}, nil
 }
 
+func (o *KubeDBClientBuilder) getClientAuthOpts() (*druidgo.ClientOption, error) {
+	if o.db.Spec.AuthSecret == nil {
+		klog.Error("AuthSecret not set")
+		return nil, errors.New("auth-secret is not set")
+	}
+
+	authSecret := &core.Secret{}
+	err := o.kc.Get(o.ctx, types.NamespacedName{
+		Namespace: o.db.Namespace,
+		Name:      o.db.Spec.AuthSecret.Name,
+	}, authSecret)
+	if err != nil {
+		if kerr.IsNotFound(err) {
+			klog.Error(err, "AuthSecret not found")
+			return nil, errors.New("auth-secret not found")
+		}
+		return nil, err
+	}
+	userName := string(authSecret.Data[core.BasicAuthUsernameKey])
+	password := string(authSecret.Data[core.BasicAuthPasswordKey])
+
+	druidAuthOpts := druidgo.WithBasicAuth(userName, password)
+	return &druidAuthOpts, nil
+}
+
+func (o *KubeDBClientBuilder) getClientSSLConfig() (*druidgo.ClientOption, error) {
+	certSecret := &core.Secret{}
+	err := o.kc.Get(o.ctx, types.NamespacedName{
+		Namespace: o.db.Namespace,
+		Name:      o.db.GetCertSecretName(olddbapi.DruidClientCert),
+	}, certSecret)
+	if err != nil {
+		if kerr.IsNotFound(err) {
+			klog.Error(err, "Client certificate secret not found")
+			return nil, errors.New("client certificate secret is not found")
+		}
+		klog.Error(err, "Failed to get client certificate Secret")
+		return nil, err
+	}
+
+	// get tls cert, clientCA and rootCA for tls config
+	clientCA := x509.NewCertPool()
+	rootCA := x509.NewCertPool()
+
+	crt, err := tls.X509KeyPair(certSecret.Data[core.TLSCertKey], certSecret.Data[core.TLSPrivateKeyKey])
+	if err != nil {
+		klog.Error(err, "Failed to parse private key pair")
+		return nil, err
+	}
+	clientCA.AppendCertsFromPEM(certSecret.Data[dbapi.TLSCACertFileName])
+	rootCA.AppendCertsFromPEM(certSecret.Data[dbapi.TLSCACertFileName])
+
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				Certificates: []tls.Certificate{crt},
+				ClientAuth:   tls.RequireAndVerifyClientCert,
+				ClientCAs:    clientCA,
+				RootCAs:      rootCA,
+				MaxVersion:   tls.VersionTLS12,
+			},
+		},
+	}
+	tlsOpts := druidgo.WithHTTPClient(httpClient)
+	return &tlsOpts, nil
+}
+
 // GetNodesAddress returns DNS for the nodes based on type of the node
 func (o *KubeDBClientBuilder) GetNodesAddress() string {
-	baseUrl := fmt.Sprintf("http://%s-0.%s.%s.svc.cluster.local:%d", o.db.PetSetName(o.nodeRole), o.db.GoverningServiceName(), o.db.Namespace, o.db.DruidNodeContainerPort(o.nodeRole))
+	var scheme string
+	if o.db.Spec.EnableSSL {
+		scheme = "https"
+	} else {
+		scheme = "http"
+	}
+
+	baseUrl := fmt.Sprintf("%s://%s-0.%s.%s.svc.cluster.local:%d", scheme, o.db.PetSetName(o.nodeRole), o.db.GoverningServiceName(), o.db.Namespace, o.db.DruidNodeContainerPort(o.nodeRole))
 	return baseUrl
 }
