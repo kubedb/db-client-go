@@ -180,7 +180,7 @@ func (r *Cassandra) GetConnectionScheme() string {
 
 func (r *Cassandra) SetHealthCheckerDefaults() {
 	if r.Spec.HealthChecker.PeriodSeconds == nil {
-		r.Spec.HealthChecker.PeriodSeconds = pointer.Int32P(60)
+		r.Spec.HealthChecker.PeriodSeconds = pointer.Int32P(30)
 	}
 	if r.Spec.HealthChecker.TimeoutSeconds == nil {
 		r.Spec.HealthChecker.TimeoutSeconds = pointer.Int32P(10)
@@ -212,7 +212,6 @@ func (r *Cassandra) SetDefaults() {
 				ExternallyManaged: false,
 			}
 		}
-
 	}
 
 	var casVersion catalog.CassandraVersion
@@ -331,4 +330,20 @@ func (r *Cassandra) assignDefaultContainerSecurityContext(csVersion *catalog.Cas
 	if rc.SeccompProfile == nil {
 		rc.SeccompProfile = secomp.DefaultSeccompProfile()
 	}
+}
+
+func (r *Cassandra) GetSeed() string {
+	seed := " "
+	if r.Spec.Topology == nil {
+		seed = kubedb.CassandraStandaloneSeed + " , "
+		return seed
+	}
+	for _, rack := range r.Spec.Topology.Rack {
+		rackCount := min(*rack.Replicas, 3)
+		for i := int32(0); i < rackCount; i++ {
+			current_seed := fmt.Sprintf("cassandra-sample-rack-%s-%d.cassandra-sample-rack-%s-pods.default.svc.cluster.local", rack.Name, i, rack.Name)
+			seed += current_seed + " , "
+		}
+	}
+	return seed
 }

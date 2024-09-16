@@ -1348,11 +1348,27 @@ const (
 // =========================== Cassandra Constants ============================
 
 const (
-	CassandraNativeTcpPort = 9042
-	CassandraInterNodePort = 7000
-	CassandraJmxPort       = 7199
+	CassandraNativeTcpPort    = 9042
+	CassandraInterNodePort    = 7000
+	CassandraInterNodeSslPort = 7001
+	CassandraJmxPort          = 7199
 
-	CassandraUserAdmin = "admin"
+	CassandraNativeTcpPortName    = "cql"
+	CassandraInterNodePortName    = "internode"
+	CassandraInterNodeSslPortName = "internode-ssl"
+	CassandraJmxPortName          = "jmx"
+
+	CassandraUserAdmin         = "admin"
+	CassandraStandaloneSeed    = "cassandra-sample-0.cassandra-sample-pods.default.svc.cluster.local"
+	CassandraAuthCommand       = "/usr/local/bin/docker-entrypoint.sh cassandra  -f & /tmp/sc/cassandra-auth.sh"
+	CassandraMetadataName      = "metadata.name"
+	CassandraMetadataNamespace = "metadata.namespace"
+	CassandraStatusPodIP       = "status.podIP"
+
+	CassandraPasswordAuthenticator = "PasswordAuthenticator"
+	CassandraAllowAllAuthenticator = "AllowAllAuthenticator"
+
+	CassandraTopology = "CASSANDRA_TOPOLOGY"
 
 	CassandraOperatorConfigDir = "/tmp/config/operator-config"
 	CassandraMainConfigDir     = "/etc/cassandra"

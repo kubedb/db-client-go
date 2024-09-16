@@ -2,6 +2,7 @@ package cassandra
 
 import (
 	"fmt"
+	"k8s.io/klog/v2"
 	"log"
 
 	health "kmodules.xyz/client-go/tools/healthchecker"
@@ -33,6 +34,7 @@ func (c *Client) InsertUser(id gocql.UUID, name string, age int, email string) e
 	return c.Query(`INSERT INTO mykeyspace.users (id, name, age, email) VALUES (?, ?, ?, ?)`,
 		id, name, age, email).Exec()
 }
+
 func (c *Client) DeleteUser(id gocql.UUID) error {
 	return c.Query(`DELETE FROM mykeyspace.users WHERE id = ?`, id).Exec()
 }
@@ -69,6 +71,7 @@ func (c *Client) CheckDbReadWrite() error {
 	if err != nil {
 		return err
 	}
+	klog.Infoln("DB Read Write Successful")
 	fmt.Printf("Name: %s, Age: %d, Email: %s\n", name, age, email)
 	err = c.DeleteUser(id)
 	return err
