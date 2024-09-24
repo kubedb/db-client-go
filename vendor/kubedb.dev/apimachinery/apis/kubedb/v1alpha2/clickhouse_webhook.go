@@ -96,6 +96,15 @@ func (c *ClickHouse) ValidateCreateOrUpdate() error {
 		}
 	}
 
+	if c.Spec.DisableSecurity {
+		if c.Spec.AuthSecret != nil {
+			allErr = append(allErr, field.Invalid(field.NewPath("spec").Child("authSecret"),
+				c.Name,
+				"authSecret should be nil when security is disabled"))
+			return apierrors.NewInvalid(schema.GroupKind{Group: "ClickHouse.kubedb.com", Kind: "ClickHouse"}, c.Name, allErr)
+		}
+	}
+
 	if c.Spec.ClusterTopology != nil {
 		clusterName := map[string]bool{}
 		clusters := c.Spec.ClusterTopology.Cluster

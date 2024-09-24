@@ -1337,6 +1337,7 @@ const (
 
 	ClickHouseInternalKeeperDataPath     = "/var/lib/clickhouse/coordination/log"
 	ClickHouseInternalKeeperSnapshotPath = "/var/lib/clickhouse/coordination/snapshots"
+	ClickHOuseKeeeprConfigFileVolumeDir  = "/tmp/clickhouse-keeper"
 
 	ComponentCoOrdinator  = "co-ordinator"
 	ClickHouseVolumeData  = "data"
