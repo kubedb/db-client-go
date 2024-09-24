@@ -43,14 +43,15 @@ type Auth struct {
 }
 
 type KubeDBClientBuilder struct {
-	kc            client.Client
-	pgbouncer     *dbapi.PgBouncer
-	url           string
-	podName       string
-	backendDBName string
-	ctx           context.Context
-	databaseRef   *dbapi.Database
-	auth          *Auth
+	kc              client.Client
+	pgbouncer       *dbapi.PgBouncer
+	url             string
+	podName         string
+	pbContainerPort *int32
+	backendDBName   string
+	ctx             context.Context
+	databaseRef     *dbapi.Database
+	auth            *Auth
 }
 
 func NewKubeDBClientBuilder(kc client.Client, pb *dbapi.PgBouncer) *KubeDBClientBuilder {
@@ -62,6 +63,11 @@ func NewKubeDBClientBuilder(kc client.Client, pb *dbapi.PgBouncer) *KubeDBClient
 
 func (o *KubeDBClientBuilder) WithURL(url string) *KubeDBClientBuilder {
 	o.url = url
+	return o
+}
+
+func (o *KubeDBClientBuilder) WithPbPort(listenPort int32) *KubeDBClientBuilder {
+	o.pbContainerPort = &listenPort
 	return o
 }
 
@@ -82,7 +88,7 @@ func (o *KubeDBClientBuilder) WithDatabaseRef(db *dbapi.Database) *KubeDBClientB
 	return o
 }
 
-func (o *KubeDBClientBuilder) WithPostgresDBName(dbName string) *KubeDBClientBuilder {
+func (o *KubeDBClientBuilder) WithDatabaseName(dbName string) *KubeDBClientBuilder {
 	if dbName == "" {
 		o.backendDBName = o.databaseRef.DatabaseName
 	} else {
@@ -176,15 +182,15 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	}
 
 	var listeningPort int = kubedb.PgBouncerDatabasePort
-	if o.pgbouncer.Spec.ConnectionPool.Port != nil {
-		listeningPort = int(*o.pgbouncer.Spec.ConnectionPool.Port)
+	if o.pbContainerPort != nil {
+		listeningPort = int(*o.pbContainerPort)
 	}
 	// TODO ssl mode is disable now need to work on this after adding tls support
 	connector := fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s", user, pass, o.url, listeningPort, o.backendDBName, TLSModeDisable)
 	return connector, nil
 }
 
-func GetXormClientList(kc client.Client, pb *dbapi.PgBouncer, ctx context.Context, auth *Auth, dbName string) (*XormClientList, error) {
+func GetXormClientList(kc client.Client, pb *dbapi.PgBouncer, ctx context.Context, auth *Auth, dbName string, listenPort rune) (*XormClientList, error) {
 	clientlist := &XormClientList{
 		List: []*XormClient{},
 	}
@@ -192,6 +198,7 @@ func GetXormClientList(kc client.Client, pb *dbapi.PgBouncer, ctx context.Contex
 	clientlist.pb = pb
 	clientlist.auth = auth
 	clientlist.dbName = dbName
+	clientlist.pbContainerPort = listenPort
 
 	for i := 0; int32(i) < *pb.Spec.Replicas; i++ {
 		podName := fmt.Sprintf("%s-%d", pb.OffshootName(), i)
@@ -216,7 +223,9 @@ func GetXormClientList(kc client.Client, pb *dbapi.PgBouncer, ctx context.Contex
 }
 
 func (l *XormClientList) addXormClient(kc client.Client, podName string) {
-	xormClient, err := NewKubeDBClientBuilder(kc, l.pb).WithContext(l.context).WithDatabaseRef(&l.pb.Spec.Database).WithPod(podName).WithAuth(l.auth).WithPostgresDBName(l.dbName).GetPgBouncerXormClient()
+	xormClient, err := NewKubeDBClientBuilder(kc, l.pb).WithContext(l.context).WithDatabaseRef(&l.pb.Spec.Database).
+		WithPod(podName).WithAuth(l.auth).WithDatabaseName(l.dbName).WithPbPort(l.pbContainerPort).GetPgBouncerXormClient()
+
 	l.Mutex.Lock()
 	defer l.Mutex.Unlock()
 	if err != nil {

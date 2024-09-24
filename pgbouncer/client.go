@@ -39,8 +39,9 @@ type XormClientList struct {
 	Mutex sync.Mutex
 	WG    sync.WaitGroup
 
-	context context.Context
-	pb      *dbapi.PgBouncer
-	auth    *Auth
-	dbName  string
+	context         context.Context
+	pb              *dbapi.PgBouncer
+	pbContainerPort rune
+	auth            *Auth
+	dbName          string
 }
