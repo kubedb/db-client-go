@@ -20,12 +20,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"k8s.io/klog/v2"
-	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sort"
 	"strings"
 	"sync"
 	"time"
+
+	"k8s.io/klog/v2"
+	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	"github.com/pkg/errors"
 )
