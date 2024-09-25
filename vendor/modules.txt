@@ -47,6 +47,9 @@ github.com/cert-manager/cert-manager/pkg/apis/meta/v1
 # github.com/cespare/xxhash/v2 v2.3.0
 ## explicit; go 1.11
 github.com/cespare/xxhash/v2
+# github.com/coreos/go-semver v0.3.1
+## explicit; go 1.8
+github.com/coreos/go-semver/semver
 # github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 ## explicit
 github.com/davecgh/go-spew/spew
@@ -1561,7 +1564,7 @@ kmodules.xyz/offshoot-api/api/v1
 kmodules.xyz/offshoot-api/api/v1/conversion
 kmodules.xyz/offshoot-api/api/v2
 kmodules.xyz/offshoot-api/util
-# kubedb.dev/apimachinery v0.47.1-0.20240925065855-706baeb42442
+# kubedb.dev/apimachinery v0.47.1-0.20240925124814-a472bfa21de1
 ## explicit; go 1.22.1
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog

@@ -18,10 +18,14 @@ package solr
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"net"
 	"net/http"
 	"time"
+
+	"k8s.io/klog/v2"
 
 	"github.com/Masterminds/semver/v3"
 	gerr "github.com/pkg/errors"
@@ -75,7 +79,7 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 
 func (o *KubeDBClientBuilder) GetSolrClient() (*Client, error) {
 	if o.podName != "" {
-		o.url = o.GetHostPath(o.db)
+		o.url = fmt.Sprintf("%v://%s.%s.%s.svc.cluster.local:%d", o.db.GetConnectionScheme(), o.podName, o.db.GoverningServiceName(), o.db.GetNamespace(), kubedb.SolrRestPort)
 	}
 	if o.url == "" {
 		o.url = o.GetHostPath(o.db)
@@ -97,6 +101,41 @@ func (o *KubeDBClientBuilder) GetSolrClient() (*Client, error) {
 		},
 		connectionScheme: o.db.GetConnectionScheme(),
 		log:              o.log,
+	}
+
+	// If EnableSSL is true set tls config,
+	// provide client certs and root CA
+	if o.db.Spec.EnableSSL {
+		var certSecret core.Secret
+		err := o.kc.Get(o.ctx, types.NamespacedName{
+			Namespace: o.db.Namespace,
+			Name:      o.db.GetCertSecretName(api.SolrClientCert),
+		}, &certSecret)
+		if err != nil {
+			klog.Error(err, "failed to get serverCert secret")
+			return nil, err
+		}
+
+		// get tls cert, clientCA and rootCA for tls config
+		// use server cert ca for rootca as issuer ref is not taken into account
+		clientCA := x509.NewCertPool()
+		rootCA := x509.NewCertPool()
+
+		crt, err := tls.X509KeyPair(certSecret.Data[core.TLSCertKey], certSecret.Data[core.TLSPrivateKeyKey])
+		if err != nil {
+			klog.Error(err, "failed to create certificate for TLS config")
+			return nil, err
+		}
+		clientCA.AppendCertsFromPEM(certSecret.Data["ca.crt"])
+		rootCA.AppendCertsFromPEM(certSecret.Data["ca.crt"])
+
+		config.transport.TLSClientConfig = &tls.Config{
+			Certificates: []tls.Certificate{crt},
+			ClientAuth:   tls.RequireAndVerifyClientCert,
+			ClientCAs:    clientCA,
+			RootCAs:      rootCA,
+			MaxVersion:   tls.VersionTLS13,
+		}
 	}
 
 	var authSecret core.Secret

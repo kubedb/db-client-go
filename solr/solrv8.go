@@ -342,3 +342,91 @@ func (sc *SLClientV8) DecodeBackupResponse(data map[string]interface{}, collecti
 	return b, nil
 
 }
+
+func (sc *SLClientV8) MoveReplica(target string, replica string, collection string, async string) (*Response, error) {
+	sc.Config.log.V(5).Info(fmt.Sprintf("Move replica %v of collection %v to target node %v", replica, collection, target))
+	req := sc.Client.R().SetDoNotParseResponse(true)
+	params := map[string]string{
+		Action:     MoveReplica,
+		Collection: collection,
+		Replica:    replica,
+		TargetNode: target,
+		Async:      async,
+	}
+	req.SetQueryParams(params)
+	//req.SetHeader("Content-Type", "application/json")
+	//moveReplica := &MoveReplicaParams{
+	//	MoveReplica: MoveReplicaInfo{
+	//		TargetNode: target,
+	//		Replica:    replica,
+	//		Async:      async,
+	//	},
+	//}
+	//req.SetBody(moveReplica)
+	res, err := req.Post("/solr/admin/collections")
+	if err != nil {
+		sc.Config.log.Error(err, "Failed to send http request to move replica")
+		return nil, err
+	}
+
+	moveReplicaResponse := &Response{
+		Code:   res.StatusCode(),
+		header: res.Header(),
+		body:   res.RawBody(),
+	}
+	return moveReplicaResponse, nil
+}
+
+func (sc *SLClientV8) BalanceReplica(async string) (*Response, error) {
+	return nil, nil
+}
+
+func (sc *SLClientV8) AddRole(role, node string) (*Response, error) {
+	sc.Config.log.V(5).Info(fmt.Sprintf("Add role %s in node %s", role, node))
+	req := sc.Client.R().SetDoNotParseResponse(true)
+	req.SetHeader("Content-Type", "application/json")
+	params := map[string]string{
+		Action: AddRole,
+		Node:   node,
+		Role:   role,
+	}
+	req.SetQueryParams(params)
+
+	res, err := req.Get("/solr/admin/collections")
+	if err != nil {
+		sc.Config.log.Error(err, "Failed to send http request to add a role")
+		return nil, err
+	}
+
+	backupResponse := &Response{
+		Code:   res.StatusCode(),
+		header: res.Header(),
+		body:   res.RawBody(),
+	}
+	return backupResponse, nil
+}
+
+func (sc *SLClientV8) RemoveRole(role, node string) (*Response, error) {
+	sc.Config.log.V(5).Info(fmt.Sprintf("Remove role %s in node %s", role, node))
+	req := sc.Client.R().SetDoNotParseResponse(true)
+	req.SetHeader("Content-Type", "application/json")
+	params := map[string]string{
+		Action: RemoveRole,
+		Node:   node,
+		Role:   role,
+	}
+	req.SetQueryParams(params)
+
+	res, err := req.Get("/solr/admin/collections")
+	if err != nil {
+		sc.Config.log.Error(err, "Failed to send http request to remove a role")
+		return nil, err
+	}
+
+	backupResponse := &Response{
+		Code:   res.StatusCode(),
+		header: res.Header(),
+		body:   res.RawBody(),
+	}
+	return backupResponse, nil
+}

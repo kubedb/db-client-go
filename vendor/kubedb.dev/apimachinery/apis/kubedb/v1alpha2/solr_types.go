@@ -57,6 +57,10 @@ type SolrSpec struct {
 	// Version of Solr to be deployed
 	Version string `json:"version"`
 
+	// Java memory for solr
+	// +optional
+	JavaMem string `json:"javaMem,omitempty"`
+
 	// Number of instances to deploy for a Solr database
 	// +optional
 	Replicas *int32 `json:"replicas,omitempty"`
@@ -83,6 +87,15 @@ type SolrSpec struct {
 	// To enable ssl for http layer
 	EnableSSL bool `json:"enableSSL,omitempty"`
 
+	// Client auth need
+	NeedClientAuth bool `json:"needClientAuth,omitempty"`
+
+	// Client auth want
+	WantClientAuth bool `json:"wantClientAuth,omitempty"`
+
+	// Check peer name
+	CheckPeerName bool `json:"checkPeerName,omitempty"`
+
 	// TLS contains tls configurations for client and server.
 	// +optional
 	TLS *kmapi.TLSConfig `json:"tls,omitempty"`
@@ -94,6 +107,9 @@ type SolrSpec struct {
 
 	// +optional
 	ConfigSecret *core.LocalObjectReference `json:"configSecret,omitempty"`
+
+	// +optional
+	KeystoreSecret *core.LocalObjectReference `json:"keystoreSecret,omitempty"`
 
 	// +optional
 	AuthSecret *core.LocalObjectReference `json:"authSecret,omitempty"`
@@ -175,6 +191,17 @@ const (
 	SolrNodeRoleData        SolrNodeRoleType = "data"
 	SolrNodeRoleCoordinator SolrNodeRoleType = "coordinator"
 	SolrNodeRoleSet                          = "set"
+)
+
+// +kubebuilder:validation:Enum=ca;transport;http;client;server
+type SolrCertificateAlias string
+
+const (
+	SolrCACert        SolrCertificateAlias = "ca"
+	SolrTransportCert SolrCertificateAlias = "transport"
+	SolrHTTPCert      SolrCertificateAlias = "http"
+	SolrClientCert    SolrCertificateAlias = "client"
+	SolrServerCert    SolrCertificateAlias = "server"
 )
 
 //+kubebuilder:object:root=true
