@@ -30,12 +30,19 @@ const (
 	ActionRestore       = "RESTORE"
 	ActionCreate        = "CREATE"
 	ActionDeleteBackup  = "DELETEBACKUP"
+	AddRole             = "ADDROLE"
+	RemoveRole          = "REMOVEROLE"
 	Name                = "name"
+	Role                = "role"
+	Node                = "node"
 	Location            = "location"
 	Repository          = "repository"
 	Collection          = "collection"
 	Async               = "async"
+	Replica             = "replica"
+	MoveReplica         = "MOVEREPLICA"
 	PurgeUnused         = "purgeUnused"
+	TargetNode          = "targetNode"
 	BackupId            = "backupId"
 	DeleteStatus        = "DELETESTATUS"
 	RequestStatus       = "REQUESTSTATUS"
@@ -60,4 +67,8 @@ type SLClient interface {
 	GetClient() *resty.Client
 	GetLog() logr.Logger
 	DecodeBackupResponse(data map[string]interface{}, collection string) ([]byte, error)
+	MoveReplica(target string, replica string, collection string, async string) (*Response, error)
+	BalanceReplica(async string) (*Response, error)
+	AddRole(role, node string) (*Response, error)
+	RemoveRole(role, node string) (*Response, error)
 }

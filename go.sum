@@ -70,6 +70,8 @@ github.com/chzyer/readline v1.5.0/go.mod h1:x22KAscuvRqlLoK9CsoYsmxoXZMMFVyOl86c
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
 github.com/chzyer/test v0.0.0-20210722231415-061457976a23/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
 github.com/cockroachdb/apd v1.1.0/go.mod h1:8Sl8LxpKi29FqWXR16WEFZRNSz3SoPzUzeMeY4+DwBQ=
+github.com/coreos/go-semver v0.3.1 h1:yi21YpKnrx1gt5R+la8n5WgS0kCrsPp33dmEyHReZr4=
+github.com/coreos/go-semver v0.3.1/go.mod h1:irMmmIw/7yzSRPWryHsK7EYSg09caPQL03VsM8rvUec=
 github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=
 github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=
 github.com/creack/pty v1.1.7/go.mod h1:lj5s0c3V2DBrqTV7llrYr5NG6My20zk30Fl46Y7DoTY=
@@ -802,8 +804,8 @@ kmodules.xyz/monitoring-agent-api v0.29.0 h1:gpFl6OZrlMLb/ySMHdREI9EwGtnJ91oZBn9
 kmodules.xyz/monitoring-agent-api v0.29.0/go.mod h1:iNbvaMTgVFOI5q2LJtGK91j4Dmjv4ZRiRdasGmWLKQI=
 kmodules.xyz/offshoot-api v0.30.0 h1:dq9F93pu4Q8rL9oTcCk+vGGy8vpS7RNt0GSwx7Bvhec=
 kmodules.xyz/offshoot-api v0.30.0/go.mod h1:o9VoA3ImZMDBp3lpLb8+kc2d/KBxioRwCpaKDfLIyDw=
-kubedb.dev/apimachinery v0.47.1-0.20240925065855-706baeb42442 h1:MgXbQzSri2ibP/MJFNn9lajy+CzeW5ajsSuMS5bf6mI=
-kubedb.dev/apimachinery v0.47.1-0.20240925065855-706baeb42442/go.mod h1:iD6XKg9Blvfd9iYEO0N9GKiSz6r+yzEPZnfkYdESNG4=
+kubedb.dev/apimachinery v0.47.1-0.20240926114257-108f2b41a885 h1:Tgo6RxT0xOwbGox9u92GFUj4/1cQYQ+E2SMPm+TWiKQ=
+kubedb.dev/apimachinery v0.47.1-0.20240926114257-108f2b41a885/go.mod h1:oyCAmVdJXFLs2jfSqjMFV5pcKdt0v4U4hIuVAaLYv+Q=
 kubeops.dev/petset v0.0.5-0.20240603165102-e2d9decb8abe h1:uWyps3VIDFwGuL0yQa0eMGaLg4ofVwpy59U14Trxnz8=
 kubeops.dev/petset v0.0.5-0.20240603165102-e2d9decb8abe/go.mod h1:A15vh0r979NsvL65DTIZKWsa/NoX9VapHBAEw1ZsdYI=
 lukechampine.com/uint128 v1.1.1/go.mod h1:c4eWIwlEGaxC/+H1VguhU4PHXNWDCDMUlWdIWl2j1gk=
