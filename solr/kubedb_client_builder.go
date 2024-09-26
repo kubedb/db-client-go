@@ -126,8 +126,8 @@ func (o *KubeDBClientBuilder) GetSolrClient() (*Client, error) {
 			klog.Error(err, "failed to create certificate for TLS config")
 			return nil, err
 		}
-		clientCA.AppendCertsFromPEM(certSecret.Data["ca.crt"])
-		rootCA.AppendCertsFromPEM(certSecret.Data["ca.crt"])
+		clientCA.AppendCertsFromPEM(certSecret.Data[kubedb.CACert])
+		rootCA.AppendCertsFromPEM(certSecret.Data[kubedb.CACert])
 
 		config.transport.TLSClientConfig = &tls.Config{
 			Certificates: []tls.Certificate{crt},
