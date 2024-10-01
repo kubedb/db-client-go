@@ -145,6 +145,29 @@ func (sc *SLClientV9) ReadCollection() (*Response, error) {
 	return writeResponse, nil
 }
 
+func (sc *SLClientV9) DeleteCollection(name string) (*Response, error) {
+	sc.Config.log.V(5).Info(fmt.Sprintf("Delete COLLECTION: %s", name))
+	req := sc.Client.R().SetDoNotParseResponse(true)
+	req.SetHeader("Content-Type", "application/json")
+	deleteParams := map[string]string{
+		Action: ActionDelete,
+		Name:   name,
+	}
+	req.SetQueryParams(deleteParams)
+	res, err := req.Delete("/solr/admin/collections")
+	if err != nil {
+		sc.Config.log.Error(err, "Failed to send http request to read a collection")
+		return nil, err
+	}
+
+	deleteResponse := &Response{
+		Code:   res.StatusCode(),
+		header: res.Header(),
+		body:   res.RawBody(),
+	}
+	return deleteResponse, nil
+}
+
 func (sc *SLClientV9) BackupCollection(ctx context.Context, collection string, backupName string, location string, repository string) (*Response, error) {
 	sc.Config.log.V(5).Info(fmt.Sprintf("BACKUP COLLECTION: %s", collection))
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
