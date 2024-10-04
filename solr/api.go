@@ -28,6 +28,7 @@ const (
 	Action              = "action"
 	ActionBackup        = "BACKUP"
 	ActionRestore       = "RESTORE"
+	ActionDelete        = "DELETE"
 	ActionCreate        = "CREATE"
 	ActionDeleteBackup  = "DELETEBACKUP"
 	AddRole             = "ADDROLE"
@@ -71,4 +72,5 @@ type SLClient interface {
 	BalanceReplica(async string) (*Response, error)
 	AddRole(role, node string) (*Response, error)
 	RemoveRole(role, node string) (*Response, error)
+	DeleteCollection(name string) (*Response, error)
 }

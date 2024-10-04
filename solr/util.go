@@ -117,6 +117,23 @@ func (sc *Client) DecodeCollectionHealth(responseBody map[string]interface{}) er
 			return errors.New("didn't find health")
 		}
 		if health != "GREEN" {
+			if name == writeCollectionName {
+				response, err := sc.DeleteCollection(name)
+				if err != nil {
+					return err
+				}
+				responseBody, err := sc.DecodeResponse(response)
+				if err != nil {
+					klog.Error(err)
+					return err
+				}
+
+				_, err = sc.GetResponseStatus(responseBody)
+				if err != nil {
+					klog.Error(err)
+					return err
+				}
+			}
 			config := sc.GetConfig()
 			config.log.Error(errors.New(""), fmt.Sprintf("Health of collection %s IS NOT GREEN", name))
 			return errors.New(fmt.Sprintf("health for collection %s is not green", name))

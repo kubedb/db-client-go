@@ -430,3 +430,26 @@ func (sc *SLClientV8) RemoveRole(role, node string) (*Response, error) {
 	}
 	return backupResponse, nil
 }
+
+func (sc *SLClientV8) DeleteCollection(name string) (*Response, error) {
+	sc.Config.log.V(5).Info(fmt.Sprintf("Delete COLLECTION: %s", name))
+	req := sc.Client.R().SetDoNotParseResponse(true)
+	req.SetHeader("Content-Type", "application/json")
+	deleteParams := map[string]string{
+		Action: ActionDelete,
+		Name:   name,
+	}
+	req.SetQueryParams(deleteParams)
+	res, err := req.Delete("/solr/admin/collections")
+	if err != nil {
+		sc.Config.log.Error(err, "Failed to send http request to read a collection")
+		return nil, err
+	}
+
+	deleteResponse := &Response{
+		Code:   res.StatusCode(),
+		header: res.Header(),
+		body:   res.RawBody(),
+	}
+	return deleteResponse, nil
+}
