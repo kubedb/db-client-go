@@ -145,6 +145,29 @@ func (sc *SLClientV9) ReadCollection() (*Response, error) {
 	return writeResponse, nil
 }
 
+func (sc *SLClientV9) DeleteCollection(name string) (*Response, error) {
+	sc.Config.log.V(5).Info(fmt.Sprintf("Delete COLLECTION: %s", name))
+	req := sc.Client.R().SetDoNotParseResponse(true)
+	req.SetHeader("Content-Type", "application/json")
+	deleteParams := map[string]string{
+		Action: ActionDelete,
+		Name:   name,
+	}
+	req.SetQueryParams(deleteParams)
+	res, err := req.Delete("/solr/admin/collections")
+	if err != nil {
+		sc.Config.log.Error(err, "Failed to send http request to read a collection")
+		return nil, err
+	}
+
+	deleteResponse := &Response{
+		Code:   res.StatusCode(),
+		header: res.Header(),
+		body:   res.RawBody(),
+	}
+	return deleteResponse, nil
+}
+
 func (sc *SLClientV9) BackupCollection(ctx context.Context, collection string, backupName string, location string, repository string) (*Response, error) {
 	sc.Config.log.V(5).Info(fmt.Sprintf("BACKUP COLLECTION: %s", collection))
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
@@ -329,4 +352,103 @@ func (sc *SLClientV9) DecodeBackupResponse(data map[string]interface{}, collecti
 	}
 	klog.Info(fmt.Sprintf("Response for collection %s\n%v", collection, string(b)))
 	return b, nil
+}
+
+func (sc *SLClientV9) MoveReplica(target string, replica string, collection string, async string) (*Response, error) {
+	sc.Config.log.V(5).Info(fmt.Sprintf("Move replica %v of collection %v to target node %v", replica, collection, target))
+	req := sc.Client.R().SetDoNotParseResponse(true)
+	req.SetHeader("Content-Type", "application/json")
+	moveReplica := &MoveReplicaParams{
+		MoveReplica: MoveReplicaInfo{
+			TargetNode: target,
+			Replica:    replica,
+			Async:      async,
+		},
+	}
+	req.SetBody(moveReplica)
+	res, err := req.Post(fmt.Sprintf("/api/collections/%s", collection))
+	if err != nil {
+		sc.Config.log.Error(err, "Failed to send http request to move replica")
+		return nil, err
+	}
+
+	moveReplicaResponse := &Response{
+		Code:   res.StatusCode(),
+		header: res.Header(),
+		body:   res.RawBody(),
+	}
+	return moveReplicaResponse, nil
+}
+
+func (sc *SLClientV9) BalanceReplica(async string) (*Response, error) {
+	sc.Config.log.V(5).Info("Balance replica")
+	req := sc.Client.R().SetDoNotParseResponse(true)
+	req.SetHeader("Content-Type", "application/json")
+	balanceReplica := &BalanceReplica{
+		WaitForFinalState: true,
+		Async:             async,
+	}
+	req.SetBody(balanceReplica)
+	res, err := req.Post("/api/cluster/replicas/balance")
+	if err != nil {
+		sc.Config.log.Error(err, "Failed to send http request to move replica")
+		return nil, err
+	}
+
+	moveReplicaResponse := &Response{
+		Code:   res.StatusCode(),
+		header: res.Header(),
+		body:   res.RawBody(),
+	}
+	return moveReplicaResponse, nil
+}
+
+func (sc *SLClientV9) AddRole(role, node string) (*Response, error) {
+	sc.Config.log.V(5).Info(fmt.Sprintf("Add role %s in node %s", role, node))
+	req := sc.Client.R().SetDoNotParseResponse(true)
+	req.SetHeader("Content-Type", "application/json")
+	params := map[string]string{
+		Action: AddRole,
+		Node:   node,
+		Role:   role,
+	}
+	req.SetQueryParams(params)
+
+	res, err := req.Get("/solr/admin/collections")
+	if err != nil {
+		sc.Config.log.Error(err, "Failed to send http request to add a role")
+		return nil, err
+	}
+
+	backupResponse := &Response{
+		Code:   res.StatusCode(),
+		header: res.Header(),
+		body:   res.RawBody(),
+	}
+	return backupResponse, nil
+}
+
+func (sc *SLClientV9) RemoveRole(role, node string) (*Response, error) {
+	sc.Config.log.V(5).Info(fmt.Sprintf("Remove role %s in node %s", role, node))
+	req := sc.Client.R().SetDoNotParseResponse(true)
+	req.SetHeader("Content-Type", "application/json")
+	params := map[string]string{
+		Action: RemoveRole,
+		Node:   node,
+		Role:   role,
+	}
+	req.SetQueryParams(params)
+
+	res, err := req.Get("/solr/admin/collections")
+	if err != nil {
+		sc.Config.log.Error(err, "Failed to send http request to remove a role")
+		return nil, err
+	}
+
+	backupResponse := &Response{
+		Code:   res.StatusCode(),
+		header: res.Header(),
+		body:   res.RawBody(),
+	}
+	return backupResponse, nil
 }

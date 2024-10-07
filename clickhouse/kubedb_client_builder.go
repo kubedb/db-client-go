@@ -21,11 +21,11 @@ import (
 	"database/sql"
 	"fmt"
 
-	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
-
 	_ "github.com/ClickHouse/clickhouse-go/v2"
 	core "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
+	"kubedb.dev/apimachinery/apis/kubedb"
+	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -95,15 +95,17 @@ func (o *KubeDBClientBuilder) getURL() string {
 }
 
 func (o *KubeDBClientBuilder) getPort() *int {
-	chPort := 9000
+	chPort := kubedb.ClickHouseNativeTCP
 	return &chPort
 }
 
 func (o *KubeDBClientBuilder) getClickHouseRootCredentials() (string, string, error) {
 	db := o.db
 	var secretName string
-	if db.Spec.AuthSecret != nil {
+	if !db.Spec.DisableSecurity {
 		secretName = db.GetAuthSecretName()
+	} else {
+		return kubedb.ClickHouseDefaultUser, "", nil
 	}
 	var secret core.Secret
 	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: db.Namespace, Name: secretName}, &secret)

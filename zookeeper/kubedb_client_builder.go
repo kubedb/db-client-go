@@ -18,8 +18,15 @@ package zookeeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
 	"time"
+
+	core "k8s.io/api/core/v1"
+	kerr "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog/v2"
 
 	"github.com/Shopify/zk"
 	"kubedb.dev/apimachinery/apis/kubedb"
@@ -99,6 +106,41 @@ func (o *KubeDBClientBuilder) GetZooKeeperClient() (*Client, error) {
 			break
 		}
 	}
+
+	if !o.db.Spec.DisableAuth {
+		if o.db.Spec.AuthSecret == nil {
+			klog.Info("Auth-secret not set")
+			return nil, errors.New("auth-secret is not set")
+		}
+
+		authSecret := core.Secret{}
+		err := o.kc.Get(o.ctx, types.NamespacedName{
+			Namespace: o.db.Namespace,
+			Name:      o.db.Spec.AuthSecret.Name,
+		}, &authSecret)
+		if err != nil {
+			if kerr.IsNotFound(err) {
+				klog.Error(err, "Auth-secret not found")
+				return nil, errors.New("auth-secret is not found")
+			}
+			klog.Error(err, "Failed to get auth-secret")
+			return nil, err
+		}
+
+		//clientConfig.Net.SASL.Enable = true
+		username := string(authSecret.Data[core.BasicAuthUsernameKey])
+		password := string(authSecret.Data[core.BasicAuthPasswordKey])
+
+		// Correct the format for the username:password string
+		authString := fmt.Sprintf("%s:%s", username, password)
+
+		// Add authentication using the properly formatted authString
+		err = zkConn.AddAuth("digest", []byte(authString))
+		if err != nil {
+			log.Fatalf("Failed to add authentication: %v", err)
+		}
+	}
+
 	return &Client{
 		zkConn,
 	}, nil

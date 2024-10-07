@@ -76,3 +76,29 @@ type CreateParams struct {
 	NumShards         int    `json:"numShards,omitempty" yaml:"numShards,omitempty"`
 	ReplicationFactor int    `json:"replicationFactor,omitempty" yaml:"replicationFactor,omitempty"`
 }
+
+type MoveReplicaInfo struct {
+	Replica    string `json:"replica,omitempty" yaml:"replica,omitempty"`
+	TargetNode string `json:"targetNode,omitempty" yaml:"targetNode,omitempty"`
+	Async      string `json:"async,omitempty" yaml:"async,omitempty"`
+}
+
+type MoveReplicaParams struct {
+	MoveReplica MoveReplicaInfo `json:"move-replica,omitempty" yaml:"move-replica,omitempty"`
+}
+
+type BalanceReplica struct {
+	WaitForFinalState bool   `json:"waitForFinalState,omitempty" yaml:"waitForFinalState,omitempty"`
+	Async             string `json:"async,omitempty" yaml:"async,omitempty"`
+}
+
+type CoreList struct {
+	coreName   string
+	collection string
+}
+
+type UpdateList struct {
+	target     string
+	replica    string
+	collection string
+}
