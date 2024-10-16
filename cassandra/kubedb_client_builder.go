@@ -45,8 +45,8 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 	o.ctx = ctx
 	return o
 }
-func (o *KubeDBClientBuilder) GetCassandraClient(dns string) (*Client, error) {
-	host := dns
+func (o *KubeDBClientBuilder) GetCassandraClient() (*Client, error) {
+	host := o.url
 	cluster := gocql.NewCluster(host)
 	cluster.Port = kubedb.CassandraNativeTcpPort
 	cluster.Keyspace = "system"
