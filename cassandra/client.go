@@ -16,37 +16,33 @@ type Client struct {
 
 // CreateKeyspace creates a keyspace
 func (c *Client) CreateKeyspace() error {
-	return c.Query(`CREATE KEYSPACE IF NOT EXISTS mykeyspace WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '2'}`).Exec()
+	return c.Query(`CREATE KEYSPACE IF NOT EXISTS test_keyspace WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '2'}`).Exec()
 }
 
 // CreateTable creates a table
 func (c *Client) CreateTable() error {
-	return c.Query(`CREATE TABLE IF NOT EXISTS mykeyspace.users (
-        id UUID PRIMARY KEY,
-        name TEXT,
-        age INT,
-        email TEXT
+	return c.Query(`CREATE TABLE IF NOT EXISTS test_keyspace.test_table (
+        name TEXT PRIMARY KEY,
+        product TEXT
     )`).Exec()
 }
 
 // InsertUser inserts a user into the table
-func (c *Client) InsertUser(id gocql.UUID, name string, age int, email string) error {
-	return c.Query(`INSERT INTO mykeyspace.users (id, name, age, email) VALUES (?, ?, ?, ?)`,
-		id, name, age, email).Exec()
+func (c *Client) InsertUser(name string, product string) error {
+	return c.Query(`INSERT INTO test_keyspace.test_table ( name, product) VALUES (?, ?)`,
+		name, product).Exec()
 }
 
-func (c *Client) DeleteUser(id gocql.UUID) error {
-	return c.Query(`DELETE FROM mykeyspace.users WHERE id = ?`, id).Exec()
+func (c *Client) DeleteUser(name string) error {
+	return c.Query(`DELETE FROM test_keyspace.test_table WHERE name = ?`, name).Exec()
 }
 
 // queries a user by ID
-func (c *Client) QueryUser(id gocql.UUID) error {
-	var name string
-	var age int
-	var email string
+func (c *Client) QueryUser(name string) error {
+	var product string
 
-	iter := c.Query(`SELECT name, age, email FROM mykeyspace.users WHERE id = ?`, id).Iter()
-	if iter.Scan(&name, &age, &email) {
+	iter := c.Query(`SELECT product FROM test_keyspace.test_table WHERE name = ?`, name).Iter()
+	if iter.Scan(&product) {
 		if err := iter.Close(); err != nil {
 			return fmt.Errorf("unable to query data: %v", err)
 		}
@@ -62,17 +58,16 @@ func (c *Client) CheckDbReadWrite() error {
 	if err := c.CreateTable(); err != nil {
 		log.Fatal("Unable to create table:", err)
 	}
-	id := gocql.TimeUUID()
-	if err := c.InsertUser(id, "John Doe", 30, "john.doe@example.com"); err != nil {
+	if err := c.InsertUser("Appscode", "KubeDB"); err != nil {
 		log.Fatal("Unable to insert data:", err)
 	}
 
-	err := c.QueryUser(id)
+	err := c.QueryUser("Appscode")
 	if err != nil {
 		return err
 	}
 	klog.Infoln("DB Read Write Successful")
-	err = c.DeleteUser(id)
+	err = c.DeleteUser("Appscode")
 	return err
 }
 
