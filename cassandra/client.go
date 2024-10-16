@@ -39,8 +39,8 @@ func (c *Client) DeleteUser(id gocql.UUID) error {
 	return c.Query(`DELETE FROM mykeyspace.users WHERE id = ?`, id).Exec()
 }
 
-// QueryUser queries a user by ID
-func (c *Client) QueryUser(id gocql.UUID) (string, int, string, error) {
+// queries a user by ID
+func (c *Client) QueryUser(id gocql.UUID) error {
 	var name string
 	var age int
 	var email string
@@ -48,11 +48,11 @@ func (c *Client) QueryUser(id gocql.UUID) (string, int, string, error) {
 	iter := c.Query(`SELECT name, age, email FROM mykeyspace.users WHERE id = ?`, id).Iter()
 	if iter.Scan(&name, &age, &email) {
 		if err := iter.Close(); err != nil {
-			return "", 0, "", fmt.Errorf("unable to query data: %v", err)
+			return fmt.Errorf("unable to query data: %v", err)
 		}
-		return name, age, email, nil
+		return nil
 	}
-	return "", 0, "", fmt.Errorf("no data found")
+	return fmt.Errorf("no data found")
 }
 
 func (c *Client) CheckDbReadWrite() error {
@@ -67,12 +67,11 @@ func (c *Client) CheckDbReadWrite() error {
 		log.Fatal("Unable to insert data:", err)
 	}
 
-	name, age, email, err := c.QueryUser(id)
+	err := c.QueryUser(id)
 	if err != nil {
 		return err
 	}
 	klog.Infoln("DB Read Write Successful")
-	fmt.Printf("Name: %s, Age: %d, Email: %s\n", name, age, email)
 	err = c.DeleteUser(id)
 	return err
 }
