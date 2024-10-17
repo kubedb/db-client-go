@@ -3,6 +3,7 @@ package cassandra
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"k8s.io/klog/v2"
 	health "kmodules.xyz/client-go/tools/healthchecker"
@@ -27,18 +28,17 @@ func (c *Client) CreateTable() error {
     )`).Exec()
 }
 
-// InsertUser inserts a user into the table
-func (c *Client) InsertUser(name string, product string) error {
-	return c.Query(`INSERT INTO test_keyspace.test_table ( name, product) VALUES (?, ?)`,
-		name, product).Exec()
+// UpdateData updates a record in the table
+func (c *Client) UpdateData(name string, product string) error {
+	currentTime := time.Now().Format("2006-01-02 15:04:05")
+	updatedProduct := fmt.Sprintf("%s - %s", product, currentTime)
+
+	return c.Query(`UPDATE test_keyspace.test_table SET product = ? where name = ? `,
+		updatedProduct, name).Exec()
 }
 
-func (c *Client) DeleteUser(name string) error {
-	return c.Query(`DELETE FROM test_keyspace.test_table WHERE name = ?`, name).Exec()
-}
-
-// queries a user by ID
-func (c *Client) QueryUser(name string) error {
+// queries a Data by ID
+func (c *Client) QueryData(name string) error {
 	var product string
 
 	iter := c.Query(`SELECT product FROM test_keyspace.test_table WHERE name = ?`, name).Iter()
@@ -58,17 +58,16 @@ func (c *Client) CheckDbReadWrite() error {
 	if err := c.CreateTable(); err != nil {
 		log.Fatal("Unable to create table:", err)
 	}
-	if err := c.InsertUser("Appscode", "KubeDB"); err != nil {
-		log.Fatal("Unable to insert data:", err)
+	if err := c.UpdateData("Appscode", "KubeDB"); err != nil {
+		log.Fatal("Unable to update data:", err)
 	}
 
-	err := c.QueryUser("Appscode")
+	err := c.QueryData("Appscode")
 	if err != nil {
 		return err
 	}
 	klog.Infoln("DB Read Write Successful")
-	err = c.DeleteUser("Appscode")
-	return err
+	return nil
 }
 
 func (c *Client) PingCassandra() error {
