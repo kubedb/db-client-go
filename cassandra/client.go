@@ -3,6 +3,7 @@ package cassandra
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"k8s.io/klog/v2"
 	health "kmodules.xyz/client-go/tools/healthchecker"
@@ -16,43 +17,38 @@ type Client struct {
 
 // CreateKeyspace creates a keyspace
 func (c *Client) CreateKeyspace() error {
-	return c.Query(`CREATE KEYSPACE IF NOT EXISTS mykeyspace WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '2'}`).Exec()
+	return c.Query(`CREATE KEYSPACE IF NOT EXISTS test_keyspace WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '2'}`).Exec()
 }
 
 // CreateTable creates a table
 func (c *Client) CreateTable() error {
-	return c.Query(`CREATE TABLE IF NOT EXISTS mykeyspace.users (
-        id UUID PRIMARY KEY,
-        name TEXT,
-        age INT,
-        email TEXT
+	return c.Query(`CREATE TABLE IF NOT EXISTS test_keyspace.test_table (
+        name TEXT PRIMARY KEY,
+        product TEXT
     )`).Exec()
 }
 
-// InsertUser inserts a user into the table
-func (c *Client) InsertUser(id gocql.UUID, name string, age int, email string) error {
-	return c.Query(`INSERT INTO mykeyspace.users (id, name, age, email) VALUES (?, ?, ?, ?)`,
-		id, name, age, email).Exec()
+// UpdateData updates a record in the table
+func (c *Client) UpdateData(name string, product string) error {
+	currentTime := time.Now().Format("2006-01-02 15:04:05")
+	updatedProduct := fmt.Sprintf("%s - %s", product, currentTime)
+
+	return c.Query(`UPDATE test_keyspace.test_table SET product = ? where name = ? `,
+		updatedProduct, name).Exec()
 }
 
-func (c *Client) DeleteUser(id gocql.UUID) error {
-	return c.Query(`DELETE FROM mykeyspace.users WHERE id = ?`, id).Exec()
-}
+// queries a Data by ID
+func (c *Client) QueryData(name string) error {
+	var product string
 
-// QueryUser queries a user by ID
-func (c *Client) QueryUser(id gocql.UUID) (string, int, string, error) {
-	var name string
-	var age int
-	var email string
-
-	iter := c.Query(`SELECT name, age, email FROM mykeyspace.users WHERE id = ?`, id).Iter()
-	if iter.Scan(&name, &age, &email) {
+	iter := c.Query(`SELECT product FROM test_keyspace.test_table WHERE name = ?`, name).Iter()
+	if iter.Scan(&product) {
 		if err := iter.Close(); err != nil {
-			return "", 0, "", fmt.Errorf("unable to query data: %v", err)
+			return fmt.Errorf("unable to query data: %v", err)
 		}
-		return name, age, email, nil
+		return nil
 	}
-	return "", 0, "", fmt.Errorf("no data found")
+	return fmt.Errorf("no data found")
 }
 
 func (c *Client) CheckDbReadWrite() error {
@@ -62,19 +58,16 @@ func (c *Client) CheckDbReadWrite() error {
 	if err := c.CreateTable(); err != nil {
 		log.Fatal("Unable to create table:", err)
 	}
-	id := gocql.TimeUUID()
-	if err := c.InsertUser(id, "John Doe", 30, "john.doe@example.com"); err != nil {
-		log.Fatal("Unable to insert data:", err)
+	if err := c.UpdateData("Appscode", "KubeDB"); err != nil {
+		log.Fatal("Unable to update data:", err)
 	}
 
-	name, age, email, err := c.QueryUser(id)
+	err := c.QueryData("Appscode")
 	if err != nil {
 		return err
 	}
 	klog.Infoln("DB Read Write Successful")
-	fmt.Printf("Name: %s, Age: %d, Email: %s\n", name, age, email)
-	err = c.DeleteUser(id)
-	return err
+	return nil
 }
 
 func (c *Client) PingCassandra() error {
