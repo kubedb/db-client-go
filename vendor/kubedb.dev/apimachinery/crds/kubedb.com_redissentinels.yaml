@@ -16,6 +16,8 @@ spec:
     kind: RedisSentinel
     listKind: RedisSentinelList
     plural: redissentinels
+    shortNames:
+    - rds
     singular: redissentinel
   scope: Namespaced
   versions:
@@ -6582,6 +6584,7 @@ spec:
                       - standby
                       - stats
                       - dashboard
+                      - secondary
                       type: string
                     metadata:
                       properties:

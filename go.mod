@@ -18,7 +18,6 @@ require (
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/gocql/gocql v1.6.0
 	github.com/grafadruid/go-druid v0.0.6
-	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/lib/pq v1.10.7
 	github.com/michaelklishin/rabbit-hole/v2 v2.16.0
 	github.com/microsoft/go-mssqldb v1.6.0
@@ -31,9 +30,9 @@ require (
 	k8s.io/api v0.30.2
 	k8s.io/apimachinery v0.30.2
 	k8s.io/klog/v2 v2.130.1
-	kmodules.xyz/client-go v0.30.17
+	kmodules.xyz/client-go v0.30.28
 	kmodules.xyz/custom-resources v0.30.0
-	kubedb.dev/apimachinery v0.48.1-0.20241003061121-cbe53073e554
+	kubedb.dev/apimachinery v0.48.1-0.20241025104947-405c179f3f23
 	sigs.k8s.io/controller-runtime v0.18.4
 	xorm.io/xorm v1.3.6
 )
@@ -79,6 +78,7 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/jcmturner/aescts/v2 v2.0.0 // indirect
@@ -143,7 +143,7 @@ require (
 	k8s.io/kube-openapi v0.0.0-20240703190633-0aa61b46e8c2 // indirect
 	k8s.io/utils v0.0.0-20240502163921-fe8a2dddb1d0 // indirect
 	kmodules.xyz/apiversion v0.2.0 // indirect
-	kmodules.xyz/monitoring-agent-api v0.30.1 // indirect
+	kmodules.xyz/monitoring-agent-api v0.30.2 // indirect
 	kmodules.xyz/offshoot-api v0.30.1 // indirect
 	kubeops.dev/petset v0.0.7 // indirect
 	modernc.org/memory v1.5.0 // indirect
