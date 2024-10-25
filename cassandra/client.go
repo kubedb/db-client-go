@@ -17,12 +17,12 @@ type Client struct {
 
 // CreateKeyspace creates a keyspace
 func (c *Client) CreateKeyspace() error {
-	return c.Query(`CREATE KEYSPACE IF NOT EXISTS test_keyspace WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '2'}`).Exec()
+	return c.Query(`CREATE KEYSPACE IF NOT EXISTS kubedb_keyspace WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '2'}`).Exec()
 }
 
 // CreateTable creates a table
 func (c *Client) CreateTable() error {
-	return c.Query(`CREATE TABLE IF NOT EXISTS test_keyspace.test_table (
+	return c.Query(`CREATE TABLE IF NOT EXISTS kubedb_keyspace.healthcheck_table (
         name TEXT PRIMARY KEY,
         product TEXT
     )`).Exec()
@@ -33,7 +33,7 @@ func (c *Client) UpdateData(name string, product string) error {
 	currentTime := time.Now().Format("2006-01-02 15:04:05")
 	updatedProduct := fmt.Sprintf("%s - %s", product, currentTime)
 
-	return c.Query(`UPDATE test_keyspace.test_table SET product = ? where name = ? `,
+	return c.Query(`UPDATE kubedb_keyspace.healthcheck_table SET product = ? where name = ? `,
 		updatedProduct, name).Exec()
 }
 
@@ -41,7 +41,7 @@ func (c *Client) UpdateData(name string, product string) error {
 func (c *Client) QueryData(name string) error {
 	var product string
 
-	iter := c.Query(`SELECT product FROM test_keyspace.test_table WHERE name = ?`, name).Iter()
+	iter := c.Query(`SELECT product FROM kubedb_keyspace.healthcheck_table WHERE name = ?`, name).Iter()
 	if iter.Scan(&product) {
 		if err := iter.Close(); err != nil {
 			return fmt.Errorf("unable to query data: %v", err)
