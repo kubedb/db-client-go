@@ -141,7 +141,7 @@ func (o *KubeDBClientBuilder) GetSolrClient() (*Client, error) {
 	var authSecret core.Secret
 	if !o.db.Spec.DisableSecurity {
 		err := o.kc.Get(o.ctx, types.NamespacedName{
-			Name:      o.db.Spec.AuthSecret.Name,
+			Name:      o.db.GetAuthSecretName(),
 			Namespace: o.db.Namespace,
 		}, &authSecret)
 		if err != nil {
