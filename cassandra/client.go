@@ -5,7 +5,6 @@ import (
 	"log"
 	"time"
 
-	"k8s.io/klog/v2"
 	health "kmodules.xyz/client-go/tools/healthchecker"
 
 	"github.com/gocql/gocql"
@@ -66,7 +65,6 @@ func (c *Client) CheckDbReadWrite() error {
 	if err != nil {
 		return err
 	}
-	klog.Infoln("DB Read Write Successful")
 	return nil
 }
 

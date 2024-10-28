@@ -78,7 +78,7 @@ func (r *RabbitMQ) GetAuthSecretName() string {
 	if r.Spec.AuthSecret != nil && r.Spec.AuthSecret.Name != "" {
 		return r.Spec.AuthSecret.Name
 	}
-	return meta_util.NameWithSuffix(r.OffshootName(), "auth")
+	return r.DefaultUserCredSecretName("admin")
 }
 
 func (r *RabbitMQ) GetPersistentSecrets() []string {
