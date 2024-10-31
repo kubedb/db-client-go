@@ -108,15 +108,10 @@ func (o *KubeDBClientBuilder) GetDruidClient() (*Client, error) {
 }
 
 func (o *KubeDBClientBuilder) getClientAuthOpts() (*druidgo.ClientOption, error) {
-	if o.db.Spec.AuthSecret == nil {
-		klog.Error("AuthSecret not set")
-		return nil, errors.New("auth-secret is not set")
-	}
-
 	authSecret := &core.Secret{}
 	err := o.kc.Get(o.ctx, types.NamespacedName{
 		Namespace: o.db.Namespace,
-		Name:      o.db.Spec.AuthSecret.Name,
+		Name:      o.db.GetAuthSecretName(),
 	}, authSecret)
 	if err != nil {
 		if kerr.IsNotFound(err) {
