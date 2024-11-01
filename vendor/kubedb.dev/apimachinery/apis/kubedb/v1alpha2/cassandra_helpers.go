@@ -148,7 +148,7 @@ func (r *Cassandra) GetAuthSecretName() string {
 	if r.Spec.AuthSecret != nil && r.Spec.AuthSecret.Name != "" {
 		return r.Spec.AuthSecret.Name
 	}
-	return r.DefaultUserCredSecretName("admin")
+	return meta_util.NameWithSuffix(r.OffshootName(), "auth")
 }
 
 func (r *Cassandra) ConfigSecretName() string {
@@ -270,17 +270,6 @@ func (r *Cassandra) ResourceSingular() string {
 func (r *Cassandra) SetDefaults() {
 	if r.Spec.DeletionPolicy == "" {
 		r.Spec.DeletionPolicy = TerminationPolicyDelete
-	}
-
-	if !r.Spec.DisableSecurity {
-		if r.Spec.AuthSecret == nil {
-			r.Spec.AuthSecret = &SecretReference{
-				LocalObjectReference: core.LocalObjectReference{
-					Name: meta_util.NameWithSuffix(r.OffshootName(), "auth"),
-				},
-				ExternallyManaged: false,
-			}
-		}
 	}
 
 	var casVersion catalog.CassandraVersion
