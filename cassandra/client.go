@@ -2,12 +2,11 @@ package cassandra
 
 import (
 	"fmt"
-	"log"
 	"time"
 
-	health "kmodules.xyz/client-go/tools/healthchecker"
-
 	"github.com/gocql/gocql"
+	"k8s.io/klog/v2"
+	health "kmodules.xyz/client-go/tools/healthchecker"
 )
 
 type Client struct {
@@ -52,13 +51,16 @@ func (c *Client) QueryData(name string) error {
 
 func (c *Client) CheckDbReadWrite() error {
 	if err := c.CreateKeyspace(); err != nil {
-		log.Fatal("Unable to create keyspace:", err)
+		klog.Error("Unable to create keyspace:", err)
+		return err
 	}
 	if err := c.CreateTable(); err != nil {
-		log.Fatal("Unable to create table:", err)
+		klog.Error("Unable to create table:", err)
+		return err
 	}
 	if err := c.UpdateData("Appscode", "KubeDB"); err != nil {
-		log.Fatal("Unable to update data:", err)
+		klog.Error("Unable to update data:", err)
+		return err
 	}
 
 	err := c.QueryData("Appscode")
