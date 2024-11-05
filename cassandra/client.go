@@ -6,7 +6,6 @@ import (
 
 	"github.com/gocql/gocql"
 	"k8s.io/klog/v2"
-	health "kmodules.xyz/client-go/tools/healthchecker"
 )
 
 type Client struct {
@@ -78,9 +77,8 @@ func (c *Client) PingCassandra() error {
 	return nil
 }
 
-func (c *Client) CloseCassandraClient(hcf *health.HealthCard) {
+func (c *Client) CloseCassandraClient() {
 	if c != nil {
 		c.Close()
 	}
-	hcf.ClientClosed()
 }
