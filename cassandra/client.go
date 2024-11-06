@@ -64,6 +64,7 @@ func (c *Client) CheckDbReadWrite() error {
 
 	err := c.QueryData("Appscode")
 	if err != nil {
+		klog.Error("Unable to query data:", err)
 		return err
 	}
 	return nil
@@ -72,6 +73,7 @@ func (c *Client) CheckDbReadWrite() error {
 func (c *Client) PingCassandra() error {
 	query := c.Query("SELECT now() FROM system.local")
 	if err := query.Exec(); err != nil {
+		klog.Error("Unable to ping cassandra:", err)
 		return err
 	}
 	return nil
