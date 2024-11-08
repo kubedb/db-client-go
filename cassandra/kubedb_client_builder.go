@@ -45,8 +45,8 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 	o.ctx = ctx
 	return o
 }
-func (o *KubeDBClientBuilder) GetCassandraClient(dns string) (*Client, error) {
-	host := dns
+func (o *KubeDBClientBuilder) GetCassandraClient() (*Client, error) {
+	host := o.url
 	cluster := gocql.NewCluster(host)
 	cluster.Port = kubedb.CassandraNativeTcpPort
 	cluster.Keyspace = "system"
@@ -56,15 +56,11 @@ func (o *KubeDBClientBuilder) GetCassandraClient(dns string) (*Client, error) {
 		cluster.Consistency = gocql.Quorum
 	}
 	if !o.db.Spec.DisableSecurity {
-		if o.db.Spec.AuthSecret == nil {
-			klog.Error("AuthSecret not set")
-			return nil, errors.New("auth-secret is not set")
-		}
 
 		authSecret := &core.Secret{}
 		err := o.kc.Get(o.ctx, types.NamespacedName{
 			Namespace: o.db.Namespace,
-			Name:      o.db.Spec.AuthSecret.Name,
+			Name:      o.db.GetAuthSecretName(),
 		}, authSecret)
 		if err != nil {
 			if kerr.IsNotFound(err) {
