@@ -130,15 +130,25 @@ const (
 	MemcachedPrimaryServicePortName = "primary"
 	MemcachedDatabasePort           = 11211
 	MemcachedContainerName          = "memcached"
+	MemcachedExporterContainerName  = "exporter"
 
 	MemcachedConfigVolumeName = "memcached-config"
 	MemcachedConfigVolumePath = "/usr/config/"
 
 	MemcachedDataVolumeName = "data"
-	MemcachedDataVolumePath = "/usr/data"
+	MemcachedDataVolumePath = "/usr/data/"
 
 	MemcachedAuthVolumeName = "auth"
-	MemcachedAuthVolumePath = "/usr/auth"
+	MemcachedAuthVolumePath = "/usr/auth/"
+
+	MemcachedExporterAuthVolumeName = "exporter-auth"
+	MemcachedExporterAuthVolumePath = "/auth/"
+
+	MemcachedExporterTLSVolumeName = "exporter-tls"
+	MemcachedExporterTLSVolumePath = "/certs/"
+
+	MemcachedTLSVolumeName = "tls"
+	MemcachedTLSVolumePath = "/usr/certs/"
 
 	MemcachedHealthKey   = "kubedb_memcached_health_key"
 	MemcachedHealthValue = "kubedb_memcached_health_value"
@@ -1369,14 +1379,15 @@ const (
 const (
 
 	// envs
-	EnvFerretDBUser     = "FERRETDB_PG_USER"
-	EnvFerretDBPassword = "FERRETDB_PG_PASSWORD"
-	EnvFerretDBHandler  = "FERRETDB_HANDLER"
-	EnvFerretDBPgURL    = "FERRETDB_POSTGRESQL_URL"
-	EnvFerretDBTLSPort  = "FERRETDB_LISTEN_TLS"
-	EnvFerretDBCAPath   = "FERRETDB_LISTEN_TLS_CA_FILE"
-	EnvFerretDBCertPath = "FERRETDB_LISTEN_TLS_CERT_FILE"
-	EnvFerretDBKeyPath  = "FERRETDB_LISTEN_TLS_KEY_FILE"
+	EnvFerretDBUser      = "FERRETDB_PG_USER"
+	EnvFerretDBPassword  = "FERRETDB_PG_PASSWORD"
+	EnvFerretDBHandler   = "FERRETDB_HANDLER"
+	EnvFerretDBPgURL     = "FERRETDB_POSTGRESQL_URL"
+	EnvFerretDBTLSPort   = "FERRETDB_LISTEN_TLS"
+	EnvFerretDBCAPath    = "FERRETDB_LISTEN_TLS_CA_FILE"
+	EnvFerretDBCertPath  = "FERRETDB_LISTEN_TLS_CERT_FILE"
+	EnvFerretDBKeyPath   = "FERRETDB_LISTEN_TLS_KEY_FILE"
+	EnvFerretDBDebugAddr = "FERRETDB_DEBUG_ADDR"
 
 	FerretDBContainerName = "ferretdb"
 	FerretDBMainImage     = "ghcr.io/ferretdb/ferretdb"
@@ -1387,7 +1398,7 @@ const (
 	FerretDBExternalClientPath = "/etc/certs/ext"
 
 	FerretDBDefaultPort = 27017
-	FerretDBMetricsPort = 8080
+	FerretDBMetricsPort = 56790
 	FerretDBTLSPort     = 27018
 
 	FerretDBMetricsPath     = "/debug/metrics"

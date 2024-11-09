@@ -142,6 +142,11 @@ func (in *ArchiverRecovery) DeepCopyInto(out *ArchiverRecovery) {
 		*out = new(apiv1.ObjectReference)
 		**out = **in
 	}
+	if in.ReplicationStrategy != nil {
+		in, out := &in.ReplicationStrategy, &out.ReplicationStrategy
+		*out = new(PITRReplicationStrategy)
+		**out = **in
+	}
 	return
 }
 
@@ -1017,8 +1022,8 @@ func (in *DruidSpec) DeepCopyInto(out *DruidSpec) {
 	}
 	if in.AuthSecret != nil {
 		in, out := &in.AuthSecret, &out.AuthSecret
-		*out = new(corev1.LocalObjectReference)
-		**out = **in
+		*out = new(SecretReference)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.Init != nil {
 		in, out := &in.Init, &out.Init
