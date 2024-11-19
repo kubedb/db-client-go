@@ -41,6 +41,7 @@ type KubeDBClientBuilder struct {
 	url      string
 	podName  string
 	nodeRole olddbapi.DruidNodeRoleType
+	password string
 	ctx      context.Context
 }
 
@@ -73,6 +74,11 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 
 func (o *KubeDBClientBuilder) WithNodeRole(nodeRole olddbapi.DruidNodeRoleType) *KubeDBClientBuilder {
 	o.nodeRole = nodeRole
+	return o
+}
+
+func (o *KubeDBClientBuilder) WithPassword(password string) *KubeDBClientBuilder {
+	o.password = password
 	return o
 }
 
@@ -120,8 +126,14 @@ func (o *KubeDBClientBuilder) getClientAuthOpts() (*druidgo.ClientOption, error)
 		}
 		return nil, err
 	}
+
+	var password string
 	userName := string(authSecret.Data[core.BasicAuthUsernameKey])
-	password := string(authSecret.Data[core.BasicAuthPasswordKey])
+	if o.password != "" {
+		password = o.password
+	} else {
+		password = string(authSecret.Data[core.BasicAuthPasswordKey])
+	}
 
 	druidAuthOpts := druidgo.WithBasicAuth(userName, password)
 	return &druidAuthOpts, nil

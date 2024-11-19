@@ -1549,7 +1549,6 @@ kmodules.xyz/client-go/discovery
 kmodules.xyz/client-go/meta
 kmodules.xyz/client-go/policy/secomp
 kmodules.xyz/client-go/tools/certholder
-kmodules.xyz/client-go/tools/healthchecker
 # kmodules.xyz/custom-resources v0.30.0
 ## explicit; go 1.22.0
 kmodules.xyz/custom-resources/apis/appcatalog

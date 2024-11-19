@@ -19,12 +19,12 @@ package druid
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	druidgo "github.com/grafadruid/go-druid"
 	"github.com/pkg/errors"
 	"k8s.io/klog/v2"
-	health "kmodules.xyz/client-go/tools/healthchecker"
 )
 
 type Client struct {
@@ -44,13 +44,12 @@ const (
 	DruidHealthCheckDataSource = "kubedb-datasource"
 )
 
-func (c *Client) CloseDruidClient(hcs *health.HealthCard) {
+func (c *Client) CloseDruidClient() {
 	err := c.Close()
 	if err != nil {
 		klog.Error(err, "Failed to close druid middleManagers client")
 		return
 	}
-	hcs.ClientClosed()
 }
 
 func IsDBConnected(druidClients []*Client) (bool, error) {
@@ -102,7 +101,6 @@ func (c *Client) CheckNodeDiscoveryStatus() (bool, error) {
 }
 
 func (c *Client) CheckDataSourceExistence() (bool, error) {
-	method := "POST"
 	path := "druid/v2/sql"
 
 	data := map[string]interface{}{
@@ -116,7 +114,7 @@ func (c *Client) CheckDataSourceExistence() (bool, error) {
 	rawMessage := json.RawMessage(jsonData)
 
 	var result []map[string]interface{}
-	_, err = c.ExecuteRequest(method, path, rawMessage, &result)
+	_, err = c.ExecuteRequest(http.MethodPost, path, rawMessage, &result)
 	if err != nil {
 		klog.Error("Failed to execute request", err)
 		return false, err
@@ -193,7 +191,6 @@ func (c *Client) GetData() (string, error) {
 }
 
 func (c *Client) runSelectQuery() (string, error) {
-	method := "POST"
 	path := "druid/v2/sql"
 	data := map[string]interface{}{
 		"query": "SELECT * FROM \"kubedb-datasource\"",
@@ -206,7 +203,7 @@ func (c *Client) runSelectQuery() (string, error) {
 	rawMessage := json.RawMessage(jsonData)
 
 	var result []map[string]interface{}
-	_, err = c.ExecuteRequest(method, path, rawMessage, &result)
+	_, err = c.ExecuteRequest(http.MethodPost, path, rawMessage, &result)
 	if err != nil {
 		klog.Error("Failed to execute POST query request", err)
 		return "", err
@@ -228,7 +225,6 @@ func (c *Client) updateCoordinatorsWaitBeforeDeletingConfig(value int32) error {
 }
 
 func (c *Client) updateCoordinatorDynamicConfig(data map[string]interface{}) error {
-	method := "POST"
 	path := "druid/coordinator/v1/config"
 
 	jsonData, err := json.Marshal(data)
@@ -237,7 +233,7 @@ func (c *Client) updateCoordinatorDynamicConfig(data map[string]interface{}) err
 	}
 	rawMessage := json.RawMessage(jsonData)
 
-	_, err = c.ExecuteRequest(method, path, rawMessage, nil)
+	_, err = c.ExecuteRequest(http.MethodPost, path, rawMessage, nil)
 	if err != nil {
 		klog.Error("Failed to execute coordinator config update request", err)
 		return err
@@ -276,11 +272,10 @@ func (c *Client) submitTask(taskType DruidTaskType, dataSource string, data stri
 		task = GetKillTaskDefinition()
 	}
 	rawMessage := json.RawMessage(task)
-	method := "POST"
 	path := "druid/indexer/v1/task"
 
 	var result map[string]interface{}
-	_, err := c.ExecuteRequest(method, path, rawMessage, &result)
+	_, err := c.ExecuteRequest(http.MethodPost, path, rawMessage, &result)
 	if err != nil {
 		klog.Error("Failed to execute POST ingestion or kill task request", err)
 		return "", err
@@ -342,11 +337,10 @@ func GetKillTaskDefinition() string {
 }
 
 func (c *Client) CheckTaskStatus(taskID string) (bool, error) {
-	method := "GET"
 	path := fmt.Sprintf("druid/indexer/v1/task/%s/status", taskID)
 
 	var result map[string]interface{}
-	_, err := c.ExecuteRequest(method, path, nil, &result)
+	_, err := c.ExecuteRequest(http.MethodGet, path, nil, &result)
 	if err != nil {
 		klog.Error("Failed to execute GET task status request", err)
 		return false, err
@@ -375,4 +369,25 @@ func (c *Client) checkDBReadAccess(oldData string) error {
 		}
 	}
 	return errors.New("failed to read ingested data")
+}
+
+// Reference: https://druid.apache.org/docs/latest/development/extensions-core/druid-basic-security/#usercredential-management
+func (c *Client) UpdateDruidPassword(password string) error {
+	path := "druid-ext/basic-security/authentication/db/basic/users/admin/credentials"
+
+	data := map[string]interface{}{
+		"password": password,
+	}
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	rawMessage := json.RawMessage(jsonData)
+
+	_, err = c.ExecuteRequest(http.MethodPost, path, rawMessage, nil)
+	if err != nil {
+		klog.Error("Failed to execute coordinator config update request", err)
+		return err
+	}
+	return nil
 }
