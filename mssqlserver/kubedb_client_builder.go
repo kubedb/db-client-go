@@ -122,7 +122,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 
 	// TLS Configuration
 	tlsConfig := ""
-	if o.db.Spec.TLS.ClientTLS {
+	if o.db.Spec.TLS.ClientTLS != nil && *o.db.Spec.TLS.ClientTLS {
 		tlsConfig = "encrypt=true;TrustServerCertificate=true;"
 	}
 
