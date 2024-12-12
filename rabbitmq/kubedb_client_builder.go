@@ -47,6 +47,7 @@ type KubeDBClientBuilder struct {
 	httpURL           string
 	podName           string
 	vhost             string
+	connName          string
 	enableHTTPClient  bool
 	disableAMQPClient bool
 }
@@ -89,6 +90,11 @@ func (o *KubeDBClientBuilder) WithHTTPURL(url string) *KubeDBClientBuilder {
 
 func (o *KubeDBClientBuilder) WithVHost(vhost string) *KubeDBClientBuilder {
 	o.vhost = vhost
+	return o
+}
+
+func (o *KubeDBClientBuilder) WithConnectionName(connName string) *KubeDBClientBuilder {
+	o.connName = connName
 	return o
 }
 
@@ -215,16 +221,31 @@ func (o *KubeDBClientBuilder) GetRabbitMQClient() (*Client, error) {
 			o.amqpURL = o.GetAMQPconnURL(username, password, o.vhost)
 		}
 
+		extraConfigProperties := amqp.NewConnectionProperties()
+		if o.connName != "" {
+			extraConfigProperties.SetClientConnectionName(o.connName)
+		}
+
 		rabbitConnection, err := amqp.DialConfig(o.amqpURL, amqp.Config{
-			Vhost:  o.vhost,
-			Locale: "en_US",
+			Vhost:      o.vhost,
+			Locale:     "en_US",
+			Properties: extraConfigProperties,
 		})
 		if err != nil {
 			klog.Error(err, "Failed to connect to rabbitmq")
 			return nil, err
 		}
 		klog.Info("Successfully created AMQP client for RabbitMQ")
+
+		msgChannel, err := rabbitConnection.Channel()
+		if err != nil {
+			klog.Error(err, "Failed to create AMQP channel")
+			return nil, err
+		}
+		klog.Info("Successfully created AMQP channel for RabbitMQ")
+
 		rmqClient.AMQPClient = AMQPClient{rabbitConnection}
+		rmqClient.Channel = Channel{msgChannel}
 	}
 
 	return rmqClient, nil
