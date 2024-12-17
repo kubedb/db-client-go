@@ -17,7 +17,7 @@ limitations under the License.
 package rabbitmq
 
 import (
-	rmqhttp "github.com/michaelklishin/rabbit-hole/v2"
+	rmqhttp "github.com/michaelklishin/rabbit-hole/v3"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
