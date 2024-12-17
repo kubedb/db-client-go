@@ -17,10 +17,13 @@ limitations under the License.
 package kubedb
 
 import (
+	"fmt"
 	"time"
 
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	meta_util "kmodules.xyz/client-go/meta"
+	skapi "kubeops.dev/sidekick/apis/apps/v1alpha1"
 )
 
 const (
@@ -68,7 +71,7 @@ const (
 	ProxySQLKey      = "proxysql" + "." + GroupName
 
 	// Auth related constants
-	BasicAuthActiveFromAnnotation = "basic-auth-active-from"
+	AuthActiveFromAnnotation = GroupName + "/auth-active-from"
 
 	// =========================== Elasticsearch Constants ============================
 	ElasticsearchRestPort                        = 9200
@@ -146,6 +149,9 @@ const (
 
 	MemcachedExporterAuthVolumeName = "exporter-auth"
 	MemcachedExporterAuthVolumePath = "/auth/"
+
+	// AuthDataKey store Username Password Pairs.
+	AuthDataKey = "authData"
 
 	MemcachedExporterTLSVolumeName = "exporter-tls"
 	MemcachedExporterTLSVolumePath = "/certs/"
@@ -830,6 +836,7 @@ const (
 	KafkaListenerSecurityProtocolMap       = "listener.security.protocol.map"
 	KafkaControllerNodeCount               = "controller.count"
 	KafkaControllerQuorumVoters            = "controller.quorum.voters"
+	KafkaControllerQuorumBootstrapServers  = "controller.quorum.bootstrap.servers"
 	KafkaControllerListenersName           = "controller.listener.names"
 	KafkaInterBrokerListener               = "inter.broker.listener.name"
 	KafkaNodeRole                          = "process.roles"
@@ -1563,6 +1570,19 @@ const (
 	ResourceKindStatefulSet = "StatefulSet"
 	ResourceKindPetSet      = "PetSet"
 )
+
+var (
+	SidekickGVR       = fmt.Sprintf("%s.%s", skapi.ResourceSidekicks, skapi.SchemeGroupVersion.Group)
+	SidekickOwnerName = SidekickGVR + "/owner-name"
+	SidekickOwnerKind = SidekickGVR + "/owner-kind"
+)
+
+func CommonSidekickLabels() map[string]string {
+	return map[string]string{
+		meta_util.NameLabelKey:      SidekickGVR,
+		meta_util.ManagedByLabelKey: GroupName,
+	}
+}
 
 var (
 	DefaultInitContainerResource = core.ResourceRequirements{

@@ -19,7 +19,7 @@ package rabbitmq
 import (
 	"fmt"
 
-	rabbithole "github.com/michaelklishin/rabbit-hole/v2"
+	rmqhttp "github.com/michaelklishin/rabbit-hole/v3"
 	"k8s.io/klog/v2"
 )
 
@@ -45,7 +45,7 @@ func (c *HTTPClient) IsAllNodesRunningInCluster(replicas int) (bool, error) {
 	return true, nil
 }
 
-func (c *HTTPClient) GetQueues() ([]rabbithole.QueueInfo, error) {
+func (c *HTTPClient) GetQueues() ([]rmqhttp.QueueInfo, error) {
 	queues, err := c.Client.ListQueues()
 	if err != nil {
 		klog.Error(err, "Failed to get queue lists")
@@ -54,13 +54,13 @@ func (c *HTTPClient) GetQueues() ([]rabbithole.QueueInfo, error) {
 	return queues, nil
 }
 
-func (c *HTTPClient) GetClassicQueues() ([]rabbithole.QueueInfo, error) {
+func (c *HTTPClient) GetClassicQueues() ([]rmqhttp.QueueInfo, error) {
 	queues, err := c.GetQueues()
 	if err != nil {
 		klog.Error(err, "Failed to get queue lists")
 		return nil, err
 	}
-	classicQueues := []rabbithole.QueueInfo{}
+	classicQueues := []rmqhttp.QueueInfo{}
 
 	for _, q := range queues {
 		if q.Type == rabbitmqQueueTypeClassic {
@@ -71,7 +71,7 @@ func (c *HTTPClient) GetClassicQueues() ([]rabbithole.QueueInfo, error) {
 	return classicQueues, nil
 }
 
-func (c *HTTPClient) HasNodeAnyClassicQueue(queues []rabbithole.QueueInfo, node string) bool {
+func (c *HTTPClient) HasNodeAnyClassicQueue(queues []rmqhttp.QueueInfo, node string) bool {
 	for _, q := range queues {
 		if q.Type == rabbitmqQueueTypeClassic && q.Node == node {
 			return true
@@ -80,13 +80,13 @@ func (c *HTTPClient) HasNodeAnyClassicQueue(queues []rabbithole.QueueInfo, node 
 	return false
 }
 
-func (c *HTTPClient) GetQuorumQueues() ([]rabbithole.QueueInfo, error) {
+func (c *HTTPClient) GetQuorumQueues() ([]rmqhttp.QueueInfo, error) {
 	queues, err := c.GetQueues()
 	if err != nil {
 		klog.Error(err, "Failed to get queue lists")
 		return nil, err
 	}
-	quorumQueues := []rabbithole.QueueInfo{}
+	quorumQueues := []rmqhttp.QueueInfo{}
 
 	for _, q := range queues {
 		if q.Type == rabbitmqQueueTypeQuorum {
@@ -97,7 +97,7 @@ func (c *HTTPClient) GetQuorumQueues() ([]rabbithole.QueueInfo, error) {
 	return quorumQueues, nil
 }
 
-func (c *HTTPClient) IsNodePrimaryReplica(queues []rabbithole.QueueInfo, node string) bool {
+func (c *HTTPClient) IsNodePrimaryReplica(queues []rmqhttp.QueueInfo, node string) bool {
 	for _, q := range queues {
 		if q.Type == rabbitmqQueueTypeQuorum && q.Leader == node {
 			return true
