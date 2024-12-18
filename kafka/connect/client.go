@@ -17,14 +17,22 @@ limitations under the License.
 package connect
 
 import (
+	"context"
 	"encoding/json"
+	"github.com/go-logr/logr"
 	"io"
 	"net/http"
+	clog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
-	"k8s.io/klog/v2"
 )
+
+var log logr.Logger
+
+func init() {
+	log = clog.FromContext(context.Background()).WithName("db-client-go").WithName("connectcluster")
+}
 
 type Client struct {
 	*resty.Client
@@ -56,7 +64,7 @@ func (cc *Client) GetConnectClusterStatus() (*Response, error) {
 	req := cc.Client.R().SetDoNotParseResponse(true)
 	res, err := req.Get(cc.Config.api)
 	if err != nil {
-		klog.Error(err, "Failed to send http request")
+		log.Error(err, "Failed to send http request")
 		return nil, err
 	}
 	response := &Response{
@@ -76,7 +84,7 @@ func (cc *Client) DeleteConnector() (*Response, error) {
 	req := cc.Client.R().SetDoNotParseResponse(true)
 	res, err := req.Delete(cc.Config.api)
 	if err != nil {
-		klog.Error(err, "Failed to send http request")
+		log.Error(err, "Failed to send http request")
 		return nil, err
 	}
 	response := &Response{
@@ -92,7 +100,7 @@ func (cc *Client) PutConnector(jsonBody []byte) (*Response, error) {
 	req := cc.Client.R().SetDoNotParseResponse(true).SetHeader("Content-Type", "application/json").SetBody(jsonBody)
 	res, err := req.Put(cc.Config.api)
 	if err != nil {
-		klog.Error(err, "Failed to send http request")
+		log.Error(err, "Failed to send http request")
 		return nil, err
 	}
 	response := &Response{
@@ -108,7 +116,7 @@ func (cc *Client) PostConnector(jsonBody []byte) (*Response, error) {
 	req := cc.Client.R().SetDoNotParseResponse(true).SetHeader("Content-Type", "application/json").SetBody(jsonBody)
 	res, err := req.Post(cc.Config.api)
 	if err != nil {
-		klog.Error(err, "Failed to send http request")
+		log.Error(err, "Failed to send http request")
 		return nil, err
 	}
 	response := &Response{

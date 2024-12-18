@@ -17,13 +17,20 @@ limitations under the License.
 package kafka
 
 import (
+	"context"
+	"fmt"
+	"github.com/go-logr/logr"
 	"time"
 
-	"fmt"
-
 	kafkago "github.com/IBM/sarama"
-	"k8s.io/klog/v2"
+	clog "sigs.k8s.io/controller-runtime/pkg/log"
 )
+
+var log logr.Logger
+
+func init() {
+	log = clog.FromContext(context.Background()).WithName("db-client-go").WithName("kafka")
+}
 
 type Client struct {
 	kafkago.Client
@@ -51,19 +58,19 @@ type MessageMetadata struct {
 func (c *Client) IsDBConnected() (bool, error) {
 	broker, err := c.Controller()
 	if err != nil || broker == nil {
-		klog.Error(err, "Failed to Get kafka broker")
+		log.Error(err, "Failed to Get kafka broker")
 		return false, err
 	}
 
 	connected, err := broker.Connected()
 	if err != nil {
-		klog.Error(err, fmt.Sprintf("Failed to connect broker: %s", broker.Addr()))
+		log.Error(err, fmt.Sprintf("Failed to connect broker: %s", broker.Addr()))
 		return false, err
 	}
 	if connected {
-		klog.V(5).Info(fmt.Sprintf("Successfully connected broker: %s", broker.Addr()))
+		log.V(1).Info(fmt.Sprintf("Successfully connected broker: %s", broker.Addr()))
 	} else {
-		klog.Error(fmt.Sprintf("Failed to connect broker: %s", broker.Addr()))
+		log.Error(fmt.Errorf("failed to connect broker: %s", broker.Addr()), "failed to connect broker")
 	}
 
 	return connected, nil
@@ -73,32 +80,32 @@ func (c *Client) CheckKafkaBrokers(numOfBrokers int32) error {
 	for i := int32(0); i < numOfBrokers; i++ {
 		broker, err := c.Broker(i)
 		if err != nil {
-			klog.ErrorS(err, "Failed to get broker with id", "id", i)
+			log.Error(err, "Failed to get broker with id", "id", i)
 			return err
 		}
 		connected, err := broker.Connected()
 		if err != nil {
-			klog.ErrorS(err, "Failed to connect broker", "id", i)
+			log.Error(err, "Failed to connect broker", "id", i)
 			return err
 		}
 		if !connected {
-			klog.ErrorS(err, "Broker is not connected", "id", i)
+			log.Error(err, "Broker is not connected", "id", i)
 			return fmt.Errorf("broker %d, is not connected", i)
 		}
 	}
-	klog.V(5).Info("all brokers are available to accept request")
+	log.V(1).Info("all brokers are available to accept request")
 	return nil
 }
 
 func (c *Client) RefreshTopicMetadata(topics ...string) error {
 	err := c.RefreshMetadata(topics...)
 	if err != nil {
-		klog.Error(err, "Failed to refresh metadata", "Topics", topics)
+		log.Error(err, "Failed to refresh metadata", "Topics", topics)
 		return err
 	}
 	_, err = c.RefreshController()
 	if err != nil {
-		klog.Error(err, "Failed to refresh controller")
+		log.Error(err, "Failed to refresh controller")
 		return err
 	}
 	return nil
@@ -107,7 +114,7 @@ func (c *Client) RefreshTopicMetadata(topics ...string) error {
 func (c *Client) GetPartitionLeaderAddress(partition int32, topic string) (string, error) {
 	leader, err := c.Leader(topic, partition)
 	if err != nil {
-		klog.Error(err, "Failed to get leader", "partition", partition)
+		log.Error(err, "Failed to get leader", "partition", partition)
 		return "", err
 	}
 	return leader.Addr(), nil
@@ -116,7 +123,7 @@ func (c *Client) GetPartitionLeaderAddress(partition int32, topic string) (strin
 func (a *AdminClient) IsTopicExists(topic string) (bool, error) {
 	topics, err := a.ListTopics()
 	if err != nil {
-		klog.Error(err, "Failed to list kafka topics")
+		log.Error(err, "Failed to list kafka topics")
 		return false, err
 	}
 	_, topicExists := topics[topic]
@@ -130,17 +137,17 @@ func (a *AdminClient) CreateKafkaTopic(topic string, topicConfig map[string]*str
 		ConfigEntries:     topicConfig,
 	}, true)
 	if err != nil {
-		klog.Error(err, fmt.Sprintf("Failed to create topic - %s", topic))
+		log.Error(err, fmt.Sprintf("Failed to create topic - %s", topic))
 		return err
 	}
-	klog.Info(fmt.Sprintf("Created topic - %s", topic))
+	log.Info(fmt.Sprintf("Created topic - %s", topic))
 	return nil
 }
 
 func (c *Client) DeleteKafkaTopics(topics ...string) {
 	broker, err := c.Controller()
 	if err != nil {
-		klog.Error(err, "Failed to get controller broker")
+		log.Error(err, "Failed to get controller broker")
 		return
 	}
 	_, err = broker.DeleteTopics(&kafkago.DeleteTopicsRequest{
@@ -148,7 +155,7 @@ func (c *Client) DeleteKafkaTopics(topics ...string) {
 		Timeout: 5 * time.Second,
 	})
 	if err != nil {
-		klog.Error(err, "Failed to delete kafka health topic")
+		log.Error(err, "Failed to delete kafka health topic")
 		return
 	}
 }
@@ -167,7 +174,7 @@ func (p *ProducerClient) PublishMessages(partition int32, topic, key, message st
 	var err error
 	msgMetadata.Partition, msgMetadata.Offset, err = p.SendMessage(producerMsg)
 	if err != nil {
-		klog.Error(err, "Failed to send message", "topic", topic, "partition", partition)
+		log.Error(err, "Failed to send message", "topic", topic, "partition", partition)
 		return nil, err
 	}
 
@@ -179,7 +186,7 @@ func (c *ConsumerClient) ConsumeMessages(partition int32, topic string, offset i
 	var partitionConsumer kafkago.PartitionConsumer
 	partitionConsumer, err = c.ConsumePartition(topic, partition, offset)
 	if err != nil {
-		klog.Error(err, "Failed to create partition consumer")
+		log.Error(err, "Failed to create partition consumer")
 		return err
 	}
 	defer partitionConsumer.AsyncClose()
@@ -189,7 +196,7 @@ func (c *ConsumerClient) ConsumeMessages(partition int32, topic string, offset i
 		case <-*signal:
 			return nil
 		case err := <-partitionConsumer.Errors():
-			klog.Error(fmt.Sprintf("could not process message, err: %s", err.Error()))
+			log.Error(err, "could not process message")
 			return err
 		case msg := <-partitionConsumer.Messages():
 			msgMetadata := MessageMetadata{
