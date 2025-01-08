@@ -30,9 +30,9 @@ require (
 	k8s.io/api v0.30.3
 	k8s.io/apimachinery v0.30.3
 	k8s.io/klog/v2 v2.130.1
-	kmodules.xyz/client-go v0.30.42
+	kmodules.xyz/client-go v0.30.44
 	kmodules.xyz/custom-resources v0.30.0
-	kubedb.dev/apimachinery v0.50.0
+	kubedb.dev/apimachinery v0.51.0
 	sigs.k8s.io/controller-runtime v0.18.4
 	xorm.io/xorm v1.3.6
 )
@@ -88,7 +88,7 @@ require (
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.17.7 // indirect
+	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/magefile/mage v1.11.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
@@ -146,7 +146,7 @@ require (
 	kmodules.xyz/monitoring-agent-api v0.30.2 // indirect
 	kmodules.xyz/offshoot-api v0.30.1 // indirect
 	kubeops.dev/petset v0.0.7 // indirect
-	kubeops.dev/sidekick v0.0.10-0.20241122131943-163e27e5ef71 // indirect
+	kubeops.dev/sidekick v0.0.10 // indirect
 	modernc.org/memory v1.5.0 // indirect
 	modernc.org/token v1.1.0 // indirect
 	sigs.k8s.io/gateway-api v1.1.0 // indirect
