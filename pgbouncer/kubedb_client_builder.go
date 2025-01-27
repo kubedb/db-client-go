@@ -215,7 +215,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		if err != nil {
 			return "", err
 		}
-		if o.pgbouncer.Spec.ConnectionPool.AuthType == dbapi.PgBouncerClientAuthModeCert || o.pgbouncer.Spec.SSLMode == dbapi.PgBouncerSSLModeVerifyCA || o.pgbouncer.Spec.SSLMode == dbapi.PgBouncerSSLModeVerifyFull {
+		if o.pgbouncer.Spec.SSLMode == dbapi.PgBouncerSSLModeVerifyCA || o.pgbouncer.Spec.SSLMode == dbapi.PgBouncerSSLModeVerifyFull {
 			connector = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s sslrootcert=%s sslcert=%s sslkey=%s", user, pass, o.url, listeningPort, o.backendDBName, sslMode, paths.CACert, paths.Cert, paths.Key)
 		} else {
 			connector = fmt.Sprintf("user=%s password=%s host=%s port=%d connect_timeout=10 dbname=%s sslmode=%s sslrootcert=%s", user, pass, o.url, listeningPort, o.backendDBName, sslMode, paths.CACert)
