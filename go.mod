@@ -32,7 +32,7 @@ require (
 	k8s.io/klog/v2 v2.130.1
 	kmodules.xyz/client-go v0.30.44
 	kmodules.xyz/custom-resources v0.30.0
-	kubedb.dev/apimachinery v0.51.1-0.20250127085441-7f9ee3e6b9a6
+	kubedb.dev/apimachinery v0.52.0-rc.0
 	sigs.k8s.io/controller-runtime v0.18.4
 	xorm.io/xorm v1.3.6
 )
@@ -128,7 +128,7 @@ require (
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/term v0.27.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
-	golang.org/x/time v0.5.0 // indirect
+	golang.org/x/time v0.6.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	gomodules.xyz/mergo v0.3.13 // indirect
 	gomodules.xyz/pointer v0.1.0 // indirect
