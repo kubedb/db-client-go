@@ -77,6 +77,27 @@ func (os *OSClientV2) NodesStats() (map[string]interface{}, error) {
 	return nodesStats, nil
 }
 
+func (os *OSClientV2) ShardStats() (map[string]interface{}, error) {
+	req := osv2api.CatShardsRequest{
+		Pretty: true,
+		Human:  true,
+		H:      []string{"index", "shard", "prirep", "state", "unassigned.reason"},
+	}
+
+	resp, err := req.Do(context.Background(), os.client)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	shardStats := make(map[string]interface{})
+	if err := json.NewDecoder(resp.Body).Decode(&shardStats); err != nil {
+		return nil, fmt.Errorf("failed to deserialize the response: %v", err)
+	}
+
+	return shardStats, nil
+}
+
 // GetIndicesInfo will return the indices' info of an Elasticsearch database
 func (os *OSClientV2) GetIndicesInfo() ([]interface{}, error) {
 	req := osv2api.CatIndicesRequest{

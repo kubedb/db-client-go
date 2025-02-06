@@ -19,7 +19,6 @@ package elasticsearch
 import (
 	"context"
 	"encoding/json"
-
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 
 	esv5 "github.com/elastic/go-elasticsearch/v5"
@@ -39,6 +38,10 @@ func (es *ESClientV5) ClusterHealthInfo() (map[string]interface{}, error) {
 
 func (es *ESClientV5) NodesStats() (map[string]interface{}, error) {
 	// Todo: need to implement for version 5
+	return nil, nil
+}
+
+func (es *ESClientV5) ShardStats() (map[string]interface{}, error) {
 	return nil, nil
 }
 
