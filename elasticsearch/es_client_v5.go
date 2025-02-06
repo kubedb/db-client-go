@@ -42,7 +42,7 @@ func (es *ESClientV5) NodesStats() (map[string]interface{}, error) {
 	return nil, nil
 }
 
-func (es *ESClientV5) ShardStats() (map[string]interface{}, error) {
+func (es *ESClientV5) ShardStats() ([]ShardInfo, error) {
 	return nil, nil
 }
 

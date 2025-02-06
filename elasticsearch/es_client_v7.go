@@ -77,8 +77,10 @@ func (es *ESClientV7) NodesStats() (map[string]interface{}, error) {
 	return nodesStats, nil
 }
 
-func (es *ESClientV7) ShardStats() (map[string]interface{}, error) {
+func (es *ESClientV7) ShardStats() ([]ShardInfo, error) {
 	req := esapi.CatShardsRequest{
+		Bytes:  "b",
+		Format: "json",
 		Pretty: true,
 		Human:  true,
 		H:      []string{"index", "shard", "prirep", "state", "unassigned.reason"},
@@ -90,11 +92,16 @@ func (es *ESClientV7) ShardStats() (map[string]interface{}, error) {
 	}
 	defer resp.Body.Close()
 
-	shardStats := make(map[string]interface{})
-	if err := json.NewDecoder(resp.Body).Decode(&shardStats); err != nil {
-		return nil, fmt.Errorf("failed to deserialize the response: %v", err)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error reading body:", err)
 	}
 
+	var shardStats []ShardInfo
+	err = json.Unmarshal(body, &shardStats)
+	if err != nil {
+		return nil, err
+	}
 	return shardStats, nil
 }
 
