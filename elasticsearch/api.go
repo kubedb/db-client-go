@@ -92,6 +92,7 @@ type ESClient interface {
 	GetDBUserRole(ctx context.Context) (error, bool)
 	IndexExistsOrNot(index string) error
 	NodesStats() (map[string]interface{}, error)
+	ShardStats() (map[string]interface{}, error)
 	PutData(index, id string, data map[string]interface{}) error
 	SyncCredentialFromSecret(secret *core.Secret) error
 }
