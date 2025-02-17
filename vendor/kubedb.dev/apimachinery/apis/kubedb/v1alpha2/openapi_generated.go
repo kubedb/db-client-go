@@ -572,6 +572,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MSSQLServerStatus":                             schema_apimachinery_apis_kubedb_v1alpha2_MSSQLServerStatus(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MSSQLServerTLSConfig":                          schema_apimachinery_apis_kubedb_v1alpha2_MSSQLServerTLSConfig(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MSSQLServerTopology":                           schema_apimachinery_apis_kubedb_v1alpha2_MSSQLServerTopology(ref),
+		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.ManifestOptions":                               schema_apimachinery_apis_kubedb_v1alpha2_ManifestOptions(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MariaDB":                                       schema_apimachinery_apis_kubedb_v1alpha2_MariaDB(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MariaDBList":                                   schema_apimachinery_apis_kubedb_v1alpha2_MariaDBList(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MariaDBSpec":                                   schema_apimachinery_apis_kubedb_v1alpha2_MariaDBSpec(ref),
@@ -25789,12 +25790,18 @@ func schema_apimachinery_apis_kubedb_v1alpha2_ArchiverRecovery(ref common.Refere
 							Format: "",
 						},
 					},
+					"manifestOptions": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ManifestOptions provide options to select particular manifest object to restore",
+							Ref:         ref("kubedb.dev/apimachinery/apis/kubedb/v1alpha2.ManifestOptions"),
+						},
+					},
 				},
 				Required: []string{"recoveryTimestamp"},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.Time", "kmodules.xyz/client-go/api/v1.ObjectReference"},
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Time", "kmodules.xyz/client-go/api/v1.ObjectReference", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.ManifestOptions"},
 	}
 }
 
@@ -29511,12 +29518,18 @@ func schema_apimachinery_apis_kubedb_v1alpha2_MSSQLServerSpec(ref common.Referen
 							Ref:         ref("kubedb.dev/apimachinery/apis/kubedb/v1alpha2.Archiver"),
 						},
 					},
+					"arbiter": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Arbiter controls spec for arbiter pods",
+							Ref:         ref("kubedb.dev/apimachinery/apis/kubedb/v1alpha2.ArbiterSpec"),
+						},
+					},
 				},
 				Required: []string{"version"},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.PersistentVolumeClaimSpec", "kmodules.xyz/client-go/api/v1.HealthCheckSpec", "kmodules.xyz/monitoring-agent-api/api/v1.AgentSpec", "kmodules.xyz/offshoot-api/api/v2.PodTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.Archiver", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.InitSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MSSQLServerTLSConfig", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MSSQLServerTopology", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.NamedServiceTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SecretReference"},
+			"k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.PersistentVolumeClaimSpec", "kmodules.xyz/client-go/api/v1.HealthCheckSpec", "kmodules.xyz/monitoring-agent-api/api/v1.AgentSpec", "kmodules.xyz/offshoot-api/api/v2.PodTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.ArbiterSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.Archiver", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.InitSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MSSQLServerTLSConfig", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MSSQLServerTopology", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.NamedServiceTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SecretReference"},
 	}
 }
 
@@ -29627,6 +29640,40 @@ func schema_apimachinery_apis_kubedb_v1alpha2_MSSQLServerTopology(ref common.Ref
 		},
 		Dependencies: []string{
 			"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.MSSQLServerAvailabilityGroupSpec"},
+	}
+}
+
+func schema_apimachinery_apis_kubedb_v1alpha2_ManifestOptions(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"archiver": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Archiver specifies whether to restore the Archiver manifest or not",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"archiverRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ArchiverRef specifies the new name and namespace of the Archiver yaml after restore",
+							Ref:         ref("kmodules.xyz/client-go/api/v1.ObjectReference"),
+						},
+					},
+					"initScript": {
+						SchemaProps: spec.SchemaProps{
+							Description: "InitScript specifies whether to restore the InitScript or not",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"kmodules.xyz/client-go/api/v1.ObjectReference"},
 	}
 }
 
