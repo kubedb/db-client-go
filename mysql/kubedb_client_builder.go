@@ -176,6 +176,18 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 			err = sql_driver.RegisterTLSConfig(kubedb.MySQLTLSConfigCustom, &tls.Config{
 				RootCAs:      certPool,
 				Certificates: clientCert,
+				// MinVersion:   tls.VersionTLS11,
+				// MaxVersion:   tls.VersionTLS12,
+				// in go version 1.22, some ciperSuits are removed, thats why tls for mysql 5.7.44 or less won't work,
+				// we need to add these ciperSuits to make working tls mysql 5.7.x
+				// ref: https://www.skeema.io/blog/2025/02/06/mysql57-golang-ssl
+				CipherSuites: []uint16{
+					// These 4 use RSA key exchange and were removed from the Go 1.22+ default list
+					tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
+					tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+					tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+					tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+				},
 			})
 			if err != nil {
 				return "", err
