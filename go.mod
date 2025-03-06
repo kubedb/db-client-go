@@ -27,12 +27,13 @@ require (
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/redis/go-redis/v9 v9.5.1
 	go.mongodb.org/mongo-driver v1.14.0
+	go.virtual-secrets.dev/operator v0.0.1
 	k8s.io/api v0.30.3
 	k8s.io/apimachinery v0.30.3
 	k8s.io/klog/v2 v2.130.1
 	kmodules.xyz/client-go v0.30.45
 	kmodules.xyz/custom-resources v0.30.0
-	kubedb.dev/apimachinery v0.52.0
+	kubedb.dev/apimachinery v0.52.1-0.20250305152532-eefd8da596cc
 	sigs.k8s.io/controller-runtime v0.18.4
 	xorm.io/xorm v1.3.6
 )

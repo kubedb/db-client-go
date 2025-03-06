@@ -19,12 +19,17 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"encoding/base64"
 	"errors"
 	"fmt"
-
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 
+	vsapi "go.virtual-secrets.dev/operator/apis/virtual-secrets/v1alpha1"
 	core "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/klog/v2"
 	"kmodules.xyz/client-go/tools/certholder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -42,6 +47,7 @@ type KubeDBClientBuilder struct {
 	podName    string
 	postgresDB string
 	ctx        context.Context
+	dc         dynamic.Interface
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *dbapi.Postgres) *KubeDBClientBuilder {
@@ -68,6 +74,11 @@ func (o *KubeDBClientBuilder) WithPostgresDB(pgDB string) *KubeDBClientBuilder {
 
 func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
 	o.ctx = ctx
+	return o
+}
+
+func (o *KubeDBClientBuilder) WithDynamicClient(dc dynamic.Interface) *KubeDBClientBuilder {
+	o.dc = dc
 	return o
 }
 
@@ -100,12 +111,47 @@ func (o *KubeDBClientBuilder) getPostgresAuthCredentials() (string, string, erro
 	if o.db.Spec.AuthSecret == nil {
 		return "", "", errors.New("no database secret")
 	}
-	var secret core.Secret
-	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.AuthSecret.Name}, &secret)
-	if err != nil {
-		return "", "", err
+
+	var username, password string
+
+	if o.db.Spec.AuthSecret.Group == vsapi.GroupName {
+		vs, err := o.dc.Resource(schema.GroupVersionResource{
+			Group:    vsapi.GroupVersion.Group,
+			Version:  vsapi.GroupVersion.Version,
+			Resource: vsapi.ResourceSecrets,
+		}).Namespace(o.db.Namespace).Get(context.TODO(), o.db.Spec.AuthSecret.Name, metav1.GetOptions{})
+		if err != nil {
+			return "", "", err
+		}
+		var vSecret vsapi.Secret
+		if vs != nil {
+			err = runtime.DefaultUnstructuredConverter.FromUnstructured(vs.UnstructuredContent(), &vSecret)
+			if err != nil {
+				return "", "", err
+			}
+		}
+
+		un, err := base64.StdEncoding.DecodeString(string(vSecret.Data["username"]))
+		if err != nil {
+			return "", "", err
+		}
+		pass, err := base64.StdEncoding.DecodeString(string(vSecret.Data["password"]))
+		if err != nil {
+			return "", "", err
+		}
+		username = string(un)
+		password = string(pass)
+	} else {
+		var secret core.Secret
+		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.AuthSecret.Name}, &secret)
+		if err != nil {
+			return "", "", err
+		}
+		username = string(secret.Data[core.BasicAuthUsernameKey])
+		password = string(secret.Data[core.BasicAuthPasswordKey])
 	}
-	return string(secret.Data[core.BasicAuthUsernameKey]), string(secret.Data[core.BasicAuthPasswordKey]), nil
+
+	return username, password, nil
 }
 
 func (o *KubeDBClientBuilder) GetPostgresClient() (*Client, error) {
