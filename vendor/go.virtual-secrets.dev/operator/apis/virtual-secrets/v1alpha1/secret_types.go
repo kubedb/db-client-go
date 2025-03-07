@@ -28,6 +28,7 @@ const (
 )
 
 // +genclient
+// +k8s:openapi-gen=true
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Secret holds secret data of a certain type. The total bytes of the values in
@@ -35,7 +36,7 @@ const (
 type Secret struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard object's metadata.
-	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
+	// More meta: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
@@ -53,8 +54,19 @@ type Secret struct {
 	// +optional
 	Data map[string][]byte `json:"data,omitempty"`
 
+	// stringData allows specifying non-binary secret data in string form.
+	// It is provided as a write-only input field for convenience.
+	// All keys and values are merged into the data field on write, overwriting any existing values.
+	// The stringData field is never output when reading from the API.
+	// +k8s:conversion-gen=false
+	// +optional
+	StringData map[string]string `json:"stringData,omitempty" protobuf:"bytes,4,rep,name=stringData"`
+
+	// Name of the SecretSource object
+	SecretSource string `json:"secretSource,omitempty"`
+
 	// Used to facilitate programmatic handling of secret data.
-	// More info: https://kubernetes.io/docs/concepts/configuration/secret/#secret-types
+	// More meta: https://kubernetes.io/docs/concepts/configuration/secret/#secret-types
 	// +optional
 	Type core.SecretType `json:"type,omitempty"`
 }
@@ -65,12 +77,12 @@ type Secret struct {
 type SecretList struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata.
-	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+	// More meta: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
 	// +optional
 	metav1.ListMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	// Items is a list of secret objects.
-	// More info: https://kubernetes.io/docs/concepts/configuration/secret
+	// More meta: https://kubernetes.io/docs/concepts/configuration/secret
 	Items []Secret `json:"items" protobuf:"bytes,2,rep,name=items"`
 }
 

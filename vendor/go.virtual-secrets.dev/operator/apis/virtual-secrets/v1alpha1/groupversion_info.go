@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// +kubebuilder:object:generate=true
+// +groupName=virtual-secrets.dev
 package v1alpha1
 
 import (
@@ -26,6 +28,8 @@ const GroupName = "virtual-secrets.dev"
 var (
 	// GroupVersion is group version used to register these objects
 	GroupVersion = schema.GroupVersion{Group: GroupName, Version: "v1alpha1"}
+
+	InternalGV = schema.GroupVersion{Group: GroupName, Version: "__internal"}
 
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
 	SchemeBuilder = &scheme.Builder{GroupVersion: GroupVersion}

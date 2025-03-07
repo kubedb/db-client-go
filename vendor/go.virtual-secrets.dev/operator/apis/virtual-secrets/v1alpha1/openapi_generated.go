@@ -360,6 +360,8 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"kmodules.xyz/client-go/api/v1.CAPIClusterInfo":                            schema_kmodulesxyz_client_go_api_v1_CAPIClusterInfo(ref),
 		"kmodules.xyz/client-go/api/v1.CertificatePrivateKey":                      schema_kmodulesxyz_client_go_api_v1_CertificatePrivateKey(ref),
 		"kmodules.xyz/client-go/api/v1.CertificateSpec":                            schema_kmodulesxyz_client_go_api_v1_CertificateSpec(ref),
+		"kmodules.xyz/client-go/api/v1.ClusterClaimFeatures":                       schema_kmodulesxyz_client_go_api_v1_ClusterClaimFeatures(ref),
+		"kmodules.xyz/client-go/api/v1.ClusterClaimInfo":                           schema_kmodulesxyz_client_go_api_v1_ClusterClaimInfo(ref),
 		"kmodules.xyz/client-go/api/v1.ClusterInfo":                                schema_kmodulesxyz_client_go_api_v1_ClusterInfo(ref),
 		"kmodules.xyz/client-go/api/v1.ClusterMetadata":                            schema_kmodulesxyz_client_go_api_v1_ClusterMetadata(ref),
 		"kmodules.xyz/client-go/api/v1.Condition":                                  schema_kmodulesxyz_client_go_api_v1_Condition(ref),
@@ -403,7 +405,7 @@ func schema_operator_apis_virtual_secrets_v1alpha1_Secret(ref common.ReferenceCa
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata",
+							Description: "Standard object's metadata. More meta: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata",
 							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
@@ -430,9 +432,32 @@ func schema_operator_apis_virtual_secrets_v1alpha1_Secret(ref common.ReferenceCa
 							},
 						},
 					},
+					"stringData": {
+						SchemaProps: spec.SchemaProps{
+							Description: "stringData allows specifying non-binary secret data in string form. It is provided as a write-only input field for convenience. All keys and values are merged into the data field on write, overwriting any existing values. The stringData field is never output when reading from the API.",
+							Type:        []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"secretSource": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name of the SecretSource object",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"type": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Used to facilitate programmatic handling of secret data. More info: https://kubernetes.io/docs/concepts/configuration/secret/#secret-types",
+							Description: "Used to facilitate programmatic handling of secret data. More meta: https://kubernetes.io/docs/concepts/configuration/secret/#secret-types",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -468,14 +493,14 @@ func schema_operator_apis_virtual_secrets_v1alpha1_SecretList(ref common.Referen
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Standard list metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Description: "Standard list metadata. More meta: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
 							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
 						},
 					},
 					"items": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Items is a list of secret objects. More info: https://kubernetes.io/docs/concepts/configuration/secret",
+							Description: "Items is a list of secret objects. More meta: https://kubernetes.io/docs/concepts/configuration/secret",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -18599,7 +18624,7 @@ func schema_kmodulesxyz_client_go_api_v1_CertificateSpec(ref common.ReferenceCal
 					},
 					"renewBefore": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Certificate renew before expiration duration",
+							Description: "Certificate renew before expiration duration\n\nDeprecated use `ReconfigureTLS` type OpsRequest instead.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
@@ -18678,6 +18703,81 @@ func schema_kmodulesxyz_client_go_api_v1_CertificateSpec(ref common.ReferenceCal
 	}
 }
 
+func schema_kmodulesxyz_client_go_api_v1_ClusterClaimFeatures(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"enabledFeatures": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"externallyManagedFeatures": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"disabledFeatures": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schema_kmodulesxyz_client_go_api_v1_ClusterClaimInfo(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"clusterMetadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("kmodules.xyz/client-go/api/v1.ClusterInfo"),
+						},
+					},
+				},
+				Required: []string{"clusterMetadata"},
+			},
+		},
+		Dependencies: []string{
+			"kmodules.xyz/client-go/api/v1.ClusterInfo"},
+	}
+}
+
 func schema_kmodulesxyz_client_go_api_v1_ClusterInfo(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -18715,8 +18815,7 @@ func schema_kmodulesxyz_client_go_api_v1_ClusterInfo(ref common.ReferenceCallbac
 					},
 					"capi": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("kmodules.xyz/client-go/api/v1.CAPIClusterInfo"),
+							Ref: ref("kmodules.xyz/client-go/api/v1.CAPIClusterInfo"),
 						},
 					},
 				},
@@ -18778,6 +18877,18 @@ func schema_kmodulesxyz_client_go_api_v1_ClusterMetadata(ref common.ReferenceCal
 						},
 					},
 					"caBundle": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"managerID": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"hubClusterID": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",

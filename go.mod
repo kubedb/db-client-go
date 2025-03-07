@@ -27,13 +27,14 @@ require (
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/redis/go-redis/v9 v9.5.1
 	go.mongodb.org/mongo-driver v1.14.0
-	go.virtual-secrets.dev/operator v0.0.1
+	go.virtual-secrets.dev/operator v0.0.2-0.20250307121340-bf8da0d38213
 	k8s.io/api v0.30.3
 	k8s.io/apimachinery v0.30.3
+	k8s.io/client-go v0.30.3
 	k8s.io/klog/v2 v2.130.1
 	kmodules.xyz/client-go v0.30.45
 	kmodules.xyz/custom-resources v0.30.0
-	kubedb.dev/apimachinery v0.52.1-0.20250305152532-eefd8da596cc
+	kubedb.dev/apimachinery v0.52.1-0.20250307145750-845b4ca2a416
 	sigs.k8s.io/controller-runtime v0.18.4
 	xorm.io/xorm v1.3.6
 )
@@ -139,7 +140,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiextensions-apiserver v0.30.2 // indirect
-	k8s.io/client-go v0.30.3 // indirect
 	k8s.io/component-base v0.30.2 // indirect
 	k8s.io/kube-openapi v0.0.0-20240726031636-6f6746feab9c // indirect
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8 // indirect
