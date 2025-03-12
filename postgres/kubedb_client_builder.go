@@ -25,7 +25,7 @@ import (
 
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 
-	vsapi "go.virtual-secrets.dev/operator/apis/virtual-secrets/v1alpha1"
+	vsecretapi "go.virtual-secrets.dev/apimachinery/apis/virtual/v1alpha1"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -115,16 +115,16 @@ func (o *KubeDBClientBuilder) getPostgresAuthCredentials() (string, string, erro
 
 	var username, password string
 
-	if o.db.Spec.AuthSecret.Group == vsapi.GroupName {
+	if dbapi.IsVirtualAuthSecretReferred(o.db.Spec.AuthSecret) {
 		vs, err := o.dc.Resource(schema.GroupVersionResource{
-			Group:    vsapi.GroupVersion.Group,
-			Version:  vsapi.GroupVersion.Version,
-			Resource: vsapi.ResourceSecrets,
+			Group:    vsecretapi.SchemeGroupVersion.Group,
+			Version:  vsecretapi.SchemeGroupVersion.Version,
+			Resource: vsecretapi.ResourceSecrets,
 		}).Namespace(o.db.Namespace).Get(context.TODO(), o.db.Spec.AuthSecret.Name, metav1.GetOptions{})
 		if err != nil {
 			return "", "", err
 		}
-		var vSecret vsapi.Secret
+		var vSecret vsecretapi.Secret
 		if vs != nil {
 			err = runtime.DefaultUnstructuredConverter.FromUnstructured(vs.UnstructuredContent(), &vSecret)
 			if err != nil {
@@ -132,11 +132,11 @@ func (o *KubeDBClientBuilder) getPostgresAuthCredentials() (string, string, erro
 			}
 		}
 
-		un, err := base64.StdEncoding.DecodeString(string(vSecret.Data["username"]))
+		un, err := base64.StdEncoding.DecodeString(string(vSecret.Data[core.BasicAuthUsernameKey]))
 		if err != nil {
 			return "", "", err
 		}
-		pass, err := base64.StdEncoding.DecodeString(string(vSecret.Data["password"]))
+		pass, err := base64.StdEncoding.DecodeString(string(vSecret.Data[core.BasicAuthPasswordKey]))
 		if err != nil {
 			return "", "", err
 		}
