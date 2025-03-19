@@ -1437,6 +1437,9 @@ const (
 	EnvFerretDBKeyPath   = "FERRETDB_LISTEN_TLS_KEY_FILE"
 	EnvFerretDBDebugAddr = "FERRETDB_DEBUG_ADDR"
 
+	FerretDBDatabasePortName       = "db"
+	FerretDBPrimaryServicePortName = "primary"
+
 	FerretDBContainerName = "ferretdb"
 	FerretDBMainImage     = "ghcr.io/ferretdb/ferretdb"
 	FerretDBUser          = "postgres"
@@ -1451,6 +1454,16 @@ const (
 
 	FerretDBMetricsPath     = "/debug/metrics"
 	FerretDBMetricsPortName = "metrics"
+
+	FerretDBServerTypePrimary   = "primary"
+	FerretDBServerTypeSecondary = "secondary"
+
+	FerretDBPrimaryLabelKey   = "ferretdb.kubedb.com/server.primary"
+	FerretDBSecondaryLabelKey = "ferretdb.kubedb.com/server.secondary"
+
+	FerretDBBackendInitShellFile = "data.sh"
+	FerretDBBackendInitSqlFile   = "data.sql"
+	FerretDBBackendConfigFile    = "user.conf"
 )
 
 // =========================== ClickHouse Constants ============================

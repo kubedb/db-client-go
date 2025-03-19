@@ -19,7 +19,6 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"encoding/base64"
 	"errors"
 	"fmt"
 
@@ -132,16 +131,8 @@ func (o *KubeDBClientBuilder) getPostgresAuthCredentials() (string, string, erro
 			}
 		}
 
-		un, err := base64.StdEncoding.DecodeString(string(vSecret.Data[core.BasicAuthUsernameKey]))
-		if err != nil {
-			return "", "", err
-		}
-		pass, err := base64.StdEncoding.DecodeString(string(vSecret.Data[core.BasicAuthPasswordKey]))
-		if err != nil {
-			return "", "", err
-		}
-		username = string(un)
-		password = string(pass)
+		username = string(vSecret.Data[core.BasicAuthUsernameKey])
+		password = string(vSecret.Data[core.BasicAuthPasswordKey])
 	} else {
 		var secret core.Secret
 		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.AuthSecret.Name}, &secret)
