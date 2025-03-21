@@ -20,12 +20,23 @@ github.com/ClickHouse/clickhouse-go/v2/resources
 # github.com/IBM/sarama v1.42.1
 ## explicit; go 1.17
 github.com/IBM/sarama
+# github.com/Masterminds/semver v1.4.2
+## explicit
+github.com/Masterminds/semver
 # github.com/Masterminds/semver/v3 v3.3.1
 ## explicit; go 1.21
 github.com/Masterminds/semver/v3
 # github.com/Shopify/zk v1.0.12
 ## explicit; go 1.22
 github.com/Shopify/zk
+# github.com/amsokol/ignite-go-client v0.12.2
+## explicit
+github.com/amsokol/ignite-go-client/binary/errors
+github.com/amsokol/ignite-go-client/binary/v1
+github.com/amsokol/ignite-go-client/debug
+github.com/amsokol/ignite-go-client/sql
+github.com/amsokol/ignite-go-client/sql/common
+github.com/amsokol/ignite-go-client/sql/v1
 # github.com/andybalholm/brotli v1.1.0
 ## explicit; go 1.13
 github.com/andybalholm/brotli
@@ -888,9 +899,6 @@ github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/klauspost/cpuid/v2 v2.0.9
 ## explicit; go 1.13
 github.com/klauspost/cpuid/v2
-# github.com/kubedb/gomemcache v0.0.0-20240930104810-7694d68c3e21
-## explicit; go 1.22.1
-github.com/kubedb/gomemcache/memcache
 # github.com/lib/pq v1.10.7
 ## explicit; go 1.13
 github.com/lib/pq
@@ -1639,7 +1647,7 @@ k8s.io/klog/v2/internal/dbg
 k8s.io/klog/v2/internal/serialize
 k8s.io/klog/v2/internal/severity
 k8s.io/klog/v2/internal/sloghandler
-# k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff
+# k8s.io/kube-openapi v0.0.0-20250318172550-b98be4ee1595
 ## explicit; go 1.21
 k8s.io/kube-openapi/pkg/cached
 k8s.io/kube-openapi/pkg/common
@@ -1691,7 +1699,7 @@ kmodules.xyz/offshoot-api/api/v1
 kmodules.xyz/offshoot-api/api/v1/conversion
 kmodules.xyz/offshoot-api/api/v2
 kmodules.xyz/offshoot-api/util
-# kubedb.dev/apimachinery v0.53.1-0.20250325061150-ba449cf3bc49
+# kubedb.dev/apimachinery v0.53.0-rc.1
 ## explicit; go 1.23.0
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog

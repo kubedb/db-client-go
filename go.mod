@@ -9,6 +9,7 @@ require (
 	github.com/IBM/sarama v1.42.1
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/Shopify/zk v1.0.12
+	github.com/amsokol/ignite-go-client v0.12.2
 	github.com/elastic/go-elasticsearch/v5 v5.6.1
 	github.com/elastic/go-elasticsearch/v6 v6.8.10
 	github.com/elastic/go-elasticsearch/v7 v7.15.1
@@ -35,7 +36,7 @@ require (
 	k8s.io/klog/v2 v2.130.1
 	kmodules.xyz/client-go v0.32.1
 	kmodules.xyz/custom-resources v0.32.0
-	kubedb.dev/apimachinery v0.53.1-0.20250325061150-ba449cf3bc49
+	kubedb.dev/apimachinery v0.53.0-rc.1
 	sigs.k8s.io/controller-runtime v0.20.3
 	xorm.io/xorm v1.3.6
 )
@@ -43,6 +44,7 @@ require (
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/ClickHouse/ch-go v0.61.5 // indirect
+	github.com/Masterminds/semver v1.4.2 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cert-manager/cert-manager v1.17.1 // indirect
