@@ -21,11 +21,13 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"kubedb.dev/apimachinery/apis/kubedb"
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 
 	"github.com/kubedb/gomemcache/memcache"
@@ -67,12 +69,7 @@ func (o *KubeDBClientBuilder) GetMemcachedClient(ctx context.Context) (*Client, 
 	mcClient := memcache.New(o.db.Address())
 	if o.db.Spec.TLS != nil {
 		// Secret for Memcached Client Certs
-		secret := &core.Secret{}
-
-		err := o.kc.Get(ctx, types.NamespacedName{
-			Namespace: o.db.Namespace,
-			Name:      o.db.GetMemcachedAuthSecretName(),
-		}, secret)
+		secret, err := o.GetSecret(ctx)
 		if err != nil {
 			klog.Error(err, "Failed to get auth-secret")
 			return nil, errors.New("secret is not found")
@@ -109,4 +106,47 @@ func (o *KubeDBClientBuilder) GetMemcachedClient(ctx context.Context) (*Client, 
 	return &Client{
 		mcClient,
 	}, nil
+}
+
+func (o *KubeDBClientBuilder) SetAuth(ctx context.Context) error {
+	secret, err := o.GetSecret(ctx)
+	if err != nil {
+		return err
+	}
+
+	authData := string(secret.Data[kubedb.AuthDataKey])
+	separatePairs := strings.Split(authData, "\n")
+	usernamePasswordPairs := separatePairs[0]
+
+	splitUsernamePassword := strings.Split(usernamePasswordPairs, ":")
+	memcachedUserName, memcachedPassword := strings.TrimSpace(splitUsernamePassword[0]), strings.TrimSpace(splitUsernamePassword[1])
+
+	mcClient, err := o.GetMemcachedClient(ctx)
+	if err != nil {
+		klog.Error(err, "Failed to create Memcached client")
+		return err
+	}
+	err = mcClient.SetAuth(&memcache.Item{
+		Key: kubedb.MemcachedHealthKey, Flags: 0, Expiration: 0, User: memcachedUserName, Pass: memcachedPassword,
+	})
+	if err != nil {
+		klog.Errorf("Authentication Error: %v", err.Error())
+	} else {
+		klog.V(5).Infof("Authentication Done Successfully !!...")
+	}
+	return nil
+}
+
+func (o *KubeDBClientBuilder) GetSecret(ctx context.Context) (*core.Secret, error) {
+	secret := &core.Secret{}
+
+	err := o.kc.Get(ctx, types.NamespacedName{
+		Namespace: o.db.Namespace,
+		Name:      o.db.GetMemcachedAuthSecretName(),
+	}, secret)
+	if err != nil {
+		klog.Error(err, "Failed to get auth-secret")
+		return nil, errors.New("secret is not found")
+	}
+	return secret, nil
 }
