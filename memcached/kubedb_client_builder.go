@@ -108,7 +108,7 @@ func (o *KubeDBClientBuilder) GetMemcachedClient(ctx context.Context) (*Client, 
 	}, nil
 }
 
-func (o *KubeDBClientBuilder) SetAuth(ctx context.Context) error {
+func (o *KubeDBClientBuilder) SetAuth(ctx context.Context, mcClient *Client) error {
 	secret, err := o.GetSecret(ctx)
 	if err != nil {
 		return err
@@ -121,11 +121,6 @@ func (o *KubeDBClientBuilder) SetAuth(ctx context.Context) error {
 	splitUsernamePassword := strings.Split(usernamePasswordPairs, ":")
 	memcachedUserName, memcachedPassword := strings.TrimSpace(splitUsernamePassword[0]), strings.TrimSpace(splitUsernamePassword[1])
 
-	mcClient, err := o.GetMemcachedClient(ctx)
-	if err != nil {
-		klog.Error(err, "Failed to create Memcached client")
-		return err
-	}
 	err = mcClient.SetAuth(&memcache.Item{
 		Key: kubedb.MemcachedHealthKey, Flags: 0, Expiration: 0, User: memcachedUserName, Pass: memcachedPassword,
 	})
