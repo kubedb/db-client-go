@@ -18,6 +18,7 @@ require (
 	github.com/go-sql-driver/mysql v1.9.0
 	github.com/gocql/gocql v1.6.0
 	github.com/grafadruid/go-druid v0.0.6
+	github.com/kubedb/gomemcache v0.0.0-20240930104810-7694d68c3e21
 	github.com/lib/pq v1.10.7
 	github.com/michaelklishin/rabbit-hole/v3 v3.1.0
 	github.com/microsoft/go-mssqldb v1.6.0
@@ -34,7 +35,7 @@ require (
 	k8s.io/klog/v2 v2.130.1
 	kmodules.xyz/client-go v0.32.1
 	kmodules.xyz/custom-resources v0.32.0
-	kubedb.dev/apimachinery v0.53.0
+	kubedb.dev/apimachinery v0.53.0-rc.1.0.20250323010024-b7bdda585fd4
 	sigs.k8s.io/controller-runtime v0.20.3
 	xorm.io/xorm v1.3.6
 )

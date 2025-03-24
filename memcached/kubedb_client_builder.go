@@ -1,0 +1,112 @@
+/*
+Copyright AppsCode Inc. and Contributors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package memcached
+
+import (
+	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"net"
+	"time"
+
+	"github.com/pkg/errors"
+	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
+
+	"github.com/kubedb/gomemcache/memcache"
+	"k8s.io/klog/v2"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+type KubeDBClientBuilder struct {
+	kc       client.Client
+	db       *dbapi.Memcached
+	podName  string
+	url      string
+	database int
+}
+
+func NewKubeDBClientBuilder(kc client.Client, db *dbapi.Memcached) *KubeDBClientBuilder {
+	return &KubeDBClientBuilder{
+		kc: kc,
+		db: db,
+	}
+}
+
+func (o *KubeDBClientBuilder) WithPod(podName string) *KubeDBClientBuilder {
+	o.podName = podName
+	return o
+}
+
+func (o *KubeDBClientBuilder) WithURL(url string) *KubeDBClientBuilder {
+	o.url = url
+	return o
+}
+
+func (o *KubeDBClientBuilder) WithDatabase(database int) *KubeDBClientBuilder {
+	o.database = database
+	return o
+}
+
+func (o *KubeDBClientBuilder) GetMemcachedClient(ctx context.Context) (*Client, error) {
+	mcClient := memcache.New(o.db.Address())
+	if o.db.Spec.TLS != nil {
+		// Secret for Memcached Client Certs
+		secret := &core.Secret{}
+
+		err := o.kc.Get(ctx, types.NamespacedName{
+			Namespace: o.db.Namespace,
+			Name:      o.db.GetMemcachedAuthSecretName(),
+		}, secret)
+		if err != nil {
+			klog.Error(err, "Failed to get auth-secret")
+			return nil, errors.New("secret is not found")
+		}
+
+		caCert := secret.Data["ca.crt"]
+		clientCert := secret.Data["tls.crt"]
+		clientKey := secret.Data["tls.key"]
+
+		caCertPool := x509.NewCertPool()
+		if ok := caCertPool.AppendCertsFromPEM(caCert); !ok {
+			klog.Infoln("Failed to append CA certificate to the pool")
+		}
+
+		// Load client certificate
+		clientCertificate, err := tls.X509KeyPair(clientCert, clientKey)
+		if err != nil {
+			klog.Errorf("Failed to load client certificate: %v", err)
+		}
+		// Create TLS configuration
+		tlsConfig := &tls.Config{
+			Certificates:       []tls.Certificate{clientCertificate},
+			RootCAs:            caCertPool,
+			InsecureSkipVerify: false, // Ensure server's cert is verified
+		}
+		// Override the dialer to use TLS by setting the DialContext function
+		mcClient.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			return tls.DialWithDialer(&net.Dialer{
+				Timeout: 10 * time.Second,
+			}, "tcp", o.db.Address(), tlsConfig)
+		}
+	}
+
+	return &Client{
+		mcClient,
+	}, nil
+}
