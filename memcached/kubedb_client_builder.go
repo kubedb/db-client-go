@@ -26,7 +26,8 @@ import (
 
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"kubedb.dev/apimachinery/apis/kubedb"
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 
@@ -37,6 +38,7 @@ import (
 
 type KubeDBClientBuilder struct {
 	kc       client.Client
+	Client   kubernetes.Interface
 	db       *dbapi.Memcached
 	podName  string
 	url      string
@@ -65,11 +67,11 @@ func (o *KubeDBClientBuilder) WithDatabase(database int) *KubeDBClientBuilder {
 	return o
 }
 
-func (o *KubeDBClientBuilder) GetMemcachedClient(ctx context.Context) (*Client, error) {
+func (o *KubeDBClientBuilder) GetMemcachedClient() (*Client, error) {
 	mcClient := memcache.New(o.db.Address())
 	if o.db.Spec.TLS != nil {
 		// Secret for Memcached Client Certs
-		secret, err := o.GetSecret(ctx)
+		secret, err := o.GetSecret()
 		if err != nil {
 			klog.Error(err, "Failed to get auth-secret")
 			return nil, errors.New("secret is not found")
@@ -108,8 +110,8 @@ func (o *KubeDBClientBuilder) GetMemcachedClient(ctx context.Context) (*Client, 
 	}, nil
 }
 
-func (o *KubeDBClientBuilder) SetAuth(ctx context.Context, mcClient *Client) error {
-	secret, err := o.GetSecret(ctx)
+func (o *KubeDBClientBuilder) SetAuth(mcClient *Client) error {
+	secret, err := o.GetSecret()
 	if err != nil {
 		return err
 	}
@@ -120,6 +122,7 @@ func (o *KubeDBClientBuilder) SetAuth(ctx context.Context, mcClient *Client) err
 
 	splitUsernamePassword := strings.Split(usernamePasswordPairs, ":")
 	memcachedUserName, memcachedPassword := strings.TrimSpace(splitUsernamePassword[0]), strings.TrimSpace(splitUsernamePassword[1])
+	klog.Infof("memcached username and password: %s %s", memcachedUserName, memcachedPassword)
 
 	err = mcClient.SetAuth(&memcache.Item{
 		Key: kubedb.MemcachedHealthKey, Flags: 0, Expiration: 0, User: memcachedUserName, Pass: memcachedPassword,
@@ -132,16 +135,11 @@ func (o *KubeDBClientBuilder) SetAuth(ctx context.Context, mcClient *Client) err
 	return nil
 }
 
-func (o *KubeDBClientBuilder) GetSecret(ctx context.Context) (*core.Secret, error) {
-	secret := &core.Secret{}
-
-	err := o.kc.Get(ctx, types.NamespacedName{
-		Namespace: o.db.Namespace,
-		Name:      o.db.GetMemcachedAuthSecretName(),
-	}, secret)
+func (o *KubeDBClientBuilder) GetSecret() (*core.Secret, error) {
+	secretName := o.db.GetMemcachedAuthSecretName()
+	secret, err := o.Client.CoreV1().Secrets(o.db.Namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
 	if err != nil {
-		klog.Error(err, "Failed to get auth-secret")
-		return nil, errors.New("secret is not found")
+		return nil, err
 	}
 	return secret, nil
 }
