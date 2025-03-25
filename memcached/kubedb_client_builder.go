@@ -124,7 +124,6 @@ func (o *KubeDBClientBuilder) SetAuth(mcClient *Client) error {
 
 	splitUsernamePassword := strings.Split(usernamePasswordPairs, ":")
 	memcachedUserName, memcachedPassword := strings.TrimSpace(splitUsernamePassword[0]), strings.TrimSpace(splitUsernamePassword[1])
-	klog.Infof("memcached username and password: %s %s", memcachedUserName, memcachedPassword)
 
 	err = mcClient.SetAuth(&memcache.Item{
 		Key: kubedb.MemcachedHealthKey, Flags: 0, Expiration: 0, User: memcachedUserName, Pass: memcachedPassword,
