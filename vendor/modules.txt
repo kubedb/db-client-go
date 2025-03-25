@@ -888,6 +888,9 @@ github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/klauspost/cpuid/v2 v2.0.9
 ## explicit; go 1.13
 github.com/klauspost/cpuid/v2
+# github.com/kubedb/gomemcache v0.0.0-20240930104810-7694d68c3e21
+## explicit; go 1.22.1
+github.com/kubedb/gomemcache/memcache
 # github.com/lib/pq v1.10.7
 ## explicit; go 1.13
 github.com/lib/pq
@@ -1688,7 +1691,7 @@ kmodules.xyz/offshoot-api/api/v1
 kmodules.xyz/offshoot-api/api/v1/conversion
 kmodules.xyz/offshoot-api/api/v2
 kmodules.xyz/offshoot-api/util
-# kubedb.dev/apimachinery v0.53.0
+# kubedb.dev/apimachinery v0.53.1-0.20250325061150-ba449cf3bc49
 ## explicit; go 1.23.0
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog
