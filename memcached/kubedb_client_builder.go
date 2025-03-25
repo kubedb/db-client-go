@@ -27,18 +27,17 @@ import (
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/kubernetes"
 	"kubedb.dev/apimachinery/apis/kubedb"
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 
 	"github.com/kubedb/gomemcache/memcache"
 	"k8s.io/klog/v2"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type KubeDBClientBuilder struct {
 	kc       client.Client
-	Client   kubernetes.Interface
 	db       *dbapi.Memcached
 	podName  string
 	url      string
@@ -71,14 +70,14 @@ func (o *KubeDBClientBuilder) GetMemcachedClient() (*Client, error) {
 	mcClient := memcache.New(o.db.Address())
 	if o.db.Spec.TLS != nil {
 		// Secret for Memcached Client Certs
-		secret, err := o.GetSecret()
+		secret, err := o.GetTLSSecret()
 		if err != nil {
-			klog.Error(err, "Failed to get auth-secret")
-			return nil, errors.New("secret is not found")
+			klog.Error(err, "Failed to get TLS-secret")
+			return nil, err
 		}
 
 		if secret.Data["ca.crt"] == nil || secret.Data["tls.crt"] == nil || secret.Data["tls.key"] == nil {
-			return nil, errors.New("invalid auth-secret. Certificates not found.")
+			return nil, errors.New("invalid tls-secret.")
 		}
 
 		caCert := secret.Data["ca.crt"]
@@ -87,7 +86,7 @@ func (o *KubeDBClientBuilder) GetMemcachedClient() (*Client, error) {
 
 		caCertPool := x509.NewCertPool()
 		if ok := caCertPool.AppendCertsFromPEM(caCert); !ok {
-			klog.Infoln("Failed to append CA certificate to the pool")
+			klog.Errorf("Failed to append CA certificate to the pool")
 		}
 
 		// Load client certificate
@@ -123,9 +122,9 @@ func (o *KubeDBClientBuilder) SetAuth(mcClient *Client) error {
 
 	authData := string(secret.Data[kubedb.AuthDataKey])
 	separatePairs := strings.Split(authData, "\n")
-	usernamePasswordPair := separatePairs[0]
+	firstUsernamePassPair := separatePairs[0]
 
-	splitUsernamePassword := strings.Split(usernamePasswordPair, ":")
+	splitUsernamePassword := strings.Split(firstUsernamePassPair, ":")
 	memcachedUserName, memcachedPassword := strings.TrimSpace(splitUsernamePassword[0]), strings.TrimSpace(splitUsernamePassword[1])
 
 	err = mcClient.SetAuth(&memcache.Item{
@@ -149,4 +148,16 @@ func (o *KubeDBClientBuilder) GetSecret() (*core.Secret, error) {
 		return nil, err
 	}
 	return &authSecret, nil
+}
+
+func (o *KubeDBClientBuilder) GetTLSSecret() (*core.Secret, error) {
+	var tlsSecret core.Secret
+	err := o.kc.Get(context.TODO(), types.NamespacedName{
+		Name:      o.db.GetCertSecretName(api.MemcachedClientCert),
+		Namespace: o.db.Namespace,
+	}, &tlsSecret)
+	if err != nil {
+		return nil, err
+	}
+	return &tlsSecret, nil
 }
