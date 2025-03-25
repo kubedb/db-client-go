@@ -1699,7 +1699,7 @@ kmodules.xyz/offshoot-api/api/v1
 kmodules.xyz/offshoot-api/api/v1/conversion
 kmodules.xyz/offshoot-api/api/v2
 kmodules.xyz/offshoot-api/util
-# kubedb.dev/apimachinery v0.53.1-0.20250325060121-225e6b62e2e8
+# kubedb.dev/apimachinery v0.53.1-0.20250325091641-8d22fe1e6ed9
 ## explicit; go 1.23.0
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog
