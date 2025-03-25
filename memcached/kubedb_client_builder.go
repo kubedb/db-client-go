@@ -140,13 +140,13 @@ func (o *KubeDBClientBuilder) SetAuth(mcClient *Client) error {
 }
 
 func (o *KubeDBClientBuilder) GetSecret() (*core.Secret, error) {
-	var authSecret *core.Secret
+	var authSecret core.Secret
 	err := o.kc.Get(context.TODO(), types.NamespacedName{
 		Name:      o.db.GetMemcachedAuthSecretName(),
 		Namespace: o.db.Namespace,
-	}, authSecret)
+	}, &authSecret)
 	if err != nil {
 		return nil, err
 	}
-	return authSecret, nil
+	return &authSecret, nil
 }
