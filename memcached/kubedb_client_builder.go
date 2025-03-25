@@ -123,9 +123,9 @@ func (o *KubeDBClientBuilder) SetAuth(mcClient *Client) error {
 
 	authData := string(secret.Data[kubedb.AuthDataKey])
 	separatePairs := strings.Split(authData, "\n")
-	usernamePasswordPairs := separatePairs[0]
+	usernamePasswordPair := separatePairs[0]
 
-	splitUsernamePassword := strings.Split(usernamePasswordPairs, ":")
+	splitUsernamePassword := strings.Split(usernamePasswordPair, ":")
 	memcachedUserName, memcachedPassword := strings.TrimSpace(splitUsernamePassword[0]), strings.TrimSpace(splitUsernamePassword[1])
 
 	err = mcClient.SetAuth(&memcache.Item{
@@ -146,7 +146,6 @@ func (o *KubeDBClientBuilder) GetSecret() (*core.Secret, error) {
 		Namespace: o.db.Namespace,
 	}, authSecret)
 	if err != nil {
-		klog.Errorf("Get Secret Error: %v", err.Error())
 		return nil, err
 	}
 	return authSecret, nil
