@@ -45,10 +45,11 @@ type KubeDBClientBuilder struct {
 	database int
 }
 
-func NewKubeDBClientBuilder(kc client.Client, db *dbapi.Memcached) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, client kubernetes.Interface, db *dbapi.Memcached) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
-		kc: kc,
-		db: db,
+		kc:     kc,
+		Client: client,
+		db:     db,
 	}
 }
 
@@ -113,7 +114,8 @@ func (o *KubeDBClientBuilder) GetMemcachedClient() (*Client, error) {
 func (o *KubeDBClientBuilder) SetAuth(mcClient *Client) error {
 	secret, err := o.GetSecret()
 	if err != nil {
-		return err
+		klog.Error(err, "Failed to get auth-secret")
+		return errors.New("secret is not found")
 	}
 
 	authData := string(secret.Data[kubedb.AuthDataKey])
@@ -139,6 +141,7 @@ func (o *KubeDBClientBuilder) GetSecret() (*core.Secret, error) {
 	secretName := o.db.GetMemcachedAuthSecretName()
 	secret, err := o.Client.CoreV1().Secrets(o.db.Namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
 	if err != nil {
+		klog.Errorf("Get Secret Error: %v", err.Error())
 		return nil, err
 	}
 	return secret, nil
