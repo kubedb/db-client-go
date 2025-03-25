@@ -26,7 +26,7 @@ import (
 
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"kubedb.dev/apimachinery/apis/kubedb"
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
@@ -45,11 +45,10 @@ type KubeDBClientBuilder struct {
 	database int
 }
 
-func NewKubeDBClientBuilder(kc client.Client, client kubernetes.Interface, db *dbapi.Memcached) *KubeDBClientBuilder {
+func NewKubeDBClientBuilder(kc client.Client, db *dbapi.Memcached) *KubeDBClientBuilder {
 	return &KubeDBClientBuilder{
-		kc:     kc,
-		Client: client,
-		db:     db,
+		kc: kc,
+		db: db,
 	}
 }
 
@@ -76,6 +75,10 @@ func (o *KubeDBClientBuilder) GetMemcachedClient() (*Client, error) {
 		if err != nil {
 			klog.Error(err, "Failed to get auth-secret")
 			return nil, errors.New("secret is not found")
+		}
+
+		if secret.Data["ca.crt"] == nil || secret.Data["tls.crt"] == nil || secret.Data["tls.key"] == nil {
+			return nil, errors.New("invalid auth-secret. Certificates not found.")
 		}
 
 		caCert := secret.Data["ca.crt"]
@@ -137,11 +140,14 @@ func (o *KubeDBClientBuilder) SetAuth(mcClient *Client) error {
 }
 
 func (o *KubeDBClientBuilder) GetSecret() (*core.Secret, error) {
-	secretName := o.db.GetMemcachedAuthSecretName()
-	secret, err := o.Client.CoreV1().Secrets(o.db.Namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
+	var authSecret *core.Secret
+	err := o.kc.Get(context.TODO(), types.NamespacedName{
+		Name:      o.db.GetMemcachedAuthSecretName(),
+		Namespace: o.db.Namespace,
+	}, authSecret)
 	if err != nil {
 		klog.Errorf("Get Secret Error: %v", err.Error())
 		return nil, err
 	}
-	return secret, nil
+	return authSecret, nil
 }
