@@ -74,7 +74,7 @@ func (o *KubeDBClientBuilder) GetIgniteClient() (*Client, error) {
 
 	igniteConnectionInfo := ignite.ConnInfo{
 		Network: "tcp",
-		Host:    "localhost",
+		Host:    o.Address(),
 		Port:    10800,
 		Major:   1,
 		Minor:   1,
@@ -177,4 +177,8 @@ func (o *KubeDBClientBuilder) AlterUserPassword(sqlClient *sql.DB, password stri
 		return err
 	}
 	return nil
+}
+
+func (o *KubeDBClientBuilder) Address() string {
+	return fmt.Sprintf("%s.%s.svc:10800", o.db.ServiceName(), o.db.Namespace)
 }
