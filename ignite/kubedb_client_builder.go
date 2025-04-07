@@ -180,5 +180,5 @@ func (o *KubeDBClientBuilder) AlterUserPassword(sqlClient *sql.DB, password stri
 }
 
 func (o *KubeDBClientBuilder) Address() string {
-	return fmt.Sprintf("%s.%s.svc:10800", o.db.ServiceName(), o.db.Namespace)
+	return fmt.Sprintf("%s.%s.svc", o.db.ServiceName(), o.db.Namespace)
 }
