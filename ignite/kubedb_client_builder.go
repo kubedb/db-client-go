@@ -29,7 +29,6 @@ import (
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/klog/v2"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -93,16 +92,12 @@ func (o *KubeDBClientBuilder) GetIgniteClient() (*Client, error) {
 		igniteConnectionInfo.Password = password
 	}
 
-	fmt.Printf("igniteConnectionInfo: %v\n", igniteConnectionInfo)
-
 	igclient, err := ignite.Connect(igniteConnectionInfo)
 	if err != nil {
-		klog.Errorf("failed connect to server: %v", err)
+		o.log.Error(err, "failed connect to server: %v")
 		return &Client{
 			igclient,
 		}, err
-	} else {
-		klog.Infof("connected to server: %v", igclient)
 	}
 
 	return &Client{
@@ -141,7 +136,7 @@ func (o *KubeDBClientBuilder) getUsernamePassword() (error, string, string) {
 		Name:      o.db.GetAuthSecretName(),
 	}, authSecret)
 	if err != nil {
-		klog.Error(err, "Failed to get auth-secret")
+		o.log.Error(err, "Failed to get auth-secret")
 		return errors.New("auth-secret is not found"), "", ""
 	}
 
@@ -152,11 +147,11 @@ func (o *KubeDBClientBuilder) CreateCache(cacheName string) error {
 	// create cache
 	db, err := NewKubeDBClientBuilder(o.kc, o.db).GetIgniteClient()
 	if err != nil {
-		klog.Errorf("Failed to get ignite client: %v", err)
+		o.log.Error(err, "Failed to get ignite client: %v")
 		return err
 	}
 	if err := db.CacheCreateWithName(cacheName); err != nil {
-		klog.Errorf("failed to create cache: %v", err)
+		o.log.Error(err, "failed to create cache: %v")
 		return err
 	}
 	return nil
@@ -164,7 +159,7 @@ func (o *KubeDBClientBuilder) CreateCache(cacheName string) error {
 
 func (o *KubeDBClientBuilder) Ping(sqlClient *sql.DB) error {
 	if err := sqlClient.PingContext(o.ctx); err != nil {
-		klog.Infof("ping failed: %v", err)
+		o.log.Error(err, "ping failed: %v")
 		return err
 	}
 	return nil
@@ -173,7 +168,7 @@ func (o *KubeDBClientBuilder) Ping(sqlClient *sql.DB) error {
 func (o *KubeDBClientBuilder) AlterUserPassword(sqlClient *sql.DB, password string) error {
 	_, err := sqlClient.ExecContext(o.ctx, fmt.Sprintf(`ALTER USER "ignite" WITH PASSWORD '%s'`, password))
 	if err != nil {
-		fmt.Printf("failed sql execute: %v", err)
+		o.log.Error(err, "failed sql execute: %v")
 		return err
 	}
 	return nil
