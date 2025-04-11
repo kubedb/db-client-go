@@ -157,6 +157,20 @@ func (o *KubeDBClientBuilder) CreateCache(cacheName string) error {
 	return nil
 }
 
+func (o *KubeDBClientBuilder) DeleteCache(cacheName string) error {
+	// create cache
+	db, err := NewKubeDBClientBuilder(o.kc, o.db).GetIgniteClient()
+	if err != nil {
+		o.log.Error(err, "Failed to get ignite client: %v")
+		return err
+	}
+	if err := db.CacheDestroy(cacheName); err != nil {
+		o.log.Error(err, "failed to create cache: %v")
+		return err
+	}
+	return nil
+}
+
 func (o *KubeDBClientBuilder) Ping(sqlClient *sql.DB) error {
 	if err := sqlClient.PingContext(o.ctx); err != nil {
 		o.log.Error(err, "ping failed: %v")
