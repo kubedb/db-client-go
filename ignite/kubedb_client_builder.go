@@ -143,28 +143,18 @@ func (o *KubeDBClientBuilder) getUsernamePassword() (error, string, string) {
 	return nil, string(authSecret.Data[core.BasicAuthUsernameKey]), string(authSecret.Data[core.BasicAuthPasswordKey])
 }
 
-func (o *KubeDBClientBuilder) CreateCache(cacheName string) error {
+func (o *KubeDBClientBuilder) CreateCache(igClient *Client, cacheName string) error {
 	// create cache
-	db, err := NewKubeDBClientBuilder(o.kc, o.db).GetIgniteClient()
-	if err != nil {
-		o.log.Error(err, "Failed to get ignite client: %v")
-		return err
-	}
-	if err := db.CacheCreateWithName(cacheName); err != nil {
+	if err := igClient.CacheCreateWithName(cacheName); err != nil {
 		o.log.Error(err, "failed to create cache: %v")
 		return err
 	}
 	return nil
 }
 
-func (o *KubeDBClientBuilder) DeleteCache(cacheName string) error {
-	// create cache
-	db, err := NewKubeDBClientBuilder(o.kc, o.db).GetIgniteClient()
-	if err != nil {
-		o.log.Error(err, "Failed to get ignite client: %v")
-		return err
-	}
-	if err := db.CacheDestroy(cacheName); err != nil {
+func (o *KubeDBClientBuilder) DeleteCache(igClient *Client, cacheName string) error {
+	// delete cache
+	if err := igClient.CacheDestroy(cacheName); err != nil {
 		o.log.Error(err, "failed to create cache: %v")
 		return err
 	}
