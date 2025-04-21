@@ -1144,7 +1144,7 @@ golang.org/x/crypto/md4
 golang.org/x/crypto/ocsp
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/scrypt
-# golang.org/x/net v0.37.0
+# golang.org/x/net v0.38.0
 ## explicit; go 1.23.0
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
@@ -1702,7 +1702,7 @@ kmodules.xyz/offshoot-api/api/v1
 kmodules.xyz/offshoot-api/api/v1/conversion
 kmodules.xyz/offshoot-api/api/v2
 kmodules.xyz/offshoot-api/util
-# kubedb.dev/apimachinery v0.53.1-0.20250404083522-1ce064c8b75b
+# kubedb.dev/apimachinery v0.53.1-0.20250421054754-a4c9cc69b667
 ## explicit; go 1.23.0
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog

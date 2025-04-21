@@ -1471,6 +1471,10 @@ const (
 
 // =========================== Ignite Constants ============================
 const (
+	IgniteVolumeCustomConfig        = "custom-config"
+	IgniteCustomConfigDir           = "/tmp/config/custom_config/"
+	IgniteVolumeTempConfig          = "temp-config"
+	IgniteTempConfigDir             = "/tmp/config/"
 	IgniteInitContainerName         = "ignite-init"
 	IgniteVolumeNameInitScript      = "init-scripts"
 	IgniteVolumeMountPathInitScript = "/scripts"
@@ -1481,8 +1485,17 @@ const (
 	IgniteDataDir                   = "/ignite/data"
 	IgniteContainerName             = "ignite"
 	IgniteConfigDir                 = "/ignite/config"
+	IgniteRestPortName              = "rest"
 	IgniteRestPort                  = 8080
-	IgniteDatabasePort              = 10800
+	IgniteThinPortName              = "thin"
+	IgniteThinPort                  = 10800
+	IgniteSPIPortName               = "spi"
+	IgniteSPIPort                   = 47100
+	IgniteTCPPortName               = "tcp"
+	IgniteTCPPort                   = 47500
+	IgniteJMXPortName               = "jmx"
+	IgniteJMXPort                   = 49112
+	IgniteUserName                  = "ignite"
 )
 
 // =========================== ClickHouse Constants ============================
