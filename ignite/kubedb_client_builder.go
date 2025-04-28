@@ -29,6 +29,7 @@ import (
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog/v2"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -69,7 +70,7 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 	return o
 }
 
-func (o *KubeDBClientBuilder) GetIgniteClient() (*Client, error) {
+func (o *KubeDBClientBuilder) GetIgniteClient() (*BinaryClient, error) {
 
 	igniteConnectionInfo := ignite.ConnInfo{
 		Network: "tcp",
@@ -95,17 +96,17 @@ func (o *KubeDBClientBuilder) GetIgniteClient() (*Client, error) {
 	igclient, err := ignite.Connect(igniteConnectionInfo)
 	if err != nil {
 		o.log.Error(err, "failed connect to server: %v")
-		return &Client{
+		return &BinaryClient{
 			igclient,
 		}, err
 	}
 
-	return &Client{
+	return &BinaryClient{
 		igclient,
 	}, nil
 }
 
-func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*sql.DB, error) {
+func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
 	dataSource := "tcp://localhost:10800/PUBLIC?" + "version=1.1.0" +
 		// Don't set "tls=yes" if your Ignite server
 		// isn't configured with any TLS certificates.
@@ -122,10 +123,15 @@ func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*sql.DB, error) {
 
 	db, err := sql.Open("ignite", dataSource)
 	if err != nil {
-		fmt.Printf("failed to open connection: %v", err)
+		klog.Errorf("failed to open connection: %v", err)
+		return &SqlClient{
+			db,
+		}, err
 	}
 
-	return db, nil
+	return &SqlClient{
+		db,
+	}, nil
 }
 
 func (o *KubeDBClientBuilder) getUsernamePassword() (error, string, string) {
@@ -143,36 +149,36 @@ func (o *KubeDBClientBuilder) getUsernamePassword() (error, string, string) {
 	return nil, string(authSecret.Data[core.BasicAuthUsernameKey]), string(authSecret.Data[core.BasicAuthPasswordKey])
 }
 
-func (o *KubeDBClientBuilder) CreateCache(igClient *Client, cacheName string) error {
+func (igB *BinaryClient) CreateCache(igClient *BinaryClient, cacheName string) error {
 	// create cache
 	if err := igClient.CacheCreateWithName(cacheName); err != nil {
-		o.log.Error(err, "failed to create cache: %v")
+		klog.Error(err, "failed to create cache: %v")
 		return err
 	}
 	return nil
 }
 
-func (o *KubeDBClientBuilder) DeleteCache(igClient *Client, cacheName string) error {
+func (igB *BinaryClient) DeleteCache(igClient *BinaryClient, cacheName string) error {
 	// delete cache
 	if err := igClient.CacheDestroy(cacheName); err != nil {
-		o.log.Error(err, "failed to create cache: %v")
+		klog.Error(err, "failed to create cache: %v")
 		return err
 	}
 	return nil
 }
 
-func (o *KubeDBClientBuilder) Ping(sqlClient *sql.DB) error {
-	if err := sqlClient.PingContext(o.ctx); err != nil {
-		o.log.Error(err, "ping failed: %v")
+func (igS *SqlClient) Ping(sqlClient *sql.DB) error {
+	if err := sqlClient.PingContext(context.TODO()); err != nil {
+		klog.Error(err, "ping failed: %v")
 		return err
 	}
 	return nil
 }
 
-func (o *KubeDBClientBuilder) AlterUserPassword(sqlClient *sql.DB, password string) error {
-	_, err := sqlClient.ExecContext(o.ctx, fmt.Sprintf(`ALTER USER "ignite" WITH PASSWORD '%s'`, password))
+func (igS *SqlClient) AlterUserPassword(sqlClient *sql.DB, password string) error {
+	_, err := sqlClient.ExecContext(context.TODO(), fmt.Sprintf(`ALTER USER "ignite" WITH PASSWORD '%s'`, password))
 	if err != nil {
-		o.log.Error(err, "failed sql execute: %v")
+		klog.Error(err, "failed sql execute: %v")
 		return err
 	}
 	return nil

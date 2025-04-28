@@ -17,9 +17,15 @@ limitations under the License.
 package ignite
 
 import (
+	"database/sql"
+
 	ignite "github.com/amsokol/ignite-go-client/binary/v1"
 )
 
-type Client struct {
+type BinaryClient struct {
 	ignite.Client
+}
+
+type SqlClient struct {
+	*sql.DB
 }
