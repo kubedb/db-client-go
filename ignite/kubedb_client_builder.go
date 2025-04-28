@@ -149,34 +149,34 @@ func (o *KubeDBClientBuilder) getUsernamePassword() (error, string, string) {
 	return nil, string(authSecret.Data[core.BasicAuthUsernameKey]), string(authSecret.Data[core.BasicAuthPasswordKey])
 }
 
-func (igB *BinaryClient) CreateCache(igClient *BinaryClient, cacheName string) error {
+func (igBin *BinaryClient) CreateCache(cacheName string) error {
 	// create cache
-	if err := igClient.CacheCreateWithName(cacheName); err != nil {
+	if err := igBin.CacheCreateWithName(cacheName); err != nil {
 		klog.Error(err, "failed to create cache: %v")
 		return err
 	}
 	return nil
 }
 
-func (igB *BinaryClient) DeleteCache(igClient *BinaryClient, cacheName string) error {
+func (igBin *BinaryClient) DeleteCache(cacheName string) error {
 	// delete cache
-	if err := igClient.CacheDestroy(cacheName); err != nil {
+	if err := igBin.CacheDestroy(cacheName); err != nil {
 		klog.Error(err, "failed to create cache: %v")
 		return err
 	}
 	return nil
 }
 
-func (igS *SqlClient) Ping(sqlClient *sql.DB) error {
-	if err := sqlClient.PingContext(context.TODO()); err != nil {
+func (igSql *SqlClient) Ping() error {
+	if err := igSql.PingContext(context.TODO()); err != nil {
 		klog.Error(err, "ping failed: %v")
 		return err
 	}
 	return nil
 }
 
-func (igS *SqlClient) AlterUserPassword(sqlClient *sql.DB, password string) error {
-	_, err := sqlClient.ExecContext(context.TODO(), fmt.Sprintf(`ALTER USER "ignite" WITH PASSWORD '%s'`, password))
+func (igSql *SqlClient) AlterUserPassword(password string) error {
+	_, err := igSql.ExecContext(context.TODO(), fmt.Sprintf(`ALTER USER "ignite" WITH PASSWORD '%s'`, password))
 	if err != nil {
 		klog.Error(err, "failed sql execute: %v")
 		return err
