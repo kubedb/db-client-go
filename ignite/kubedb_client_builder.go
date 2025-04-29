@@ -118,7 +118,7 @@ func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
 		"tcp://%s:%d/PUBLIC?version=1.1.0"+
 			"&tls-insecure-skip-verify=yes"+
 			"&page-size=10000"+
-			"&%s",
+			"&%d",
 		o.Address(), kubedb.IgniteThinPort, o.timeout)
 
 	if !o.db.Spec.DisableSecurity {
