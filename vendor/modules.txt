@@ -20,12 +20,23 @@ github.com/ClickHouse/clickhouse-go/v2/resources
 # github.com/IBM/sarama v1.42.1
 ## explicit; go 1.17
 github.com/IBM/sarama
+# github.com/Masterminds/semver v1.4.2
+## explicit
+github.com/Masterminds/semver
 # github.com/Masterminds/semver/v3 v3.3.1
 ## explicit; go 1.21
 github.com/Masterminds/semver/v3
 # github.com/Shopify/zk v1.0.12
 ## explicit; go 1.22
 github.com/Shopify/zk
+# github.com/amsokol/ignite-go-client v0.12.2
+## explicit
+github.com/amsokol/ignite-go-client/binary/errors
+github.com/amsokol/ignite-go-client/binary/v1
+github.com/amsokol/ignite-go-client/debug
+github.com/amsokol/ignite-go-client/sql
+github.com/amsokol/ignite-go-client/sql/common
+github.com/amsokol/ignite-go-client/sql/v1
 # github.com/andybalholm/brotli v1.1.0
 ## explicit; go 1.13
 github.com/andybalholm/brotli
@@ -1133,7 +1144,7 @@ golang.org/x/crypto/md4
 golang.org/x/crypto/ocsp
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/scrypt
-# golang.org/x/net v0.37.0
+# golang.org/x/net v0.38.0
 ## explicit; go 1.23.0
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
@@ -1691,7 +1702,7 @@ kmodules.xyz/offshoot-api/api/v1
 kmodules.xyz/offshoot-api/api/v1/conversion
 kmodules.xyz/offshoot-api/api/v2
 kmodules.xyz/offshoot-api/util
-# kubedb.dev/apimachinery v0.53.1-0.20250325061150-ba449cf3bc49
+# kubedb.dev/apimachinery v0.53.1-0.20250429114236-b5f3a997dacd
 ## explicit; go 1.23.0
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog
