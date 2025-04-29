@@ -30,6 +30,7 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
+	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -70,12 +71,12 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 	return o
 }
 
-func (o *KubeDBClientBuilder) GetIgniteClient() (*BinaryClient, error) {
+func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 
 	igniteConnectionInfo := ignite.ConnInfo{
 		Network: "tcp",
 		Host:    o.Address(),
-		Port:    10800,
+		Port:    kubedb.IgniteThinPort,
 		Major:   1,
 		Minor:   1,
 		Patch:   0,
@@ -107,10 +108,12 @@ func (o *KubeDBClientBuilder) GetIgniteClient() (*BinaryClient, error) {
 }
 
 func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
-	dataSource := "tcp://localhost:10800/PUBLIC?" + "version=1.1.0" +
-		// Don't set "tls=yes" if your Ignite server
-		// isn't configured with any TLS certificates.
-		"&tls-insecure-skip-verify=yes" + "&page-size=10000" + "&timeout=5000"
+	dataSource := fmt.Sprintf(
+		"tcp://%s:%d/PUBLIC?version=1.1.0"+
+			"&tls-insecure-skip-verify=yes"+
+			"&page-size=10000"+
+			"&timeout=5000",
+		o.Address(), kubedb.IgniteThinPort)
 
 	if !o.db.Spec.DisableSecurity {
 		err, username, password := o.getUsernamePassword()
