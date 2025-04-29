@@ -172,7 +172,7 @@ func (igBin *BinaryClient) DeleteCache(cacheName string) error {
 
 func (igSql *SqlClient) Ping() error {
 	if err := igSql.PingContext(context.TODO()); err != nil {
-		klog.Error(err, "ping failed: %v")
+		klog.Error(err, "Ping failed: %v")
 		return err
 	}
 	return nil
