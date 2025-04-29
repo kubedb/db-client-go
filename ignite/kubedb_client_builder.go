@@ -42,6 +42,7 @@ type KubeDBClientBuilder struct {
 	url     string
 	podName string
 	ctx     context.Context
+	timeout time.Duration
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *api.Ignite) *KubeDBClientBuilder {
@@ -71,6 +72,11 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 	return o
 }
 
+func (o *KubeDBClientBuilder) WithTimeout(d time.Duration) *KubeDBClientBuilder {
+	o.timeout = d
+	return o
+}
+
 func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 
 	igniteConnectionInfo := ignite.ConnInfo{
@@ -81,7 +87,7 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 		Minor:   1,
 		Patch:   0,
 		Dialer: net.Dialer{
-			Timeout: 10 * time.Second,
+			Timeout: o.timeout,
 		},
 	}
 	if !o.db.Spec.DisableSecurity {
@@ -112,8 +118,8 @@ func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
 		"tcp://%s:%d/PUBLIC?version=1.1.0"+
 			"&tls-insecure-skip-verify=yes"+
 			"&page-size=10000"+
-			"&timeout=5000",
-		o.Address(), kubedb.IgniteThinPort)
+			"&%s",
+		o.Address(), kubedb.IgniteThinPort, o.timeout)
 
 	if !o.db.Spec.DisableSecurity {
 		err, username, password := o.getUsernamePassword()
@@ -173,15 +179,6 @@ func (igBin *BinaryClient) DeleteCache(cacheName string) error {
 func (igSql *SqlClient) Ping() error {
 	if err := igSql.PingContext(context.TODO()); err != nil {
 		klog.Error(err, "Ping failed: %v")
-		return err
-	}
-	return nil
-}
-
-func (igSql *SqlClient) AlterUserPassword(password string) error {
-	_, err := igSql.ExecContext(context.TODO(), fmt.Sprintf(`ALTER USER "ignite" WITH PASSWORD '%s'`, password))
-	if err != nil {
-		klog.Error(err, "failed sql execute: %v")
 		return err
 	}
 	return nil
