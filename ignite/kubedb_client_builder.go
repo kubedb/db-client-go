@@ -97,7 +97,7 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 		}
 
 		igniteConnectionInfo.Username = username
-		igniteConnectionInfo.Password = password
+		igniteConnectionInfo.Password = fmt.Sprintf("'%s'", password)
 	}
 
 	igclient, err := ignite.Connect(igniteConnectionInfo)
@@ -126,7 +126,7 @@ func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
 			return nil, nil
 		}
 		// Credentials are only needed if they're configured in your Ignite server.
-		dataSource += fmt.Sprintf("&username=%s", username) + fmt.Sprintf("&password=%s", password)
+		dataSource += fmt.Sprintf("&username=%s", username) + fmt.Sprintf("&password='%s'", password)
 	}
 
 	db, err := sql.Open("ignite", dataSource)
