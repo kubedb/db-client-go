@@ -375,6 +375,7 @@ const (
 	MaxscaleDataVolumePath    = "/var/lib/maxscale"
 	MaxscaleUIPort            = 8989
 	MaxscaleUIPortName        = "ui"
+	MaxscaleCertMountPath     = "/etc/ssl/maxscale"
 
 	// =========================== SingleStore Constants ============================
 	SinglestoreDatabasePortName       = "db"
@@ -1511,7 +1512,7 @@ const (
 	ClickhousePromethues  = 9363
 	ClickHouseRaftPort    = 9234
 
-	ComponentCoOrdinator = "co-ordinator"
+	ComponentCoOrdinator = "coordinator"
 
 	ClickHousePromethusEndpoint           = "/metrics"
 	ClickHouseDataDir                     = "/var/lib/clickhouse"
@@ -1519,14 +1520,17 @@ const (
 	ClickHouseConfigDir                   = "/etc/clickhouse-server/config.d"
 	ClickHouseKeeperConfigDir             = "/etc/clickhouse-keeper"
 	ClickHouseCommonConfigDir             = "/etc/clickhouse-server/conf.d"
-	ClickHouseTempConfigDir               = "/ch-tmp"
 	ClickHouseInternalKeeperTempConfigDir = "/keeper"
-	ClickHouseTempDir                     = "/ch-tmp"
-	ClickHouseKeeperTempDir               = "/ch-tmp"
 	ClickHouseKeeperConfigPath            = "/etc/clickhouse-keeper"
 	ClickHouseUserConfigDir               = "/etc/clickhouse-server/user.d"
 	ClickHouseLogPath                     = "/var/log/clickhouse-server/clickhouse-server.log"
 	ClickHouseErrorLogPath                = "/var/log/clickhouse-server/clickhouse-server.err.log"
+
+	ClickHouseClientCertMountPath      = "/etc/clickhouse-server/certs"
+	ClickHouseClientCertVolumeName     = "certs"
+	ClickHouseTempClientCertVolumeName = "certs-tmp"
+	ClickHouseTempClientCertMountPath  = "/certs-tmp"
+	ClickHouseTempConfigDir            = "/config-tmp"
 
 	// keeper
 	ClickHouseKeeperDataPath     = "/var/lib/clickhouse_keeper"
@@ -1808,6 +1812,27 @@ var (
 		},
 	}
 
+	DefaultResourcesCoreAndMemoryIntensiveOracle = core.ResourceRequirements{
+		Requests: core.ResourceList{
+			core.ResourceCPU:    resource.MustParse("2"),
+			core.ResourceMemory: resource.MustParse("7Gi"),
+		},
+		Limits: core.ResourceList{
+			core.ResourceCPU:    resource.MustParse("4"),
+			core.ResourceMemory: resource.MustParse("10Gi"),
+		},
+	}
+	DefaultResourcesCoreAndMemoryIntensiveOracleObserver = core.ResourceRequirements{
+		Requests: core.ResourceList{
+			core.ResourceCPU:    resource.MustParse("500m"),
+			core.ResourceMemory: resource.MustParse("2Gi"),
+		},
+		Limits: core.ResourceList{
+			core.ResourceCPU:    resource.MustParse("1"),
+			core.ResourceMemory: resource.MustParse("3Gi"),
+		},
+	}
+
 	// DefaultResourcesMemoryIntensiveSDB must be used for Singlestore when enabled monitoring or version >= 8.5.x
 	DefaultResourcesMemoryIntensiveSDB = core.ResourceRequirements{
 		Requests: core.ResourceList{
@@ -1845,4 +1870,40 @@ const (
 	GitSecretVolume      = "git-secret"
 	GitSecretMountPath   = "/etc/git-secret"
 	GitSyncContainerName = "git-sync"
+)
+
+const (
+	OracleDatabaseServiceName = "ORCL"
+	OracleSqlNetPortName      = "sqlnet"
+
+	OracleEditionEnterprise = "enterprise"
+
+	OraclePrimaryRole = "primary"
+	OracleStandbyRole = "standby"
+
+	OracleDatabasePort = 1521
+
+	OracleSysDbaUser = "sys"
+
+	OracleContainerName             = "oracle"
+	OracleCoordinatorContainerName  = "oracle-coordinator"
+	OracleObserverContainerName     = "observer"
+	OracleInitContainerName         = "oracle-init"
+	OracleObserverInitContainerName = "observer-init"
+
+	OracleVolumeScripts = "oracle-scripts"
+	OracleDataVolume    = "data"
+
+	OracleVolumeMountScripts = "/scripts"
+	OracleDataDir            = "/opt/oracle/oradata"
+
+	OracleStandbyServiceSuffix = "standby"
+
+	OracleDatabaseRoleKey      = "oracle.db/role"
+	OracleDatabaseRoleObserver = "observer"
+	OracleDatabaseRoleInstance = "instance"
+	OracleEnvUserName          = "SYS_USER"
+	OracleEnvPassword          = "ORACLE_PWD"
+	OracleEnvOracleSID         = "ORACLE_SID"
+	OracleEnvDataDir           = "ORADATA"
 )

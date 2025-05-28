@@ -170,7 +170,7 @@ func (statement *Statement) Reset() {
 // SQL adds raw sql statement
 func (statement *Statement) SQL(query interface{}, args ...interface{}) *Statement {
 	switch t := query.(type) {
-	case (*builder.Builder):
+	case *builder.Builder:
 		var err error
 		statement.RawSQL, statement.RawParams, err = t.ToSQL()
 		if err != nil {
@@ -616,7 +616,7 @@ func (statement *Statement) BuildConds(table *schemas.Table, bean interface{}, i
 // MergeConds merge conditions from bean and id
 func (statement *Statement) MergeConds(bean interface{}) error {
 	if !statement.NoAutoCondition && statement.RefTable != nil {
-		addedTableName := (len(statement.joins) > 0)
+		addedTableName := len(statement.joins) > 0
 		autoCond, err := statement.BuildConds(statement.RefTable, bean, true, true, false, true, addedTableName)
 		if err != nil {
 			return err
@@ -713,11 +713,14 @@ func (statement *Statement) CondDeleted(col *schemas.Column) builder.Cond {
 	cond := builder.NewCond()
 	if col.SQLType.IsNumeric() {
 		cond = builder.Eq{colName: 0}
-	} else {
-		// FIXME: mssql: The conversion of a nvarchar data type to a datetime data type resulted in an out-of-range value.
-		if statement.dialect.URI().DBType != schemas.MSSQL {
-			cond = builder.Eq{colName: utils.ZeroTime1}
+	} else if col.SQLType.Name == schemas.TimeStamp || col.SQLType.Name == schemas.TimeStampz {
+		tmZone := statement.defaultTimeZone
+		if col.TimeZone != nil {
+			tmZone = col.TimeZone
 		}
+		cond = builder.Eq{colName: time.Unix(0, 0).In(tmZone).Format("2006-01-02 15:04:05.999999999")}
+	} else {
+		cond = builder.Eq{colName: utils.ZeroTime1}
 	}
 
 	if col.Nullable {

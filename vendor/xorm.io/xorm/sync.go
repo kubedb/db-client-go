@@ -17,6 +17,8 @@ type SyncOptions struct {
 	IgnoreConstrains bool
 	// IgnoreIndices will not add or delete indices
 	IgnoreIndices bool
+	// IgnoreDropIndices will not delete indices
+	IgnoreDropIndices bool
 }
 
 type SyncResult struct{}
@@ -55,6 +57,7 @@ func (session *Session) Sync(beans ...interface{}) error {
 		WarnIfDatabaseColumnMissed: false,
 		IgnoreConstrains:           false,
 		IgnoreIndices:              false,
+		IgnoreDropIndices:          false,
 	}, beans...)
 	return err
 }
@@ -244,7 +247,7 @@ func (session *Session) SyncWithOptions(opts SyncOptions, beans ...interface{}) 
 		for name2, index2 := range oriTable.Indexes {
 			if _, ok := foundIndexNames[name2]; !ok {
 				// ignore based on there type
-				if (index2.Type == schemas.IndexType && opts.IgnoreIndices) ||
+				if (index2.Type == schemas.IndexType && (opts.IgnoreIndices || opts.IgnoreDropIndices)) ||
 					(index2.Type == schemas.UniqueType && opts.IgnoreConstrains) {
 					// make sure we do not add a index with same name later
 					delete(addedNames, name2)

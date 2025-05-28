@@ -28,6 +28,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/redis/go-redis/v9 v9.5.1
+	github.com/sijms/go-ora/v2 v2.8.24
 	go.mongodb.org/mongo-driver v1.14.0
 	go.virtual-secrets.dev/apimachinery v0.0.1
 	k8s.io/api v0.32.3
@@ -36,9 +37,9 @@ require (
 	k8s.io/klog/v2 v2.130.1
 	kmodules.xyz/client-go v0.32.1
 	kmodules.xyz/custom-resources v0.32.0
-	kubedb.dev/apimachinery v0.54.0
+	kubedb.dev/apimachinery v0.54.1-0.20250529040406-83b8482b9751
 	sigs.k8s.io/controller-runtime v0.20.3
-	xorm.io/xorm v1.3.6
+	xorm.io/xorm v1.3.9
 )
 
 require (

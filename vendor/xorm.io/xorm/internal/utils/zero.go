@@ -146,6 +146,6 @@ const (
 
 // IsTimeZero return true if a time is zero
 func IsTimeZero(t time.Time) bool {
-	return t.IsZero() || t.Format("2006-01-02 15:04:05") == ZeroTime0 ||
-		t.Format("2006-01-02 15:04:05") == ZeroTime1
+	return t.IsZero() || t.Format("2006-01-02 15:04:05.999999999") == ZeroTime0 ||
+		t.Format("2006-01-02 15:04:05.999999999") == ZeroTime1
 }

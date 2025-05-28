@@ -34,6 +34,7 @@ func (statement *Statement) writeOracleLegacySelect(buf *builder.BytesWriter, co
 	return statement.writeMultiple(buf,
 		statement.writeSelectColumns(columnStr),
 		statement.writeFrom,
+		statement.writeWhere,
 		statement.writeOracleLimit(columnStr),
 		statement.writeGroupBy,
 		statement.writeHaving,

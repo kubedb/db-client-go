@@ -330,15 +330,11 @@ func (db *mssql) SQLType(c *schemas.Column) string {
 			res += "(MAX)"
 		}
 	case schemas.TimeStamp, schemas.DateTime:
-		if c.Length > 3 {
-			res = "DATETIME2"
-		} else {
-			return schemas.DateTime
-		}
+		return "DATETIME2"
 	case schemas.TimeStampz:
 		res = "DATETIMEOFFSET"
 		c.Length = 7
-	case schemas.MediumInt, schemas.TinyInt, schemas.SmallInt, schemas.UnsignedMediumInt, schemas.UnsignedTinyInt, schemas.UnsignedSmallInt:
+	case schemas.MediumInt, schemas.SmallInt, schemas.UnsignedMediumInt, schemas.UnsignedTinyInt, schemas.UnsignedSmallInt:
 		res = schemas.Int
 	case schemas.Text, schemas.MediumText, schemas.TinyText, schemas.LongText, schemas.Json:
 		res = db.defaultVarchar + "(MAX)"
@@ -381,8 +377,8 @@ func (db *mssql) SQLType(c *schemas.Column) string {
 		return res
 	}
 
-	hasLen1 := (c.Length > 0)
-	hasLen2 := (c.Length2 > 0)
+	hasLen1 := c.Length > 0
+	hasLen2 := c.Length2 > 0
 
 	if hasLen2 {
 		res += "(" + strconv.FormatInt(c.Length, 10) + "," + strconv.FormatInt(c.Length2, 10) + ")"
@@ -586,10 +582,10 @@ func (db *mssql) GetIndexes(queryer core.Queryer, ctx context.Context, tableName
 IXS.NAME                    AS  [INDEX_NAME],
 C.NAME                      AS  [COLUMN_NAME],
 IXS.is_unique AS [IS_UNIQUE]
-FROM SYS.INDEXES IXS
-INNER JOIN SYS.INDEX_COLUMNS   IXCS
+FROM sys.indexes IXS
+INNER JOIN sys.index_columns IXCS
 ON IXS.OBJECT_ID=IXCS.OBJECT_ID  AND IXS.INDEX_ID = IXCS.INDEX_ID
-INNER   JOIN SYS.COLUMNS C  ON IXS.OBJECT_ID=C.OBJECT_ID
+INNER   JOIN sys.columns C  ON IXS.OBJECT_ID=C.OBJECT_ID
 AND IXCS.COLUMN_ID=C.COLUMN_ID
 WHERE IXS.TYPE_DESC='NONCLUSTERED' and OBJECT_NAME(IXS.OBJECT_ID) =?
 `

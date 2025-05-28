@@ -51,7 +51,7 @@ type Engine struct {
 
 // NewEngine new a db manager according to the parameter. Currently support four
 // drivers
-func NewEngine(driverName string, dataSourceName string) (*Engine, error) {
+func NewEngine(driverName string, dataSourceName string, driverOptions ...func(db *sql.DB) error) (*Engine, error) {
 	dialect, err := dialects.OpenDialect(driverName, dataSourceName)
 	if err != nil {
 		return nil, err
@@ -60,6 +60,12 @@ func NewEngine(driverName string, dataSourceName string) (*Engine, error) {
 	db, err := core.Open(driverName, dataSourceName)
 	if err != nil {
 		return nil, err
+	}
+
+	for _, driverOption := range driverOptions {
+		if err := driverOption(db.DB); err != nil {
+			return nil, err
+		}
 	}
 
 	return newEngine(driverName, dataSourceName, dialect, db)
@@ -1206,7 +1212,7 @@ func (engine *Engine) Insert(beans ...interface{}) (int64, error) {
 func (engine *Engine) InsertOne(bean interface{}) (int64, error) {
 	session := engine.NewSession()
 	defer session.Close()
-	return session.InsertOne(bean)
+	return session.Insert(bean)
 }
 
 // Update records, bean's non-empty fields are updated contents,

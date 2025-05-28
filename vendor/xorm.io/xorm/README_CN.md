@@ -1,6 +1,6 @@
 # xorm
 
-[English](https://gitea.com/xorm/xorm/src/branch/master/README.md)
+[English](https://gitea.com/xorm/xorm/src/branch/v1/README.md)
 
 xorm 是一个简单而强大的Go语言ORM库. 通过它可以使数据库操作非常简便。
 
@@ -47,7 +47,7 @@ v1.0.0 相对于 v0.8.2 有以下不兼容的变更：
   - [modernc.org/sqlite](https://gitlab.com/cznic/sqlite)
 
 * MsSql
-  - [github.com/denisenkom/go-mssqldb](https://github.com/denisenkom/go-mssqldb)
+  - [github.com/microsoft/go-mssqldb](https://github.com/microsoft/go-mssqldb)
 
 * Oracle
   - [github.com/godror/godror](https://github.com/godror/godror) (试验性支持)

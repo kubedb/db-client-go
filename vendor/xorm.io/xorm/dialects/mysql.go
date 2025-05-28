@@ -326,8 +326,8 @@ func (db *mysql) SQLType(c *schemas.Column) string {
 		res = t
 	}
 
-	hasLen1 := (c.Length > 0)
-	hasLen2 := (c.Length2 > 0)
+	hasLen1 := c.Length > 0
+	hasLen2 := c.Length2 > 0
 
 	if res == schemas.BigInt && !hasLen1 && !hasLen2 {
 		c.Length = 20

@@ -149,7 +149,7 @@ func isASCIIUpper(r rune) bool {
 
 func toASCIIUpper(r rune) rune {
 	if 'a' <= r && r <= 'z' {
-		r -= ('a' - 'A')
+		r -= 'a' - 'A'
 	}
 	return r
 }
