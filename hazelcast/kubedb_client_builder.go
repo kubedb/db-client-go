@@ -69,8 +69,68 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 	return o
 }
 
+func (o *KubeDBClientBuilder) GetAuthCredentials() (string, string, error) {
+	var authSecret core.Secret
+	var username, password string
+	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.GetAuthSecretName()}, &authSecret)
+	if err != nil {
+		return "", "", errors.Errorf("Failed to get auth secret with %s", err)
+	}
+
+	if value, ok := authSecret.Data[core.BasicAuthUsernameKey]; ok {
+		username = string(value)
+	} else {
+		klog.Errorf("Failed for secret: %s/%s, username is missing", authSecret.Namespace, authSecret.Name)
+		return "", "", errors.New("username is missing")
+	}
+
+	if value, ok := authSecret.Data[core.BasicAuthPasswordKey]; ok {
+		password = string(value)
+	} else {
+		klog.Errorf("Failed for secret: %s/%s, password is missing", authSecret.Namespace, authSecret.Name)
+		return "", "", errors.New("password is missing")
+	}
+
+	return username, password, nil
+}
+
+func (o *KubeDBClientBuilder) GetTLSConfig() (*tls.Config, error) {
+	var certSecret core.Secret
+	err := o.kc.Get(o.ctx, types.NamespacedName{
+		Namespace: o.db.Namespace,
+		Name:      o.db.GetCertSecretName(api.HazelcastClientCert),
+	}, &certSecret)
+	if err != nil {
+		klog.Error(err, "failed to get clientCert secret")
+		return nil, err
+	}
+
+	// get tls cert, clientCA and rootCA for tls config
+	// use server cert ca for rootca as issuer ref is not taken into account
+	clientCA := x509.NewCertPool()
+	rootCA := x509.NewCertPool()
+
+	crt, err := tls.X509KeyPair(certSecret.Data[core.TLSCertKey], certSecret.Data[core.TLSPrivateKeyKey])
+	if err != nil {
+		klog.Error(err, "failed to create certificate for TLS config")
+		return nil, err
+	}
+	clientCA.AppendCertsFromPEM(certSecret.Data[kubedb.CACert])
+	rootCA.AppendCertsFromPEM(certSecret.Data[kubedb.CACert])
+
+	tlsConfig := &tls.Config{
+		ServerName:   o.db.ServiceName(),
+		Certificates: []tls.Certificate{crt},
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientCAs:    clientCA,
+		RootCAs:      rootCA,
+		MaxVersion:   tls.VersionTLS13,
+	}
+	return tlsConfig, nil
+}
+
 func (o *KubeDBClientBuilder) GetHazelcastClient() (*Client, error) {
-	if o.podName != "" {
+	if o.podName == "" {
 		o.url = o.ServiceURL()
 	}
 
@@ -83,29 +143,13 @@ func (o *KubeDBClientBuilder) GetHazelcastClient() (*Client, error) {
 	}
 
 	config := hazelcast.Config{}
-	config.Cluster.Name = "dev"
+	config.Cluster.Name = fmt.Sprintf("%s/%s", o.db.Name, o.db.Namespace)
 	config.Cluster.Network.SetAddresses(o.url)
 
-	var authSecret core.Secret
-	var username, password string
 	if !o.db.Spec.DisableSecurity {
-		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.GetAuthSecretName()}, &authSecret)
+		username, password, err := o.GetAuthCredentials()
 		if err != nil {
-			return nil, errors.Errorf("Failed to get auth secret with %s", err)
-		}
-
-		if value, ok := authSecret.Data[core.BasicAuthUsernameKey]; ok {
-			username = string(value)
-		} else {
-			klog.Errorf("Failed for secret: %s/%s, username is missing", authSecret.Namespace, authSecret.Name)
-			return nil, errors.New("username is missing")
-		}
-
-		if value, ok := authSecret.Data[core.BasicAuthPasswordKey]; ok {
-			password = string(value)
-		} else {
-			klog.Errorf("Failed for secret: %s/%s, password is missing", authSecret.Namespace, authSecret.Name)
-			return nil, errors.New("password is missing")
+			return nil, err
 		}
 		config.Cluster.Security.Credentials.Username = username
 		config.Cluster.Security.Credentials.Password = password
@@ -114,43 +158,16 @@ func (o *KubeDBClientBuilder) GetHazelcastClient() (*Client, error) {
 	// If EnableSSL is true set tls config,
 	// provide client certs and root CA
 	if o.db.Spec.EnableSSL {
-		var certSecret core.Secret
-		err := o.kc.Get(o.ctx, types.NamespacedName{
-			Namespace: o.db.Namespace,
-			Name:      o.db.GetCertSecretName(api.HazelcastClientCert),
-		}, &certSecret)
+		tlsConfig, err := o.GetTLSConfig()
 		if err != nil {
-			klog.Error(err, "failed to get clientCert secret")
 			return nil, err
-		}
-
-		// get tls cert, clientCA and rootCA for tls config
-		// use server cert ca for rootca as issuer ref is not taken into account
-		clientCA := x509.NewCertPool()
-		rootCA := x509.NewCertPool()
-
-		crt, err := tls.X509KeyPair(certSecret.Data[core.TLSCertKey], certSecret.Data[core.TLSPrivateKeyKey])
-		if err != nil {
-			klog.Error(err, "failed to create certificate for TLS config")
-			return nil, err
-		}
-		clientCA.AppendCertsFromPEM(certSecret.Data[kubedb.CACert])
-		rootCA.AppendCertsFromPEM(certSecret.Data[kubedb.CACert])
-
-		tlsConfig := &tls.Config{
-			ServerName:   fmt.Sprintf("%s.%s.svc", o.db.Name, o.db.Namespace),
-			Certificates: []tls.Certificate{crt},
-			ClientAuth:   tls.RequireAndVerifyClientCert,
-			ClientCAs:    clientCA,
-			RootCAs:      rootCA,
-			MaxVersion:   tls.VersionTLS13,
 		}
 		config.Cluster.Network.SSL.Enabled = true
 		config.Cluster.Network.SSL.ServerName = o.db.Name
 		config.Cluster.Network.SSL.SetTLSConfig(tlsConfig)
 	}
 
-	hzClient, err := hazelcast.StartNewClientWithConfig(context.TODO(), config)
+	hzClient, err := hazelcast.StartNewClientWithConfig(o.ctx, config)
 	if err != nil {
 		klog.Errorf("Failed to create HTTP client for Hazelcast: %s/%s with: %s", o.db.Namespace, o.db.Name, err)
 		return nil, err
