@@ -143,7 +143,7 @@ func (o *KubeDBClientBuilder) GetHazelcastClient() (*Client, error) {
 	}
 
 	config := hazelcast.Config{}
-	config.Cluster.Name = fmt.Sprintf("%s/%s", o.db.Name, o.db.Namespace)
+	config.Cluster.Name = fmt.Sprintf("%s/%s", o.db.Namespace, o.db.Name)
 	config.Cluster.Network.SetAddresses(o.url)
 
 	if !o.db.Spec.DisableSecurity {
@@ -163,7 +163,7 @@ func (o *KubeDBClientBuilder) GetHazelcastClient() (*Client, error) {
 			return nil, err
 		}
 		config.Cluster.Network.SSL.Enabled = true
-		config.Cluster.Network.SSL.ServerName = o.db.Name
+		config.Cluster.Network.SSL.ServerName = fmt.Sprintf("%s.%s.svc", o.db.Name, o.db.Namespace)
 		config.Cluster.Network.SSL.SetTLSConfig(tlsConfig)
 	}
 
