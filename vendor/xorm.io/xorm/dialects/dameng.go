@@ -618,8 +618,8 @@ func (db *dameng) SQLType(c *schemas.Column) string {
 		res = t
 	}
 
-	hasLen1 := (c.Length > 0)
-	hasLen2 := (c.Length2 > 0)
+	hasLen1 := c.Length > 0
+	hasLen2 := c.Length2 > 0
 
 	if hasLen2 {
 		res += "(" + strconv.FormatInt(c.Length, 10) + "," + strconv.FormatInt(c.Length2, 10) + ")"
@@ -826,6 +826,13 @@ func (d *dmClobScanner) Scan(data interface{}) error {
 		return nil
 	case []byte:
 		if t == nil {
+			return nil
+		}
+		d.data = string(t)
+		d.valid = true
+		return nil
+	case string:
+		if len(t) <= 0 {
 			return nil
 		}
 		d.data = string(t)

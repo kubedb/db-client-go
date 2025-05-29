@@ -50,7 +50,7 @@ var ErrNoColumnName = errors.New("no column name")
 
 func (statement *Statement) writeOrderBy(w *builder.BytesWriter, orderBy orderBy) error {
 	switch t := orderBy.orderStr.(type) {
-	case (*builder.Expression):
+	case *builder.Expression:
 		if _, err := fmt.Fprint(w.Builder, statement.dialect.Quoter().Replace(t.Content())); err != nil {
 			return err
 		}

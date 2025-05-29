@@ -7,19 +7,22 @@ package dialects
 import (
 	"strings"
 	"time"
+	"xorm.io/xorm/internal/utils"
 
 	"xorm.io/xorm/schemas"
 )
 
 // FormatColumnTime format column time
 func FormatColumnTime(dialect Dialect, dbLocation *time.Location, col *schemas.Column, t time.Time) (interface{}, error) {
-	if t.IsZero() {
+	if utils.IsTimeZero(t) {
 		if col.Nullable {
 			return nil, nil
 		}
-
 		if col.SQLType.IsNumeric() {
 			return 0, nil
+		}
+		if col.SQLType.Name == schemas.TimeStamp || col.SQLType.Name == schemas.TimeStampz {
+			t = time.Unix(0, 0)
 		}
 	}
 

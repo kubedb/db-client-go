@@ -240,7 +240,7 @@ func (session *Session) getSlice(rows *core.Rows, types []*sql.ColumnType, field
 		}
 		return nil
 	default:
-		return fmt.Errorf("unspoorted slice type: %t", t)
+		return fmt.Errorf("unsupported slice type: %t", t)
 	}
 }
 
@@ -269,7 +269,7 @@ func (session *Session) getMap(rows *core.Rows, types []*sql.ColumnType, fields 
 		}
 		return nil
 	default:
-		return fmt.Errorf("unspoorted map type: %t", t)
+		return fmt.Errorf("unsupported map type: %t", t)
 	}
 }
 

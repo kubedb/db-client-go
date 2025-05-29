@@ -957,8 +957,8 @@ func (db *postgres) SQLType(c *schemas.Column) string {
 		// for bool, we don't need length information
 		return res
 	}
-	hasLen1 := (c.Length > 0)
-	hasLen2 := (c.Length2 > 0)
+	hasLen1 := c.Length > 0
+	hasLen2 := c.Length2 > 0
 
 	if hasLen2 {
 		res += "(" + strconv.FormatInt(c.Length, 10) + "," + strconv.FormatInt(c.Length2, 10) + ")"
@@ -1185,7 +1185,7 @@ WHERE n.nspname= s.table_schema AND c.relkind = 'r' AND c.relname = $1%s AND f.a
 			col.IsPrimaryKey = true
 		}
 
-		col.Nullable = (isNullable == "YES")
+		col.Nullable = isNullable == "YES"
 
 		switch strings.ToLower(dataType) {
 		case "character varying", "string":
