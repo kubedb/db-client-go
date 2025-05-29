@@ -749,6 +749,32 @@ const (
 	ZooKeeperSuperUsername       = "super"
 	ZooKeeperSASLAuthLoginConfig = "-Djava.security.auth.login.config"
 	ZooKeeperJaasFilePath        = "/data/jaas.conf"
+
+	// ========================================== Hazelcast Constants =================================================//
+	HazelcastAdmin                = "admin"
+	HazelcastSecretKey            = "hazelcast.yaml"
+	HazelcastClientSecretKey      = "hazelcast-client.yaml"
+	HazelcastRestPort             = 5701
+	HazelcastPortName             = "hazelcast"
+	HazelcastConfigVolume         = "hzconfig"
+	HazelcastDefaultConfigVolume  = "default-config"
+	HazelcastCustomConfigVolume   = "custom-config"
+	HazelcastCustomConfigDir      = "/data/custom"
+	HazelcastTempConfigDir        = "/data/temp"
+	HazelcastConfigFileName       = "hazelcast.yaml"
+	HazelcastVolumeData           = "data"
+	HazelcastDataDir              = "/data/persistence"
+	HazelcastContainerName        = "hazelcast"
+	HazelcastInitContainerName    = "hazelcast-init"
+	HazelcastConfigDir            = "/data/hazelcast"
+	HazelcastKeystorePassKey      = "keystore-secret"
+	HazelcastServerKeystoreFile   = "/data/etc/server/keystore.p12"
+	HazelcastServerTruststoreFile = "/data/etc/server/truststore.p12"
+	HazelcastClientKeystoreFile   = "/data/etc/client/keystore.p12"
+	HazelcastClientTruststoreFile = "/data/etc/client/truststore.p12"
+	HazelcastTLSServerMountPath   = "/data/etc/server"
+	HazelcastTLSClientMountPath   = "/data/etc/client"
+	HazelcastLicenseKey           = "licenseKey"
 )
 
 // List of possible condition types for a KubeDB object
@@ -1499,6 +1525,11 @@ const (
 	IgniteJMXPortName         = "jmx"
 	IgniteJMXPort             = 49112
 	IgniteUserName            = "ignite"
+	OPTION_LIBS               = "OPTION_LIBS"
+	CONFIG_URI                = "CONFIG_URI"
+	CONTROL_JVM_OPTS          = "CONTROL_JVM_OPTS"
+	IGNITE_PASSWORD           = "IGNITE_PASSWORD"
+	DISABLE_SECURITY          = "DISABLE_SECURITY"
 )
 
 // =========================== ClickHouse Constants ============================
@@ -1830,6 +1861,11 @@ var (
 		Limits: core.ResourceList{
 			core.ResourceCPU:    resource.MustParse("1"),
 			core.ResourceMemory: resource.MustParse("3Gi"),
+		},
+	}
+	DefaultResourceStorageOracleObserver = core.VolumeResourceRequirements{
+		Requests: core.ResourceList{
+			core.ResourceStorage: resource.MustParse("1Gi"),
 		},
 	}
 
