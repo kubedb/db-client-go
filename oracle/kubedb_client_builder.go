@@ -82,8 +82,12 @@ func (o *OracleClientBuilder) getConnectionString() (string, error) {
 		return "", fmt.Errorf("failed to get auth credentials for Oracle %s/%s: %v", o.db.Namespace, o.db.Name, err)
 	}
 
+	url := o.url
+	if url == "" {
+		url = PrimaryServiceDNS(o.db)
+	}
 	// Use the provided URL (e.g., service DNS)
-	host := fmt.Sprintf("%v:%v/%v", o.url, o.port, o.service)
+	host := fmt.Sprintf("%v:%v/%v", url, o.port, o.service)
 
 	// Construct basic connection string
 	connStr := fmt.Sprintf("oracle://%s:%s@%s", user, pass, host)
@@ -97,7 +101,7 @@ func (o *OracleClientBuilder) getOracleAuthCredentials() (string, string, error)
 	}
 
 	var secret core.Secret
-	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.AuthSecret.Name}, &secret)
+	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.GetAuthSecretName()}, &secret)
 	if err != nil {
 		return "", "", err
 	}
@@ -108,4 +112,9 @@ func (o *OracleClientBuilder) getOracleAuthCredentials() (string, string, error)
 		return "", "", errors.New("username or password missing in secret")
 	}
 	return username, password, nil
+}
+
+// PrimaryServiceDNS make primary host dns with require template
+func PrimaryServiceDNS(db *olddbapi.Oracle) string {
+	return fmt.Sprintf("%v.%v.svc.cluster.local", db.ServiceName(), db.Namespace)
 }
