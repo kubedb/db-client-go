@@ -88,29 +88,14 @@ func (sc *Client) GetResponseStatus(responseBody map[string]interface{}) (int, e
 	return int(status), nil
 }
 
-func (sc *Client) GetVal(ival interface{}) float32 {
+func (sc *Client) GetVal(ival interface{}, ss string) float64 {
 	val := reflect.ValueOf(ival)
+	fmt.Println(ss, ival, reflect.TypeOf(ival), val, val.Type(), val.Kind())
+	var realVal float64
 
-	var realVal any
-	if val.Kind() == reflect.Int {
-		fmt.Println("$$$$$$$$$$$$===>> there is an INT")
-		realVal = val.Interface().(int)
-	} else if val.Kind() == reflect.Int32 {
-		fmt.Println("$$$$$$$$$$$$===>> there is an INT32")
-		realVal = val.Interface().(int32)
-	} else if val.Kind() == reflect.Int64 {
-		fmt.Println("$$$$$$$$$$$$===>> there is an INT64")
-		realVal = val.Interface().(int32)
-	} else if val.Kind() == reflect.Float32 {
-		realVal = val.Interface().(float32)
-		fmt.Println("$$$$$$$$$$$$===>> there is an FLOAT 32")
-	} else if val.Kind() == reflect.Float64 {
-		realVal = val.Interface().(float64)
-		fmt.Println("$$$$$$$$$$$$===>> there is an FLOAT 32")
-	} else {
-		fmt.Println("WHATTTTTTTTTTT THEEEEEEEEEEEEEE FUCJKKKKKKKKKKKKKKKKKKK********************************", val.Kind())
-	}
-	return realVal.(float32)
+	realVal = val.Interface().(float64)
+
+	return realVal
 }
 
 func (sc *Client) RetrieveMetrics(responseBody map[string]interface{}) (*Metrics, error) {
@@ -126,46 +111,47 @@ func (sc *Client) RetrieveMetrics(responseBody map[string]interface{}) (*Metrics
 			metrics.JVM = JVM{}
 			jvmMetrics := metricsVal.(map[string]interface{})
 			for jvmKey, jvmVal := range jvmMetrics {
-				val := reflect.ValueOf(jvmVal)
+
+				val := jvmVal
 				switch jvmKey {
 				case "buffers.direct.Count":
-					metrics.JVM.BuffersDirectCount = sc.GetVal(val)
+					metrics.JVM.BuffersDirectCount = sc.GetVal(val, jvmKey)
 					break
 				case "buffers.direct.MemoryUsed":
-					metrics.JVM.BuffersDirectMemoryUsed = sc.GetVal(val)
+					metrics.JVM.BuffersDirectMemoryUsed = sc.GetVal(val, jvmKey)
 					break
 				case "buffers.direct.TotalCapacity":
-					metrics.JVM.BuffersDirectTotalCapacity = sc.GetVal(val)
+					metrics.JVM.BuffersDirectTotalCapacity = sc.GetVal(val, jvmKey)
 					break
 				case "buffers.mapped.Count":
-					metrics.JVM.BuffersMappedCount = sc.GetVal(val)
+					metrics.JVM.BuffersMappedCount = sc.GetVal(val, jvmKey)
 					break
 				case "buffers.mapped.MemoryUsed":
-					metrics.JVM.BuffersMappedMemoryUsed = sc.GetVal(val)
+					metrics.JVM.BuffersMappedMemoryUsed = sc.GetVal(val, jvmKey)
 					break
 				case "buffers.mapped.TotalCapacity":
-					metrics.JVM.BuffersMappedTotalCapacity = sc.GetVal(val)
+					metrics.JVM.BuffersMappedTotalCapacity = sc.GetVal(val, jvmKey)
 					break
 				case "memory.heap.max":
-					metrics.JVM.MemoryHeapMax = sc.GetVal(val)
+					metrics.JVM.MemoryHeapMax = sc.GetVal(val, jvmKey)
 					break
 				case "memory.heap.used":
-					metrics.JVM.MemoryHeapUsed = sc.GetVal(val)
+					metrics.JVM.MemoryHeapUsed = sc.GetVal(val, jvmKey)
 					break
 				case "memory.heap.usage":
-					metrics.JVM.MemoryHeapUsage = sc.GetVal(val)
+					metrics.JVM.MemoryHeapUsage = sc.GetVal(val, jvmKey)
 					break
 				case "threads.count":
-					metrics.JVM.ThreadsCount = sc.GetVal(val)
+					metrics.JVM.ThreadsCount = sc.GetVal(val, jvmKey)
 					break
 				case "threads.peak.count":
-					metrics.JVM.ThreadsPeakCount = sc.GetVal(val)
+					metrics.JVM.ThreadsPeakCount = sc.GetVal(val, jvmKey)
 					break
 				case "threads.runnable.count":
-					metrics.JVM.ThreadsRunnableCount = sc.GetVal(val)
+					metrics.JVM.ThreadsRunnableCount = sc.GetVal(val, jvmKey)
 					break
 				default:
-					klog.Info(fmt.Sprintf("&&&&&&&&&&&&&&&&&&&&&&Unsupported metrics key: %s", metricsKey))
+					//klog.Info(fmt.Sprintf("&&&&&&&&&&&&&&&&&&&&&&Unsupported metrics key: %s", jvmKey))
 				}
 			}
 		} else if metricsKey == "solr.jetty" {
@@ -178,16 +164,16 @@ func (sc *Client) RetrieveMetrics(responseBody map[string]interface{}) (*Metrics
 				val := reflect.ValueOf(jettyVal)
 				switch key {
 				case "jobs":
-					metrics.Jetty.Jobs = sc.GetVal(val)
+					metrics.Jetty.Jobs = val
 					break
 				case "size":
-					metrics.Jetty.Size = sc.GetVal(val)
+					metrics.Jetty.Size = val
 					break
 				case "utilization":
-					metrics.Jetty.Utilization = sc.GetVal(val)
+					metrics.Jetty.Utilization = val
 					break
 				default:
-					klog.Info(fmt.Sprintf("^^^^^^^^^^^^^^^^^^^^^^^^Unsupported metrics key: %s", metricsKey))
+					klog.Info(fmt.Sprintf("^^^^^^^^^^^^^^^^^^^^^^^^Unsupported metrics key: %s", jettyKey))
 				}
 			}
 		}
