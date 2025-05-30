@@ -130,7 +130,7 @@ func (o *KubeDBClientBuilder) getURL() string {
 	return fmt.Sprintf("%s.%s.%s.svc", o.podName, o.pgbouncer.GoverningServiceName(), o.pgbouncer.Namespace)
 }
 
-func (o *KubeDBClientBuilder) getBackendAuth() (string, string, error) {
+func (o *KubeDBClientBuilder) GetBackendAuth() (string, string, error) {
 	if o.auth != nil {
 		return o.auth.UserName, o.auth.Password, nil
 	}
@@ -191,7 +191,7 @@ func (o *KubeDBClientBuilder) getTLSConfig(ctx context.Context) (*certholder.Pat
 }
 
 func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
-	user, pass, err := o.getBackendAuth()
+	user, pass, err := o.GetBackendAuth()
 	if err != nil {
 		return "", err
 	}
