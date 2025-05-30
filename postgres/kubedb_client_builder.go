@@ -26,10 +26,6 @@ import (
 
 	vsecretapi "go.virtual-secrets.dev/apimachinery/apis/virtual/v1alpha1"
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/dynamic"
 	"k8s.io/klog/v2"
 	"kmodules.xyz/client-go/tools/certholder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -47,7 +43,6 @@ type KubeDBClientBuilder struct {
 	podName    string
 	postgresDB string
 	ctx        context.Context
-	dc         dynamic.Interface
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *dbapi.Postgres) *KubeDBClientBuilder {
@@ -74,11 +69,6 @@ func (o *KubeDBClientBuilder) WithPostgresDB(pgDB string) *KubeDBClientBuilder {
 
 func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
 	o.ctx = ctx
-	return o
-}
-
-func (o *KubeDBClientBuilder) WithDynamicClient(dc dynamic.Interface) *KubeDBClientBuilder {
-	o.dc = dc
 	return o
 }
 
@@ -115,24 +105,13 @@ func (o *KubeDBClientBuilder) getPostgresAuthCredentials() (string, string, erro
 	var username, password string
 
 	if dbapi.IsVirtualAuthSecretReferred(o.db.Spec.AuthSecret) {
-		vs, err := o.dc.Resource(schema.GroupVersionResource{
-			Group:    vsecretapi.SchemeGroupVersion.Group,
-			Version:  vsecretapi.SchemeGroupVersion.Version,
-			Resource: vsecretapi.ResourceSecrets,
-		}).Namespace(o.db.Namespace).Get(context.TODO(), o.db.Spec.AuthSecret.Name, metav1.GetOptions{})
+		var secret vsecretapi.Secret
+		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.AuthSecret.Name}, &secret)
 		if err != nil {
 			return "", "", err
 		}
-		var vSecret vsecretapi.Secret
-		if vs != nil {
-			err = runtime.DefaultUnstructuredConverter.FromUnstructured(vs.UnstructuredContent(), &vSecret)
-			if err != nil {
-				return "", "", err
-			}
-		}
-
-		username = string(vSecret.Data[core.BasicAuthUsernameKey])
-		password = string(vSecret.Data[core.BasicAuthPasswordKey])
+		username = string(secret.Data[core.BasicAuthUsernameKey])
+		password = string(secret.Data[core.BasicAuthPasswordKey])
 	} else {
 		var secret core.Secret
 		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.AuthSecret.Name}, &secret)
