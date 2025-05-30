@@ -102,3 +102,36 @@ type UpdateList struct {
 	replica    string
 	collection string
 }
+
+type MetricsInfo struct {
+	Metrics Metrics `json:"metrics,omitempty" yaml:"metrics,omitempty"`
+}
+
+type Metrics struct {
+	Jetty Jetty `json:"jetty,omitempty" yaml:"jetty,omitempty"`
+	JVM   JVM   `json:"jvm,omitempty" yaml:"jvm,omitempty"`
+}
+
+type Jetty struct {
+	Jobs        float32
+	Size        float32
+	Utilization float32
+}
+
+type JVM struct {
+	BuffersDirectCount         float32 `json:"buffers.direct.count,omitempty" yaml:"buffers.direct.count,omitempty"`
+	BuffersDirectMemoryUsed    float32 `json:"buffers.direct.MemoryUsed,omitempty" yaml:"buffers.direct.MemoryUsed,omitempty"`
+	BuffersDirectTotalCapacity float32 `json:"buffers.direct.TotalCapacity,omitempty" yaml:"buffers.direct.TotalCapacity,omitempty"`
+
+	BuffersMappedCount         float32 `json:"buffers.mapped.count,omitempty" yaml:"buffers.mapped.count,omitempty"`
+	BuffersMappedMemoryUsed    float32 `json:"buffers.mapped.MemoryUsed,omitempty" yaml:"buffers.mapped.MemoryUsed,omitempty"`
+	BuffersMappedTotalCapacity float32 `json:"buffers.mapped.TotalCapacity,omitempty" yaml:"buffers.mapped.TotalCapacity,omitempty"`
+
+	MemoryHeapMax   float32
+	MemoryHeapUsed  float32
+	MemoryHeapUsage float32
+
+	ThreadsCount         float32
+	ThreadsPeakCount     float32
+	ThreadsRunnableCount float32
+}
