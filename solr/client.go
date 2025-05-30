@@ -113,25 +113,25 @@ type Metrics struct {
 }
 
 type Jetty struct {
-	Jobs        float32
-	Size        float32
-	Utilization float32
+	Jobs        any
+	Size        any
+	Utilization any
 }
 
 type JVM struct {
-	BuffersDirectCount         float32 `json:"buffers.direct.count,omitempty" yaml:"buffers.direct.count,omitempty"`
-	BuffersDirectMemoryUsed    float32 `json:"buffers.direct.MemoryUsed,omitempty" yaml:"buffers.direct.MemoryUsed,omitempty"`
-	BuffersDirectTotalCapacity float32 `json:"buffers.direct.TotalCapacity,omitempty" yaml:"buffers.direct.TotalCapacity,omitempty"`
+	BuffersDirectCount         float64 `json:"buffers.direct.count,omitempty" yaml:"buffers.direct.count,omitempty"`
+	BuffersDirectMemoryUsed    float64 `json:"buffers.direct.MemoryUsed,omitempty" yaml:"buffers.direct.MemoryUsed,omitempty"`
+	BuffersDirectTotalCapacity float64 `json:"buffers.direct.TotalCapacity,omitempty" yaml:"buffers.direct.TotalCapacity,omitempty"`
 
-	BuffersMappedCount         float32 `json:"buffers.mapped.count,omitempty" yaml:"buffers.mapped.count,omitempty"`
-	BuffersMappedMemoryUsed    float32 `json:"buffers.mapped.MemoryUsed,omitempty" yaml:"buffers.mapped.MemoryUsed,omitempty"`
-	BuffersMappedTotalCapacity float32 `json:"buffers.mapped.TotalCapacity,omitempty" yaml:"buffers.mapped.TotalCapacity,omitempty"`
+	BuffersMappedCount         float64 `json:"buffers.mapped.count,omitempty" yaml:"buffers.mapped.count,omitempty"`
+	BuffersMappedMemoryUsed    float64 `json:"buffers.mapped.MemoryUsed,omitempty" yaml:"buffers.mapped.MemoryUsed,omitempty"`
+	BuffersMappedTotalCapacity float64 `json:"buffers.mapped.TotalCapacity,omitempty" yaml:"buffers.mapped.TotalCapacity,omitempty"`
 
-	MemoryHeapMax   float32
-	MemoryHeapUsed  float32
-	MemoryHeapUsage float32
+	MemoryHeapMax   float64
+	MemoryHeapUsed  float64
+	MemoryHeapUsage float64
 
-	ThreadsCount         float32
-	ThreadsPeakCount     float32
-	ThreadsRunnableCount float32
+	ThreadsCount         float64
+	ThreadsPeakCount     float64
+	ThreadsRunnableCount float64
 }
