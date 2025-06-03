@@ -150,8 +150,6 @@ func (sc *Client) RetrieveMetrics(responseBody map[string]interface{}) (*Metrics
 				case "threads.runnable.count":
 					metrics.JVM.ThreadsRunnableCount = sc.GetVal(val, jvmKey)
 					break
-				default:
-					//klog.Info(fmt.Sprintf("&&&&&&&&&&&&&&&&&&&&&&Unsupported metrics key: %s", jvmKey))
 				}
 			}
 		} else if metricsKey == "solr.jetty" {
@@ -172,8 +170,6 @@ func (sc *Client) RetrieveMetrics(responseBody map[string]interface{}) (*Metrics
 				case "utilization":
 					metrics.Jetty.Utilization = val
 					break
-				default:
-					klog.Info(fmt.Sprintf("^^^^^^^^^^^^^^^^^^^^^^^^Unsupported metrics key: %s", jettyKey))
 				}
 			}
 		}
