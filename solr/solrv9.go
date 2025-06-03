@@ -452,3 +452,21 @@ func (sc *SLClientV9) RemoveRole(role, node string) (*Response, error) {
 	}
 	return backupResponse, nil
 }
+
+func (sc *SLClientV9) GetMetrics() (*Response, error) {
+	sc.Config.log.V(5).Info("GET METRICS")
+	req := sc.Client.R().SetDoNotParseResponse(true)
+	req.SetHeader("Content-Type", "application/json")
+	res, err := req.Get("/solr/admin/metrics")
+	if err != nil {
+		sc.Config.log.Error(err, "Failed to send http request to get metrics")
+		return nil, err
+	}
+
+	writeResponse := &Response{
+		Code:   res.StatusCode(),
+		header: res.Header(),
+		body:   res.RawBody(),
+	}
+	return writeResponse, nil
+}
