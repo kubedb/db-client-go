@@ -391,3 +391,81 @@ func (c *Client) UpdateDruidPassword(password string) error {
 	}
 	return nil
 }
+
+// Struct to hold the memory fields from the response
+type Memory struct {
+	MaxMemory    int64 `json:"maxMemory"`
+	TotalMemory  int64 `json:"totalMemory"`
+	FreeMemory   int64 `json:"freeMemory"`
+	UsedMemory   int64 `json:"usedMemory"`
+	DirectMemory int64 `json:"directMemory"`
+}
+
+// DruidStatus represents the whole Druid status response
+type DruidStatus struct {
+	Memory Memory `json:"memory"`
+}
+
+func (c *Client) GetDruidMemoryStatus() (*Memory, error) {
+	// Define the API path for Druisd status
+	path := "status"
+
+	// Initialize the DruidStatus struct
+	var druidStatus DruidStatus
+
+	// Perform the request using ExecuteRequest
+	_, err := c.ExecuteRequest(http.MethodGet, path, nil, &druidStatus)
+	if err != nil {
+		klog.Error("Failed to execute GET request for Druid status", err)
+		return nil, err
+	}
+
+	// Return the memory fields
+	return &druidStatus.Memory, nil
+}
+
+type DatasourceInfo struct {
+	Name       string `json:"name"`
+	Properties struct {
+		Tiers struct {
+			DefaultTier struct {
+				Size           int64 `json:"size"`
+				ReplicatedSize int64 `json:"replicatedSize"`
+				SegmentCount   int   `json:"segmentCount"`
+			} `json:"_default_tier"`
+		} `json:"tiers"`
+		Segments struct {
+			MaxTime        string `json:"maxTime"`
+			MinTime        string `json:"minTime"`
+			Size           int64  `json:"size"`
+			ReplicatedSize int64  `json:"replicatedSize"`
+			Count          int    `json:"count"`
+		} `json:"segments"`
+	} `json:"properties"`
+}
+
+// Define a struct to hold query parameters
+type DatasourceQuery struct {
+	Simple string `url:"simple"`
+}
+
+func (c *Client) GetDruidDatasources() ([]DatasourceInfo, error) {
+	// Define the API path for retrieving simple datasource info
+	path := "druid/coordinator/v1/datasources"
+
+	// Create a struct to hold the query parameters
+	query := DatasourceQuery{Simple: ""}
+
+	// Declare a slice to hold the response
+	var datasources []DatasourceInfo
+
+	// Execute the HTTP GET request
+	_, err := c.ExecuteRequest(http.MethodGet, path, query, &datasources)
+	if err != nil {
+		klog.Error("Failed to execute GET request for Druid datasources: ", err.Error())
+		return nil, err
+	}
+
+	// Return the parsed datasources
+	return datasources, nil
+}
