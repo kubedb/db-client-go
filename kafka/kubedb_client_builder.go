@@ -64,6 +64,12 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 
 func (o *KubeDBClientBuilder) GetConfig() (*kafkago.Config, error) {
 	clientConfig := kafkago.NewConfig()
+	sversion, err := kafkago.ParseKafkaVersion(o.db.Spec.Version)
+	if err != nil {
+		klog.Error(err, "Failed to parse Kafka version", "version", o.db.Spec.Version)
+		return nil, errors.New("failed to parse Kafka version: " + o.db.Spec.Version)
+	}
+	clientConfig.Version = sversion
 	if !o.db.Spec.DisableSecurity {
 		if o.db.Spec.AuthSecret == nil {
 			klog.Info("Auth-secret not set")
