@@ -119,13 +119,13 @@ type Jetty struct {
 }
 
 type JVM struct {
-	BuffersDirectCount         float64 `json:"buffers.direct.count,omitempty" yaml:"buffers.direct.count,omitempty"`
-	BuffersDirectMemoryUsed    float64 `json:"buffers.direct.MemoryUsed,omitempty" yaml:"buffers.direct.MemoryUsed,omitempty"`
-	BuffersDirectTotalCapacity float64 `json:"buffers.direct.TotalCapacity,omitempty" yaml:"buffers.direct.TotalCapacity,omitempty"`
+	BuffersDirectCount         float64
+	BuffersDirectMemoryUsed    float64
+	BuffersDirectTotalCapacity float64
 
-	BuffersMappedCount         float64 `json:"buffers.mapped.count,omitempty" yaml:"buffers.mapped.count,omitempty"`
-	BuffersMappedMemoryUsed    float64 `json:"buffers.mapped.MemoryUsed,omitempty" yaml:"buffers.mapped.MemoryUsed,omitempty"`
-	BuffersMappedTotalCapacity float64 `json:"buffers.mapped.TotalCapacity,omitempty" yaml:"buffers.mapped.TotalCapacity,omitempty"`
+	BuffersMappedCount         float64
+	BuffersMappedMemoryUsed    float64
+	BuffersMappedTotalCapacity float64
 
 	MemoryHeapMax   float64
 	MemoryHeapUsed  float64

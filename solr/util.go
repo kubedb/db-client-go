@@ -110,7 +110,6 @@ func (sc *Client) RetrieveMetrics(responseBody map[string]interface{}) (*Metrics
 			metrics.JVM = JVM{}
 			jvmMetrics := metricsVal.(map[string]interface{})
 			for jvmKey, jvmVal := range jvmMetrics {
-
 				val := jvmVal
 				switch jvmKey {
 				case "buffers.direct.Count":
