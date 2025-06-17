@@ -18,6 +18,7 @@ package ignite
 
 import (
 	"context"
+	"crypto/tls"
 	"database/sql"
 	"fmt"
 	"net"
@@ -89,6 +90,10 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 		Dialer: net.Dialer{
 			Timeout: o.timeout,
 		},
+		TLSConfig: &tls.Config{
+			// You should only set this to true for testing purposes.
+			InsecureSkipVerify: false,
+		},
 	}
 	if !o.db.Spec.DisableSecurity {
 		err, username, password := o.getUsernamePassword()
@@ -116,7 +121,8 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
 	dataSource := fmt.Sprintf(
 		"tcp://%s:%d/PUBLIC?version=1.1.0"+
-			"&tls-insecure-skip-verify=yes"+
+			"&tls=yes"+
+			"&tls-insecure-skip-verify=no"+
 			"&timeout=%d",
 		o.Address(), kubedb.IgniteThinPort, o.timeout)
 
