@@ -90,10 +90,6 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 		Dialer: net.Dialer{
 			Timeout: o.timeout,
 		},
-		TLSConfig: &tls.Config{
-			// You should only set this to true for testing purposes.
-			InsecureSkipVerify: false,
-		},
 	}
 	if !o.db.Spec.DisableSecurity {
 		err, username, password := o.getUsernamePassword()
@@ -103,6 +99,10 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 
 		igniteConnectionInfo.Username = username
 		igniteConnectionInfo.Password = password
+	}
+
+	if o.db.Spec.EnableSSL {
+		igniteConnectionInfo.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	}
 
 	igclient, err := ignite.Connect(igniteConnectionInfo)
@@ -121,8 +121,6 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
 	dataSource := fmt.Sprintf(
 		"tcp://%s:%d/PUBLIC?version=1.1.0"+
-			"&tls=yes"+
-			"&tls-insecure-skip-verify=no"+
 			"&timeout=%d",
 		o.Address(), kubedb.IgniteThinPort, o.timeout)
 
@@ -133,6 +131,10 @@ func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
 		}
 		// Credentials are only needed if they're configured in your Ignite server.
 		dataSource += fmt.Sprintf("&username=%s", username) + fmt.Sprintf("&password=%s", password)
+	}
+
+	if o.db.Spec.EnableSSL {
+		dataSource += fmt.Sprintf("&tls=yes" + "&tls-insecure-skip-verify=no")
 	}
 
 	db, err := sql.Open("ignite", dataSource)
