@@ -19,6 +19,7 @@ package ignite
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"database/sql"
 	"fmt"
 	"net"
@@ -102,7 +103,37 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 	}
 
 	if o.db.Spec.EnableSSL {
-		igniteConnectionInfo.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+		// Secret for Ignite Client Certs
+		secret, err := o.GetTLSSecret()
+		if err != nil {
+			klog.Error(err, "Failed to get TLS-secret")
+			return nil, err
+		}
+
+		if secret.Data["ca.crt"] == nil || secret.Data["tls.crt"] == nil || secret.Data["tls.key"] == nil {
+			return nil, errors.New("invalid tls-secret.")
+		}
+
+		caCert := secret.Data["ca.crt"]
+		clientCert := secret.Data["tls.crt"]
+		clientKey := secret.Data["tls.key"]
+
+		caCertPool := x509.NewCertPool()
+		if ok := caCertPool.AppendCertsFromPEM(caCert); !ok {
+			klog.Errorf("Failed to append CA certificate to the pool")
+		}
+
+		// Load client certificate
+		clientCertificate, err := tls.X509KeyPair(clientCert, clientKey)
+		if err != nil {
+			klog.Errorf("Failed to load client certificate: %v", err)
+		}
+
+		igniteConnectionInfo.TLSConfig = &tls.Config{
+			InsecureSkipVerify: false,
+			Certificates:       []tls.Certificate{clientCertificate},
+			RootCAs:            caCertPool,
+		}
 	}
 
 	igclient, err := ignite.Connect(igniteConnectionInfo)
@@ -193,4 +224,16 @@ func (igSql *SqlClient) Ping() error {
 
 func (o *KubeDBClientBuilder) Address() string {
 	return fmt.Sprintf("%s.%s.svc.cluster.local", o.db.ServiceName(), o.db.Namespace)
+}
+
+func (o *KubeDBClientBuilder) GetTLSSecret() (*core.Secret, error) {
+	var tlsSecret core.Secret
+	err := o.kc.Get(context.TODO(), types.NamespacedName{
+		Name:      o.db.GetIgniteCertSecretName(api.IgniteClientCert),
+		Namespace: o.db.Namespace,
+	}, &tlsSecret)
+	if err != nil {
+		return nil, err
+	}
+	return &tlsSecret, nil
 }
