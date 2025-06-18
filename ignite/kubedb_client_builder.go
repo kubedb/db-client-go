@@ -128,13 +128,12 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 		rootCA.AppendCertsFromPEM(certSecret.Data[kubedb.CACert])
 
 		igniteConnectionInfo.TLSConfig = &tls.Config{
-			ServerName:         o.db.GoverningServiceName(),
-			Certificates:       []tls.Certificate{crt},
-			ClientAuth:         tls.RequireAndVerifyClientCert,
-			ClientCAs:          clientCA,
-			RootCAs:            rootCA,
-			MaxVersion:         tls.VersionTLS13,
-			InsecureSkipVerify: false, // Ensure server's cert is verified
+			ServerName:   o.db.GoverningServiceName(),
+			Certificates: []tls.Certificate{crt},
+			ClientAuth:   tls.RequireAndVerifyClientCert,
+			ClientCAs:    clientCA,
+			RootCAs:      rootCA,
+			MaxVersion:   tls.VersionTLS13,
 		}
 	}
 
