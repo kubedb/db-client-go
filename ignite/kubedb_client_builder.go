@@ -111,11 +111,11 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 		}
 
 		if certSecret.Data["ca.crt"] == nil || certSecret.Data["tls.crt"] == nil || certSecret.Data["tls.key"] == nil {
-			return nil, errors.New("invalid tls-secret.")
+			return nil, errors.New("invalid cert-secret.")
 		}
 
 		// get tls cert, clientCA and rootCA for tls config
-		// use server cert ca for rootca as issuer ref is not taken into account
+		// use server cert ca for root ca as issuer ref is not taken into account
 		clientCA := x509.NewCertPool()
 		rootCA := x509.NewCertPool()
 
@@ -128,12 +128,13 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 		rootCA.AppendCertsFromPEM(certSecret.Data[kubedb.CACert])
 
 		igniteConnectionInfo.TLSConfig = &tls.Config{
-			ServerName:   o.db.GoverningServiceName(),
-			Certificates: []tls.Certificate{crt},
-			ClientAuth:   tls.RequireAndVerifyClientCert,
-			ClientCAs:    clientCA,
-			RootCAs:      rootCA,
-			MaxVersion:   tls.VersionTLS13,
+			ServerName:         o.db.GoverningServiceName(),
+			Certificates:       []tls.Certificate{crt},
+			ClientAuth:         tls.RequireAndVerifyClientCert,
+			ClientCAs:          clientCA,
+			RootCAs:            rootCA,
+			MaxVersion:         tls.VersionTLS13,
+			InsecureSkipVerify: false, // Ensure server's cert is verified
 		}
 	}
 
