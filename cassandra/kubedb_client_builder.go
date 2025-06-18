@@ -2,6 +2,8 @@ package cassandra
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 
@@ -76,10 +78,54 @@ func (o *KubeDBClientBuilder) GetCassandraClient() (*Client, error) {
 			Password: password,
 		}
 	}
+	if o.db.Spec.EnableSSL {
+		tlsConfig, err := o.GetTLSConfig()
+		if err != nil {
+			return nil, err
+		}
+		cluster.SslOpts = &gocql.SslOptions{
+			Config: tlsConfig,
+		}
+	}
 	session, err := cluster.CreateSession()
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to Cassandra cluster: %v", err)
 	}
 
 	return &Client{session}, nil
+}
+
+func (o *KubeDBClientBuilder) GetTLSConfig() (*tls.Config, error) {
+	var certSecret core.Secret
+	err := o.kc.Get(o.ctx, types.NamespacedName{
+		Namespace: o.db.Namespace,
+		Name:      o.db.GetCertSecretName(api.CassandraClientCert),
+	}, &certSecret)
+	if err != nil {
+		klog.Error(err, "failed to get clientCert secret")
+		return nil, err
+	}
+
+	// get tls cert, clientCA and rootCA for tls config
+	// use server cert ca for rootca as issuer ref is not taken into account
+	clientCA := x509.NewCertPool()
+	rootCA := x509.NewCertPool()
+
+	crt, err := tls.X509KeyPair(certSecret.Data[core.TLSCertKey], certSecret.Data[core.TLSPrivateKeyKey])
+	if err != nil {
+		klog.Error(err, "failed to create certificate for TLS config")
+		return nil, err
+	}
+	clientCA.AppendCertsFromPEM(certSecret.Data[kubedb.CACert])
+	rootCA.AppendCertsFromPEM(certSecret.Data[kubedb.CACert])
+
+	tlsConfig := &tls.Config{
+		ServerName:   o.db.ServiceName(),
+		Certificates: []tls.Certificate{crt},
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientCAs:    clientCA,
+		RootCAs:      rootCA,
+		MaxVersion:   tls.VersionTLS13,
+	}
+	return tlsConfig, nil
 }
