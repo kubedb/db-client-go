@@ -128,7 +128,7 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 		rootCA.AppendCertsFromPEM(certSecret.Data[kubedb.CACert])
 
 		igniteConnectionInfo.TLSConfig = &tls.Config{
-			ServerName:   o.db.ServiceName(),
+			ServerName:   o.db.GoverningServiceName(),
 			Certificates: []tls.Certificate{crt},
 			ClientAuth:   tls.RequireAndVerifyClientCert,
 			ClientCAs:    clientCA,
@@ -137,16 +137,16 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 		}
 	}
 
-	igclient, err := ignite.Connect(igniteConnectionInfo)
+	igClient, err := ignite.Connect(igniteConnectionInfo)
 	if err != nil {
 		o.log.Error(err, "failed connect to server: %v")
 		return &BinaryClient{
-			igclient,
+			igClient,
 		}, err
 	}
 
 	return &BinaryClient{
-		igclient,
+		igClient,
 	}, nil
 }
 
