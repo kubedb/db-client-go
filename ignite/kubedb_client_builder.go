@@ -223,7 +223,7 @@ func (igSql *SqlClient) Ping() error {
 }
 
 func (o *KubeDBClientBuilder) Address() string {
-	return fmt.Sprintf("%s.%s.svc.cluster.local", o.db.ServiceName(), o.db.Namespace)
+	return fmt.Sprintf("%s-pods.%s.svc.cluster.local", o.db.ServiceName(), o.db.Namespace)
 }
 
 func (o *KubeDBClientBuilder) GetTLSSecret() (*core.Secret, error) {
