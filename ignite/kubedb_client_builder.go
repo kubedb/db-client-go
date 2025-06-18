@@ -104,35 +104,36 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 
 	if o.db.Spec.EnableSSL {
 		// Secret for Ignite Client Certs
-		secret, err := o.GetTLSSecret()
+		certSecret, err := o.GetCertSecret()
 		if err != nil {
 			klog.Error(err, "Failed to get TLS-secret")
 			return nil, err
 		}
 
-		if secret.Data["ca.crt"] == nil || secret.Data["tls.crt"] == nil || secret.Data["tls.key"] == nil {
+		if certSecret.Data["ca.crt"] == nil || certSecret.Data["tls.crt"] == nil || certSecret.Data["tls.key"] == nil {
 			return nil, errors.New("invalid tls-secret.")
 		}
 
-		caCert := secret.Data["ca.crt"]
-		clientCert := secret.Data["tls.crt"]
-		clientKey := secret.Data["tls.key"]
+		// get tls cert, clientCA and rootCA for tls config
+		// use server cert ca for rootca as issuer ref is not taken into account
+		clientCA := x509.NewCertPool()
+		rootCA := x509.NewCertPool()
 
-		caCertPool := x509.NewCertPool()
-		if ok := caCertPool.AppendCertsFromPEM(caCert); !ok {
-			klog.Errorf("Failed to append CA certificate to the pool")
-		}
-
-		// Load client certificate
-		clientCertificate, err := tls.X509KeyPair(clientCert, clientKey)
+		crt, err := tls.X509KeyPair(certSecret.Data[core.TLSCertKey], certSecret.Data[core.TLSPrivateKeyKey])
 		if err != nil {
-			klog.Errorf("Failed to load client certificate: %v", err)
+			klog.Error(err, "failed to create certificate for TLS config")
+			return nil, err
 		}
+		clientCA.AppendCertsFromPEM(certSecret.Data[kubedb.CACert])
+		rootCA.AppendCertsFromPEM(certSecret.Data[kubedb.CACert])
 
 		igniteConnectionInfo.TLSConfig = &tls.Config{
-			InsecureSkipVerify: false,
-			Certificates:       []tls.Certificate{clientCertificate},
-			RootCAs:            caCertPool,
+			ServerName:   o.db.ServiceName(),
+			Certificates: []tls.Certificate{crt},
+			ClientAuth:   tls.RequireAndVerifyClientCert,
+			ClientCAs:    clientCA,
+			RootCAs:      rootCA,
+			MaxVersion:   tls.VersionTLS13,
 		}
 	}
 
@@ -223,17 +224,17 @@ func (igSql *SqlClient) Ping() error {
 }
 
 func (o *KubeDBClientBuilder) Address() string {
-	return fmt.Sprintf("%s-pods.%s.svc.cluster.local", o.db.ServiceName(), o.db.Namespace)
+	return fmt.Sprintf("%s.%s.svc.cluster.local", o.db.ServiceName(), o.db.Namespace)
 }
 
-func (o *KubeDBClientBuilder) GetTLSSecret() (*core.Secret, error) {
-	var tlsSecret core.Secret
+func (o *KubeDBClientBuilder) GetCertSecret() (*core.Secret, error) {
+	var certSecret core.Secret
 	err := o.kc.Get(context.TODO(), types.NamespacedName{
 		Name:      o.db.GetIgniteCertSecretName(api.IgniteClientCert),
 		Namespace: o.db.Namespace,
-	}, &tlsSecret)
+	}, &certSecret)
 	if err != nil {
 		return nil, err
 	}
-	return &tlsSecret, nil
+	return &certSecret, nil
 }
