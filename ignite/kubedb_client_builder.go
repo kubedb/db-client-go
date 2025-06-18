@@ -80,7 +80,6 @@ func (o *KubeDBClientBuilder) WithTimeout(d time.Duration) *KubeDBClientBuilder 
 }
 
 func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
-
 	igniteConnectionInfo := ignite.ConnInfo{
 		Network: "tcp",
 		Host:    o.Address(),
@@ -130,10 +129,8 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 		igniteConnectionInfo.TLSConfig = &tls.Config{
 			ServerName:   o.db.GoverningServiceName(),
 			Certificates: []tls.Certificate{crt},
-			ClientAuth:   tls.RequireAndVerifyClientCert,
 			ClientCAs:    clientCA,
 			RootCAs:      rootCA,
-			MaxVersion:   tls.VersionTLS13,
 		}
 	}
 
