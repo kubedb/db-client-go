@@ -32,7 +32,6 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
-	"kmodules.xyz/client-go/tools/certholder"
 	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -164,23 +163,23 @@ func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
 	}
 
 	if o.db.Spec.EnableSSL {
-		secretName := o.db.GetIgniteCertSecretName(api.IgniteClientCert)
+		//secretName := o.db.GetIgniteCertSecretName(api.IgniteClientCert)
+		//
+		//var certSecret core.Secret
+		//err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: secretName}, &certSecret)
+		//if err != nil {
+		//	klog.Error(err, "failed to get certificate secret.", secretName)
+		//	return nil, err
+		//}
+		//
+		//certs, _ := certholder.DefaultHolder.ForResource(api.SchemeGroupVersion.WithResource(api.ResourcePluralIgnite), o.db.ObjectMeta)
+		//paths, err := certs.Save(&certSecret)
+		//if err != nil {
+		//	klog.Error(err, "failed to save certificate")
+		//	return nil, err
+		//}
 
-		var certSecret core.Secret
-		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: secretName}, &certSecret)
-		if err != nil {
-			klog.Error(err, "failed to get certificate secret.", secretName)
-			return nil, err
-		}
-
-		certs, _ := certholder.DefaultHolder.ForResource(api.SchemeGroupVersion.WithResource(api.ResourcePluralIgnite), o.db.ObjectMeta)
-		paths, err := certs.Save(&certSecret)
-		if err != nil {
-			klog.Error(err, "failed to save certificate")
-			return nil, err
-		}
-
-		dataSource += fmt.Sprintf("&tls=yes + sslrootcert=%s sslcert=%s sslkey=%s", paths.CACert, paths.Cert, paths.Key)
+		dataSource += fmt.Sprintf("&tls=yes") + fmt.Sprintf("&tls-insecure-skip-verify=yes")
 	}
 
 	db, err := sql.Open("ignite", dataSource)
