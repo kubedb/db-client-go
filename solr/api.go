@@ -73,4 +73,5 @@ type SLClient interface {
 	AddRole(role, node string) (*Response, error)
 	RemoveRole(role, node string) (*Response, error)
 	DeleteCollection(name string) (*Response, error)
+	GetMetrics() (*Response, error)
 }
