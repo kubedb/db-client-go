@@ -92,13 +92,13 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 		},
 	}
 	if !o.db.Spec.DisableSecurity {
-		err, username, password := o.getUsernamePassword()
+		err, username, _ := o.getUsernamePassword()
 		if err != nil {
 			return nil, err
 		}
 
 		igniteConnectionInfo.Username = username
-		igniteConnectionInfo.Password = password
+		igniteConnectionInfo.Password = "ignite"
 	}
 
 	if o.db.Spec.EnableSSL {
