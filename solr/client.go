@@ -102,3 +102,36 @@ type UpdateList struct {
 	replica    string
 	collection string
 }
+
+type MetricsInfo struct {
+	Metrics Metrics `json:"metrics,omitempty" yaml:"metrics,omitempty"`
+}
+
+type Metrics struct {
+	Jetty Jetty `json:"jetty,omitempty" yaml:"jetty,omitempty"`
+	JVM   JVM   `json:"jvm,omitempty" yaml:"jvm,omitempty"`
+}
+
+type Jetty struct {
+	Jobs        any
+	Size        any
+	Utilization any
+}
+
+type JVM struct {
+	BuffersDirectCount         float64
+	BuffersDirectMemoryUsed    float64
+	BuffersDirectTotalCapacity float64
+
+	BuffersMappedCount         float64
+	BuffersMappedMemoryUsed    float64
+	BuffersMappedTotalCapacity float64
+
+	MemoryHeapMax   float64
+	MemoryHeapUsed  float64
+	MemoryHeapUsage float64
+
+	ThreadsCount         float64
+	ThreadsPeakCount     float64
+	ThreadsRunnableCount float64
+}
