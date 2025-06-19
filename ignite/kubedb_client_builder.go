@@ -32,6 +32,7 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
+	"kmodules.xyz/client-go/tools/certholder"
 	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -92,13 +93,13 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 		},
 	}
 	if !o.db.Spec.DisableSecurity {
-		err, username, _ := o.getUsernamePassword()
+		err, username, password := o.getUsernamePassword()
 		if err != nil {
 			return nil, err
 		}
 
 		igniteConnectionInfo.Username = username
-		igniteConnectionInfo.Password = "ignite"
+		igniteConnectionInfo.Password = password
 	}
 
 	if o.db.Spec.EnableSSL {
@@ -127,7 +128,7 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 		rootCA.AppendCertsFromPEM(certSecret.Data[kubedb.CACert])
 
 		igniteConnectionInfo.TLSConfig = &tls.Config{
-			ServerName:   o.db.GoverningServiceName(),
+			ServerName:   o.db.ServiceName(),
 			Certificates: []tls.Certificate{crt},
 			ClientCAs:    clientCA,
 			RootCAs:      rootCA,
@@ -163,7 +164,23 @@ func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
 	}
 
 	if o.db.Spec.EnableSSL {
-		dataSource += fmt.Sprintf("&tls=yes" + "&tls-insecure-skip-verify=no")
+		secretName := o.db.GetIgniteCertSecretName(api.IgniteClientCert)
+
+		var certSecret core.Secret
+		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: secretName}, &certSecret)
+		if err != nil {
+			klog.Error(err, "failed to get certificate secret.", secretName)
+			return nil, err
+		}
+
+		certs, _ := certholder.DefaultHolder.ForResource(api.SchemeGroupVersion.WithResource(api.ResourcePluralIgnite), o.db.ObjectMeta)
+		paths, err := certs.Save(&certSecret)
+		if err != nil {
+			klog.Error(err, "failed to save certificate")
+			return nil, err
+		}
+
+		dataSource += fmt.Sprintf("&tls=yes + sslrootcert=%s sslcert=%s sslkey=%s", paths.CACert, paths.Cert, paths.Key)
 	}
 
 	db, err := sql.Open("ignite", dataSource)
