@@ -130,8 +130,9 @@ func (o *KubeDBClientBuilder) GetTLSConfig() (*tls.Config, error) {
 }
 
 func (o *KubeDBClientBuilder) GetHazelcastClient() (*Client, error) {
-	if o.podName == "" {
-		o.url = o.ServiceURL()
+	if o.podName != "" {
+		o.url = fmt.Sprintf("%s.%s.%s.svc.cluster.local:%d", o.podName, o.db.GoverningServiceName(), o.db.GetNamespace(), kubedb.HazelcastRestPort)
+
 	}
 
 	if o.url == "" {
