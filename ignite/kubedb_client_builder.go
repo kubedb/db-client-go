@@ -102,48 +102,24 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 	}
 
 	if o.db.Spec.EnableSSL {
-		// Secret for Ignite Client Certs
-		certSecret, err := o.GetCertSecret()
+		igniteTLSConfig, err := o.GetTLSConfig()
 		if err != nil {
-			klog.Error(err, "Failed to get TLS-secret")
 			return nil, err
 		}
 
-		if certSecret.Data["ca.crt"] == nil || certSecret.Data["tls.crt"] == nil || certSecret.Data["tls.key"] == nil {
-			return nil, errors.New("invalid cert-secret.")
-		}
-
-		// get tls cert, clientCA and rootCA for tls config
-		// use server cert ca for root ca as issuer ref is not taken into account
-		clientCA := x509.NewCertPool()
-		rootCA := x509.NewCertPool()
-
-		crt, err := tls.X509KeyPair(certSecret.Data[core.TLSCertKey], certSecret.Data[core.TLSPrivateKeyKey])
-		if err != nil {
-			klog.Error(err, "failed to create certificate for TLS config")
-			return nil, err
-		}
-		clientCA.AppendCertsFromPEM(certSecret.Data[kubedb.CACert])
-		rootCA.AppendCertsFromPEM(certSecret.Data[kubedb.CACert])
-
-		igniteConnectionInfo.TLSConfig = &tls.Config{
-			ServerName:   o.db.ServiceName(),
-			Certificates: []tls.Certificate{crt},
-			ClientCAs:    clientCA,
-			RootCAs:      rootCA,
-		}
+		igniteConnectionInfo.TLSConfig = igniteTLSConfig
 	}
 
-	igClient, err := ignite.Connect(igniteConnectionInfo)
+	igBinClient, err := ignite.Connect(igniteConnectionInfo)
 	if err != nil {
 		o.log.Error(err, "failed connect to server: %v")
 		return &BinaryClient{
-			igClient,
+			igBinClient,
 		}, err
 	}
 
 	return &BinaryClient{
-		igClient,
+		igBinClient,
 	}, nil
 }
 
@@ -163,23 +139,7 @@ func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
 	}
 
 	if o.db.Spec.EnableSSL {
-		//secretName := o.db.GetIgniteCertSecretName(api.IgniteClientCert)
-		//
-		//var certSecret core.Secret
-		//err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: secretName}, &certSecret)
-		//if err != nil {
-		//	klog.Error(err, "failed to get certificate secret.", secretName)
-		//	return nil, err
-		//}
-		//
-		//certs, _ := certholder.DefaultHolder.ForResource(api.SchemeGroupVersion.WithResource(api.ResourcePluralIgnite), o.db.ObjectMeta)
-		//paths, err := certs.Save(&certSecret)
-		//if err != nil {
-		//	klog.Error(err, "failed to save certificate")
-		//	return nil, err
-		//}
-
-		dataSource += fmt.Sprintf("&tls=yes") + fmt.Sprintf("&tls-insecure-skip-verify=yes")
+		dataSource += fmt.Sprintf("&tls=yes") + fmt.Sprintf("&tls-insecure-skip-verify=no")
 	}
 
 	db, err := sql.Open("ignite", dataSource)
@@ -250,4 +210,38 @@ func (o *KubeDBClientBuilder) GetCertSecret() (*core.Secret, error) {
 		return nil, err
 	}
 	return &certSecret, nil
+}
+
+func (o *KubeDBClientBuilder) GetTLSConfig() (*tls.Config, error) {
+	// Secret for Ignite Client Certs
+	certSecret, err := o.GetCertSecret()
+	if err != nil {
+		klog.Error(err, "Failed to get TLS-secret")
+		return nil, err
+	}
+
+	if certSecret.Data["ca.crt"] == nil || certSecret.Data["tls.crt"] == nil || certSecret.Data["tls.key"] == nil {
+		return nil, errors.New("invalid cert-secret.")
+	}
+
+	// get tls cert, clientCA and rootCA for tls config
+	// use server cert ca for root ca as issuer ref is not taken into account
+	clientCA := x509.NewCertPool()
+	rootCA := x509.NewCertPool()
+
+	crt, err := tls.X509KeyPair(certSecret.Data[core.TLSCertKey], certSecret.Data[core.TLSPrivateKeyKey])
+	if err != nil {
+		klog.Error(err, "failed to create certificate for TLS config")
+		return nil, err
+	}
+	clientCA.AppendCertsFromPEM(certSecret.Data[kubedb.CACert])
+	rootCA.AppendCertsFromPEM(certSecret.Data[kubedb.CACert])
+
+	tlsConfig := &tls.Config{
+		ServerName:   o.db.ServiceName(),
+		Certificates: []tls.Certificate{crt},
+		ClientCAs:    clientCA,
+		RootCAs:      rootCA,
+	}
+	return tlsConfig, nil
 }
