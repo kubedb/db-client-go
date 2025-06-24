@@ -26,6 +26,7 @@ type Client struct {
 }
 
 type HZRestyClient struct {
-	Client *resty.Client
-	Config *RestyConfig
+	Client   *resty.Client
+	Config   *RestyConfig
+	password string
 }

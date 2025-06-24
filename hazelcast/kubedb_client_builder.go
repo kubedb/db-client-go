@@ -197,7 +197,8 @@ type RestyConfig struct {
 
 func (o *KubeDBClientBuilder) GetHazelcastRestyClient() (*HZRestyClient, error) {
 	if o.url == "" {
-		o.url = fmt.Sprintf("%s:%s.%s.svc:%d", o.db.GetConnectionScheme(), o.db.ServiceName(), o.db.GetNamespace(), kubedb.HazelcastRestPort)
+		o.url = fmt.Sprintf("%s://%s.%s.svc:%d", o.db.GetConnectionScheme(), o.db.ServiceName(), o.db.GetNamespace(), kubedb.HazelcastRestPort)
+		klog.Info("++++++++++++++++++++++++>>>>>>>>>>>>>>>>>>>>>>>> ", o.url)
 	}
 
 	config := RestyConfig{
@@ -210,27 +211,14 @@ func (o *KubeDBClientBuilder) GetHazelcastRestyClient() (*HZRestyClient, error) 
 		},
 	}
 
-	var authSecret core.Secret
 	var username, password string
-	if !o.db.Spec.DisableSecurity && o.db.Spec.AuthSecret != nil {
-		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.AuthSecret.Name}, &authSecret)
+	if !o.db.Spec.DisableSecurity {
+		user, pass, err := o.GetAuthCredentials()
 		if err != nil {
-			return nil, errors.Errorf("Failed to get auth secret with %s", err)
+			return nil, err
 		}
-
-		if value, ok := authSecret.Data[core.BasicAuthUsernameKey]; ok {
-			username = string(value)
-		} else {
-			klog.Errorf("Failed for secret: %s/%s, username is missing", authSecret.Namespace, authSecret.Name)
-			return nil, errors.New("username is missing")
-		}
-
-		if value, ok := authSecret.Data[core.BasicAuthPasswordKey]; ok {
-			password = string(value)
-		} else {
-			klog.Errorf("Failed for secret: %s/%s, password is missing", authSecret.Namespace, authSecret.Name)
-			return nil, errors.New("password is missing")
-		}
+		username = user
+		password = pass
 	}
 
 	defaultTlsConfig, err := o.GetTLSConfig()
@@ -245,14 +233,15 @@ func (o *KubeDBClientBuilder) GetHazelcastRestyClient() (*HZRestyClient, error) 
 	newClient.SetTimeout(time.Second * 30)
 
 	return &HZRestyClient{
-		Client: newClient,
-		Config: &config,
+		Client:   newClient,
+		Config:   &config,
+		password: password,
 	}, nil
 }
 
-func (client *HZRestyClient) ChangeClusterState(password, state string) (string, error) {
+func (client *HZRestyClient) ChangeClusterState(state string) (string, error) {
 	req := client.Client.R().SetDoNotParseResponse(true)
-	param := fmt.Sprintf("admin&%s&%s", password, state)
+	param := fmt.Sprintf("admin&%s&%s", client.password, state)
 	req.SetHeader("Content-Type", "application/json")
 	req.SetBody(param)
 	res, err := req.Post("/hazelcast/rest/management/cluster/changeState")
@@ -274,6 +263,36 @@ func (client *HZRestyClient) ChangeClusterState(password, state string) (string,
 		return "", fmt.Errorf("failed to deserialize the response: %v", err)
 	}
 	if val, ok := responseBody["status"]; ok {
+		if strValue, ok := val.(string); ok {
+			return strValue, nil
+		}
+		return "", errors.New("failed to convert response to string")
+	}
+	return "", errors.New("status is missing")
+}
+
+func (client *HZRestyClient) GetClusterState() (string, error) {
+	req := client.Client.R().SetDoNotParseResponse(true)
+
+	res, err := req.Get("/hazelcast/health")
+	if res != nil {
+		if res.StatusCode() != 200 {
+			klog.Error("stauscode is not 200")
+			return "", errors.New("statuscode is not 200")
+		}
+	} else {
+		return "", errors.New("response can not be nil")
+	}
+	if err != nil {
+		klog.Error(err, res.StatusCode(), "Failed to send http request")
+		return "", err
+	}
+	body := res.RawBody()
+	responseBody := make(map[string]interface{})
+	if err := json.NewDecoder(body).Decode(&responseBody); err != nil {
+		return "", fmt.Errorf("failed to deserialize the response: %v", err)
+	}
+	if val, ok := responseBody["clusterState"]; ok {
 		if strValue, ok := val.(string); ok {
 			return strValue, nil
 		}

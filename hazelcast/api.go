@@ -1,5 +1,6 @@
 package hazelcast
 
 type HZClient interface {
-	ChangeClusterState(password, state string) (string, error)
+	ChangeClusterState(state string) (string, error)
+	GetClusterState() (string, error)
 }
