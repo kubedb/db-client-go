@@ -17,9 +17,15 @@ limitations under the License.
 package hazelcast
 
 import (
+	"github.com/go-resty/resty/v2"
 	hazelcast "github.com/hazelcast/hazelcast-go-client"
 )
 
 type Client struct {
 	*hazelcast.Client
+}
+
+type HZRestyClient struct {
+	Client *resty.Client
+	Config *RestyConfig
 }
