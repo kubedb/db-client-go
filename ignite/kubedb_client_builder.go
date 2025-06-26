@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net"
+	"strings"
 	"time"
 
 	ignite "github.com/amsokol/ignite-go-client/binary/v1"
@@ -97,6 +98,7 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 			return nil, err
 		}
 
+		klog.Infoln(username, password)
 		igniteConnectionInfo.Username = username
 		igniteConnectionInfo.Password = password
 	}
@@ -167,8 +169,8 @@ func (o *KubeDBClientBuilder) getUsernamePassword() (error, string, string) {
 		return errors.New("auth-secret is not found"), "", ""
 	}
 
-	username := string(authSecret.Data["username"])
-	password := "'" + string(authSecret.Data["password"]) + "'"
+	username := strings.TrimSpace(string(authSecret.Data["username"]))
+	password := strings.TrimSpace(string(authSecret.Data["password"]))
 	return nil, username, password
 }
 
