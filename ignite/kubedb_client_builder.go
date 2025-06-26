@@ -167,7 +167,9 @@ func (o *KubeDBClientBuilder) getUsernamePassword() (error, string, string) {
 		return errors.New("auth-secret is not found"), "", ""
 	}
 
-	return nil, string(authSecret.Data[core.BasicAuthUsernameKey]), string(authSecret.Data[core.BasicAuthPasswordKey])
+	username := string(authSecret.Data["username"])
+	password := "'" + string(authSecret.Data["password"]) + "'"
+	return nil, username, password
 }
 
 func (igBin *BinaryClient) CreateCache(cacheName string) error {
