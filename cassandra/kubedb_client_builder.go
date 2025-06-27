@@ -78,7 +78,7 @@ func (o *KubeDBClientBuilder) GetCassandraClient() (*Client, error) {
 			Password: password,
 		}
 	}
-	if o.db.Spec.EnableSSL {
+	if o.db.Spec.TLS != nil {
 		tlsConfig, err := o.GetTLSConfig()
 		if err != nil {
 			return nil, err
