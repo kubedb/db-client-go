@@ -140,7 +140,7 @@ func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
 	}
 
 	if o.db.Spec.TLS != nil {
-		dataSource += fmt.Sprintf("&tls=yes") + fmt.Sprintf("&tls-insecure-skip-verify=yes")
+		dataSource += "&tls=yes" + "&tls-insecure-skip-verify=yes"
 	}
 
 	db, err := sql.Open("ignite", dataSource)
