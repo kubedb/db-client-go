@@ -546,8 +546,8 @@ kmodules.xyz/monitoring-agent-api v0.32.0 h1:cMQbWvbTc4JWeLI/zYE0HLefsdFYBzqvATL
 kmodules.xyz/monitoring-agent-api v0.32.0/go.mod h1:zgRKiJcuK7FOHy0Y1TsONRbJfgnPCs8t4Zh/6Afr+yU=
 kmodules.xyz/offshoot-api v0.32.0 h1:gogc5scSZe2JoXtZof72UGRl3Tit0kFaFRMkLLT1D8o=
 kmodules.xyz/offshoot-api v0.32.0/go.mod h1:tled7OxYZ3SkUJcrVFVVYyd+zXjsRSEm1R6Q3k4gcx0=
-kubedb.dev/apimachinery v0.55.0 h1:n4DfJqW6fDFxU9/rlmzPfk8BDHkA8v+HK58lLTenPu0=
-kubedb.dev/apimachinery v0.55.0/go.mod h1:/GY1pDR/Y9C1qY83KI9DBHLS+JFO/TYq4zLxk/+UJy0=
+kubedb.dev/apimachinery v0.55.1-0.20250627044625-8ce5da487c01 h1:mZ/amsE16eesPExYL6TZo8mc3CHzvcphtanSdmj3xbg=
+kubedb.dev/apimachinery v0.55.1-0.20250627044625-8ce5da487c01/go.mod h1:/GY1pDR/Y9C1qY83KI9DBHLS+JFO/TYq4zLxk/+UJy0=
 kubeops.dev/petset v0.0.10 h1:sNaqmHrD9bW7pcrWnwPoiQrKvdRwRX0BaRQc5QA78Bg=
 kubeops.dev/petset v0.0.10/go.mod h1:uHL83kggwmtSxdlIfxNbY2isV22iYV6YjADv0y+Z7YA=
 kubeops.dev/sidekick v0.0.11 h1:OydXdIH6cYSiWxKIWvrywk95WhhHSERkc7RNPOmTekc=
