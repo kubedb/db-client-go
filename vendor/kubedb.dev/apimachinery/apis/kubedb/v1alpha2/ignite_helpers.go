@@ -321,3 +321,54 @@ func (i Ignite) ServiceLabels(alias ServiceAlias, extraLabels ...map[string]stri
 	svcTemplate := GetServiceTemplate(i.Spec.ServiceTemplates, alias)
 	return i.offshootLabels(meta_util.OverwriteKeys(i.OffshootSelectors(), extraLabels...), svcTemplate.Labels)
 }
+
+// GetCertSecretName returns the secret name for a certificate alias if any,
+// otherwise returns default certificate secret name for the given alias.
+func (i Ignite) GetIgniteCertSecretName(alias IgniteCertificateAlias) string {
+	if i.Spec.TLS != nil {
+		name, ok := kmapi.GetCertificateSecretName(i.Spec.TLS.Certificates, string(alias))
+		if ok {
+			return name
+		}
+	}
+	return i.IgniteCertificateName(alias)
+}
+
+// CertificateName returns the default certificate name and/or certificate secret name for a certificate alias
+func (i Ignite) IgniteCertificateName(alias IgniteCertificateAlias) string {
+	return meta_util.NameWithSuffix(i.Name, fmt.Sprintf("%s-cert", string(alias)))
+}
+
+func (i Ignite) GetIgniteConnectionScheme() string {
+	scheme := "http"
+	if i.Spec.TLS != nil {
+		scheme = "https"
+	}
+	return scheme
+}
+
+func (i Ignite) GetIgniteKeystoreSecretName() string {
+	if i.Spec.KeystoreCredSecret != nil && i.Spec.KeystoreCredSecret.Name != "" {
+		return i.Spec.KeystoreCredSecret.Name
+	}
+	return meta_util.NameWithSuffix(i.OffshootName(), "keystore-cred")
+}
+
+// CertSecretVolumeName returns the CertSecretVolumeName
+// Values will be like: client-certs, server-certs etc.
+func (i Ignite) IgniteCertSecretVolumeName(alias IgniteCertificateAlias) string {
+	return string(alias) + "-certs"
+}
+
+// CertSecretVolumeMountPath returns the CertSecretVolumeMountPath
+func (i Ignite) IgniteCertSecretVolumeMountPath(configDir string, cert string) string {
+	return filepath.Join(configDir, cert)
+}
+
+func (i Ignite) SetTLSDefaults() {
+	if i.Spec.TLS == nil || i.Spec.TLS.IssuerRef == nil {
+		return
+	}
+	i.Spec.TLS.Certificates = kmapi.SetMissingSecretNameForCertificate(i.Spec.TLS.Certificates, string(IgniteServerCert), i.IgniteCertificateName(IgniteServerCert))
+	i.Spec.TLS.Certificates = kmapi.SetMissingSecretNameForCertificate(i.Spec.TLS.Certificates, string(IgniteClientCert), i.IgniteCertSecretVolumeName(IgniteClientCert))
+}

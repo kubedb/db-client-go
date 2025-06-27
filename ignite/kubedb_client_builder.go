@@ -102,7 +102,7 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 		igniteConnectionInfo.Password = password
 	}
 
-	if o.db.Spec.EnableSSL {
+	if o.db.Spec.TLS != nil {
 		igniteTLSConfig, err := o.GetTLSConfig()
 		if err != nil {
 			return nil, err
@@ -139,7 +139,7 @@ func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
 		dataSource += fmt.Sprintf("&username=%s", username) + fmt.Sprintf("&password=%s", password)
 	}
 
-	if o.db.Spec.EnableSSL {
+	if o.db.Spec.TLS != nil {
 		dataSource += fmt.Sprintf("&tls=yes") + fmt.Sprintf("&tls-insecure-skip-verify=yes")
 	}
 
