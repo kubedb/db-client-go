@@ -23,7 +23,6 @@ import (
 	"database/sql"
 	"fmt"
 	"net"
-	"strings"
 	"time"
 
 	ignite "github.com/amsokol/ignite-go-client/binary/v1"
@@ -168,8 +167,8 @@ func (o *KubeDBClientBuilder) getUsernamePassword() (error, string, string) {
 		return errors.New("auth-secret is not found"), "", ""
 	}
 
-	username := strings.TrimSpace(string(authSecret.Data["username"]))
-	password := strings.TrimSpace(string(authSecret.Data["password"]))
+	username := string(authSecret.Data[core.BasicAuthUsernameKey])
+	password := string(authSecret.Data[core.BasicAuthPasswordKey])
 	return nil, username, password
 }
 
@@ -223,7 +222,7 @@ func (o *KubeDBClientBuilder) GetTLSConfig() (*tls.Config, error) {
 		return nil, err
 	}
 
-	if certSecret.Data["ca.crt"] == nil || certSecret.Data["tls.crt"] == nil || certSecret.Data["tls.key"] == nil {
+	if certSecret.Data[kubedb.CACert] == nil || certSecret.Data[core.TLSPrivateKeyKey] == nil || certSecret.Data[core.TLSCertKey] == nil {
 		return nil, errors.New("invalid cert-secret.")
 	}
 
