@@ -22,10 +22,11 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"github.com/go-resty/resty/v2"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/go-resty/resty/v2"
 
 	"github.com/go-logr/logr"
 	hazelcast "github.com/hazelcast/hazelcast-go-client"
@@ -191,7 +192,6 @@ func (o *KubeDBClientBuilder) GetHazelcastClient() (*Client, error) {
 
 type RestyConfig struct {
 	host      string
-	api       string
 	transport *http.Transport
 }
 
