@@ -244,17 +244,17 @@ func (client *HZRestyClient) ChangeClusterState(state string) (string, error) {
 	req.SetHeader("Content-Type", "application/json")
 	req.SetBody(param)
 	res, err := req.Post("/hazelcast/rest/management/cluster/changeState")
+	if err != nil {
+		klog.Error(err, "Failed to send http request")
+		return "", err
+	}
 	if res != nil {
-		if res.StatusCode() != 200 {
-			klog.Error("stauscode is not 200")
-			return "", errors.New("statuscode is not 200")
+		if res.IsError() {
+			klog.Error(res.Error())
+			return "", errors.New(fmt.Sprintf("HTTP request failed: %v, StatusCode: %v", res.Error(), res.StatusCode()))
 		}
 	} else {
 		return "", errors.New("response can not be nil")
-	}
-	if err != nil {
-		klog.Error(err, res.StatusCode(), "Failed to send http request")
-		return "", err
 	}
 	body := res.RawBody()
 	responseBody := make(map[string]interface{})
@@ -274,17 +274,17 @@ func (client *HZRestyClient) GetClusterState() (string, error) {
 	req := client.Client.R().SetDoNotParseResponse(true)
 
 	res, err := req.Get("/hazelcast/health")
+	if err != nil {
+		klog.Error(err, "Failed to send http request")
+		return "", err
+	}
 	if res != nil {
-		if res.StatusCode() != 200 {
-			klog.Error("stauscode is not 200")
-			return "", errors.New("statuscode is not 200")
+		if res.IsError() {
+			klog.Error(res.Error())
+			return "", errors.New(fmt.Sprintf("HTTP request failed: %v, StatusCode: %v", res.Error(), res.StatusCode()))
 		}
 	} else {
 		return "", errors.New("response can not be nil")
-	}
-	if err != nil {
-		klog.Error(err, res.StatusCode(), "Failed to send http request")
-		return "", err
 	}
 	body := res.RawBody()
 	responseBody := make(map[string]interface{})
