@@ -198,7 +198,6 @@ type RestyConfig struct {
 func (o *KubeDBClientBuilder) GetHazelcastRestyClient() (*HZRestyClient, error) {
 	if o.url == "" {
 		o.url = fmt.Sprintf("%s://%s.%s.svc:%d", o.db.GetConnectionScheme(), o.db.ServiceName(), o.db.GetNamespace(), kubedb.HazelcastRestPort)
-		klog.Info("++++++++++++++++++++++++>>>>>>>>>>>>>>>>>>>>>>>> ", o.url)
 	}
 
 	config := RestyConfig{
