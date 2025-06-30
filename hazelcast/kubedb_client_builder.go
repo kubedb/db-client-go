@@ -20,7 +20,13 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"fmt"
+	"net"
+	"net/http"
+	"time"
+
+	"github.com/go-resty/resty/v2"
 
 	"github.com/go-logr/logr"
 	hazelcast "github.com/hazelcast/hazelcast-go-client"
@@ -130,8 +136,9 @@ func (o *KubeDBClientBuilder) GetTLSConfig() (*tls.Config, error) {
 }
 
 func (o *KubeDBClientBuilder) GetHazelcastClient() (*Client, error) {
-	if o.podName == "" {
-		o.url = o.ServiceURL()
+	if o.podName != "" {
+		o.url = fmt.Sprintf("%s.%s.%s.svc.cluster.local:%d", o.podName, o.db.GoverningServiceName(), o.db.GetNamespace(), kubedb.HazelcastRestPort)
+
 	}
 
 	if o.url == "" {
@@ -181,6 +188,116 @@ func (o *KubeDBClientBuilder) GetHazelcastClient() (*Client, error) {
 	return &Client{
 		Client: hzClient,
 	}, nil
+}
+
+type RestyConfig struct {
+	host      string
+	transport *http.Transport
+}
+
+func (o *KubeDBClientBuilder) GetHazelcastRestyClient() (*HZRestyClient, error) {
+	if o.url == "" {
+		o.url = fmt.Sprintf("%s://%s.%s.svc:%d", o.db.GetConnectionScheme(), o.db.ServiceName(), o.db.GetNamespace(), kubedb.HazelcastRestPort)
+	}
+
+	config := RestyConfig{
+		host: o.url,
+		transport: &http.Transport{
+			IdleConnTimeout: time.Second * 3,
+			DialContext: (&net.Dialer{
+				Timeout: time.Second * 30,
+			}).DialContext,
+		},
+	}
+
+	var username, password string
+	if !o.db.Spec.DisableSecurity {
+		user, pass, err := o.GetAuthCredentials()
+		if err != nil {
+			return nil, err
+		}
+		username = user
+		password = pass
+	}
+
+	defaultTlsConfig, err := o.GetTLSConfig()
+	if err != nil {
+		klog.Errorf("Failed to get default tls config: %v", err)
+	}
+	config.transport.TLSClientConfig = defaultTlsConfig
+	newClient := resty.New()
+	newClient.SetTransport(config.transport).SetScheme(o.db.GetConnectionScheme()).SetBaseURL(config.host)
+	newClient.SetHeader("Accept", "application/json")
+	newClient.SetBasicAuth(username, password)
+	newClient.SetTimeout(time.Second * 30)
+
+	return &HZRestyClient{
+		Client:   newClient,
+		Config:   &config,
+		password: password,
+	}, nil
+}
+
+func (client *HZRestyClient) ChangeClusterState(state string) (string, error) {
+	req := client.Client.R().SetDoNotParseResponse(true)
+	param := fmt.Sprintf("admin&%s&%s", client.password, state)
+	req.SetHeader("Content-Type", "application/json")
+	req.SetBody(param)
+	res, err := req.Post("/hazelcast/rest/management/cluster/changeState")
+	if err != nil {
+		klog.Error(err, "Failed to send http request")
+		return "", err
+	}
+	if res != nil {
+		if res.IsError() {
+			klog.Error(res.Error())
+			return "", errors.New(fmt.Sprintf("HTTP request failed: %v, StatusCode: %v", res.Error(), res.StatusCode()))
+		}
+	} else {
+		return "", errors.New("response can not be nil")
+	}
+	body := res.RawBody()
+	responseBody := make(map[string]interface{})
+	if err := json.NewDecoder(body).Decode(&responseBody); err != nil {
+		return "", fmt.Errorf("failed to deserialize the response: %v", err)
+	}
+	if val, ok := responseBody["status"]; ok {
+		if strValue, ok := val.(string); ok {
+			return strValue, nil
+		}
+		return "", errors.New("failed to convert response to string")
+	}
+	return "", errors.New("status is missing")
+}
+
+func (client *HZRestyClient) GetClusterState() (string, error) {
+	req := client.Client.R().SetDoNotParseResponse(true)
+
+	res, err := req.Get("/hazelcast/health")
+	if err != nil {
+		klog.Error(err, "Failed to send http request")
+		return "", err
+	}
+	if res != nil {
+		if res.IsError() {
+			klog.Error(res.Error())
+			return "", errors.New(fmt.Sprintf("HTTP request failed: %v, StatusCode: %v", res.Error(), res.StatusCode()))
+		}
+	} else {
+		return "", errors.New("response can not be nil")
+	}
+	body := res.RawBody()
+	responseBody := make(map[string]interface{})
+	if err := json.NewDecoder(body).Decode(&responseBody); err != nil {
+		return "", fmt.Errorf("failed to deserialize the response: %v", err)
+	}
+	if val, ok := responseBody["clusterState"]; ok {
+		if strValue, ok := val.(string); ok {
+			return strValue, nil
+		}
+		return "", errors.New("failed to convert response to string")
+	}
+	return "", errors.New("status is missing")
 }
 
 func (o *KubeDBClientBuilder) ServiceURL() string {
