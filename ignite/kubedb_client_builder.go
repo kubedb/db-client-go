@@ -130,7 +130,7 @@ func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
 		o.Address(), kubedb.IgniteThinPort, o.timeout)
 
 	if !o.db.Spec.DisableSecurity {
-		err, username, password := o.getUsernamePassword()
+		err, username, password := o.GetUsernamePassword()
 		if err != nil {
 			return nil, nil
 		}
@@ -155,7 +155,7 @@ func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
 	}, nil
 }
 
-func (o *KubeDBClientBuilder) getUsernamePassword() (error, string, string) {
+func (o *KubeDBClientBuilder) GetUsernamePassword() (error, string, string) {
 	authSecret := &core.Secret{}
 
 	err := o.kc.Get(o.ctx, types.NamespacedName{
@@ -246,4 +246,26 @@ func (o *KubeDBClientBuilder) GetTLSConfig() (*tls.Config, error) {
 		RootCAs:      rootCA,
 	}
 	return tlsConfig, nil
+}
+
+func (o *KubeDBClientBuilder) IsClusterActivated() bool {
+	igniteConnectionInfo := ignite.ConnInfo{
+		Network: "tcp",
+		Host:    o.Address(),
+		Port:    kubedb.IgniteThinPort,
+		Major:   1,
+		Minor:   1,
+		Patch:   0,
+		Dialer: net.Dialer{
+			Timeout: o.timeout,
+		},
+		Username: "ignite",
+		Password: "ignite",
+	}
+
+	_, err := ignite.Connect(igniteConnectionInfo)
+	if err != nil {
+		return true
+	}
+	return false
 }
