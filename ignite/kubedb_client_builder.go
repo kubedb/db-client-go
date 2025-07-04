@@ -262,6 +262,13 @@ func (o *KubeDBClientBuilder) IsClusterActivated() bool {
 		Username: "ignite",
 		Password: "ignite",
 	}
+	if o.db.Spec.TLS != nil {
+		igniteTLSConfig, err := o.GetTLSConfig()
+		if err != nil {
+			return false
+		}
+		igniteConnectionInfo.TLSConfig = igniteTLSConfig
+	}
 
 	_, err := ignite.Connect(igniteConnectionInfo)
 	if err != nil {
