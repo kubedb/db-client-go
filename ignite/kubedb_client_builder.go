@@ -263,12 +263,10 @@ func (o *KubeDBClientBuilder) IsClusterActivated() bool {
 		Password: "ignite",
 	}
 	if o.db.Spec.TLS != nil {
-		igniteTLSConfig, err := o.GetTLSConfig()
-		if err != nil {
-			klog.Info("Failed to get TLS config")
-			return false
+		igniteConnectionInfo.TLSConfig = &tls.Config{
+			// You should only set this to true for testing purposes.
+			InsecureSkipVerify: true,
 		}
-		igniteConnectionInfo.TLSConfig = igniteTLSConfig
 	}
 
 	_, err := ignite.Connect(igniteConnectionInfo)
