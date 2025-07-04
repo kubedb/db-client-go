@@ -265,6 +265,7 @@ func (o *KubeDBClientBuilder) IsClusterActivated() bool {
 	if o.db.Spec.TLS != nil {
 		igniteTLSConfig, err := o.GetTLSConfig()
 		if err != nil {
+			klog.Info("Failed to get TLS config")
 			return false
 		}
 		igniteConnectionInfo.TLSConfig = igniteTLSConfig
@@ -272,7 +273,9 @@ func (o *KubeDBClientBuilder) IsClusterActivated() bool {
 
 	_, err := ignite.Connect(igniteConnectionInfo)
 	if err != nil {
+		klog.Info("Failed to connect to cluster with `ignite` password ")
 		return true
 	}
+	klog.Infoln("Connect to Ignite cluster with `ignite` password Successfully")
 	return false
 }
