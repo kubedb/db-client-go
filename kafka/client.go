@@ -143,10 +143,8 @@ func (c *Client) DeleteKafkaTopics(topics ...string) {
 		klog.Error(err, "Failed to get controller broker")
 		return
 	}
-	_, err = broker.DeleteTopics(&kafkago.DeleteTopicsRequest{
-		Topics:  topics,
-		Timeout: 5 * time.Second,
-	})
+
+	_, err = broker.DeleteTopics(kafkago.NewDeleteTopicsRequest(c.Config().Version, topics, 5*time.Second))
 	if err != nil {
 		klog.Error(err, "Failed to delete kafka health topic")
 		return
