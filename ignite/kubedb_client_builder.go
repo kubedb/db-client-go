@@ -174,7 +174,7 @@ func (o *KubeDBClientBuilder) GetUsernamePassword() (error, string, string) {
 
 func (igBin *BinaryClient) CreateCache(cacheName string) error {
 	// create cache
-	if err := igBin.CacheCreateWithName(cacheName); err != nil {
+	if err := igBin.CacheGetOrCreateWithName(cacheName); err != nil {
 		klog.Error(err, "failed to create cache: %v")
 		return err
 	}
