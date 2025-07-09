@@ -37,6 +37,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const Public_Cache_Name = "PUBLIC"
+
 type KubeDBClientBuilder struct {
 	kc      client.Client
 	db      *api.Ignite
@@ -79,7 +81,7 @@ func (o *KubeDBClientBuilder) WithTimeout(d time.Duration) *KubeDBClientBuilder 
 	return o
 }
 
-func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
+func (o *KubeDBClientBuilder) GetIgniteConnectionInfo() ignite.ConnInfo {
 	igniteConnectionInfo := ignite.ConnInfo{
 		Network: "tcp",
 		Host:    o.Address(),
@@ -91,6 +93,12 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 			Timeout: o.timeout,
 		},
 	}
+	return igniteConnectionInfo
+}
+
+func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
+	igniteConnectionInfo := o.GetIgniteConnectionInfo()
+
 	if !o.db.Spec.DisableSecurity {
 		err, username, password := o.GetUsernamePassword()
 		if err != nil {
@@ -123,11 +131,15 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 	}, nil
 }
 
-func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
+func (o *KubeDBClientBuilder) GetIgniteDataSource() string {
 	dataSource := fmt.Sprintf(
 		"tcp://%s:%d/PUBLIC?version=1.1.0"+
 			"&timeout=%d",
 		o.Address(), kubedb.IgniteThinPort, o.timeout)
+	return dataSource
+}
+func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
+	dataSource := o.GetIgniteDataSource()
 
 	if !o.db.Spec.DisableSecurity {
 		err, username, password := o.GetUsernamePassword()
@@ -276,4 +288,53 @@ func (o *KubeDBClientBuilder) IsClusterActivated() bool {
 	}
 	klog.Infoln("Connect to Ignite cluster with `ignite` password Successfully")
 	return false
+}
+
+func (o *KubeDBClientBuilder) UpdateIgnitePassword() error {
+	// Get Ignite Binary Client
+	igBinClient, err := o.GetIgniteBinaryClient()
+	if err != nil {
+		o.log.Error(err, "Failed to get Ignite client")
+		return err
+	}
+	defer func() {
+		err := igBinClient.Close()
+		if err != nil {
+			o.log.Error(err, "Failed to close Binary client")
+			return
+		}
+	}()
+	///////////
+	// create cache named PUBLIC
+	if err := igBinClient.CreateCache(Public_Cache_Name); err != nil {
+		o.log.Error(err, "failed to create cache: %v")
+		return err
+	}
+	defer func() {
+		// delete cache
+		if err := igBinClient.DeleteCache(Public_Cache_Name); err != nil {
+			o.log.Error(err, "failed to delete cache: %v")
+			return
+		}
+	}()
+	//////////////
+	// Get SQL Client
+	igSqlClient, err := o.GetIgniteSqlClient()
+	if err != nil {
+		o.log.Error(err, "Failed to get Ignite sql client")
+		return err
+	}
+
+	err, _, password := o.GetUsernamePassword()
+	if err != nil {
+		o.log.Error(err, "Failed to get username and password")
+		return err
+	}
+	// Update Ignite Password
+	_, err = igSqlClient.ExecContext(context.TODO(), `ALTER USER "ignite" WITH PASSWORD '%s'`, password)
+	if err != nil {
+		o.log.Error(err, "Failed to update Ignite credential")
+		return err
+	}
+	return nil
 }
