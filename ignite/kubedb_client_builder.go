@@ -108,7 +108,7 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 		igniteConnectionInfo.Username = username
 		igniteConnectionInfo.Password = password
 
-		klog.Infof("Binary Client: %v", &igniteConnectionInfo.Password)
+		klog.Infof("Binary Client: %v", password)
 	}
 
 	if o.db.Spec.TLS != nil {
