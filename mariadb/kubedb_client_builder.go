@@ -144,7 +144,7 @@ func (o *KubeDBClientBuilder) SSLEnabledMariaDB() bool {
 }
 
 func (o *KubeDBClientBuilder) getURL() string {
-	return fmt.Sprintf("%s.%s.%s.svc", o.podName, o.db.GoverningServiceName(), o.db.Namespace)
+	return fmt.Sprintf("%s.%s.%s.svc.cluster.local", o.podName, o.db.GoverningServiceName(), o.db.Namespace)
 }
 
 func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
