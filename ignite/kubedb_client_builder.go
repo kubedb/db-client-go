@@ -138,6 +138,7 @@ func (o *KubeDBClientBuilder) GetIgniteDataSource() string {
 		o.Address(), kubedb.IgniteThinPort, o.timeout)
 	return dataSource
 }
+
 func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
 	dataSource := o.GetIgniteDataSource()
 
@@ -258,34 +259,4 @@ func (o *KubeDBClientBuilder) GetTLSConfig() (*tls.Config, error) {
 		RootCAs:      rootCA,
 	}
 	return tlsConfig, nil
-}
-
-func (o *KubeDBClientBuilder) IsClusterActivated() bool {
-	igniteConnectionInfo := ignite.ConnInfo{
-		Network: "tcp",
-		Host:    o.Address(),
-		Port:    kubedb.IgniteThinPort,
-		Major:   1,
-		Minor:   1,
-		Patch:   0,
-		Dialer: net.Dialer{
-			Timeout: o.timeout,
-		},
-		Username: "ignite",
-		Password: "ignite",
-	}
-	if o.db.Spec.TLS != nil {
-		igniteConnectionInfo.TLSConfig = &tls.Config{
-			// You should only set this to true for testing purposes.
-			InsecureSkipVerify: true,
-		}
-	}
-
-	_, err := ignite.Connect(igniteConnectionInfo)
-	if err != nil {
-		klog.Error("Failed to connect to cluster with `ignite` password ")
-		return true
-	}
-	klog.Infoln("Connect to Ignite cluster with `ignite` password Successfully")
-	return false
 }
