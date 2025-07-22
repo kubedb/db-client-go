@@ -37,6 +37,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const Public_Cache_Name = "PUBLIC"
+
 type KubeDBClientBuilder struct {
 	kc      client.Client
 	db      *api.Ignite
@@ -79,7 +81,7 @@ func (o *KubeDBClientBuilder) WithTimeout(d time.Duration) *KubeDBClientBuilder 
 	return o
 }
 
-func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
+func (o *KubeDBClientBuilder) GetIgniteConnectionInfo() ignite.ConnInfo {
 	igniteConnectionInfo := ignite.ConnInfo{
 		Network: "tcp",
 		Host:    o.Address(),
@@ -91,8 +93,14 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 			Timeout: o.timeout,
 		},
 	}
+	return igniteConnectionInfo
+}
+
+func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
+	igniteConnectionInfo := o.GetIgniteConnectionInfo()
+
 	if !o.db.Spec.DisableSecurity {
-		err, username, password := o.getUsernamePassword()
+		err, username, password := o.GetUsernamePassword()
 		if err != nil {
 			return nil, err
 		}
@@ -123,14 +131,19 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 	}, nil
 }
 
-func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
+func (o *KubeDBClientBuilder) GetIgniteDataSource() string {
 	dataSource := fmt.Sprintf(
 		"tcp://%s:%d/PUBLIC?version=1.1.0"+
 			"&timeout=%d",
 		o.Address(), kubedb.IgniteThinPort, o.timeout)
+	return dataSource
+}
+
+func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
+	dataSource := o.GetIgniteDataSource()
 
 	if !o.db.Spec.DisableSecurity {
-		err, username, password := o.getUsernamePassword()
+		err, username, password := o.GetUsernamePassword()
 		if err != nil {
 			return nil, nil
 		}
@@ -155,7 +168,7 @@ func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
 	}, nil
 }
 
-func (o *KubeDBClientBuilder) getUsernamePassword() (error, string, string) {
+func (o *KubeDBClientBuilder) GetUsernamePassword() (error, string, string) {
 	authSecret := &core.Secret{}
 
 	err := o.kc.Get(o.ctx, types.NamespacedName{
@@ -174,7 +187,7 @@ func (o *KubeDBClientBuilder) getUsernamePassword() (error, string, string) {
 
 func (igBin *BinaryClient) CreateCache(cacheName string) error {
 	// create cache
-	if err := igBin.CacheCreateWithName(cacheName); err != nil {
+	if err := igBin.CacheGetOrCreateWithName(cacheName); err != nil {
 		klog.Error(err, "failed to create cache: %v")
 		return err
 	}
