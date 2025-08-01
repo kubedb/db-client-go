@@ -44,7 +44,7 @@ github.com/andybalholm/brotli/matchfinder
 # github.com/beorn7/perks v1.0.1
 ## explicit; go 1.11
 github.com/beorn7/perks/quantile
-# github.com/cert-manager/cert-manager v1.17.1
+# github.com/cert-manager/cert-manager v1.18.2
 ## explicit; go 1.23.0
 github.com/cert-manager/cert-manager/pkg/apis/acme
 github.com/cert-manager/cert-manager/pkg/apis/acme/v1
@@ -1236,7 +1236,7 @@ golang.org/x/net/internal/httpcommon
 golang.org/x/net/internal/socks
 golang.org/x/net/proxy
 golang.org/x/net/publicsuffix
-# golang.org/x/oauth2 v0.27.0
+# golang.org/x/oauth2 v0.28.0
 ## explicit; go 1.23.0
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
@@ -1758,7 +1758,7 @@ k8s.io/utils/trace
 # kmodules.xyz/apiversion v0.2.0
 ## explicit; go 1.14
 kmodules.xyz/apiversion
-# kmodules.xyz/client-go v0.32.6
+# kmodules.xyz/client-go v0.32.7
 ## explicit; go 1.23.0
 kmodules.xyz/client-go
 kmodules.xyz/client-go/api/v1
@@ -1775,7 +1775,7 @@ kmodules.xyz/client-go/tools/certholder
 kmodules.xyz/custom-resources/apis/appcatalog
 kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1
 kmodules.xyz/custom-resources/crds
-# kmodules.xyz/monitoring-agent-api v0.32.0
+# kmodules.xyz/monitoring-agent-api v0.32.1
 ## explicit; go 1.23.0
 kmodules.xyz/monitoring-agent-api/api/v1
 # kmodules.xyz/offshoot-api v0.32.0
@@ -1784,8 +1784,8 @@ kmodules.xyz/offshoot-api/api/v1
 kmodules.xyz/offshoot-api/api/v1/conversion
 kmodules.xyz/offshoot-api/api/v2
 kmodules.xyz/offshoot-api/util
-# kubedb.dev/apimachinery v0.56.1-0.20250718121809-af2b0a656c75
-## explicit; go 1.23.0
+# kubedb.dev/apimachinery v0.57.0-rc.0
+## explicit; go 1.23.6
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog
 kubedb.dev/apimachinery/apis/catalog/v1alpha1
@@ -1796,8 +1796,8 @@ kubedb.dev/apimachinery/apis/kubedb
 kubedb.dev/apimachinery/apis/kubedb/v1
 kubedb.dev/apimachinery/apis/kubedb/v1alpha2
 kubedb.dev/apimachinery/crds
-# kubeops.dev/petset v0.0.10
-## explicit; go 1.23.0
+# kubeops.dev/petset v0.0.11
+## explicit; go 1.23.6
 kubeops.dev/petset/apis/apps/v1
 kubeops.dev/petset/client/clientset/versioned/scheme
 kubeops.dev/petset/client/clientset/versioned/typed/apps/v1
@@ -1812,6 +1812,9 @@ kubeops.dev/sidekick/crds
 ## explicit; go 1.18
 # modernc.org/token v1.1.0
 ## explicit
+# open-cluster-management.io/api v1.0.0
+## explicit; go 1.23.6
+open-cluster-management.io/api/work/v1
 # sigs.k8s.io/controller-runtime v0.20.4 => github.com/kmodules/controller-runtime v0.20.3-0.20250221050548-8eabe54e7dda
 ## explicit; go 1.23.0
 sigs.k8s.io/controller-runtime
