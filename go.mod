@@ -1,8 +1,8 @@
 module kubedb.dev/db-client-go
 
-go 1.23.0
+go 1.23.6
 
-toolchain go1.23.6
+toolchain go1.24.5
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.23.2
@@ -35,9 +35,9 @@ require (
 	k8s.io/api v0.32.3
 	k8s.io/apimachinery v0.32.3
 	k8s.io/klog/v2 v2.130.1
-	kmodules.xyz/client-go v0.32.6
+	kmodules.xyz/client-go v0.32.7
 	kmodules.xyz/custom-resources v0.32.0
-	kubedb.dev/apimachinery v0.56.1-0.20250718121809-af2b0a656c75
+	kubedb.dev/apimachinery v0.57.0-rc.0
 	sigs.k8s.io/controller-runtime v0.20.4
 	xorm.io/xorm v1.3.9
 )
@@ -48,7 +48,7 @@ require (
 	github.com/Masterminds/semver v1.4.2 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/cert-manager/cert-manager v1.17.1 // indirect
+	github.com/cert-manager/cert-manager v1.18.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
@@ -136,7 +136,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.33.0 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/net v0.40.0 // indirect
-	golang.org/x/oauth2 v0.27.0 // indirect
+	golang.org/x/oauth2 v0.28.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/term v0.32.0 // indirect
@@ -154,12 +154,13 @@ require (
 	k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff // indirect
 	k8s.io/utils v0.0.0-20241210054802-24370beab758 // indirect
 	kmodules.xyz/apiversion v0.2.0 // indirect
-	kmodules.xyz/monitoring-agent-api v0.32.0 // indirect
+	kmodules.xyz/monitoring-agent-api v0.32.1 // indirect
 	kmodules.xyz/offshoot-api v0.32.0 // indirect
-	kubeops.dev/petset v0.0.10 // indirect
+	kubeops.dev/petset v0.0.11 // indirect
 	kubeops.dev/sidekick v0.0.11 // indirect
 	modernc.org/memory v1.5.0 // indirect
 	modernc.org/token v1.1.0 // indirect
+	open-cluster-management.io/api v1.0.0 // indirect
 	sigs.k8s.io/gateway-api v1.1.0 // indirect
 	sigs.k8s.io/json v0.0.0-20241014173422-cfa47c3a1cc8 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
