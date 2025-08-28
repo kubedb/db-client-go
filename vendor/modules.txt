@@ -784,6 +784,9 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
+# github.com/google/go-containerregistry v0.20.3
+## explicit; go 1.23.0
+github.com/google/go-containerregistry/pkg/name
 # github.com/google/go-querystring v1.1.0
 ## explicit; go 1.10
 github.com/google/go-querystring/query
@@ -996,6 +999,9 @@ github.com/montanaflynn/stats
 # github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
 ## explicit
 github.com/munnerz/goautoneg
+# github.com/opencontainers/go-digest v1.0.0
+## explicit; go 1.13
+github.com/opencontainers/go-digest
 # github.com/opensearch-project/opensearch-go v1.1.0
 ## explicit; go 1.11
 github.com/opensearch-project/opensearch-go
@@ -1765,11 +1771,13 @@ kmodules.xyz/client-go/api/v1
 kmodules.xyz/client-go/apiextensions
 kmodules.xyz/client-go/apiextensions/v1
 kmodules.xyz/client-go/apps/v1
+kmodules.xyz/client-go/client/apiutil
 kmodules.xyz/client-go/core/v1
 kmodules.xyz/client-go/discovery
 kmodules.xyz/client-go/meta
 kmodules.xyz/client-go/policy/secomp
 kmodules.xyz/client-go/tools/certholder
+kmodules.xyz/client-go/tools/healthchecker
 # kmodules.xyz/custom-resources v0.32.0
 ## explicit; go 1.23.0
 kmodules.xyz/custom-resources/apis/appcatalog
@@ -1784,7 +1792,7 @@ kmodules.xyz/offshoot-api/api/v1
 kmodules.xyz/offshoot-api/api/v1/conversion
 kmodules.xyz/offshoot-api/api/v2
 kmodules.xyz/offshoot-api/util
-# kubedb.dev/apimachinery v0.57.0
+# kubedb.dev/apimachinery v0.57.1-0.20250828110547-eaa96229204d
 ## explicit; go 1.23.6
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog
@@ -1796,6 +1804,10 @@ kubedb.dev/apimachinery/apis/kubedb
 kubedb.dev/apimachinery/apis/kubedb/v1
 kubedb.dev/apimachinery/apis/kubedb/v1alpha2
 kubedb.dev/apimachinery/crds
+kubedb.dev/apimachinery/pkg/utils
+# kubeops.dev/operator-shard-manager v0.0.3
+## explicit; go 1.23.0
+kubeops.dev/operator-shard-manager/api/v1alpha1
 # kubeops.dev/petset v0.0.11
 ## explicit; go 1.23.6
 kubeops.dev/petset/apis/apps/v1

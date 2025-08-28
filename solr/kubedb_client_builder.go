@@ -21,6 +21,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"kubedb.dev/apimachinery/pkg/utils"
 	"net"
 	"net/http"
 	"time"
@@ -79,7 +80,7 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 
 func (o *KubeDBClientBuilder) GetSolrClient() (*Client, error) {
 	if o.podName != "" {
-		o.url = fmt.Sprintf("%v://%s.%s.%s.svc.cluster.local:%d", o.db.GetConnectionScheme(), o.podName, o.db.GoverningServiceName(), o.db.GetNamespace(), kubedb.SolrRestPort)
+		o.url = fmt.Sprintf("%v://%s.%s.%s.svc.%s:%d", o.db.GetConnectionScheme(), o.podName, o.db.GoverningServiceName(), o.db.GetNamespace(), utils.FindDomain(), kubedb.SolrRestPort)
 	}
 	if o.url == "" {
 		o.url = o.GetHostPath(o.db)
@@ -188,5 +189,5 @@ func (o *KubeDBClientBuilder) GetSolrClient() (*Client, error) {
 }
 
 func (o *KubeDBClientBuilder) GetHostPath(db *api.Solr) string {
-	return fmt.Sprintf("%v://%s.%s.svc.cluster.local:%d", db.GetConnectionScheme(), db.ServiceName(), db.GetNamespace(), kubedb.SolrRestPort)
+	return fmt.Sprintf("%v://%s.%s.svc.%s:%d", db.GetConnectionScheme(), db.ServiceName(), db.GetNamespace(), utils.FindDomain(), kubedb.SolrRestPort)
 }

@@ -22,6 +22,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"kubedb.dev/apimachinery/pkg/utils"
 	"net"
 	"net/http"
 	"time"
@@ -137,7 +138,7 @@ func (o *KubeDBClientBuilder) GetTLSConfig() (*tls.Config, error) {
 
 func (o *KubeDBClientBuilder) GetHazelcastClient() (*Client, error) {
 	if o.podName != "" {
-		o.url = fmt.Sprintf("%s.%s.%s.svc.cluster.local:%d", o.podName, o.db.GoverningServiceName(), o.db.GetNamespace(), kubedb.HazelcastRestPort)
+		o.url = fmt.Sprintf("%s.%s.%s.svc.%s:%d", o.podName, o.db.GoverningServiceName(), o.db.GetNamespace(), utils.FindDomain(), kubedb.HazelcastRestPort)
 
 	}
 

@@ -190,6 +190,6 @@ func (o *KubeDBClientBuilder) GetNodesAddress() string {
 		scheme = "http"
 	}
 
-	baseUrl := fmt.Sprintf("%s://%s-0.%s.%s.svc.cluster.local:%d", scheme, o.db.PetSetName(o.nodeRole), o.db.GoverningServiceName(), o.db.Namespace, o.db.DruidNodeContainerPort(o.nodeRole))
+	baseUrl := fmt.Sprintf("%s://%s-0.%s.%s.svc.%s:%d", scheme, o.db.PetSetName(o.nodeRole), o.db.GoverningServiceName(), o.db.Namespace, o.db.DruidNodeContainerPort(o.nodeRole))
 	return baseUrl
 }
