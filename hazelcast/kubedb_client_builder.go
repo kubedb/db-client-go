@@ -22,7 +22,6 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	apiutils "kubedb.dev/apimachinery/pkg/utils"
 	"net"
 	"net/http"
 	"time"
@@ -37,6 +36,7 @@ import (
 	"k8s.io/klog/v2"
 	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	apiutils "kubedb.dev/apimachinery/pkg/utils"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 

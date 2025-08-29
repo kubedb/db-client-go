@@ -21,18 +21,17 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
-	apiutils "kubedb.dev/apimachinery/pkg/utils"
 	"net"
 	"net/http"
 	"time"
-
-	"k8s.io/klog/v2"
 
 	"github.com/Masterminds/semver/v3"
 	gerr "github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog/v2"
 	"kubedb.dev/apimachinery/apis/kubedb"
+	apiutils "kubedb.dev/apimachinery/pkg/utils"
 
 	"fmt"
 

@@ -22,7 +22,6 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	apiutils "kubedb.dev/apimachinery/pkg/utils"
 	"net"
 	"net/http"
 	"strings"
@@ -37,6 +36,7 @@ import (
 	"kubedb.dev/apimachinery/apis/kubedb"
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	apiutils "kubedb.dev/apimachinery/pkg/utils"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
