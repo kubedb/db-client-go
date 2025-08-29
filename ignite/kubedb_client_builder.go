@@ -22,7 +22,7 @@ import (
 	"crypto/x509"
 	"database/sql"
 	"fmt"
-	"kubedb.dev/apimachinery/pkg/utils"
+	apiutils "kubedb.dev/apimachinery/pkg/utils"
 	"net"
 	"time"
 
@@ -213,7 +213,7 @@ func (igSql *SqlClient) Ping() error {
 }
 
 func (o *KubeDBClientBuilder) Address() string {
-	return fmt.Sprintf("%s.%s.svc.%s", o.db.ServiceName(), o.db.Namespace, utils.FindDomain())
+	return fmt.Sprintf("%s.%s.svc.%s", o.db.ServiceName(), o.db.Namespace, apiutils.FindDomain())
 }
 
 func (o *KubeDBClientBuilder) GetCertSecret() (*core.Secret, error) {

@@ -554,7 +554,7 @@ kubedb.dev/apimachinery v0.57.1-0.20250828110547-eaa96229204d h1:N7OH/efAE0FA0g7
 kubedb.dev/apimachinery v0.57.1-0.20250828110547-eaa96229204d/go.mod h1:STmyKaUgTJ3mspOrb9xjwhYyj68c6v6R1kjpPyNu9KY=
 kubeops.dev/operator-shard-manager v0.0.3 h1:Z2YOAfyQIjvHMwT4O56lR0l9z25s2tCVDO22u/XuYnw=
 kubeops.dev/operator-shard-manager v0.0.3/go.mod h1:2oRq5vnCaUxzE+qIiRuzB34PlqahiynE+sYqWu6AMIY=
-kubeops.dev/petset v0.0.11 h1:tlcGhGN+9wMYHXvGkSNz48ziozJFEknWaDj5YUws3kQ=
+kubeops.dev/petset v0.0.11 h1:P7R9zbo371sOccpljypJ2+iDvpwhYEOIbjT7jsuq/Q0=
 kubeops.dev/petset v0.0.11/go.mod h1:veOaOzhp1GVKeI1QAV0z6p0WDtCShwkFXiqgxwYNoBo=
 kubeops.dev/sidekick v0.0.11 h1:OydXdIH6cYSiWxKIWvrywk95WhhHSERkc7RNPOmTekc=
 kubeops.dev/sidekick v0.0.11/go.mod h1:90KMNmJOPoMKHbrdC1cpEsMx+1KjTea/lHDAbGRDzHc=

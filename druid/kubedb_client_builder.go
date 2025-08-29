@@ -32,6 +32,7 @@ import (
 	"k8s.io/klog/v2"
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	apiutils "kubedb.dev/apimachinery/pkg/utils"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -190,6 +191,6 @@ func (o *KubeDBClientBuilder) GetNodesAddress() string {
 		scheme = "http"
 	}
 
-	baseUrl := fmt.Sprintf("%s://%s-0.%s.%s.svc.%s:%d", scheme, o.db.PetSetName(o.nodeRole), o.db.GoverningServiceName(), o.db.Namespace, o.db.DruidNodeContainerPort(o.nodeRole))
+	baseUrl := fmt.Sprintf("%s://%s-0.%s.%s.svc.%s:%d", scheme, o.db.PetSetName(o.nodeRole), o.db.GoverningServiceName(), o.db.Namespace, apiutils.FindDomain(), o.db.DruidNodeContainerPort(o.nodeRole))
 	return baseUrl
 }
