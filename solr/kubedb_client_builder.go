@@ -25,13 +25,13 @@ import (
 	"net/http"
 	"time"
 
-	"k8s.io/klog/v2"
-
 	"github.com/Masterminds/semver/v3"
 	gerr "github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog/v2"
 	"kubedb.dev/apimachinery/apis/kubedb"
+	apiutils "kubedb.dev/apimachinery/pkg/utils"
 
 	"fmt"
 
@@ -79,7 +79,7 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 
 func (o *KubeDBClientBuilder) GetSolrClient() (*Client, error) {
 	if o.podName != "" {
-		o.url = fmt.Sprintf("%v://%s.%s.%s.svc.cluster.local:%d", o.db.GetConnectionScheme(), o.podName, o.db.GoverningServiceName(), o.db.GetNamespace(), kubedb.SolrRestPort)
+		o.url = fmt.Sprintf("%v://%s.%s.%s.svc.%s:%d", o.db.GetConnectionScheme(), o.podName, o.db.GoverningServiceName(), o.db.GetNamespace(), apiutils.FindDomain(), kubedb.SolrRestPort)
 	}
 	if o.url == "" {
 		o.url = o.GetHostPath(o.db)
@@ -188,5 +188,5 @@ func (o *KubeDBClientBuilder) GetSolrClient() (*Client, error) {
 }
 
 func (o *KubeDBClientBuilder) GetHostPath(db *api.Solr) string {
-	return fmt.Sprintf("%v://%s.%s.svc.cluster.local:%d", db.GetConnectionScheme(), db.ServiceName(), db.GetNamespace(), kubedb.SolrRestPort)
+	return fmt.Sprintf("%v://%s.%s.svc.%s:%d", db.GetConnectionScheme(), db.ServiceName(), db.GetNamespace(), apiutils.FindDomain(), kubedb.SolrRestPort)
 }

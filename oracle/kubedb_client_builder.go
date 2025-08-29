@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	apiutils "kubedb.dev/apimachinery/pkg/utils"
 
 	"github.com/pkg/errors"
 	_ "github.com/sijms/go-ora/v2" // Oracle driver
@@ -116,5 +117,5 @@ func (o *OracleClientBuilder) getOracleAuthCredentials() (string, string, error)
 
 // PrimaryServiceDNS make primary host dns with require template
 func PrimaryServiceDNS(db *olddbapi.Oracle) string {
-	return fmt.Sprintf("%v.%v.svc.cluster.local", db.ServiceName(), db.Namespace)
+	return fmt.Sprintf("%v.%v.svc.%s", db.ServiceName(), db.Namespace, apiutils.FindDomain())
 }

@@ -34,6 +34,7 @@ import (
 	"k8s.io/klog/v2"
 	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	apiutils "kubedb.dev/apimachinery/pkg/utils"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -212,7 +213,7 @@ func (igSql *SqlClient) Ping() error {
 }
 
 func (o *KubeDBClientBuilder) Address() string {
-	return fmt.Sprintf("%s.%s.svc.cluster.local", o.db.ServiceName(), o.db.Namespace)
+	return fmt.Sprintf("%s.%s.svc.%s", o.db.ServiceName(), o.db.Namespace, apiutils.FindDomain())
 }
 
 func (o *KubeDBClientBuilder) GetCertSecret() (*core.Secret, error) {

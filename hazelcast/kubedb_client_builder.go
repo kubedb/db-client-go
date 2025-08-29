@@ -36,6 +36,7 @@ import (
 	"k8s.io/klog/v2"
 	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	apiutils "kubedb.dev/apimachinery/pkg/utils"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -137,7 +138,7 @@ func (o *KubeDBClientBuilder) GetTLSConfig() (*tls.Config, error) {
 
 func (o *KubeDBClientBuilder) GetHazelcastClient() (*Client, error) {
 	if o.podName != "" {
-		o.url = fmt.Sprintf("%s.%s.%s.svc.cluster.local:%d", o.podName, o.db.GoverningServiceName(), o.db.GetNamespace(), kubedb.HazelcastRestPort)
+		o.url = fmt.Sprintf("%s.%s.%s.svc.%s:%d", o.podName, o.db.GoverningServiceName(), o.db.GetNamespace(), apiutils.FindDomain(), kubedb.HazelcastRestPort)
 
 	}
 
