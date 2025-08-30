@@ -942,8 +942,8 @@ github.com/klauspost/compress/internal/le
 github.com/klauspost/compress/internal/snapref
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
-# github.com/klauspost/cpuid/v2 v2.0.9
-## explicit; go 1.13
+# github.com/klauspost/cpuid/v2 v2.2.5
+## explicit; go 1.15
 github.com/klauspost/cpuid/v2
 # github.com/kubedb/gomemcache v0.0.0-20240930104810-7694d68c3e21
 ## explicit; go 1.22.1
@@ -1792,8 +1792,8 @@ kmodules.xyz/offshoot-api/api/v1
 kmodules.xyz/offshoot-api/api/v1/conversion
 kmodules.xyz/offshoot-api/api/v2
 kmodules.xyz/offshoot-api/util
-# kubedb.dev/apimachinery v0.57.1-0.20250828110547-eaa96229204d
-## explicit; go 1.23.6
+# kubedb.dev/apimachinery v0.58.0
+## explicit; go 1.24.0
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog
 kubedb.dev/apimachinery/apis/catalog/v1alpha1
@@ -1808,8 +1808,8 @@ kubedb.dev/apimachinery/pkg/utils
 # kubeops.dev/operator-shard-manager v0.0.3
 ## explicit; go 1.23.0
 kubeops.dev/operator-shard-manager/api/v1alpha1
-# kubeops.dev/petset v0.0.11
-## explicit; go 1.23.6
+# kubeops.dev/petset v0.0.12
+## explicit; go 1.24.0
 kubeops.dev/petset/apis/apps/v1
 kubeops.dev/petset/client/clientset/versioned/scheme
 kubeops.dev/petset/client/clientset/versioned/typed/apps/v1

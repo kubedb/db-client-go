@@ -1443,7 +1443,7 @@ const (
 	RabbitMQPeerDiscoveryKey           = "cluster_formation.peer_discovery_backend"
 	RabbitMQPeerDiscoveryVal           = "rabbit_peer_discovery_k8s"
 	RabbitMQK8sHostKey                 = "cluster_formation.k8s.host"
-	RabbitMQK8sHostVal                 = "kubernetes.default.svc.cluster.local"
+	RabbitMQK8sHostVal                 = "kubernetes.default.svc"
 	RabbitMQK8sAddressTypeKey          = "cluster_formation.k8s.address_type"
 	RabbitMQK8sAddressTypeVal          = "hostname"
 	RabbitMQNodeCleanupWarningKey      = "cluster_formation.node_cleanup.only_log_warning"
@@ -1772,6 +1772,12 @@ const (
 	CassandraTLSProtocolTLSValue           = "TLS"
 	CassandraTLSDefaultAlgorithmValue      = "SunX509"
 	CassandraTLSStoreTypeJKSValue          = "JKS"
+)
+
+// =========================== Migration Constant  =================================
+const (
+	StorageMigration          = "StorageMigration"
+	StorageMigrationSucceeded = "StorageMigrationSucceeded"
 )
 
 // =========================== Virtual Secrets Constants ============================

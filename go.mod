@@ -1,6 +1,6 @@
 module kubedb.dev/db-client-go
 
-go 1.23.6
+go 1.24.0
 
 toolchain go1.24.5
 
@@ -37,7 +37,7 @@ require (
 	k8s.io/klog/v2 v2.130.1
 	kmodules.xyz/client-go v0.32.7
 	kmodules.xyz/custom-resources v0.32.0
-	kubedb.dev/apimachinery v0.57.1-0.20250828110547-eaa96229204d
+	kubedb.dev/apimachinery v0.58.0
 	sigs.k8s.io/controller-runtime v0.20.4
 	xorm.io/xorm v1.3.9
 )
@@ -96,7 +96,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
-	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magefile/mage v1.11.0 // indirect
 	github.com/mailru/easyjson v0.9.0 // indirect
@@ -159,7 +159,7 @@ require (
 	kmodules.xyz/monitoring-agent-api v0.32.1 // indirect
 	kmodules.xyz/offshoot-api v0.32.0 // indirect
 	kubeops.dev/operator-shard-manager v0.0.3 // indirect
-	kubeops.dev/petset v0.0.11 // indirect
+	kubeops.dev/petset v0.0.12 // indirect
 	kubeops.dev/sidekick v0.0.11 // indirect
 	modernc.org/memory v1.5.0 // indirect
 	modernc.org/token v1.1.0 // indirect
