@@ -2003,6 +2003,7 @@ const (
 	GitSyncContainerName        = "git-sync"
 )
 
+// ========================= Oracle Constants ====================================
 const (
 	OracleDatabaseServiceName = "ORCL"
 	OracleSqlNetPortName      = "sqlnet"
@@ -2030,11 +2031,13 @@ const (
 
 	OracleStandbyServiceSuffix = "standby"
 
-	OracleDatabaseRoleKey      = "oracle.db/role"
-	OracleDatabaseRoleObserver = "observer"
-	OracleDatabaseRoleInstance = "instance"
-	OracleEnvUserName          = "SYS_USER"
-	OracleEnvPassword          = "ORACLE_PWD"
-	OracleEnvOracleSID         = "ORACLE_SID"
-	OracleEnvDataDir           = "ORADATA"
+	OracleDatabaseRoleKey          = "oracle.db/role"
+	OracleDatabaseRoleObserver     = "observer"
+	OracleDatabaseRoleInstance     = "instance"
+	OracleEnvUserName              = "SYS_USER"
+	OracleEnvPassword              = "ORACLE_PWD"
+	OracleEnvOracleSID             = "ORACLE_SID"
+	OracleEnvDataDir               = "ORADATA"
+	OracleSharedTlsVolumeName      = "certs"
+	OracleSharedTlsVolumeMountPath = "/tls/certs"
 )
