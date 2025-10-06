@@ -91,7 +91,7 @@ func (o *OracleClientBuilder) getConnectionString() (string, error) {
 	host := fmt.Sprintf("%v:%v/%v", url, o.port, o.service)
 
 	// Construct basic connection string
-	connStr := fmt.Sprintf("oracle://%s:%s@%s", user, pass, host)
+	connStr := fmt.Sprintf("oracle://%s:%s@tcps://%s", user, pass, host)
 
 	return connStr, nil
 }
