@@ -93,7 +93,7 @@ func (o *OracleClientBuilder) getConnectionString() (string, error) {
 	// Construct basic connection string
 	connStr := ""
 	if o.db.Spec.TCPSConfig != nil && o.db.Spec.TCPSConfig.TLS != nil {
-		connStr = fmt.Sprintf("oracle://%s:%s@tcps://%s", user, pass, host)
+		connStr = fmt.Sprintf("tcps://%s:%s@%s", user, pass, host)
 	} else {
 		connStr = fmt.Sprintf("oracle://%s:%s@%s", user, pass, host)
 	}
