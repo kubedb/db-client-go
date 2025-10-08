@@ -27,6 +27,7 @@ require (
 	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/pkg/errors v0.9.1
+	github.com/qdrant/go-client v1.15.2
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/redis/go-redis/v9 v9.5.1
 	github.com/sijms/go-ora/v2 v2.8.24
@@ -36,8 +37,8 @@ require (
 	k8s.io/apimachinery v0.32.3
 	k8s.io/klog/v2 v2.130.1
 	kmodules.xyz/client-go v0.32.7
-	kmodules.xyz/custom-resources v0.32.0
-	kubedb.dev/apimachinery v0.58.0
+	kmodules.xyz/custom-resources v0.32.1
+	kubedb.dev/apimachinery v0.58.3-0.20251008030956-a6a035102390
 	sigs.k8s.io/controller-runtime v0.20.4
 	xorm.io/xorm v1.3.9
 )
@@ -147,6 +148,8 @@ require (
 	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
 	gomodules.xyz/mergo v0.3.13 // indirect
 	gomodules.xyz/pointer v0.1.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241219192143-6b3ec007d9bb // indirect
+	google.golang.org/grpc v1.69.2 // indirect
 	google.golang.org/protobuf v1.36.3 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
