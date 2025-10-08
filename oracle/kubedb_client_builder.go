@@ -4,12 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	apiutils "kubedb.dev/apimachinery/pkg/utils"
 
 	"github.com/pkg/errors"
-	_ "github.com/sijms/go-ora/v2" // Oracle driver
+	go_ora "github.com/sijms/go-ora/v2" // Oracle driver
 	core "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -54,8 +55,10 @@ func (o *OracleClientBuilder) GetOracleClient() (*sql.DB, error) {
 	if o.ctx == nil {
 		o.ctx = context.Background()
 	}
-
+	// go_ora.RegisterConnConfig()
 	connStr, err := o.getConnectionString()
+	// Print connection string for debugging
+	fmt.Printf("[DEBUG] Oracle connection string: %s\n", connStr)
 	if err != nil {
 		return nil, err
 	}
@@ -93,9 +96,42 @@ func (o *OracleClientBuilder) getConnectionString() (string, error) {
 	// Construct basic connection string
 	connStr := ""
 	if o.db.Spec.TCPSConfig != nil && o.db.Spec.TCPSConfig.TLS != nil {
-		connStr = fmt.Sprintf("oracle://%s:%s@tcps://%s", user, pass, host)
+		connStr = fmt.Sprintf("oracle://%s:%s@%s", user, pass, host)
+		// Need to change this accordingly
+		urlOptions := map[string]string{
+			"SSL":        "true",  // or enable
+			"SSL VERIFY": "false", // stop ssl certificate verification
+			//	"WALLET":     "/opt/oracle/oradata/dbconfig/ORCL/.tls-wallet",
+		}
+		connStr += "?"
+		fmt.Printf("[DEBUG] Connection string now: %s\n", connStr)
+		for key, val := range urlOptions {
+			val = strings.TrimSpace(val)
+			fmt.Printf("[DEBUG] Setting key: %s\n", key)
+			fmt.Printf("[DEBUG] Setting value: %s\n", val)
+			for _, temp := range strings.Split(val, ",") {
+				fmt.Printf("[DEBUG] Setting temp: %s\n", temp)
+				temp = strings.TrimSpace(temp)
+				if strings.ToUpper(key) == "SERVER" {
+					connStr += fmt.Sprintf("%s=%s&", key, temp)
+				} else {
+					t := []byte(temp)
+					for i := 0; i < len(temp); i++ {
+						if temp[i] == ' ' {
+							t[i] = '+'
+						}
+					}
+					fmt.Printf("[DEBUG] Setting t: %s\n", string(t))
+					connStr += fmt.Sprintf("%s=%s&", key, string(t))
+				}
+			}
+		}
+		connStr = strings.TrimRight(connStr, "&")
+
+		fmt.Printf("Passed from TLS\n")
 	} else {
 		connStr = fmt.Sprintf("oracle://%s:%s@%s", user, pass, host)
+		fmt.Printf("Without from TLS\n")
 	}
 	return connStr, nil
 }
