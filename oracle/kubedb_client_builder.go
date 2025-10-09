@@ -4,13 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	apiutils "kubedb.dev/apimachinery/pkg/utils"
 
 	"github.com/pkg/errors"
-	go_ora "github.com/sijms/go-ora/v2" // Oracle driver
+	_ "github.com/sijms/go-ora/v2" // Oracle driver
 	core "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -96,12 +98,38 @@ func (o *OracleClientBuilder) getConnectionString() (string, error) {
 	// Construct basic connection string
 	connStr := ""
 	if o.db.Spec.TCPSConfig != nil && o.db.Spec.TCPSConfig.TLS != nil {
+		dbname := o.db.ObjectMeta.Name
+		dstDir := fmt.Sprintf("/tmp/%s/.tls-wallet", dbname)
+
+		if err := os.MkdirAll(dstDir, 0755); err != nil {
+			fmt.Printf("[ERROR] Failed to create wallet directory: %v\n", err)
+		} else {
+			fmt.Printf("[DEBUG] Created wallet directory: %s\n", dstDir)
+		}
+
+		// Read the TLS secret from Kubernetes
+		var tlsSecret core.Secret
+		secretName := "oracle-tls-wallet"
+		if err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: secretName}, &tlsSecret); err != nil {
+			fmt.Printf("[ERROR] Failed to get TLS secret %s: %v\n", secretName, err)
+		} else {
+			// Write each key to a file inside dstDir
+			for key, val := range tlsSecret.Data {
+				filePath := filepath.Join(dstDir, key)
+				if err := os.WriteFile(filePath, val, 0644); err != nil {
+					fmt.Printf("[ERROR] Failed to write %s: %v\n", filePath, err)
+				} else {
+					fmt.Printf("[DEBUG] Written TLS file: %s\n", filePath)
+				}
+			}
+		}
+
 		connStr = fmt.Sprintf("oracle://%s:%s@%s", user, pass, host)
 		// Need to change this accordingly
 		urlOptions := map[string]string{
 			"SSL":        "true",  // or enable
 			"SSL VERIFY": "false", // stop ssl certificate verification
-			//	"WALLET":     "/opt/oracle/oradata/dbconfig/ORCL/.tls-wallet",
+			"WALLET":     dstDir,
 		}
 		connStr += "?"
 		fmt.Printf("[DEBUG] Connection string now: %s\n", connStr)
