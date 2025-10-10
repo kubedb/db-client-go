@@ -109,8 +109,8 @@ func (o *OracleClientBuilder) getConnectionString() (string, error) {
 
 		// Read the TLS secret from Kubernetes
 		var tlsSecret core.Secret
-		secretName := "oracle-tls-wallet"
-		if err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: secretName}, &tlsSecret); err != nil {
+		secretName := "oracle-tls-secret"
+		if err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: "demo", Name: secretName}, &tlsSecret); err != nil {
 			fmt.Printf("[ERROR] Failed to get TLS secret %s: %v\n", secretName, err)
 		} else {
 			// Write each key to a file inside dstDir
