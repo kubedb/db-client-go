@@ -198,7 +198,19 @@ func (o *KubeDBClientBuilder) GetElasticsearchDashboardClient() (*Client, error)
 				Config: &config,
 			},
 		}, nil
+	case config.dbVersionInfo.AuthPlugin == catalog.ElasticsearchAuthPluginXpack && version.Major() == 9:
+		newClient := resty.New()
+		newClient.SetTransport(config.transport).SetScheme(config.connectionScheme).SetBaseURL(config.host)
+		newClient.SetHeader("Accept", "application/json")
+		newClient.SetBasicAuth(config.username, config.password)
+		newClient.SetTimeout(time.Second * 30)
 
+		return &Client{
+			&EDClientV9{
+				Client: newClient,
+				Config: &config,
+			},
+		}, nil
 	case config.dbVersionInfo.AuthPlugin == catalog.ElasticsearchAuthPluginOpenSearch:
 		newClient := resty.New()
 		newClient.SetTransport(config.transport).SetScheme(config.connectionScheme).SetBaseURL(config.host)
