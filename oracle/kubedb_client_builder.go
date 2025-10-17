@@ -24,6 +24,7 @@ type OracleClientBuilder struct {
 	port    int32
 	service string
 	ctx     context.Context
+	wallet  string
 }
 
 func NewOracleClientBuilder(kc client.Client, db *olddbapi.Oracle) *OracleClientBuilder {
@@ -50,6 +51,11 @@ func (o *OracleClientBuilder) WithService(svc string) *OracleClientBuilder {
 
 func (o *OracleClientBuilder) WithContext(ctx context.Context) *OracleClientBuilder {
 	o.ctx = ctx
+	return o
+}
+
+func (o *OracleClientBuilder) WithWallet(wallet string) *OracleClientBuilder {
+	o.wallet = wallet
 	return o
 }
 
@@ -90,6 +96,7 @@ func (o *OracleClientBuilder) getConnectionString() (string, error) {
 
 	url := o.url
 	if url == "" {
+		fmt.Printf("[DEBUG] URL not found, set PrimaryServiceDNS\n")
 		url = PrimaryServiceDNS(o.db)
 	}
 	// Use the provided URL (e.g., service DNS)
@@ -99,32 +106,37 @@ func (o *OracleClientBuilder) getConnectionString() (string, error) {
 	connStr := ""
 	if o.db.Spec.TCPSConfig != nil && o.db.Spec.TCPSConfig.TLS != nil {
 		dbname := o.db.ObjectMeta.Name
-		dstDir := fmt.Sprintf("/tmp/%s/.tls-wallet", dbname)
+		dstDir := o.wallet
+		if dstDir == "" {
+			fmt.Printf("[DEBUG] wallet not found at o.wallet %s\n", o.wallet)
+			dstDir = fmt.Sprintf("/tmp/%s/.tls-wallet", dbname)
 
-		if err := os.MkdirAll(dstDir, 0755); err != nil {
-			fmt.Printf("[ERROR] Failed to create wallet directory: %v\n", err)
-		} else {
-			fmt.Printf("[DEBUG] Created wallet directory: %s\n", dstDir)
-		}
+			if err := os.MkdirAll(dstDir, 0755); err != nil {
+				fmt.Printf("[ERROR] Failed to create wallet directory: %v\n", err)
+			} else {
+				fmt.Printf("[DEBUG] Created wallet directory: %s\n", dstDir)
+			}
 
-		// Read the TLS secret from Kubernetes
-		var tlsSecret core.Secret
-		secretName := "oracle-tls-secret"
-		if err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: "demo", Name: secretName}, &tlsSecret); err != nil {
-			fmt.Printf("[ERROR] Failed to get TLS secret %s: %v\n", secretName, err)
-		} else {
-			// Write each key to a file inside dstDir
-			for key, val := range tlsSecret.Data {
-				filePath := filepath.Join(dstDir, key)
-				if err := os.WriteFile(filePath, val, 0644); err != nil {
-					fmt.Printf("[ERROR] Failed to write %s: %v\n", filePath, err)
-				} else {
-					fmt.Printf("[DEBUG] Written TLS file: %s\n", filePath)
+			// Read the TLS secret from Kubernetes
+			var tlsSecret core.Secret
+			secretName := "oracle-tls-secret"
+			if err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: "demo", Name: secretName}, &tlsSecret); err != nil {
+				fmt.Printf("[ERROR] Failed to get TLS secret %s: %v\n", secretName, err)
+			} else {
+				// Write each key to a file inside dstDir
+				for key, val := range tlsSecret.Data {
+					filePath := filepath.Join(dstDir, key)
+					if err := os.WriteFile(filePath, val, 0644); err != nil {
+						fmt.Printf("[ERROR] Failed to write %s: %v\n", filePath, err)
+					} else {
+						fmt.Printf("[DEBUG] Written TLS file: %s\n", filePath)
+					}
 				}
 			}
 		}
 
 		connStr = fmt.Sprintf("oracle://%s:%s@%s", user, pass, host)
+
 		// Need to change this accordingly
 		urlOptions := map[string]string{
 			"SSL":        "true",  // or enable
