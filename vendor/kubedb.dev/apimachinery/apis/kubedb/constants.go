@@ -2285,3 +2285,17 @@ const (
 	// TenantDatabaseName is the name of the KubeDB managed tenant database
 	KubeDBTenantDatabaseName = "KUBEDB_HEALTH_CHECK"
 )
+
+// =========================== Qdrant Constants ============================
+const (
+	QdrantContainerName  = "qdrant"
+	QdrantHTTPPortName   = "http"
+	QdrantHTTPPort       = 6333
+	QdrantGRPCPortName   = "grpc"
+	QdrantGRPCPort       = 6334
+	QdrantP2PPortName    = "p2p"
+	QdrantP2PPort        = 6335
+	QdrantConfigKey      = "config.yaml"
+	QdrantAPIKey         = "api-key"
+	QdrantReadOnlyAPIKey = "read-only-api-key"
+)
