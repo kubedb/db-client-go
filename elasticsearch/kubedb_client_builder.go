@@ -223,7 +223,7 @@ func (o *KubeDBClientBuilder) GetElasticClient() (*Client, error) {
 				return nil, fmt.Errorf("cluster ping request failed with status code: %d", res.StatusCode)
 			}
 			return &Client{
-				&ESClientV5{client: esClient},
+				&ESClientV6{client: esClient},
 			}, nil
 
 		// for Elasticsearch 7.x.x
