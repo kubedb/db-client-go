@@ -104,6 +104,27 @@ func (es *OSClientV1) ShardStats() ([]ShardInfo, error) {
 	return shardStats, nil
 }
 
+func (os *OSClientV1) DisableShardAllocation() error {
+	var b strings.Builder
+	b.WriteString(DisableShardAllocation)
+	req := opensearchapi.ClusterPutSettingsRequest{
+		Body:   strings.NewReader(b.String()),
+		Pretty: true,
+		Human:  true,
+	}
+	res, err := req.Do(context.Background(), os.client)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("received status code: %d", res.StatusCode)
+	}
+
+	return nil
+}
+
 // GetIndicesInfo will return the indices' info of an Elasticsearch database
 func (os *OSClientV1) GetIndicesInfo() ([]interface{}, error) {
 	req := opensearchapi.CatIndicesRequest{
@@ -430,4 +451,68 @@ func (os *OSClientV1) PutData(index, id string, data map[string]interface{}) err
 		return errors.New("failed to put data in an index")
 	}
 	return nil
+}
+
+func (os *OSClientV1) ReEnableShardAllocation() error {
+	var b strings.Builder
+	b.WriteString(ReEnableShardAllocation)
+	req := opensearchapi.ClusterPutSettingsRequest{
+		Body:   strings.NewReader(b.String()),
+		Pretty: true,
+		Human:  true,
+	}
+	res, err := req.Do(context.Background(), os.client)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("received status code: %d", res.StatusCode)
+	}
+
+	return nil
+}
+
+func (os *OSClientV1) CheckVersion() (string, error) {
+	req := opensearchapi.InfoRequest{
+		Pretty: true,
+		Human:  true,
+	}
+
+	res, err := req.Do(context.Background(), os.client)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+
+	nodeInfo := new(Info)
+	if err := json.NewDecoder(res.Body).Decode(&nodeInfo); err != nil {
+		return "", errors.Wrap(err, "failed to deserialize the response")
+	}
+
+	if nodeInfo.Version.Number == "" {
+		return "", errors.New("elasticsearch version is empty")
+	}
+
+	return nodeInfo.Version.Number, nil
+}
+
+func (os *OSClientV1) GetClusterStatus() (string, error) {
+	res, err := os.client.Cluster.Health(
+		os.client.Cluster.Health.WithPretty(),
+	)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+
+	response := make(map[string]interface{})
+	if err2 := json.NewDecoder(res.Body).Decode(&response); err2 != nil {
+		return "", errors.Wrap(err2, "failed to parse the response body")
+	}
+	if value, ok := response["status"]; ok {
+		return value.(string), nil
+	}
+	return "", errors.New("status is missing")
 }
