@@ -19,6 +19,7 @@ package pgbouncer
 import (
 	"context"
 	"fmt"
+	vsecretapi "go.virtual-secrets.dev/apimachinery/apis/virtual/v1alpha1"
 
 	"kubedb.dev/apimachinery/apis/kubedb"
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
@@ -152,20 +153,44 @@ func (o *KubeDBClientBuilder) GetBackendAuth() (string, string, error) {
 		return "", "", fmt.Errorf("backend postgres auth secret unspecified for pgBouncer %s/%s", o.pgbouncer.Namespace, o.pgbouncer.Name)
 	}
 
-	var secret core.Secret
-	err = o.kc.Get(o.ctx, client.ObjectKey{Namespace: appBinding.Namespace, Name: appBinding.Spec.Secret.Name}, &secret)
-	if err != nil {
-		return "", "", err
-	}
+	user, pass := []byte{}, []byte{}
+	if appBinding.Spec.Secret.Kind == "" || appBinding.Spec.Secret.Kind == kubedb.ResourceKindSecret {
+		var secret core.Secret
+		err = o.kc.Get(o.ctx, client.ObjectKey{Namespace: appBinding.Namespace, Name: appBinding.Spec.Secret.Name}, &secret)
+		if err != nil {
+			return "", "", err
+		}
 
-	user, present := secret.Data[core.BasicAuthUsernameKey]
-	if !present {
-		return "", "", fmt.Errorf("error getting backend username")
-	}
+		var present bool
+		user, present = secret.Data[core.BasicAuthUsernameKey]
+		if !present {
+			return "", "", fmt.Errorf("error getting backend username")
+		}
 
-	pass, present := secret.Data[core.BasicAuthPasswordKey]
-	if !present {
-		return "", "", fmt.Errorf("error getting backend password")
+		pass, present = secret.Data[core.BasicAuthPasswordKey]
+		if !present {
+			return "", "", fmt.Errorf("error getting backend password")
+		}
+	} else {
+		vSecret := &vsecretapi.Secret{}
+		err = o.kc.Get(context.TODO(), types.NamespacedName{
+			Name:      appBinding.Spec.Secret.Name,
+			Namespace: appBinding.Namespace,
+		}, vSecret)
+		if err != nil {
+			return "", "", err
+		}
+
+		var present bool
+		user, present = vSecret.Data[core.BasicAuthUsernameKey]
+		if !present {
+			return "", "", fmt.Errorf("error getting backend username")
+		}
+
+		pass, present = vSecret.Data[core.BasicAuthPasswordKey]
+		if !present {
+			return "", "", fmt.Errorf("error getting backend password")
+		}
 	}
 
 	return string(user), string(pass), nil
