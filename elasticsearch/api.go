@@ -33,6 +33,7 @@ import (
 	esv6 "github.com/elastic/go-elasticsearch/v6"
 	esv7 "github.com/elastic/go-elasticsearch/v7"
 	esv8 "github.com/elastic/go-elasticsearch/v8"
+	esv9 "github.com/elastic/go-elasticsearch/v9"
 	"github.com/go-logr/logr"
 	opensearchv1 "github.com/opensearch-project/opensearch-go"
 	opensearchv2 "github.com/opensearch-project/opensearch-go/v2"
@@ -285,6 +286,42 @@ func GetElasticClient(kc kubernetes.Interface, dc cs.Interface, db *dbapi.Elasti
 				return &ESClientV8{client: client}, res.StatusCode, fmt.Errorf("health check failed with status code: %d", res.StatusCode)
 			}
 			return &ESClientV8{client: client}, res.StatusCode, nil
+
+		case version.Major() == 9:
+			client, err := esv9.NewClient(esv9.Config{
+				Addresses:         []string{url},
+				Username:          username,
+				Password:          password,
+				EnableDebugLogger: true,
+				DisableRetry:      true,
+				Transport: &http.Transport{
+					IdleConnTimeout: 3 * time.Second,
+					DialContext: (&net.Dialer{
+						Timeout: 30 * time.Second,
+					}).DialContext,
+					TLSClientConfig: &tls.Config{
+						InsecureSkipVerify: true,
+						MaxVersion:         tls.VersionTLS12,
+					},
+				},
+			})
+			if err != nil {
+				log.Error(err, fmt.Sprintf("Failed to create HTTP client for Elasticsearch: %s/%s", db.Namespace, db.Name))
+				return nil, -1, err
+			}
+			// do a manual health check to test client
+			res, err := client.Cluster.Health(
+				client.Cluster.Health.WithPretty(),
+			)
+			if err != nil {
+				return nil, -1, errors.Wrap(err, "failed to perform health check")
+			}
+			defer res.Body.Close()
+
+			if res.IsError() {
+				return &ESClientV9{client: client}, res.StatusCode, fmt.Errorf("health check failed with status code: %d", res.StatusCode)
+			}
+			return &ESClientV9{client: client}, res.StatusCode, nil
 		}
 
 	case esVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginOpenSearch:
@@ -432,4 +469,19 @@ type ESClient interface {
 	ShardStats() ([]ShardInfo, error)
 	PutData(index, id string, data map[string]interface{}) error
 	SyncCredentialFromSecret(secret *core.Secret) error
+	DisableShardAllocation() error
+	ReEnableShardAllocation() error
+	CheckVersion() (string, error)
+	GetClusterStatus() (string, error)
+	CountIndex() (int, error)
+	GetData(_index, _type, _id string) (map[string]interface{}, error)
+	CountNodes() (int64, error)
+	AddVotingConfigExclusions(nodes []string) error
+	DeleteVotingConfigExclusions() error
+	ExcludeNodeAllocation(nodes []string) error
+	DeleteNodeAllocationExclusion() error
+	GetUsedDataNodes() ([]string, error)
+	AssignedShardsSize(node string) (int64, error)
+	EnableUpgradeModeML() error
+	DisableUpgradeModeML() error
 }

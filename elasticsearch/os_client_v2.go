@@ -520,7 +520,7 @@ func (os *OSClientV2) GetClusterStatus() (string, error) {
 	return "", errors.New("status is missing")
 }
 
-func (os *OSClientV1) CountIndex() (int, error) {
+func (os *OSClientV2) CountIndex() (int, error) {
 	req := opensearchapi.IndicesGetSettingsRequest{
 		Index:  []string{"_all"},
 		Pretty: true,
@@ -544,7 +544,7 @@ func (os *OSClientV1) CountIndex() (int, error) {
 	return len(response), nil
 }
 
-func (os *OSClientV1) GetData(_index, _type, _id string) (map[string]interface{}, error) {
+func (os *OSClientV2) GetData(_index, _type, _id string) (map[string]interface{}, error) {
 	req := opensearchapi.GetRequest{
 		Index:        _index,
 		DocumentType: _type,
@@ -571,7 +571,7 @@ func (os *OSClientV1) GetData(_index, _type, _id string) (map[string]interface{}
 	return response, nil
 }
 
-func (os *OSClientV1) CountNodes() (int64, error) {
+func (os *OSClientV2) CountNodes() (int64, error) {
 	req := opensearchapi.NodesInfoRequest{
 		Pretty: false,
 		Human:  false,
@@ -595,7 +595,7 @@ func (os *OSClientV1) CountNodes() (int64, error) {
 	return nodeInfo.Nodes.Total.Int64()
 }
 
-func (os *OSClientV1) AddVotingConfigExclusions(nodes []string) error {
+func (os *OSClientV2) AddVotingConfigExclusions(nodes []string) error {
 	nodeNames := strings.Join(nodes, ",")
 	req := opensearchapi.ClusterPostVotingConfigExclusionsRequest{
 		NodeNames: nodeNames,
@@ -613,7 +613,7 @@ func (os *OSClientV1) AddVotingConfigExclusions(nodes []string) error {
 	return nil
 }
 
-func (os *OSClientV1) DeleteVotingConfigExclusions() error {
+func (os *OSClientV2) DeleteVotingConfigExclusions() error {
 	req, err := http.NewRequest(http.MethodDelete, VotingExclusionUrl, nil)
 	if err != nil {
 		return err
@@ -631,7 +631,7 @@ func (os *OSClientV1) DeleteVotingConfigExclusions() error {
 	return nil
 }
 
-func (os *OSClientV1) ExcludeNodeAllocation(nodes []string) error {
+func (os *OSClientV2) ExcludeNodeAllocation(nodes []string) error {
 	list := strings.Join(nodes, ",")
 	var body bytes.Buffer
 	t, err := template.New("").Parse(ExcludeNodeAllocation)
@@ -661,7 +661,7 @@ func (os *OSClientV1) ExcludeNodeAllocation(nodes []string) error {
 	return nil
 }
 
-func (os *OSClientV1) DeleteNodeAllocationExclusion() error {
+func (os *OSClientV2) DeleteNodeAllocationExclusion() error {
 	var b strings.Builder
 	b.WriteString(DeleteNodeAllocationExclusion)
 	req := opensearchapi.ClusterPutSettingsRequest{
@@ -682,7 +682,7 @@ func (os *OSClientV1) DeleteNodeAllocationExclusion() error {
 	return nil
 }
 
-func (os *OSClientV1) GetUsedDataNodes() ([]string, error) {
+func (os *OSClientV2) GetUsedDataNodes() ([]string, error) {
 	req := opensearchapi.CatShardsRequest{
 		Pretty: true,
 		Human:  true,
@@ -720,7 +720,7 @@ func (os *OSClientV1) GetUsedDataNodes() ([]string, error) {
 }
 
 // AssignedShardsSize returns the assigned shards size of a given node
-func (os *OSClientV1) AssignedShardsSize(node string) (int64, error) {
+func (os *OSClientV2) AssignedShardsSize(node string) (int64, error) {
 	req := opensearchapi.NodesStatsRequest{
 		NodeID: []string{node},
 		Pretty: true,
@@ -745,11 +745,11 @@ func (os *OSClientV1) AssignedShardsSize(node string) (int64, error) {
 }
 
 // EnableUpgradeModeML	enables upgrade modes for ML nodes.
-func (os *OSClientV1) EnableUpgradeModeML() error {
+func (os *OSClientV2) EnableUpgradeModeML() error {
 	return nil
 }
 
 // DisableUpgradeModeML	disables upgrade modes for ML nodes.
-func (os *OSClientV1) DisableUpgradeModeML() error {
+func (os *OSClientV2) DisableUpgradeModeML() error {
 	return nil
 }
