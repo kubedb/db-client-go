@@ -148,7 +148,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	encodedUser := url.QueryEscape(user)
 	encodedPass := url.QueryEscape(pass)
 
-	connectionString := fmt.Sprintf("hdb://%s:%s@%s:%s%s%s", encodedUser, encodedPass, host, port, dbParam, tlsConfig)
+	connectionString := fmt.Sprintf("hdb://%s:%s@%s:%s%s", encodedUser, encodedPass, host, port, dbParam)
 	return connectionString, nil
 }
 

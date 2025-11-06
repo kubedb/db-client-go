@@ -52,17 +52,9 @@ spec:
                 properties:
                   secretRef:
                     properties:
-                      apiGroup:
+                      name:
                         default: ""
                         type: string
-                      kind:
-                        default: Secret
-                        type: string
-                      name:
-                        type: string
-                    required:
-                    - kind
-                    - name
                     type: object
                     x-kubernetes-map-type: atomic
                 type: object
