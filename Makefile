@@ -194,8 +194,9 @@ lint: $(BUILD_DIRS)
 	    --env HTTP_PROXY=$(HTTP_PROXY)                          \
 	    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
 	    --env GO111MODULE=on                                    \
+	    --env GOFLAGS="-mod=vendor"                             \
 	    $(BUILD_IMAGE)                                          \
-	    golangci-lint run $(SRC_DIRS)
+	    golangci-lint run --enable $(ADDTL_LINTERS) --timeout=10m --exclude-files="generated.*\.go$\" --exclude-dirs-use-default
 
 $(BUILD_DIRS):
 	@mkdir -p $@
