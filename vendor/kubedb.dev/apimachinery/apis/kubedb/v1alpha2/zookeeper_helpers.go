@@ -203,15 +203,6 @@ func (z *ZooKeeper) SetDefaults(kc client.Client) {
 		z.Spec.DeletionPolicy = DeletionPolicyHalt
 	}
 
-	if !z.Spec.DisableAuth {
-		if z.Spec.AuthSecret == nil {
-			z.Spec.AuthSecret = &SecretReference{}
-		}
-		if z.Spec.AuthSecret.Kind == "" {
-			z.Spec.AuthSecret.Kind = kubedb.ResourceKindSecret
-		}
-	}
-
 	var zkVersion catalog.ZooKeeperVersion
 	err := kc.Get(context.TODO(), types.NamespacedName{Name: z.Spec.Version}, &zkVersion)
 	if err != nil {
