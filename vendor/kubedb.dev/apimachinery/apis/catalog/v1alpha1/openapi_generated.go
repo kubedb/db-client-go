@@ -454,7 +454,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1.StashAddonSpec":                      schema_custom_resources_apis_appcatalog_v1alpha1_StashAddonSpec(ref),
 		"kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1.StashTaskSpec":                       schema_custom_resources_apis_appcatalog_v1alpha1_StashTaskSpec(ref),
 		"kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1.TaskRef":                             schema_custom_resources_apis_appcatalog_v1alpha1_TaskRef(ref),
-		"kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1.TypedLocalObjectReference":           schema_custom_resources_apis_appcatalog_v1alpha1_TypedLocalObjectReference(ref),
 		"kmodules.xyz/monitoring-agent-api/api/v1.AgentSpec":                                         schema_kmodulesxyz_monitoring_agent_api_api_v1_AgentSpec(ref),
 		"kmodules.xyz/monitoring-agent-api/api/v1.AlertPreset":                                       schema_kmodulesxyz_monitoring_agent_api_api_v1_AlertPreset(ref),
 		"kmodules.xyz/monitoring-agent-api/api/v1.BasicAuth":                                         schema_kmodulesxyz_monitoring_agent_api_api_v1_BasicAuth(ref),
@@ -553,6 +552,11 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"kubedb.dev/apimachinery/apis/catalog/v1alpha1.FullBackup":                                   schema_apimachinery_apis_catalog_v1alpha1_FullBackup(ref),
 		"kubedb.dev/apimachinery/apis/catalog/v1alpha1.FullBackupRestore":                            schema_apimachinery_apis_catalog_v1alpha1_FullBackupRestore(ref),
 		"kubedb.dev/apimachinery/apis/catalog/v1alpha1.GitSyncer":                                    schema_apimachinery_apis_catalog_v1alpha1_GitSyncer(ref),
+		"kubedb.dev/apimachinery/apis/catalog/v1alpha1.HanaDBSecurityContext":                        schema_apimachinery_apis_catalog_v1alpha1_HanaDBSecurityContext(ref),
+		"kubedb.dev/apimachinery/apis/catalog/v1alpha1.HanaDBVersion":                                schema_apimachinery_apis_catalog_v1alpha1_HanaDBVersion(ref),
+		"kubedb.dev/apimachinery/apis/catalog/v1alpha1.HanaDBVersionList":                            schema_apimachinery_apis_catalog_v1alpha1_HanaDBVersionList(ref),
+		"kubedb.dev/apimachinery/apis/catalog/v1alpha1.HanaDBVersionSpec":                            schema_apimachinery_apis_catalog_v1alpha1_HanaDBVersionSpec(ref),
+		"kubedb.dev/apimachinery/apis/catalog/v1alpha1.HanaDatabase":                                 schema_apimachinery_apis_catalog_v1alpha1_HanaDatabase(ref),
 		"kubedb.dev/apimachinery/apis/catalog/v1alpha1.HazelcastInitContainer":                       schema_apimachinery_apis_catalog_v1alpha1_HazelcastInitContainer(ref),
 		"kubedb.dev/apimachinery/apis/catalog/v1alpha1.HazelcastVersion":                             schema_apimachinery_apis_catalog_v1alpha1_HazelcastVersion(ref),
 		"kubedb.dev/apimachinery/apis/catalog/v1alpha1.HazelcastVersionDatabase":                     schema_apimachinery_apis_catalog_v1alpha1_HazelcastVersionDatabase(ref),
@@ -22758,7 +22762,7 @@ func schema_custom_resources_apis_appcatalog_v1alpha1_AppBindingSpec(ref common.
 					"secret": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Secret is the name of the secret to create in the AppBinding's namespace that will hold the credentials associated with the AppBinding.",
-							Ref:         ref("kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1.TypedLocalObjectReference"),
+							Ref:         ref("k8s.io/api/core/v1.LocalObjectReference"),
 						},
 					},
 					"secretTransforms": {
@@ -22784,7 +22788,7 @@ func schema_custom_resources_apis_appcatalog_v1alpha1_AppBindingSpec(ref common.
 					"tlsSecret": {
 						SchemaProps: spec.SchemaProps{
 							Description: "TLSSecret is the name of the secret that will hold the client certificate and private key associated with the AppBinding.",
-							Ref:         ref("kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1.TypedLocalObjectReference"),
+							Ref:         ref("k8s.io/api/core/v1.LocalObjectReference"),
 						},
 					},
 				},
@@ -22792,7 +22796,7 @@ func schema_custom_resources_apis_appcatalog_v1alpha1_AppBindingSpec(ref common.
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/runtime.RawExtension", "kmodules.xyz/client-go/api/v1.TypedObjectReference", "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1.ClientConfig", "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1.SecretTransform", "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1.TypedLocalObjectReference"},
+			"k8s.io/api/core/v1.LocalObjectReference", "k8s.io/apimachinery/pkg/runtime.RawExtension", "kmodules.xyz/client-go/api/v1.TypedObjectReference", "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1.ClientConfig", "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1.SecretTransform"},
 	}
 }
 
@@ -23205,48 +23209,6 @@ func schema_custom_resources_apis_appcatalog_v1alpha1_TaskRef(ref common.Referen
 		},
 		Dependencies: []string{
 			"kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1.Param"},
-	}
-}
-
-func schema_custom_resources_apis_appcatalog_v1alpha1_TypedLocalObjectReference(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"apiGroup": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIGroup is the group for the resource being referenced. If APIGroup is not specified, the specified Kind must be in the core API group. For any other third-party types, APIGroup is required.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is the type of resource being referenced",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Name is the name of resource being referenced",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-				},
-				Required: []string{"kind", "name"},
-			},
-			VendorExtensible: spec.VendorExtensible{
-				Extensions: spec.Extensions{
-					"x-kubernetes-map-type": "atomic",
-				},
-			},
-		},
 	}
 }
 
@@ -27812,6 +27774,206 @@ func schema_apimachinery_apis_catalog_v1alpha1_GitSyncer(ref common.ReferenceCal
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Description: "GitSyncer is the image for the kubernetes/git-sync https://github.com/kubernetes/git-sync",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"image": {
+						SchemaProps: spec.SchemaProps{
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
+						},
+					},
+				},
+				Required: []string{"image"},
+			},
+		},
+	}
+}
+
+func schema_apimachinery_apis_catalog_v1alpha1_HanaDBSecurityContext(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "HanaDBSecurityContext is for the additional config for the DB container",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"runAsUser": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
+						},
+					},
+					"runAsGroup": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schema_apimachinery_apis_catalog_v1alpha1_HanaDBVersion(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "HanaDBVersion defines a HanaDB database version",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("kubedb.dev/apimachinery/apis/catalog/v1alpha1.HanaDBVersionSpec"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "kubedb.dev/apimachinery/apis/catalog/v1alpha1.HanaDBVersionSpec"},
+	}
+}
+
+func schema_apimachinery_apis_catalog_v1alpha1_HanaDBVersionList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "HanaDBVersionList is a list of HanaDBVersions",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("kubedb.dev/apimachinery/apis/catalog/v1alpha1.HanaDBVersion"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta", "kubedb.dev/apimachinery/apis/catalog/v1alpha1.HanaDBVersion"},
+	}
+}
+
+func schema_apimachinery_apis_catalog_v1alpha1_HanaDBVersionSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "HanaDBVersionSpec is the spec for  HanaDB version",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"version": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Version",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"db": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Database Image",
+							Default:     map[string]interface{}{},
+							Ref:         ref("kubedb.dev/apimachinery/apis/catalog/v1alpha1.HanaDatabase"),
+						},
+					},
+					"deprecated": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Deprecated versions usable but considered as obsolete and best avoided typically superseded",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"securityContext": {
+						SchemaProps: spec.SchemaProps{
+							Description: "SecurityContext is for the additional config for the DB container",
+							Default:     map[string]interface{}{},
+							Ref:         ref("kubedb.dev/apimachinery/apis/catalog/v1alpha1.HanaDBSecurityContext"),
+						},
+					},
+					"ui": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("kubedb.dev/apimachinery/apis/catalog/v1alpha1.ChartInfo"),
+									},
+								},
+							},
+						},
+					},
+					"updateConstraints": {
+						SchemaProps: spec.SchemaProps{
+							Description: "update constraints",
+							Default:     map[string]interface{}{},
+							Ref:         ref("kubedb.dev/apimachinery/apis/catalog/v1alpha1.UpdateConstraints"),
+						},
+					},
+				},
+				Required: []string{"version", "db"},
+			},
+		},
+		Dependencies: []string{
+			"kubedb.dev/apimachinery/apis/catalog/v1alpha1.ChartInfo", "kubedb.dev/apimachinery/apis/catalog/v1alpha1.HanaDBSecurityContext", "kubedb.dev/apimachinery/apis/catalog/v1alpha1.HanaDatabase", "kubedb.dev/apimachinery/apis/catalog/v1alpha1.UpdateConstraints"},
+	}
+}
+
+func schema_apimachinery_apis_catalog_v1alpha1_HanaDatabase(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "HanaDBVersionDatabase is the HanaDB Database image",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"image": {

@@ -8,6 +8,7 @@ require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.23.2
 	github.com/IBM/sarama v1.45.2
 	github.com/Masterminds/semver/v3 v3.3.1
+	github.com/SAP/go-hdb v1.14.11
 	github.com/Shopify/zk v1.0.12
 	github.com/amsokol/ignite-go-client v0.12.2
 	github.com/elastic/go-elasticsearch/v5 v5.6.1
@@ -38,7 +39,7 @@ require (
 	k8s.io/klog/v2 v2.130.1
 	kmodules.xyz/client-go v0.32.7
 	kmodules.xyz/custom-resources v0.32.2
-	kubedb.dev/apimachinery v0.59.0
+	kubedb.dev/apimachinery v0.58.1-0.20251030123201-2c2394a10dce
 	sigs.k8s.io/controller-runtime v0.20.4
 	xorm.io/xorm v1.3.9
 )
@@ -143,10 +144,10 @@ require (
 	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/oauth2 v0.28.0 // indirect
-	golang.org/x/sync v0.14.0 // indirect
+	golang.org/x/sync v0.17.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/term v0.32.0 // indirect
-	golang.org/x/text v0.25.0 // indirect
+	golang.org/x/text v0.30.0 // indirect
 	golang.org/x/time v0.10.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
 	gomodules.xyz/mergo v0.3.13 // indirect
