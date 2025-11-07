@@ -106,12 +106,18 @@ func (q *Qdrant) ServiceAccountName() string {
 	return q.OffshootName()
 }
 
-func (q *Qdrant) PrimaryServiceDNS() string {
+func (q *Qdrant) ServiceDNS() string {
 	return fmt.Sprintf("%s.%s.svc", q.ServiceName(), q.Namespace)
 }
 
-func (q *Qdrant) Address() string {
-	return fmt.Sprintf("%v.%v.svc", q.Name, q.Namespace)
+func (q *Qdrant) GetPodAddress(i int) string {
+	return fmt.Sprintf("%s-%d.%s.%s.svc:%d",
+		q.OffshootName(),
+		i,
+		q.GoverningServiceName(),
+		q.Namespace,
+		kubedb.QdrantHTTPPort,
+	)
 }
 
 func (q *Qdrant) GetAuthSecretName() string {
@@ -119,6 +125,26 @@ func (q *Qdrant) GetAuthSecretName() string {
 		return q.Spec.AuthSecret.Name
 	}
 	return meta_util.NameWithSuffix(q.OffshootName(), "auth")
+}
+
+func (q *Qdrant) GetAPIKey(ctx context.Context, kc client.Client) string {
+	var secretName string
+	if q.Spec.AuthSecret != nil {
+		secretName = q.GetAuthSecretName()
+	}
+
+	var secret core.Secret
+	err := kc.Get(ctx, client.ObjectKey{Namespace: q.Namespace, Name: secretName}, &secret)
+	if err != nil {
+		return ""
+	}
+
+	apiKey, ok := secret.Data[kubedb.QdrantAPIKey]
+	if !ok {
+		return ""
+	}
+
+	return string(apiKey)
 }
 
 func (q *Qdrant) ConfigSecretName() string {
@@ -161,12 +187,28 @@ func (q *Qdrant) SetDefaults(kc client.Client) {
 		q.Spec.Replicas = pointer.Int32P(1)
 	}
 
+	if q.Spec.Mode == "" {
+		q.Spec.Mode = QdrantStandalone
+	}
+
 	if q.Spec.DeletionPolicy == "" {
 		q.Spec.DeletionPolicy = DeletionPolicyDelete
 	}
 
 	if q.Spec.StorageType == "" {
 		q.Spec.StorageType = StorageTypeDurable
+	}
+
+	if q.Spec.AuthSecret == nil {
+		q.Spec.AuthSecret = &SecretReference{}
+	}
+
+	if q.Spec.AuthSecret.Kind == "" {
+		q.Spec.AuthSecret.Kind = kubedb.ResourceKindSecret
+	}
+
+	if q.Spec.PodTemplate == nil {
+		q.Spec.PodTemplate = &ofst.PodTemplateSpec{}
 	}
 
 	var qdVersion catalog.QdrantVersion
@@ -177,7 +219,7 @@ func (q *Qdrant) SetDefaults(kc client.Client) {
 		return
 	}
 
-	q.setDefaultContainerSecurityContext(&qdVersion, &q.Spec.PodTemplate)
+	q.setDefaultContainerSecurityContext(&qdVersion, q.Spec.PodTemplate)
 
 	dbContainer := coreutil.GetContainerByName(q.Spec.PodTemplate.Spec.Containers, kubedb.QdrantContainerName)
 	if dbContainer != nil && (dbContainer.Resources.Requests == nil || dbContainer.Resources.Limits == nil) {
@@ -185,6 +227,8 @@ func (q *Qdrant) SetDefaults(kc client.Client) {
 	}
 
 	q.SetHealthCheckerDefaults()
+
+	q.setDefaultContainerResourceLimits(q.Spec.PodTemplate)
 }
 
 func (q *Qdrant) SetHealthCheckerDefaults() {
@@ -195,7 +239,7 @@ func (q *Qdrant) SetHealthCheckerDefaults() {
 		q.Spec.HealthChecker.TimeoutSeconds = pointer.Int32P(10)
 	}
 	if q.Spec.HealthChecker.FailureThreshold == nil {
-		q.Spec.HealthChecker.FailureThreshold = pointer.Int32P(3)
+		q.Spec.HealthChecker.FailureThreshold = pointer.Int32P(1)
 	}
 }
 
@@ -240,7 +284,17 @@ func (q *Qdrant) assignDefaultContainerSecurityContext(qdVersion *catalog.Qdrant
 	if rc.RunAsUser == nil {
 		rc.RunAsUser = qdVersion.Spec.SecurityContext.RunAsUser
 	}
+	if rc.RunAsGroup == nil {
+		rc.RunAsGroup = qdVersion.Spec.SecurityContext.RunAsUser
+	}
 	if rc.SeccompProfile == nil {
 		rc.SeccompProfile = secomp.DefaultSeccompProfile()
+	}
+}
+
+func (q *Qdrant) setDefaultContainerResourceLimits(podTemplate *ofst.PodTemplateSpec) {
+	dbContainer := coreutil.GetContainerByName(podTemplate.Spec.Containers, kubedb.QdrantContainerName)
+	if dbContainer != nil && (dbContainer.Resources.Requests == nil && dbContainer.Resources.Limits == nil) {
+		apis.SetDefaultResourceLimits(&dbContainer.Resources, kubedb.DefaultResources)
 	}
 }
