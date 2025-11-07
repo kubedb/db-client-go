@@ -154,7 +154,7 @@ func (o *KubeDBClientBuilder) GetBackendAuth() (string, string, error) {
 	}
 
 	user, pass := []byte{}, []byte{}
-	if appBinding.Spec.Secret.Kind == "" || appBinding.Spec.Secret.Kind == kubedb.ResourceKindSecret {
+	if !dbapi.IsVirtualAuthSecretReferred(appBinding.Spec.Secret) {
 		var secret core.Secret
 		err = o.kc.Get(o.ctx, client.ObjectKey{Namespace: appBinding.Namespace, Name: appBinding.Spec.Secret.Name}, &secret)
 		if err != nil {
