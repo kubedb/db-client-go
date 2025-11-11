@@ -154,7 +154,7 @@ func (o *KubeDBClientBuilder) GetBackendAuth() (string, string, error) {
 	}
 
 	user, pass := []byte{}, []byte{}
-	if !dbapi.IsVirtualAuthSecretReferred(appBinding.Spec.Secret) {
+	if appBinding.Spec.Secret.APIGroup == "" || appBinding.Spec.Secret.APIGroup == vsecretapi.GroupName {
 		var secret core.Secret
 		err = o.kc.Get(o.ctx, client.ObjectKey{Namespace: appBinding.Namespace, Name: appBinding.Spec.Secret.Name}, &secret)
 		if err != nil {
@@ -181,18 +181,17 @@ func (o *KubeDBClientBuilder) GetBackendAuth() (string, string, error) {
 			return "", "", err
 		}
 
-		var present bool
-		user, present = vSecret.Data[core.BasicAuthUsernameKey]
+		userCpy, present := vSecret.StringData[core.BasicAuthUsernameKey]
 		if !present {
 			return "", "", fmt.Errorf("error getting backend username")
 		}
 
-		pass, present = vSecret.Data[core.BasicAuthPasswordKey]
+		passCpy, present := vSecret.StringData[core.BasicAuthPasswordKey]
 		if !present {
 			return "", "", fmt.Errorf("error getting backend password")
 		}
+		user, pass = []byte(userCpy), []byte(passCpy)
 	}
-
 	return string(user), string(pass), nil
 }
 
