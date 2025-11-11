@@ -36,16 +36,32 @@ const (
 	LabelRole                  = GroupName + "/role"
 	LabelPetSet                = GroupName + "/petset"
 
+	PrometheusAddressFile     = "/var/prometheus-data/address"
+	PrometheusCaFile          = "/var/prometheus-data/ca.crt"
+	PrometheusTokenFile       = "/var/prometheus-data/token.txt"
+	MonitoringAgentAnnotation = GroupName + "/monitoring-agent"
+
 	// distributed const
-	DistributedCustomConfigSecretNameSuffix = "custom-config"
-	DistributedRBACNameSuffix               = "rbac"
-	DistributedServiceExportNameSuffix      = "serviceexports"
-	DistributedTLSSecretNameSuffix          = "tls-secrets"
-	DistributedGRPCSecretNameSuffix         = "grpc-secrets"
-	DistributedAuthSecretNameSuffix         = "auth"
-	KubeSliceNSMIPKey                       = "kubeslice.io/nsmIP"
-	KubeSlicePodIPVolumeName                = "podip"
-	KubeSlicePodIPFileName                  = "podip"
+	DistributedDatabaseLabel                   = GroupName + "/distributed"
+	DistributedCustomConfigSecretNameSuffix    = "custom-config"
+	DistributedRBACNameSuffix                  = "rbac"
+	DistributedServiceExportNameSuffix         = "serviceexports"
+	DistributedTLSSecretNameSuffix             = "tls-secrets"
+	DistributedGRPCSecretNameSuffix            = "grpc-secrets"
+	DistributedAuthSecretNameSuffix            = "auth"
+	DistributedPromethuesSecretNameSuffix      = "prometheus-data"
+	DistributedPromethuesSecretVolumeName      = "prometheus-data"
+	DistributedPromethuesSecretVolumeMountPath = "/var/prometheus-data"
+	DistributedMonitoringAgentENV              = "MONITORING_AGENT"
+	DistributedMonitoringAgentPrometheus       = "prometheus"
+	DistributedDBReplicaENV                    = "DB_REPLICAS"
+	DistributedMaxVolumeUsed                   = "max_used"
+	DistributedVolumeCapacity                  = "capacity"
+
+	KubeSliceNSMIPKey         = "kubeslice.io/nsmIP"
+	KubeSlicePodIPVolumeName  = "podip"
+	KubeSlicePodIPFileName    = "podip"
+	KubeSliceNSMContainerName = "cmd-nsc"
 
 	ReplicationModeDetectorContainerName = "replication-mode-detector"
 	DatabasePodPrimary                   = "primary"
@@ -370,9 +386,16 @@ const (
 	MariaDBMetricsExporterTLSVolumeName  = "metrics-exporter-config"
 	MariaDBMetricsExporterConfigPath     = "/etc/mysql/config/exporter"
 	MariaDBDataVolumeName                = "data"
-	DatabasePodPrimaryComponent          = "Primary"
-	DatabasePodMasterComponent           = "Master"
-	DatabasePodSlaveComponent            = "Slave"
+
+	DatabasePodPrimaryComponent = "Primary"
+	DatabasePodMasterComponent  = "Master"
+	DatabasePodSlaveComponent   = "Slave"
+
+	MariaDBDistributedUpgradeCommand           = "mariadb-upgrade"
+	MariaDBDistributedPodMetricGetCommand      = "get-pod-metrics"
+	MariaDBDistributedPodGetCommand            = "get-pod"
+	MariaDBDistributedVolumeUsageGetCommand    = "get-volume-usage"
+	MariaDBDistributedVolumeCapacityGetCommand = "get-volume-capacity"
 
 	// Maxscale
 	MaxscaleCommonName            = "mx"
@@ -585,7 +608,8 @@ const (
 	ProxySQLConfigSecretKey = "proxysql.cnf"
 
 	// =========================== Redis Constants ============================
-	RedisConfigKey = "redis.conf" // RedisConfigKey is going to create for the customize redis configuration
+	RedisConfigKey      = "redis.conf"    // RedisConfigKey is going to create for the customize redis configuration
+	RedisAclUserListKey = "user_acl.conf" // RedisAclUserListKey is going to create for the redis acl user list configuration
 	// DefaultConfigKey is going to create for the default redis configuration
 	RedisContainerName             = "redis"
 	RedisSentinelContainerName     = "redissentinel"
@@ -929,6 +953,8 @@ const (
 	KafkaClusterID                         = "cluster.id"
 	KafkaClientID                          = "client.id"
 	KafkaDataDirName                       = "log.dirs"
+	KafkaReplicaSelectorClassKey           = "replica.selector.class"
+	KafkaReplicaSelectorClassName          = "org.apache.kafka.common.replica.RackAwareReplicaSelector"
 	KafkaMetadataDirName                   = "metadata.log.dir"
 	KafkaServerKeystoreKey                 = "server.keystore.jks"
 	KafkaServerTruststoreKey               = "server.truststore.jks"
@@ -1612,10 +1638,13 @@ const (
 	ClickHouseClientKey                = "tls.key"
 	ClickHouseClientPath               = "client.key"
 
+	ClickHouseUserInitScriptVolumeName      = "initial-script"
+	ClickHouseUserInitScriptVolumeMountPath = "/docker-entrypoint-initdb.d"
+
 	// keeper
-	ClickHouseKeeperDataPath     = "/var/lib/clickhouse_keeper"
-	ClickHouseKeeperLogPath      = "/var/lib/clickhouse_keeper/coordination/logs"
-	ClickHouseKeeperSnapshotPath = "/var/lib/clickhouse_keeper/coordination/snapshots"
+	ClickHouseKeeperDataPath     = "/var/lib/clickhouse"
+	ClickHouseKeeperLogPath      = "/var/lib/clickhouse/coordination/logs"
+	ClickHouseKeeperSnapshotPath = "/var/lib/clickhouse/coordination/snapshots"
 
 	ClickHouseInternalKeeperDataPath     = "/var/lib/clickhouse/coordination/log"
 	ClickHouseInternalKeeperSnapshotPath = "/var/lib/clickhouse/coordination/snapshots"
@@ -1796,6 +1825,7 @@ const (
 const (
 	ResourceKindStatefulSet = "StatefulSet"
 	ResourceKindPetSet      = "PetSet"
+	ResourceKindSecret      = "Secret"
 )
 
 var (
@@ -2037,4 +2067,43 @@ const (
 	OracleEnvPassword          = "ORACLE_PWD"
 	OracleEnvOracleSID         = "ORACLE_SID"
 	OracleEnvDataDir           = "ORADATA"
+)
+
+// =========================== DB2 Constants ============================
+
+const (
+	DB2DatabaseServiceName = "DB2"
+	DB2SqlNetPortName      = "db2-port"
+	DB2SqlNetPort          = 50001
+
+	DB2EditionEnterprise = "enterprise"
+
+	DB2PrimaryRole = "primary"
+	DB2StandbyRole = "standby"
+
+	DB2DatabasePort = 1521
+
+	DB2SysDbaUser = "db2inst1"
+
+	DB2ContainerName             = "db2"
+	DB2CoordinatorContainerName  = "db2-coordinator"
+	DB2ObserverContainerName     = "observer"
+	DB2InitContainerName         = "db2-init"
+	DB2ObserverInitContainerName = "observer-init"
+
+	DB2VolumeScripts = "db2-data"
+	DB2DataVolume    = "db2-data"
+
+	DB2VolumeMountScripts = "db2-data"
+	DB2DataDir            = "/database"
+
+	DB2StandbyServiceSuffix = "standby"
+
+	DB2DatabaseRoleKey      = "db2.db/role"
+	DB2DatabaseRoleObserver = "observer"
+	DB2DatabaseRoleInstance = "instance"
+	DB2EnvUserName          = "SYS_USER"
+	DB2EnvPassword          = "DB2_PWD"
+	DB2EnvOracleSID         = "DB2_SID"
+	DB2EnvDataDir           = "DB2DATA"
 )
