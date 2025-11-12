@@ -181,16 +181,16 @@ func (o *KubeDBClientBuilder) GetBackendAuth() (string, string, error) {
 			return "", "", err
 		}
 
-		userCpy, present := vSecret.StringData[core.BasicAuthUsernameKey]
+		var present bool
+		user, present = vSecret.Data[core.BasicAuthUsernameKey]
 		if !present {
 			return "", "", fmt.Errorf("error getting backend username")
 		}
 
-		passCpy, present := vSecret.StringData[core.BasicAuthPasswordKey]
+		pass, present = vSecret.Data[core.BasicAuthPasswordKey]
 		if !present {
 			return "", "", fmt.Errorf("error getting backend password")
 		}
-		user, pass = []byte(userCpy), []byte(passCpy)
 	}
 	return string(user), string(pass), nil
 }
