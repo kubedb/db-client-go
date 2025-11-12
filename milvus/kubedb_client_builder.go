@@ -10,20 +10,15 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	core "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
-	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type KubeDBClientBuilder struct {
-	kc      client.Client
-	db      *api.Milvus
-	url     string
-	podName string
-	ctx     context.Context
+	kc  client.Client
+	db  *api.Milvus
+	ctx context.Context
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *api.Milvus) *KubeDBClientBuilder {
@@ -31,16 +26,6 @@ func NewKubeDBClientBuilder(kc client.Client, db *api.Milvus) *KubeDBClientBuild
 		kc: kc,
 		db: db,
 	}
-}
-
-func (o *KubeDBClientBuilder) WithURL(url string) *KubeDBClientBuilder {
-	o.url = url
-	return o
-}
-
-func (o *KubeDBClientBuilder) WithPod(podName string) *KubeDBClientBuilder {
-	o.podName = podName
-	return o
 }
 
 func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
@@ -62,40 +47,25 @@ func (o *KubeDBClientBuilder) GetMilvusClient() (*milvusclient.Client, error) {
 		return nil, fmt.Errorf("standalone spec is nil")
 	}
 
-	grpcPort := int32(19530)
-	if o.db.Spec.Standalone.GRPCPort != nil {
-		grpcPort = *o.db.Spec.Standalone.GRPCPort
-	}
+	addr := o.db.GetGRPCAddress()
 
-	addr := o.url
-	if addr == "" {
-		addr = fmt.Sprintf("localhost:%d", grpcPort)
+	var username, password string
+	if !o.db.Spec.Standalone.DisableSecurity {
+		var err error
+		username, err = o.db.GetUsername(o.ctx, o.kc)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to read username from auth secret")
+		}
+		password, err = o.db.GetPassword(o.ctx, o.kc)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to read password from auth secret")
+		}
 	}
 
 	config := &milvusclient.ClientConfig{
-		Address: addr,
-	}
-
-	if !o.db.Spec.Standalone.DisableSecurity {
-		secret := &core.Secret{}
-		err := o.kc.Get(o.ctx, types.NamespacedName{
-			Name:      o.db.Spec.Standalone.AuthSecret.Name,
-			Namespace: o.db.Namespace,
-		}, secret)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to get auth secret %s", o.db.Spec.Standalone.AuthSecret.Name)
-		}
-
-		username, ok := secret.Data[kubedb.MilvusUsernameKey]
-		if !ok || len(username) == 0 {
-			return nil, fmt.Errorf("username missing in auth secret %s", o.db.Spec.Standalone.AuthSecret.Name)
-		}
-		password, ok := secret.Data[kubedb.MilvusPasswordKey]
-		if !ok || len(password) == 0 {
-			return nil, fmt.Errorf("password missing in auth secret %s", o.db.Spec.Standalone.AuthSecret.Name)
-		}
-		config.Username = string(username)
-		config.Password = string(password)
+		Address:  addr,
+		Username: username,
+		Password: password,
 	}
 
 	// store the client outside the retry function
