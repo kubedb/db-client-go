@@ -2,18 +2,18 @@ package postgres
 
 import (
 	"context"
+	"crypto/tls"
 	"database/sql"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
-	"strings"
-
-	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
-	apiutils "kubedb.dev/apimachinery/pkg/utils"
 
 	"github.com/pkg/errors"
-	_ "github.com/sijms/go-ora/v2" // Oracle driver
+	go_ora "github.com/sijms/go-ora/v2"
 	core "k8s.io/api/core/v1"
+	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	apiutils "kubedb.dev/apimachinery/pkg/utils"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -63,14 +63,38 @@ func (o *OracleClientBuilder) GetOracleClient() (*sql.DB, error) {
 	if o.ctx == nil {
 		o.ctx = context.Background()
 	}
-	// go_ora.RegisterConnConfig()
+
 	connStr, err := o.getConnectionString()
-	// Print connection string for debugging
 	fmt.Printf("[DEBUG] Oracle connection string: %s\n", connStr)
 	if err != nil {
 		return nil, err
 	}
 
+	// TODO: Remove this block if not needed
+	// If TLS is configured, try using custom TLS config via connector
+	if o.db.Spec.TCPSConfig != nil && o.db.Spec.TCPSConfig.TLS != nil {
+		tlsConfig, err := o.getTLSConfig()
+		if err != nil {
+			fmt.Printf("[WARN] Failed to create custom TLS config: %v, falling back to wallet-only approach\n", err)
+		} else {
+			fmt.Printf("[DEBUG] Using custom TLS configuration with certificates\n")
+			connector := go_ora.NewConnector(connStr)
+			oracleConn, ok := connector.(*go_ora.OracleConnector)
+			if ok {
+				oracleConn.WithTLSConfig(tlsConfig)
+				db := sql.OpenDB(connector)
+				if err := db.PingContext(o.ctx); err != nil {
+					fmt.Printf("[WARN] Failed with custom TLS config: %v, will try wallet approach\n", err)
+					db.Close()
+				} else {
+					fmt.Printf("[DEBUG] Successfully connected with custom TLS config\n")
+					return db, nil
+				}
+			}
+		}
+	}
+
+	// Fallback to standard connection (with wallet if configured)
 	db, err := sql.Open("oracle", connStr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open Oracle connection: %v", err)
@@ -94,13 +118,13 @@ func (o *OracleClientBuilder) getConnectionString() (string, error) {
 		return "", fmt.Errorf("failed to get auth credentials for Oracle %s/%s: %v", o.db.Namespace, o.db.Name, err)
 	}
 
-	url := o.url
-	if url == "" {
+	serverURL := o.url
+	if serverURL == "" {
 		fmt.Printf("[DEBUG] URL not found, set PrimaryServiceDNS\n")
-		url = PrimaryServiceDNS(o.db)
+		serverURL = PrimaryServiceDNS(o.db)
 	}
 	// Use the provided URL (e.g., service DNS)
-	host := fmt.Sprintf("%v:%v/%v", url, o.port, o.service)
+	host := fmt.Sprintf("%v:%v/%v", serverURL, o.port, o.service)
 
 	// Construct basic connection string
 	connStr := ""
@@ -119,56 +143,65 @@ func (o *OracleClientBuilder) getConnectionString() (string, error) {
 
 			// Read the TLS secret from Kubernetes
 			var tlsSecret core.Secret
-			secretName := "oracle-tls-secret"
-			if err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: "demo", Name: secretName}, &tlsSecret); err != nil {
-				fmt.Printf("[ERROR] Failed to get TLS secret %s: %v\n", secretName, err)
+			secretName := o.db.ObjectMeta.Name + "-tls-wallet"
+			if err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: secretName}, &tlsSecret); err != nil {
+				return "", fmt.Errorf("failed to get TLS secret %s: %v", secretName, err)
+			}
+
+			// Extract and save all files in the secret data
+			for filename, data := range tlsSecret.Data {
+				filePath := filepath.Join(dstDir, filename)
+				if err := os.WriteFile(filePath, data, 0600); err != nil {
+					return "", fmt.Errorf("failed to write wallet file %s: %v", filename, err)
+				}
+				fmt.Printf("[DEBUG] Written wallet file: %s\n", filePath)
+			}
+
+		}
+
+		// Get service name from database spec
+		service := "ORCL"
+		if o.db.Spec.Listener != nil && o.db.Spec.Listener.Service != nil {
+			service = *o.db.Spec.Listener.Service
+		}
+
+		// Build connection string with SSL enabled
+		baseURL := go_ora.BuildUrl(serverURL, int(o.port), service, user, pass, nil)
+
+		// Add SSL parameters with proper URL encoding
+		params := url.Values{}
+		params.Add("SSL", "true")
+		params.Add("SSL VERIFY", "false")
+		params.Add("WALLET", dstDir)
+
+		// Check if we have a wallet password in the secret
+		//var tlsSecret core.Secret
+		//secretName := o.db.ObjectMeta.Name + "-tls-wallet"
+		//if err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: secretName}, &tlsSecret); err == nil {
+		//	if walletPass, ok := tlsSecret.Data["wallet_password"]; ok && len(walletPass) > 0 {
+		//		params.Add("WALLET PASSWORD", string(walletPass))
+		//		fmt.Printf("[DEBUG] Using wallet password from secret\n")
+		//	}
+		//}
+		params.Add("WALLET PASSWORD", pass)
+
+		connStr = baseURL + "?" + params.Encode()
+
+		fmt.Printf("[DEBUG] Service: %s\n", service)
+		fmt.Printf("[DEBUG] URL: %s\n", serverURL)
+		fmt.Printf("[DEBUG] Wallet dir: %s\n", dstDir)
+		fmt.Printf("[DEBUG] Wallet files exist:\n")
+		for _, fname := range []string{"cwallet.sso", "ewallet.p12", "server.p12"} {
+			fpath := filepath.Join(dstDir, fname)
+			if _, err := os.Stat(fpath); err == nil {
+				fmt.Printf("[DEBUG]   - %s: exists\n", fname)
 			} else {
-				// Write each key to a file inside dstDir
-				for key, val := range tlsSecret.Data {
-					filePath := filepath.Join(dstDir, key)
-					if err := os.WriteFile(filePath, val, 0644); err != nil {
-						fmt.Printf("[ERROR] Failed to write %s: %v\n", filePath, err)
-					} else {
-						fmt.Printf("[DEBUG] Written TLS file: %s\n", filePath)
-					}
-				}
+				fmt.Printf("[DEBUG]   - %s: NOT FOUND\n", fname)
 			}
 		}
-
-		connStr = fmt.Sprintf("oracle://%s:%s@%s", user, pass, host)
-
-		// Need to change this accordingly
-		urlOptions := map[string]string{
-			"SSL":        "true",  // or enable
-			"SSL VERIFY": "false", // stop ssl certificate verification
-			"WALLET":     dstDir,
-		}
-		connStr += "?"
-		fmt.Printf("[DEBUG] Connection string now: %s\n", connStr)
-		for key, val := range urlOptions {
-			val = strings.TrimSpace(val)
-			fmt.Printf("[DEBUG] Setting key: %s\n", key)
-			fmt.Printf("[DEBUG] Setting value: %s\n", val)
-			for _, temp := range strings.Split(val, ",") {
-				fmt.Printf("[DEBUG] Setting temp: %s\n", temp)
-				temp = strings.TrimSpace(temp)
-				if strings.ToUpper(key) == "SERVER" {
-					connStr += fmt.Sprintf("%s=%s&", key, temp)
-				} else {
-					t := []byte(temp)
-					for i := 0; i < len(temp); i++ {
-						if temp[i] == ' ' {
-							t[i] = '+'
-						}
-					}
-					fmt.Printf("[DEBUG] Setting t: %s\n", string(t))
-					connStr += fmt.Sprintf("%s=%s&", key, string(t))
-				}
-			}
-		}
-		connStr = strings.TrimRight(connStr, "&")
-
-		fmt.Printf("Passed from TLS\n")
+		fmt.Printf("[DEBUG] user: %v\n", user)
+		fmt.Printf("[DEBUG] Oracle connection string: %s\n", connStr)
+		fmt.Printf("[DEBUG] Using TLS with wallet\n")
 	} else {
 		connStr = fmt.Sprintf("oracle://%s:%s@%s", user, pass, host)
 		fmt.Printf("Without from TLS\n")
@@ -193,6 +226,26 @@ func (o *OracleClientBuilder) getOracleAuthCredentials() (string, string, error)
 		return "", "", errors.New("username or password missing in secret")
 	}
 	return username, password, nil
+}
+
+// getTLSConfig creates a TLS configuration without client certificates
+// Since SSL_CLIENT_AUTHENTICATION = FALSE on the server, we don't need client certs
+func (o *OracleClientBuilder) getTLSConfig() (*tls.Config, error) {
+	// Create a basic TLS config that accepts any server certificate
+	// Match Oracle server's configuration:
+	// - SSL_VERSION = 1.2
+	// - SSL_CLIENT_AUTHENTICATION = FALSE
+	// Note: Oracle requires specific ciphers (TLS_RSA_WITH_AES_256_CBC_SHA256, TLS_RSA_WITH_AES_128_CBC_SHA256)
+	// but Go's crypto/tls will negotiate compatible ciphers automatically
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: true, // Accept server's self-signed certificate
+		MinVersion:         tls.VersionTLS12,
+		MaxVersion:         tls.VersionTLS12,
+		// Let Go negotiate cipher suites - it will use compatible RSA+AES ciphers
+	}
+
+	fmt.Printf("[DEBUG] TLS config: TLS 1.2, InsecureSkipVerify=true, cipher negotiation enabled\n")
+	return tlsConfig, nil
 }
 
 // PrimaryServiceDNS make primary host dns with require template
