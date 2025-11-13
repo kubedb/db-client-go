@@ -695,7 +695,6 @@ For more information about the approver role, see the [community repository](htt
 
 ### Triagers
 
-- [Alex Kats](https://github.com/akats7), Capital One
 - [Cheng-Zhen Yang](https://github.com/scorpionknifes), Independent
 
 For more information about the triager role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#triager).
