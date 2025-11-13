@@ -2,10 +2,9 @@ package protocol
 
 import (
 	"github.com/SAP/go-hdb/driver/internal/protocol/encoding"
-	"golang.org/x/text/transform"
 )
 
-func decodeResult(tc typeCode, d *encoding.Decoder, tr transform.Transformer, lobReader LobReader, lobChunkSize, scale int) (any, error) { //nolint: gocyclo
+func decodeResult(tc typeCode, d *encoding.Decoder, lobReader LobReader, lobChunkSize, scale int) (any, error) { //nolint: gocyclo
 	switch tc {
 	case tcBoolean:
 		return d.BooleanField()
@@ -55,7 +54,7 @@ func decodeResult(tc typeCode, d *encoding.Decoder, tr transform.Transformer, lo
 		return d.Fixed12Field(scale)
 	case tcFixed16:
 		return d.Fixed16Field(scale)
-	case tcChar, tcVarchar, tcString, tcBstring, tcBinary, tcVarbinary:
+	case tcChar, tcVarchar, tcString, tcBinary, tcVarbinary:
 		return d.VarField()
 	case tcAlphanum:
 		return d.AlphanumField()
@@ -70,7 +69,7 @@ func decodeResult(tc typeCode, d *encoding.Decoder, tr transform.Transformer, lo
 		}
 		return descr, nil
 	case tcText, tcNclob, tcNlocator:
-		descr := newLobOutDescr(tr, lobReader, lobChunkSize)
+		descr := newLobOutDescr(d.Transformer(), lobReader, lobChunkSize)
 		if descr.decode(d) {
 			return nil, nil
 		}
@@ -130,7 +129,7 @@ func decodeParameter(tc typeCode, d *encoding.Decoder, scale int) (any, error) {
 		return d.Fixed12Field(scale)
 	case tcFixed16:
 		return d.Fixed16Field(scale)
-	case tcChar, tcVarchar, tcString, tcBstring, tcBinary, tcVarbinary:
+	case tcChar, tcVarchar, tcString, tcBinary, tcVarbinary:
 		return d.VarField()
 	case tcAlphanum:
 		return d.AlphanumField()

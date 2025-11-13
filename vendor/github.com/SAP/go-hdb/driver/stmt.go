@@ -6,11 +6,7 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
-	"iter"
 	"slices"
-	"sync"
-
-	"github.com/SAP/go-hdb/driver/wgroup"
 )
 
 // check if statements implements all required interfaces.
@@ -23,12 +19,10 @@ var (
 
 type stmt struct {
 	session *session
-	wg      *sync.WaitGroup // from conn
 	attrs   *connAttrs
 	metrics *metrics
 	query   string
 	pr      *prepareResult
-
 	// rows: stored procedures with table output parameters
 	rows *sql.Rows
 }
@@ -46,9 +40,9 @@ func (t *totalRowsAffected) add(r driver.Result) {
 	*t += totalRowsAffected(rows)
 }
 
-func newStmt(session *session, wg *sync.WaitGroup, attrs *connAttrs, metrics *metrics, query string, pr *prepareResult) *stmt {
+func newStmt(session *session, attrs *connAttrs, metrics *metrics, query string, pr *prepareResult) *stmt {
 	metrics.msgCh <- gaugeMsg{idx: gaugeStmt, v: 1} // increment number of statements.
-	return &stmt{session: session, wg: wg, attrs: attrs, metrics: metrics, query: query, pr: pr}
+	return &stmt{session: session, attrs: attrs, metrics: metrics, query: query, pr: pr}
 }
 
 /*
@@ -83,56 +77,32 @@ func (s *stmt) QueryContext(ctx context.Context, nvargs []driver.NamedValue) (dr
 	if s.pr.isProcedureCall() {
 		return nil, fmt.Errorf("invalid procedure call %s - please use Exec instead", s.query)
 	}
+
 	if err := s.session.preventSwitchUser(ctx); err != nil {
 		return nil, err
 	}
-
-	var sqlErr error
-	var rows driver.Rows
-	done := make(chan struct{})
-	wgroup.Go(s.wg, func() {
-		defer close(done)
-		rows, sqlErr = s.session.query(ctx, s.query, s.pr, nvargs)
-	})
-
-	select {
-	case <-ctx.Done():
-		s.session.cancel()
-		return nil, ctx.Err()
-	case <-done:
-		return rows, sqlErr
-	}
+	return s.session.query(ctx, s.query, s.pr, nvargs)
 }
 
 func (s *stmt) ExecContext(ctx context.Context, nvargs []driver.NamedValue) (driver.Result, error) {
 	if hookFn, ok := ctx.Value(connHookCtxKey).(connHookFn); ok {
 		hookFn(choStmtExec)
 	}
+
+	var (
+		result driver.Result
+		err    error
+	)
+
 	if err := s.session.preventSwitchUser(ctx); err != nil {
 		return nil, err
 	}
-
-	var sqlErr error
-	var result driver.Result
-	var rows *sql.Rows // needed to avoid data race in case if context get cancelled.
-	done := make(chan struct{})
-	wgroup.Go(s.wg, func() {
-		defer close(done)
-		if s.pr.isProcedureCall() {
-			result, s.rows, sqlErr = s.execCall(ctx, s.pr, nvargs)
-		} else {
-			result, sqlErr = s.execDefault(ctx, nvargs)
-		}
-	})
-
-	select {
-	case <-ctx.Done():
-		s.session.cancel()
-		return nil, ctx.Err()
-	case <-done:
-		s.rows = rows
-		return result, sqlErr
+	if s.pr.isProcedureCall() {
+		result, s.rows, err = s.execCall(ctx, s.pr, nvargs)
+	} else {
+		result, err = s.execDefault(ctx, nvargs)
 	}
+	return result, err
 }
 
 func (s *stmt) execCall(ctx context.Context, pr *prepareResult, nvargs []driver.NamedValue) (driver.Result, *sql.Rows, error) {
@@ -186,6 +156,8 @@ func (s *stmt) execCall(ctx context.Context, pr *prepareResult, nvargs []driver.
 	return driver.RowsAffected(numRow), rows, nil
 }
 
+type execFn func(ctx context.Context, nvargs []driver.NamedValue) (driver.Result, error)
+
 func (s *stmt) execDefault(ctx context.Context, nvargs []driver.NamedValue) (driver.Result, error) {
 	numNVArg, numField := len(nvargs), s.pr.numField()
 
@@ -196,11 +168,8 @@ func (s *stmt) execDefault(ctx context.Context, nvargs []driver.NamedValue) (dri
 		return s.session.exec(ctx, s.query, s.pr, nvargs, 0)
 	}
 	if numNVArg == 1 {
-		switch nvargs[0].Value.(type) {
-		case func(args []any) error:
-			return s.execFct(ctx, nvargs)
-		case iter.Seq[[]any]:
-			return s.execSeq(ctx, nvargs)
+		if execFn := s.detectExecFn(nvargs[0]); execFn != nil {
+			return execFn(ctx, nvargs)
 		}
 	}
 	if numNVArg == numField {
@@ -221,8 +190,6 @@ Non 'atomic' (transactional) operation due to the split in packages (bulkSize),
 execMany data might only be written partially to the database in case of hdb stmt errors.
 */
 func (s *stmt) execFct(ctx context.Context, nvargs []driver.NamedValue) (driver.Result, error) {
-	bulkSize := s.attrs.bulkSize
-
 	totalRowsAffected := totalRowsAffected(0)
 	args := make([]driver.NamedValue, 0, s.pr.numField())
 	scanArgs := make([]any, s.pr.numField())
@@ -236,7 +203,7 @@ func (s *stmt) execFct(ctx context.Context, nvargs []driver.NamedValue) (driver.
 	batch := 0
 	for !done {
 		args = args[:0]
-		for range bulkSize {
+		for range s.attrs._bulkSize {
 			err := fct(scanArgs)
 			if errors.Is(err, ErrEndOfRows) {
 				done = true
@@ -260,7 +227,7 @@ func (s *stmt) execFct(ctx context.Context, nvargs []driver.NamedValue) (driver.
 			}
 		}
 
-		r, err := s.exec(ctx, s.pr, args, batch*bulkSize)
+		r, err := s.exec(ctx, s.pr, args, batch*s.attrs._bulkSize)
 		totalRowsAffected.add(r)
 		if err != nil {
 			return driver.RowsAffected(totalRowsAffected), err
@@ -270,65 +237,12 @@ func (s *stmt) execFct(ctx context.Context, nvargs []driver.NamedValue) (driver.
 	return driver.RowsAffected(totalRowsAffected), nil
 }
 
-func (s *stmt) execSeq(ctx context.Context, nvargs []driver.NamedValue) (driver.Result, error) {
-	bulkSize := s.attrs.bulkSize
-
-	totalRowsAffected := totalRowsAffected(0)
-	args := make([]driver.NamedValue, 0, s.pr.numField())
-
-	seq, ok := nvargs[0].Value.(iter.Seq[[]any])
-	if !ok {
-		panic("invalid argument") // should never happen
-	}
-
-	batch, n := 0, 0
-	for scanArgs := range seq {
-		if len(scanArgs) != s.pr.numField() {
-			return driver.RowsAffected(totalRowsAffected), fmt.Errorf("invalid number of args %d - expected %d", len(scanArgs), s.pr.numField())
-		}
-
-		args = slices.Grow(args, len(scanArgs))
-		for i, scanArg := range scanArgs {
-			nv := driver.NamedValue{Ordinal: i + 1}
-			if t, ok := scanArg.(sql.NamedArg); ok {
-				nv.Name = t.Name
-				nv.Value = t.Value
-			} else {
-				nv.Name = ""
-				nv.Value = scanArg
-			}
-			args = append(args, nv)
-		}
-
-		n++
-		if n >= bulkSize {
-			r, err := s.exec(ctx, s.pr, args, batch*bulkSize)
-			totalRowsAffected.add(r)
-			if err != nil {
-				return driver.RowsAffected(totalRowsAffected), err
-			}
-			args = args[:0]
-			batch++
-		}
-	}
-
-	if n > 0 {
-		r, err := s.exec(ctx, s.pr, args, batch*bulkSize)
-		totalRowsAffected.add(r)
-		if err != nil {
-			return driver.RowsAffected(totalRowsAffected), err
-		}
-	}
-
-	return driver.RowsAffected(totalRowsAffected), nil
-}
-
 /*
 Non 'atomic' (transactional) operation due to the split in packages (bulkSize),
 execMany data might only be written partially to the database in case of hdb stmt errors.
 */
 func (s *stmt) execMany(ctx context.Context, nvargs []driver.NamedValue) (driver.Result, error) {
-	bulkSize := s.attrs.bulkSize
+	bulkSize := s.attrs._bulkSize
 
 	totalRowsAffected := totalRowsAffected(0)
 	numField := s.pr.numField()
@@ -375,7 +289,7 @@ Bulk insert containing LOBs:
     .for all packages except the last one, the last row contains 'incomplete' LOB data ('piecewise' writing)
 */
 func (s *stmt) exec(ctx context.Context, pr *prepareResult, nvargs []driver.NamedValue, ofs int) (driver.Result, error) {
-	addLobDataRecs, err := convertExecArgs(pr.parameterFields, nvargs, s.attrs.cesu8Encoder, s.attrs.lobChunkSize)
+	addLobDataRecs, err := convertExecArgs(pr.parameterFields, nvargs, s.attrs._cesu8Encoder(), s.attrs._lobChunkSize)
 	if err != nil {
 		return driver.ResultNoRows, err
 	}
@@ -384,8 +298,8 @@ func (s *stmt) exec(ctx context.Context, pr *prepareResult, nvargs []driver.Name
 	numColumn := len(pr.parameterFields)
 	totalRowsAffected := totalRowsAffected(0)
 	from := 0
-	for _, row := range addLobDataRecs {
-		to := (row + 1) * numColumn
+	for i := range len(addLobDataRecs) {
+		to := (addLobDataRecs[i] + 1) * numColumn
 
 		r, err := s.session.exec(ctx, s.query, pr, nvargs[from:to], ofs)
 		totalRowsAffected.add(r)

@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"sync/atomic"
 	"time"
 
 	p "github.com/SAP/go-hdb/driver/internal/protocol"
 	"github.com/SAP/go-hdb/driver/internal/protocol/encoding"
+	"golang.org/x/text/transform"
 )
 
 // SessionUser provides the fields for a hdb 'connect' (switch user) statement.
@@ -51,22 +51,16 @@ type session struct {
 	prd *p.Reader
 	pwr *p.Writer
 
+	cesu8Encoder transform.Transformer
+
 	hdbVersion   *Version
 	databaseName string
 
 	user *SessionUser // session user
 
-	// atomic as data race got reported on closeTx + exec in parallel
-	inTx atomic.Bool
+	inTx bool
 
 	sqlTracer *sqlTracer
-
-	/*
-		bad connection flag (can be set by 'done' and 'write' concurrently).
-		we cannot work with nested errors containing driver.ErrBadConn
-		as go sql retries these statements.
-	*/
-	cancelled bool
 }
 
 func newSession(ctx context.Context, host string, logger *slog.Logger, metrics *metrics, attrs *connAttrs, authHnd *p.AuthHnd) (*session, error) {
@@ -75,16 +69,18 @@ func newSession(ctx context.Context, host string, logger *slog.Logger, metrics *
 		return nil, err
 	}
 
-	rd := bufio.NewReaderSize(dbConn, attrs.bufferSize)
-	wr := bufio.NewWriterSize(dbConn, attrs.bufferSize)
+	rd := bufio.NewReaderSize(dbConn, attrs._bufferSize)
+	wr := bufio.NewWriterSize(dbConn, attrs._bufferSize)
 
-	dec := encoding.NewDecoder(rd, attrs.cesu8Decoder, attrs.emptyDateAsNull)
-	enc := encoding.NewEncoder(wr, attrs.cesu8Encoder)
+	cesu8Encoder := attrs._cesu8Encoder() // call function only once.
+
+	dec := encoding.NewDecoder(rd, attrs._cesu8Decoder(), attrs._emptyDateAsNull)
+	enc := encoding.NewEncoder(wr, cesu8Encoder)
 
 	protTrace := protTrace.Load()
 
-	prd := p.NewDBReader(dec, attrs.cesu8Decoder, protTrace, logger, attrs.lobChunkSize)
-	pwr := p.NewWriter(wr, enc, protTrace, logger, attrs.sessionVariables)
+	prd := p.NewDBReader(dec, protTrace, logger, attrs._lobChunkSize)
+	pwr := p.NewWriter(wr, enc, protTrace, logger, attrs._sessionVariables)
 
 	// prolog
 	if err := pwr.WriteProlog(ctx); err != nil {
@@ -100,7 +96,7 @@ func newSession(ctx context.Context, host string, logger *slog.Logger, metrics *
 	if sqlTrace.Load() {
 		sqlTracer = newSQLTracer(logger, 0)
 	}
-	s := &session{dbConn: dbConn, metrics: metrics, attrs: attrs, prd: prd, pwr: pwr, sqlTracer: sqlTracer}
+	s := &session{dbConn: dbConn, metrics: metrics, attrs: attrs, prd: prd, pwr: pwr, cesu8Encoder: cesu8Encoder, sqlTracer: sqlTracer}
 
 	if authHnd != nil { // authenticate
 		serverOptions, err := s.authenticate(ctx, authHnd, attrs)
@@ -123,8 +119,7 @@ func newSession(ctx context.Context, host string, logger *slog.Logger, metrics *
 
 // we cannot work with nested errors containing driver.ErrBadConn
 // as go sql retries these statements.
-func (s *session) isBad() bool { return s.cancelled || s.pwr.HasError() }
-func (s *session) cancel()     { s.cancelled = true }
+func (s *session) isBad() bool { return s.pwr.CancelledOrError() || s.prd.Cancelled() }
 
 func (s *session) close() error {
 	// do not disconnect if isBad.
@@ -143,7 +138,7 @@ func (s *session) authenticate(ctx context.Context, authHnd *p.AuthHnd, attrs *c
 	clientContext := &p.ClientContext{}
 	clientContext.SetVersion(DriverVersion)
 	clientContext.SetType(clientType)
-	clientContext.SetApplicationProgram(attrs.applicationName)
+	clientContext.SetApplicationProgram(attrs._applicationName)
 
 	initRequest, err := authHnd.InitRequest()
 	if err != nil {
@@ -172,7 +167,7 @@ func (s *session) authenticate(ctx context.Context, authHnd *p.AuthHnd, attrs *c
 	}
 
 	co := &p.ConnectOptions{}
-	co.SetDataFormatVersion2(attrs.dfv)
+	co.SetDataFormatVersion2(attrs._dfv)
 	co.SetClientDistributionMode(p.CdmOff)
 	// co.SetClientDistributionMode(p.CdmConnectionStatement)
 	// co.SetSelectForUpdateSupported(true) // doesn't seem to make a difference
@@ -181,8 +176,8 @@ func (s *session) authenticate(ctx context.Context, authHnd *p.AuthHnd, attrs *c
 		p.CoCompleteArrayExecution:      true,
 	*/
 
-	if attrs.locale != "" {
-		co.SetClientLocale(attrs.locale)
+	if attrs._locale != "" {
+		co.SetClientLocale(attrs._locale)
 	}
 
 	if err := s.pwr.Write(ctx, p.MtConnect, false, finalRequest, p.ClientID(clientID), co); err != nil {
@@ -226,8 +221,8 @@ func (s *session) setSchema(ctx context.Context) error {
 	case s.user != nil && s.user.Schema != "":
 		_, err := s.execDirect(ctx, "set schema "+Identifier(s.user.Schema).String())
 		return err
-	case s.attrs.defaultSchema != "":
-		_, err := s.execDirect(ctx, "set schema "+Identifier(s.attrs.defaultSchema).String())
+	case s.attrs._defaultSchema != "":
+		_, err := s.execDirect(ctx, "set schema "+Identifier(s.attrs._defaultSchema).String())
 		return err
 	default:
 		return nil
@@ -242,7 +237,7 @@ func (s *session) switchUser(ctx context.Context) error {
 	if !ok || user.equal(s.user) {
 		return nil
 	}
-	if s.inTx.Load() {
+	if s.inTx {
 		return ErrSwitchUser
 	}
 	s.user = user.clone()
@@ -285,12 +280,12 @@ func (s *session) dbConnectInfo(ctx context.Context, databaseName string) (*DBCo
 	}, nil
 }
 
-func (s *session) queryDirect(ctx context.Context, query string, traceKind string) (driver.Rows, error) {
+func (s *session) queryDirect(ctx context.Context, query string) (driver.Rows, error) {
 	t := time.Now()
 	defer metricsAddSQLTimeValue(s.metrics, time.Now(), sqlTimeQuery)
 
 	// allow e.g inserts as query -> handle commit like in _execDirect
-	if err := s.pwr.Write(ctx, p.MtExecuteDirect, !s.inTx.Load(), p.Command(query)); err != nil {
+	if err := s.pwr.Write(ctx, p.MtExecuteDirect, !s.inTx, p.Command(query)); err != nil {
 		return nil, err
 	}
 
@@ -324,7 +319,7 @@ func (s *session) queryDirect(ctx context.Context, query string, traceKind strin
 		return nil, err
 	}
 	if s.sqlTracer != nil {
-		s.sqlTracer.log(ctx, t, traceKind, query)
+		s.sqlTracer.log(ctx, t, traceQueryLogKind(query), query)
 	}
 	if qr.rsID == 0 { // non select query
 		return noResult, nil
@@ -336,7 +331,7 @@ func (s *session) execDirect(ctx context.Context, query string) (driver.Result, 
 	t := time.Now()
 	defer metricsAddSQLTimeValue(s.metrics, time.Now(), sqlTimeExec)
 
-	if err := s.pwr.Write(ctx, p.MtExecuteDirect, !s.inTx.Load(), p.Command(query)); err != nil {
+	if err := s.pwr.Write(ctx, p.MtExecuteDirect, !s.inTx, p.Command(query)); err != nil {
 		return nil, err
 	}
 
@@ -400,14 +395,14 @@ func (s *session) query(ctx context.Context, query string, pr *prepareResult, nv
 
 	// allow e.g inserts as query -> handle commit like in exec
 
-	if err := convertQueryArgs(pr.parameterFields, nvargs, s.attrs.cesu8Encoder, s.attrs.lobChunkSize); err != nil {
+	if err := convertQueryArgs(pr.parameterFields, nvargs, s.cesu8Encoder, s.attrs._lobChunkSize); err != nil {
 		return nil, err
 	}
 	inputParameters, err := p.NewInputParameters(pr.parameterFields, nvargs)
 	if err != nil {
 		return nil, err
 	}
-	if err := s.pwr.Write(ctx, p.MtExecute, !s.inTx.Load(), p.StatementID(pr.stmtID), inputParameters); err != nil {
+	if err := s.pwr.Write(ctx, p.MtExecute, !s.inTx, p.StatementID(pr.stmtID), inputParameters); err != nil {
 		return nil, err
 	}
 
@@ -450,7 +445,7 @@ func (s *session) exec(ctx context.Context, query string, pr *prepareResult, nva
 	if err != nil {
 		return nil, err
 	}
-	if err := s.pwr.Write(ctx, p.MtExecute, !s.inTx.Load(), p.StatementID(pr.stmtID), inputParameters); err != nil {
+	if err := s.pwr.Write(ctx, p.MtExecute, !s.inTx, p.StatementID(pr.stmtID), inputParameters); err != nil {
 		return nil, err
 	}
 
@@ -502,7 +497,7 @@ func (s *session) execCall(ctx context.Context, query string, pr *prepareResult,
 	t := time.Now()
 	defer metricsAddSQLTimeValue(s.metrics, time.Now(), sqlTimeCall)
 
-	callArgs, err := convertCallArgs(pr.parameterFields, nvargs, s.attrs.cesu8Encoder, s.attrs.lobChunkSize)
+	callArgs, err := convertCallArgs(pr.parameterFields, nvargs, s.cesu8Encoder, s.attrs._lobChunkSize)
 	if err != nil {
 		return nil, nil, 0, err
 	}
@@ -511,7 +506,7 @@ func (s *session) execCall(ctx context.Context, query string, pr *prepareResult,
 		return nil, nil, 0, err
 	}
 
-	if err := s.pwr.Write(ctx, p.MtExecute, !s.inTx.Load(), (*p.StatementID)(&pr.stmtID), inputParameters); err != nil {
+	if err := s.pwr.Write(ctx, p.MtExecute, !s.inTx, (*p.StatementID)(&pr.stmtID), inputParameters); err != nil {
 		return nil, nil, 0, err
 	}
 
@@ -596,7 +591,7 @@ func (s *session) execCall(ctx context.Context, query string, pr *prepareResult,
 func (s *session) fetchNext(ctx context.Context, qr *queryResult) error {
 	defer metricsAddSQLTimeValue(s.metrics, time.Now(), sqlTimeFetch)
 
-	if err := s.pwr.Write(ctx, p.MtFetchNext, false, p.ResultsetID(qr.rsID), p.Fetchsize(s.attrs.fetchSize)); err != nil { //nolint: gosec
+	if err := s.pwr.Write(ctx, p.MtFetchNext, false, p.ResultsetID(qr.rsID), p.Fetchsize(s.attrs._fetchSize)); err != nil {
 		return err
 	}
 
@@ -714,10 +709,10 @@ func (s *session) writeLobs(ctx context.Context, cr *callResult, ids []p.Locator
 	descrs := make([]*p.WriteLobDescr, 0, len(ids))
 	j := 0
 	for i, f := range inPrmFields {
-		if f.IsLob() && nvargs[i].Value != nil {
+		if f.IsLob() {
 			lobInDescr, ok := nvargs[i].Value.(*p.LobInDescr)
 			if !ok {
-				return fmt.Errorf("protocol error: invalid lob parameter %[1]T %[1]v - lobInDescr expected", nvargs[i])
+				return fmt.Errorf("protocol error: invalid lob parameter %[1]T %[1]v - *lobInDescr expected", nvargs[i])
 			}
 			if j > len(ids) {
 				return fmt.Errorf("protocol error: invalid number of lob parameter ids %d", len(ids))
@@ -743,7 +738,7 @@ func (s *session) writeLobs(ctx context.Context, cr *callResult, ids []p.Locator
 
 		// TODO check total size limit
 		for _, descr := range descrs {
-			if err := descr.FetchNext(s.attrs.lobChunkSize); err != nil {
+			if err := descr.FetchNext(s.attrs._lobChunkSize); err != nil {
 				return err
 			}
 		}

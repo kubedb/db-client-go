@@ -253,7 +253,7 @@ func (h *partHeader) setNumArg(numArg int) error {
 	default:
 		return fmt.Errorf("maximum number of arguments %d exceeded", numArg)
 	case numArg <= math.MaxInt16:
-		h.argumentCount = int16(numArg) //nolint: gosec
+		h.argumentCount = int16(numArg)
 		h.bigArgumentCount = 0
 	case numArg <= math.MaxInt32:
 		h.argumentCount = bigNumArgInd

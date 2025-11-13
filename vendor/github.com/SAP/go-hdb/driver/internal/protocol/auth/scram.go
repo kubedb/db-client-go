@@ -30,8 +30,9 @@ func checkServerChallenge(serverChallenge []byte) error {
 
 func clientChallenge() []byte {
 	r := make([]byte, clientChallengeSize)
-	// does not return err starting with go1.24
-	rand.Read(r) //nolint: errcheck
+	if _, err := rand.Read(r); err != nil {
+		panic(err)
+	}
 	return r
 }
 
