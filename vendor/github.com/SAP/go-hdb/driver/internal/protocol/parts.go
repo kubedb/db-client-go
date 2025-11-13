@@ -4,7 +4,6 @@ import (
 	"reflect"
 
 	"github.com/SAP/go-hdb/driver/internal/protocol/encoding"
-	"golang.org/x/text/transform"
 )
 
 // Part represents a protocol part.
@@ -27,7 +26,7 @@ type bufLenPartDecoder interface {
 }
 type resultPartDecoder interface {
 	Part
-	decodeResult(dec *encoding.Decoder, tr transform.Transformer, numArg int, lobReader LobReader, lobChunkSize int) error
+	decodeResult(dec *encoding.Decoder, numArg int, lobReader LobReader, lobChunkSize int) error
 }
 
 // PartEncoder represents a protocol part the driver is able to encode.
@@ -174,4 +173,26 @@ var genPartTypeMap = map[PartKind]reflect.Type{
 // in case the part is instatiated generically.
 type initer interface {
 	init()
+}
+
+// newGenPartReader returns a generic part reader.
+func newGenPartReader(kind PartKind) Part {
+	if kind == PkAuthentication {
+		return nil // cannot instantiate generically
+	}
+	pt, ok := genPartTypeMap[kind]
+	if !ok {
+		// whether part cannot be instantiated generically or
+		// part is not (yet) known to the driver
+		return nil
+	}
+	// create instance
+	part, ok := reflect.New(pt).Interface().(Part)
+	if !ok {
+		panic("part kind does not implement part reader interface") // should never happen
+	}
+	if part, ok := part.(initer); ok {
+		part.init()
+	}
+	return part
 }

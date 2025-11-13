@@ -84,8 +84,8 @@ func (e *Encoder) Int8(i int8) {
 
 // Int16 encodes an int16.
 func (e *Encoder) Int16(i int16) {
-	binary.LittleEndian.PutUint16(e.b[:2], uint16(i)) //nolint: gosec
-	e.wr.Write(e.b[:2])                               //nolint:errcheck
+	binary.LittleEndian.PutUint16(e.b[:2], uint16(i))
+	e.wr.Write(e.b[:2]) //nolint:errcheck
 }
 
 // Uint16 encodes an uint16.
@@ -102,8 +102,8 @@ func (e *Encoder) Uint16ByteOrder(i uint16, byteOrder binary.ByteOrder) {
 
 // Int32 encodes an int32.
 func (e *Encoder) Int32(i int32) {
-	binary.LittleEndian.PutUint32(e.b[:4], uint32(i)) //nolint:gosec
-	e.wr.Write(e.b[:4])                               //nolint:errcheck
+	binary.LittleEndian.PutUint32(e.b[:4], uint32(i))
+	e.wr.Write(e.b[:4]) //nolint:errcheck
 }
 
 // Uint32 encodes an uint32.
@@ -114,8 +114,8 @@ func (e *Encoder) Uint32(i uint32) {
 
 // Int64 encodes an int64.
 func (e *Encoder) Int64(i int64) {
-	binary.LittleEndian.PutUint64(e.b[:8], uint64(i)) //nolint:gosec
-	e.wr.Write(e.b[:8])                               //nolint:errcheck
+	binary.LittleEndian.PutUint64(e.b[:8], uint64(i))
+	e.wr.Write(e.b[:8]) //nolint:errcheck
 }
 
 // Uint64 encodes an uint64.
@@ -159,7 +159,7 @@ func (e *Encoder) Decimal(m *big.Int, exp int) {
 
 	exp += dec128Bias
 	b[14] |= (byte(exp) << 1)
-	b[15] = byte(uint16(exp) >> 7) //nolint: gosec
+	b[15] = byte(uint16(exp) >> 7)
 
 	if m.Sign() == -1 {
 		b[15] |= 0x80
@@ -376,9 +376,9 @@ func (e *Encoder) encodeDate(t time.Time) {
 	// year: set most sig bit
 	// month 0 based
 	year, month, day := t.Date()
-	e.Uint16(uint16(year) | 0x8000) //nolint: gosec
-	e.Int8(int8(month) - 1)         //nolint: gosec
-	e.Int8(int8(day))               //nolint: gosec
+	e.Uint16(uint16(year) | 0x8000)
+	e.Int8(int8(month) - 1)
+	e.Int8(int8(day))
 }
 
 // DateField encodes a dayte field.
@@ -389,9 +389,9 @@ func (e *Encoder) DateField(v any) error {
 
 func (e *Encoder) encodeTime(t time.Time) {
 	e.Byte(byte(t.Hour()) | 0x80)
-	e.Int8(int8(t.Minute())) //nolint: gosec
+	e.Int8(int8(t.Minute()))
 	msec := t.Second()*1000 + t.Nanosecond()/1000000
-	e.Uint16(uint16(msec)) //nolint: gosec
+	e.Uint16(uint16(msec))
 }
 
 // TimeField encodes a time field.
@@ -422,7 +422,7 @@ func (e *Encoder) SeconddateField(v any) error {
 
 // DaydateField encodes a daydate field.
 func (e *Encoder) DaydateField(v any) error {
-	e.Int32(int32(convertTimeToDayDate(asTime(v)))) //nolint: gosec
+	e.Int32(int32(convertTimeToDayDate(asTime(v))))
 	return nil
 }
 
@@ -432,7 +432,7 @@ func (e *Encoder) SecondtimeField(v any) error {
 		e.Int32(secondtimeNullValue)
 		return nil
 	}
-	e.Int32(int32(convertTimeToSecondtime(asTime(v)))) //nolint: gosec
+	e.Int32(int32(convertTimeToSecondtime(asTime(v))))
 	return nil
 }
 

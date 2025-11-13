@@ -77,10 +77,7 @@ func (e *Encoder) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err er
 			}
 		}
 		r, n := utf8.DecodeRune(src[i:])
-		// invalid UTF-8 cases:
-		// - if p is empty it returns (RuneError, 0)
-		// - otherwise, if the encoding is invalid, it returns (RuneError, 1)
-		if (n == 0 || n == 1) && r == utf8.RuneError {
+		if r == utf8.RuneError {
 			decodeErr := newDecodeError(UTF8, i, src)
 			if e.errorHandler == nil {
 				return j, i, decodeErr
@@ -116,14 +113,6 @@ func NewDecoder(errorHandler func(err *DecodeError) (rune, error)) *Decoder {
 	return &Decoder{errorHandler: errorHandler}
 }
 
-func (d *Decoder) handleDecodeError(r rune, i int, src []byte) (rune, error) {
-	decodeErr := newDecodeError(CESU8, i, src)
-	if d.errorHandler == nil {
-		return r, decodeErr
-	}
-	return d.errorHandler(decodeErr)
-}
-
 // Transform implements the transform.Transformer interface.
 func (d *Decoder) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
 	i, j := 0, 0
@@ -137,34 +126,23 @@ func (d *Decoder) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err er
 			j++
 			continue
 		}
-		p := src[i:]
 		// check if additional bytes needed (ErrShortSrc) only
 		// - if further bytes are potentially available (!atEOF) and
 		// - remaining buffer smaller than max size for an encoded CESU-8 rune
-		if !atEOF && len(p) < CESUMax {
-			if !FullRune(p) {
+		if !atEOF && len(src[i:]) < CESUMax {
+			if !FullRune(src[i:]) {
 				return j, i, transform.ErrShortSrc
 			}
 		}
-		/*
-			cannot use DecodeRune as we cannot distinguish betweeen
-			.unicode replacement character and
-			.invalid surrogate
-			r, n := DecodeRune(src[i:])
-		*/
-		var r rune
-		var n int
-		if !isSurrogate(p) {
-			if r, n = utf8.DecodeRune(p); r == utf8.RuneError && (n == 0 || n == 1) {
-				if r, err = d.handleDecodeError(r, i, src); err != nil {
-					return j, i, err
-				}
+		r, n := DecodeRune(src[i:])
+		if r == utf8.RuneError {
+			decodeErr := newDecodeError(CESU8, i, src)
+			if d.errorHandler == nil {
+				return j, i, decodeErr
 			}
-		} else {
-			if r, n = decodeSurrogates(p); r == utf8.RuneError {
-				if r, err = d.handleDecodeError(r, i, src); err != nil {
-					return j, i, err
-				}
+			r, err = d.errorHandler(decodeErr)
+			if err != nil {
+				return j, i, err
 			}
 		}
 		m := utf8.RuneLen(r)

@@ -3,7 +3,6 @@ package protocol
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"math"
 	"math/big"
@@ -228,7 +227,7 @@ func convertInteger(v any, minI64, maxI64 int64) (any, error) { //nolint: gocycl
 		}
 		return i64, nil
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32:
-		i64 := int64(rv.Uint()) //nolint: gosec
+		i64 := int64(rv.Uint())
 		if i64 > maxI64 || i64 < minI64 {
 			return nil, errIntegerOutOfRange
 		}
@@ -574,29 +573,26 @@ type readProvider interface {
 	Reader() io.Reader
 }
 
-func convertLob(v any, cesu8Encoder transform.Transformer) (any, error) {
-	var rd io.Reader = nil
+func convertToLobInDescr(tr transform.Transformer, rd io.Reader) *LobInDescr {
+	return newLobInDescr(tr, rd)
+}
+
+func convertLob(v any, t transform.Transformer) (any, error) {
 	switch v := v.(type) {
 	case io.Reader:
-		rd = v
+		return convertToLobInDescr(t, v), nil
 	case readProvider:
-		rd = v.Reader()
+		return convertToLobInDescr(t, v.Reader()), nil
 	default:
 		// check if string or []byte
 		if v, err := convertBytes(v); err == nil {
 			switch v := v.(type) {
 			case string:
-				rd = strings.NewReader(v)
+				return convertToLobInDescr(t, strings.NewReader(v)), nil
 			case []byte:
-				rd = bytes.NewReader(v)
+				return convertToLobInDescr(t, bytes.NewReader(v)), nil
 			}
 		}
-	}
-	if rd != nil {
-		if cesu8Encoder != nil {
-			rd = transform.NewReader(rd, cesu8Encoder)
-		}
-		return newLobInDescr(rd), nil
 	}
 
 	rv := reflect.ValueOf(v)
@@ -605,13 +601,13 @@ func convertLob(v any, cesu8Encoder transform.Transformer) (any, error) {
 		if rv.IsNil() {
 			return nil, nil
 		}
-		return convertLob(rv.Elem().Interface(), cesu8Encoder)
+		return convertLob(rv.Elem().Interface(), t)
 	default:
 		return nil, errConversionNotSupported
 	}
 }
 
-func convertField(tc typeCode, v any, cesu8Encoder transform.Transformer) (any, error) {
+func convertField(tc typeCode, v any, t transform.Transformer) (any, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -635,15 +631,15 @@ func convertField(tc typeCode, v any, cesu8Encoder transform.Transformer) (any, 
 		return convertTime(v)
 	case tcDecimal, tcFixed8, tcFixed12, tcFixed16:
 		return convertDecimal(v)
-	case tcChar, tcVarchar, tcString, tcBstring, tcAlphanum, tcNchar, tcNvarchar, tcNstring, tcShorttext, tcBinary, tcVarbinary, tcStPoint, tcStGeometry:
+	case tcChar, tcVarchar, tcString, tcAlphanum, tcNchar, tcNvarchar, tcNstring, tcShorttext, tcBinary, tcVarbinary, tcStPoint, tcStGeometry:
 		return convertBytes(v)
 	case tcBlob, tcClob, tcLocator:
 		return convertLob(v, nil)
 	case tcNclob, tcText, tcNlocator:
-		return convertLob(v, cesu8Encoder)
+		return convertLob(v, t)
 	case tcBintext: // ?? lobCESU8Type
 		return convertLob(v, nil)
 	default:
-		panic(fmt.Errorf("invalid type code %[1]d %[1]s", tc)) // should never happen
+		panic("invalid type code")
 	}
 }

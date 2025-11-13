@@ -10,10 +10,11 @@ import (
 const csAlphanum = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" // alphanumeric character set.
 var numAlphanum = byte(len(csAlphanum))                                             // len character sets <= max(byte)
 
-// Read fills p with random alphanumeric characters and returns the number of read bytes. It never returns an error, and always fills b entirely.
+// Read fills p with random alphanumeric characters and returns the number of read bytes and a potential error.
 func Read(p []byte) (n int, err error) {
-	// starting with go1.24 rand.Read is never returning a error.
-	rand.Read(p) //nolint: errcheck
+	if n, err = rand.Read(p); err != nil {
+		return n, err
+	}
 	for i, b := range p {
 		p[i] = csAlphanum[b%numAlphanum]
 	}
@@ -23,6 +24,8 @@ func Read(p []byte) (n int, err error) {
 // ReadString returns a random string of alphanumeric characters and panics if crypto random reader returns an error.
 func ReadString(n int) string {
 	b := make([]byte, n)
-	Read(b) //nolint: errcheck
+	if _, err := Read(b); err != nil {
+		panic(err) // rand should never fail
+	}
 	return unsafe.ByteSlice2String(b)
 }

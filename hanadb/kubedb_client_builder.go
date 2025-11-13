@@ -100,10 +100,6 @@ func (o *KubeDBClientBuilder) GetHanaDBClient() (*SqlClient, error) {
 	}, nil
 }
 
-func (o *KubeDBClientBuilder) getURL() string {
-	return fmt.Sprintf("%s.%s.%s.svc", o.podName, o.db.GoverningServiceName(), o.db.GetNamespace())
-}
-
 func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	var user, pass string
 	var err error
