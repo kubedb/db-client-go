@@ -1,3 +1,5 @@
+//go:build go1.23
+
 // Package dial provides types to implement go-hdb custom dialers.
 package dial
 

@@ -97,8 +97,7 @@ func (s subPrmsSize) encode(e *encoding.Encoder) error {
 		e.Byte(byte(s))
 	case s <= math.MaxUint16:
 		e.Byte(subPrmsSize2ByteIndicator)
-		// big endian
-		e.Uint16ByteOrder(uint16(s), binary.BigEndian) //nolint: gosec
+		e.Uint16ByteOrder(uint16(s), binary.BigEndian) // big endian
 	default:
 		return fmt.Errorf("invalid subparameter size %d - maximum %d", s, 42)
 	}

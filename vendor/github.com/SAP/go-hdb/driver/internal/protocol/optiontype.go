@@ -49,8 +49,8 @@ func (_optTinyintType) String() string { return "tinyintType" }
 func (_optIntegerType) String() string { return "integerType" }
 func (_optBigintType) String() string  { return "bigintType" }
 func (_optDoubleType) String() string  { return "doubleType" }
-func (_optStringType) String() string  { return "stringType" }
-func (_optBstringType) String() string { return "bstringType" }
+func (_optStringType) String() string  { return "dateType" }
+func (_optBstringType) String() string { return "timeType" }
 
 func (_optBooleanType) typeCode() typeCode { return tcBoolean }
 func (_optTinyintType) typeCode() typeCode { return tcTinyint }
@@ -75,12 +75,12 @@ func (_optBigintType) encode(e *encoding.Encoder, v any)  { e.Int64(v.(int64)) }
 func (_optDoubleType) encode(e *encoding.Encoder, v any)  { e.Float64(v.(float64)) }
 func (_optStringType) encode(e *encoding.Encoder, v any) {
 	s := v.(string)
-	e.Int16(int16(len(s))) //nolint: gosec
+	e.Int16(int16(len(s)))
 	e.Bytes([]byte(s))
 }
 func (_optBstringType) encode(e *encoding.Encoder, v any) {
 	b := v.([]byte)
-	e.Int16(int16(len(b))) //nolint: gosec
+	e.Int16(int16(len(b)))
 	e.Bytes(b)
 }
 
@@ -140,6 +140,6 @@ func optTypeViaTypeCode(tc typeCode) optType {
 	case tcBstring:
 		return optBstringType
 	default:
-		panic("missing optType for typeCode") // should never happen
+		panic("missing optType for typeCode")
 	}
 }

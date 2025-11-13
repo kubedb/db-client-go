@@ -4,20 +4,20 @@ package auth
 
 import (
 	"bytes"
-	"crypto/pbkdf2"
 	"crypto/sha256"
 	"fmt"
+
+	"github.com/SAP/go-hdb/driver/internal/protocol/cache"
+	"golang.org/x/crypto/pbkdf2"
 )
 
-/*
-
+func scrampbkdf2sha256Key(password, salt []byte, rounds int) []byte {
 	return _sha256(pbkdf2.Key(password, salt, rounds, clientProofSize, sha256.New))
 }
-*/
 
 // use cache as key calculation is expensive.
-var scrampbkdf2KeyCache = newList(3, func(k *SCRAMPBKDF2SHA256) ([]byte, error) {
-	return scrampbkdf2sha256Key(k.password, k.salt, int(k.rounds))
+var scrampbkdf2KeyCache = cache.NewList(3, func(k *SCRAMPBKDF2SHA256) []byte {
+	return scrampbkdf2sha256Key([]byte(k.password), k.salt, int(k.rounds))
 })
 
 // SCRAMPBKDF2SHA256 implements SCRAMPBKDF2SHA256 authentication.
@@ -79,10 +79,7 @@ func (a *SCRAMPBKDF2SHA256) InitRepDecode(d *Decoder) error {
 
 // PrepareFinalReq implements the Method interface.
 func (a *SCRAMPBKDF2SHA256) PrepareFinalReq(prms *Prms) error {
-	key, err := scrampbkdf2KeyCache.Get(a)
-	if err != nil {
-		return err
-	}
+	key := scrampbkdf2KeyCache.Get(a)
 	clientProof, err := clientProof(key, a.salt, a.serverChallenge, a.clientChallenge)
 	if err != nil {
 		return err
@@ -111,12 +108,4 @@ func (a *SCRAMPBKDF2SHA256) FinalRepDecode(d *Decoder) error {
 	}
 	a.serverProof = d.bytes()
 	return nil
-}
-
-func scrampbkdf2sha256Key(password string, salt []byte, rounds int) ([]byte, error) {
-	b, err := pbkdf2.Key(sha256.New, password, salt, rounds, clientProofSize)
-	if err != nil {
-		return nil, err
-	}
-	return _sha256(b), nil
 }

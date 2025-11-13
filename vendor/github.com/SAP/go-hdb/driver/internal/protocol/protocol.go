@@ -9,7 +9,6 @@ import (
 	"math"
 
 	"github.com/SAP/go-hdb/driver/internal/protocol/encoding"
-	"golang.org/x/text/transform"
 )
 
 const (
@@ -53,7 +52,6 @@ func (c *partCache) get(kind PartKind) (Part, bool) {
 // Reader represents a protocol reader.
 type Reader struct {
 	dec *encoding.Decoder
-	tr  transform.Transformer
 
 	protTrace bool
 	logger    *slog.Logger
@@ -71,12 +69,13 @@ type Reader struct {
 
 	hdbErrors    *HdbErrors
 	rowsAffected *rowsAffected
+
+	cancelled bool
 }
 
-func newReader(dec *encoding.Decoder, tr transform.Transformer, protTrace bool, logger *slog.Logger, lobChunkSize int, readFromDB bool, prefix string) *Reader {
+func newReader(dec *encoding.Decoder, protTrace bool, logger *slog.Logger, lobChunkSize int, readFromDB bool, prefix string) *Reader {
 	return &Reader{
 		dec:          dec,
-		tr:           tr,
 		protTrace:    protTrace,
 		logger:       logger,
 		lobChunkSize: lobChunkSize,
@@ -92,14 +91,17 @@ func newReader(dec *encoding.Decoder, tr transform.Transformer, protTrace bool, 
 }
 
 // NewDBReader returns an instance of a database protocol reader.
-func NewDBReader(dec *encoding.Decoder, tr transform.Transformer, protTrace bool, logger *slog.Logger, lobChunkSize int) *Reader {
-	return newReader(dec, tr, protTrace, logger, lobChunkSize, true, prefixDB)
+func NewDBReader(dec *encoding.Decoder, protTrace bool, logger *slog.Logger, lobChunkSize int) *Reader {
+	return newReader(dec, protTrace, logger, lobChunkSize, true, prefixDB)
 }
 
 // NewClientReader returns an instance of a client protocol reader.
-func NewClientReader(dec *encoding.Decoder, tr transform.Transformer, protTrace bool, logger *slog.Logger, lobChunkSize int) *Reader {
-	return newReader(dec, tr, protTrace, logger, lobChunkSize, false, prefixClient)
+func NewClientReader(dec *encoding.Decoder, protTrace bool, logger *slog.Logger, lobChunkSize int) *Reader {
+	return newReader(dec, protTrace, logger, lobChunkSize, false, prefixClient)
 }
+
+// Cancelled returns true if reading got cancelled, else otherwise.
+func (r *Reader) Cancelled() bool { return r.cancelled }
 
 // SkipParts reads and discards all protocol parts.
 func (r *Reader) SkipParts(ctx context.Context) error {
@@ -169,7 +171,7 @@ func (r *Reader) ReadPart(ctx context.Context, part Part, lobReader LobReader) (
 		if lobReader == nil {
 			panic("missing lob reader") // should never happen
 		}
-		err = part.decodeResult(r.dec, r.tr, r.ph.numArg(), lobReader, r.lobChunkSize)
+		err = part.decodeResult(r.dec, r.ph.numArg(), lobReader, r.lobChunkSize)
 	default:
 		panic("invalid part decoder") // should never happen
 	}
@@ -209,6 +211,13 @@ func (r *Reader) IterateParts(ctx context.Context, offset int, fn func(kind Part
 	}
 
 	for range int(r.mh.noOfSegm) {
+
+		// check if ctx got cancelled
+		if err := ctx.Err(); err != nil {
+			r.cancelled = true
+			return 0, err
+		}
+
 		if err := r.sh.decode(r.dec); err != nil {
 			return 0, err
 		}
@@ -333,7 +342,7 @@ type Writer struct {
 	sh *segmentHeader
 	ph *partHeader
 
-	hasError bool
+	cancelledOrError bool
 }
 
 // NewWriter returns an instance of a protocol writer.
@@ -358,8 +367,8 @@ const (
 	protocolVersionMinor = 1
 )
 
-// HasError returns true if writing raised an error, false otherwise.
-func (w *Writer) HasError() bool { return w.hasError }
+// CancelledOrError returns true if writing got cancelled or raised an error, else otherwise.
+func (w *Writer) CancelledOrError() bool { return w.cancelledOrError }
 
 // WriteProlog writes the protocol prolog.
 func (w *Writer) WriteProlog(ctx context.Context) error {
@@ -385,7 +394,7 @@ func (w *Writer) SetSessionID(sessionID int64) { w.sessionID = sessionID }
 func (w *Writer) Write(ctx context.Context, messageType MessageType, commit bool, parts ...PartEncoder) error {
 	err := w._write(ctx, messageType, commit, parts...)
 	if err != nil {
-		w.hasError = true
+		w.cancelledOrError = true
 	}
 	return err
 }
@@ -414,8 +423,8 @@ func (w *Writer) _write(ctx context.Context, messageType MessageType, commit boo
 	bufferSize := size
 
 	w.mh.sessionID = w.sessionID
-	w.mh.varPartLength = uint32(size)     //nolint: gosec
-	w.mh.varPartSize = uint32(bufferSize) //nolint: gosec
+	w.mh.varPartLength = uint32(size)
+	w.mh.varPartSize = uint32(bufferSize)
 	w.mh.noOfSegm = 1
 
 	if err := w.mh.encode(w.enc); err != nil {
@@ -432,9 +441,9 @@ func (w *Writer) _write(ctx context.Context, messageType MessageType, commit boo
 	w.sh.messageType = messageType
 	w.sh.commit = commit
 	w.sh.segmentKind = skRequest
-	w.sh.segmentLength = int32(size) //nolint: gosec
+	w.sh.segmentLength = int32(size)
 	w.sh.segmentOfs = 0
-	w.sh.noOfParts = int16(numPart) //nolint: gosec
+	w.sh.noOfParts = int16(numPart)
 	w.sh.segmentNo = 1
 
 	if err := w.sh.encode(w.enc); err != nil {
@@ -447,6 +456,11 @@ func (w *Writer) _write(ctx context.Context, messageType MessageType, commit boo
 	bufferSize -= segmentHeaderSize
 
 	for i, part := range parts {
+		// check if ctx got cancelled
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
 		size := partSize[i]
 		pad := padBytes(size)
 
@@ -454,8 +468,8 @@ func (w *Writer) _write(ctx context.Context, messageType MessageType, commit boo
 		if err := w.ph.setNumArg(part.numArg()); err != nil {
 			return err
 		}
-		w.ph.bufferLength = int32(size)     //nolint: gosec
-		w.ph.bufferSize = int32(bufferSize) //nolint: gosec
+		w.ph.bufferLength = int32(size)
+		w.ph.bufferSize = int32(bufferSize)
 
 		if err := w.ph.encode(w.enc); err != nil {
 			return err

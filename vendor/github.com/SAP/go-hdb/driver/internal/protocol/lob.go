@@ -86,7 +86,10 @@ type LobInDescr struct {
 	buf bytes.Buffer
 }
 
-func newLobInDescr(rd io.Reader) *LobInDescr {
+func newLobInDescr(tr transform.Transformer, rd io.Reader) *LobInDescr {
+	if tr != nil { // cesu8Encoder
+		rd = transform.NewReader(rd, tr)
+	}
 	return &LobInDescr{rd: rd}
 }
 
@@ -186,6 +189,17 @@ func (d *lobOutDescr) decode(dec *encoding.Decoder) bool {
 	return false
 }
 
+func (d *lobOutDescr) countChars(b []byte) (numChar int) {
+	s := unsafe.ByteSlice2String(b)
+	for _, r := range s {
+		numChar++
+		if utf8.RuneLen(r) == 4 {
+			numChar++ // caution: hdb counts 2 chars in case of surrogate pair
+		}
+	}
+	return
+}
+
 func (d *lobOutDescr) write(b []byte) (int, error) {
 	if d.tr == nil {
 		if _, err := d.wr.Write(b); err != nil {
@@ -200,15 +214,7 @@ func (d *lobOutDescr) write(b []byte) (int, error) {
 		return nDst, err
 	}
 
-	// inline count runes
-	numChar := 0
-	for _, r := range unsafe.ByteSlice2String(b[:nDst]) {
-		numChar++
-		if utf8.RuneLen(r) == 4 {
-			numChar++ // caution: hdb counts 2 chars in case of surrogate pair
-		}
-	}
-
+	numChar := d.countChars(b[:nDst])
 	if _, err := d.wr.Write(b[:nDst]); err != nil {
 		return numChar, err
 	}
@@ -317,7 +323,7 @@ func (d *WriteLobDescr) encode(enc *encoding.Encoder) error {
 	enc.Uint64(uint64(d.ID))
 	enc.Int8(int8(d.opt))
 	enc.Int64(d.ofs)
-	enc.Int32(int32(len(d.b))) //nolint: gosec
+	enc.Int32(int32(len(d.b)))
 	enc.Bytes(d.b)
 	return nil
 }
@@ -411,8 +417,8 @@ func (r *ReadLobRequest) decode(dec *encoding.Decoder) error {
 
 func (r *ReadLobRequest) encode(enc *encoding.Encoder) error {
 	enc.Uint64(uint64(r.id))
-	enc.Int64(r.ofs + 1)          // 1-based
-	enc.Int32(int32(r.chunkSize)) //nolint: gosec
+	enc.Int64(r.ofs + 1) // 1-based
+	enc.Int32(int32(r.chunkSize))
 	enc.Zeroes(4)
 	return nil
 }

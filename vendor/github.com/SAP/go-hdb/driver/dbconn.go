@@ -56,11 +56,11 @@ func newDBConn(ctx context.Context, logger *slog.Logger, host string, metrics *m
 		return nil, err
 	}
 	// is TLS connection requested?
-	if attrs.tlsConfig != nil {
-		conn = tls.Client(conn, attrs.tlsConfig)
+	if attrs._tlsConfig != nil {
+		conn = tls.Client(conn, attrs._tlsConfig)
 	}
 
-	dbConn := &stdDBConn{metrics: metrics, conn: conn, timeout: attrs.timeout, logger: logger}
+	dbConn := &stdDBConn{metrics: metrics, conn: conn, timeout: attrs._timeout, logger: logger}
 	if cpuProfile {
 		return &profileDBConn{dbConn: dbConn}, nil
 	}
@@ -88,7 +88,7 @@ func (c *stdDBConn) Read(b []byte) (int, error) {
 	c._lastRead = time.Now()
 	n, err := c.conn.Read(b)
 	c.metrics.msgCh <- timeMsg{idx: timeRead, d: time.Since(c._lastRead)}
-	c.metrics.msgCh <- counterMsg{idx: counterBytesRead, v: uint64(n)} //nolint:gosec
+	c.metrics.msgCh <- counterMsg{idx: counterBytesRead, v: uint64(n)}
 	if err != nil {
 		c.logger.LogAttrs(context.Background(), slog.LevelError, "DB conn read error", slog.String("error", err.Error()), slog.String("local address", c.conn.LocalAddr().String()), slog.String("remote address", c.conn.RemoteAddr().String()))
 		// wrap error in driver.ErrBadConn
@@ -106,7 +106,7 @@ func (c *stdDBConn) Write(b []byte) (int, error) {
 	c._lastWrite = time.Now()
 	n, err := c.conn.Write(b)
 	c.metrics.msgCh <- timeMsg{idx: timeWrite, d: time.Since(c._lastWrite)}
-	c.metrics.msgCh <- counterMsg{idx: counterBytesWritten, v: uint64(n)} //nolint:gosec
+	c.metrics.msgCh <- counterMsg{idx: counterBytesWritten, v: uint64(n)}
 	if err != nil {
 		c.logger.LogAttrs(context.Background(), slog.LevelError, "DB conn write error", slog.String("error", err.Error()), slog.String("local address", c.conn.LocalAddr().String()), slog.String("remote address", c.conn.RemoteAddr().String()))
 		// wrap error in driver.ErrBadConn
