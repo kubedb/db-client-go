@@ -21,10 +21,9 @@ package v1alpha1
 import (
 	"net/http"
 
+	rest "k8s.io/client-go/rest"
 	v1alpha1 "kubedb.dev/apimachinery/apis/catalog/v1alpha1"
 	"kubedb.dev/apimachinery/client/clientset/versioned/scheme"
-
-	rest "k8s.io/client-go/rest"
 )
 
 type CatalogV1alpha1Interface interface {
@@ -55,6 +54,7 @@ type CatalogV1alpha1Interface interface {
 	SchemaRegistryVersionsGetter
 	SinglestoreVersionsGetter
 	SolrVersionsGetter
+	WeaviateVersionsGetter
 	ZooKeeperVersionsGetter
 }
 
@@ -165,6 +165,10 @@ func (c *CatalogV1alpha1Client) SinglestoreVersions() SinglestoreVersionInterfac
 
 func (c *CatalogV1alpha1Client) SolrVersions() SolrVersionInterface {
 	return newSolrVersions(c)
+}
+
+func (c *CatalogV1alpha1Client) WeaviateVersions() WeaviateVersionInterface {
+	return newWeaviateVersions(c)
 }
 
 func (c *CatalogV1alpha1Client) ZooKeeperVersions() ZooKeeperVersionInterface {
