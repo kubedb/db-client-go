@@ -18,12 +18,13 @@ package pgpool
 
 import (
 	"context"
-
 	"fmt"
 
 	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	"kubedb.dev/apimachinery/pkg/lib"
 
 	_ "github.com/lib/pq"
+	vsecretapi "go.virtual-secrets.dev/apimachinery/apis/virtual/v1alpha1"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
@@ -124,20 +125,27 @@ func (o *KubeDBClientBuilder) getBackendAuth() (string, string, error) {
 		return "", "", fmt.Errorf("backend postgres auth secret unspecified for pgpool %s/%s", pp.Namespace, pp.Name)
 	}
 
-	var secret core.Secret
-	err = o.kc.Get(o.ctx, client.ObjectKey{Namespace: pp.Spec.PostgresRef.Namespace, Name: apb.Spec.Secret.Name}, &secret)
-	if err != nil {
-		return "", "", err
+	if apb.Spec.Secret.APIGroup == vsecretapi.GroupName {
+		var secret vsecretapi.Secret
+		err = o.kc.Get(o.ctx, client.ObjectKey{Namespace: pp.Spec.PostgresRef.Namespace, Name: apb.Spec.Secret.Name}, &secret)
+		if err != nil {
+			return "", "", err
+		}
+		if err = lib.ValidateVirtualAuthSecret(&secret); err != nil {
+			return "", "", err
+		}
+		return string(secret.Data[core.BasicAuthUsernameKey]), string(secret.Data[core.BasicAuthPasswordKey]), nil
+	} else {
+		var secret core.Secret
+		err = o.kc.Get(o.ctx, client.ObjectKey{Namespace: pp.Spec.PostgresRef.Namespace, Name: apb.Spec.Secret.Name}, &secret)
+		if err != nil {
+			return "", "", err
+		}
+		if err = lib.ValidateAuthSecret(&secret); err != nil {
+			return "", "", err
+		}
+		return string(secret.Data[core.BasicAuthUsernameKey]), string(secret.Data[core.BasicAuthPasswordKey]), nil
 	}
-	user, ok := secret.Data[core.BasicAuthUsernameKey]
-	if !ok {
-		return "", "", fmt.Errorf("error getting backend username")
-	}
-	pass, ok := secret.Data[core.BasicAuthPasswordKey]
-	if !ok {
-		return "", "", fmt.Errorf("error getting backend password")
-	}
-	return string(user), string(pass), nil
 }
 
 func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
