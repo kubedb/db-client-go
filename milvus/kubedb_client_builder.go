@@ -38,19 +38,10 @@ func (o *KubeDBClientBuilder) GetMilvusClient() (*milvusclient.Client, error) {
 		o.ctx = context.Background()
 	}
 
-	if o.db == nil {
-		klog.Errorf("Milvus CR is nil")
-		return nil, fmt.Errorf("milvus CR is nil")
-	}
-
-	if o.db.Spec.Topology.Standalone == nil {
-		return nil, fmt.Errorf("standalone spec is nil")
-	}
-
 	addr := o.db.GetGRPCAddress()
 
 	var username, password string
-	if !o.db.Spec.Topology.Standalone.DisableSecurity {
+	if !o.db.Spec.DisableSecurity {
 		var err error
 		username, err = o.db.GetUsername(o.ctx, o.kc)
 		if err != nil {
