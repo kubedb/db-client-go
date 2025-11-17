@@ -45,6 +45,8 @@ require (
 	xorm.io/xorm v1.3.9
 )
 
+replace kubedb.dev/apimachinery => ../apimachinery
+
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/ClickHouse/ch-go v0.61.5 // indirect
