@@ -26,17 +26,9 @@ import (
 	_ "github.com/SAP/go-hdb/driver"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
+	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-)
-
-const (
-	// TenantDatabaseName is the name of the KubeDB managed tenant database
-	TenantDatabaseName = "KUBEDB"
-	// TenantSystemPassword is the system user password for the tenant database
-	TenantSystemPassword = "Tenant1_Strong#2025"
-	// SystemDBPort is the default port for SYSTEMDB
-	SystemDBPort = "39017"
 )
 
 type KubeDBClientBuilder struct {
@@ -104,17 +96,10 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	var user, pass string
 	var err error
 
-	// For tenant database, use tenant credentials if connecting to KUBEDB
-	// For SYSTEMDB or default, use the auth secret credentials
-	if o.databaseName == TenantDatabaseName {
-		user = "SYSTEM"
-		pass = TenantSystemPassword
-	} else {
-		// Authentication credentials from secret
-		user, pass, err = o.getHanaDBAuthCredentials()
-		if err != nil {
-			return "", fmt.Errorf("unable to get hanaDB auth credentials: %s/%s: %v", o.db.Namespace, o.db.Name, err)
-		}
+	// Authentication credentials from secret
+	user, pass, err = o.getHanaDBAuthCredentials()
+	if err != nil {
+		return "", fmt.Errorf("unable to get hanaDB auth credentials: %s/%s: %v", o.db.Namespace, o.db.Name, err)
 	}
 
 	var host string
@@ -131,8 +116,8 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		}
 	}
 
-	// Port is always 39017 for both SYSTEMDB and tenant databases (local access)
-	port := SystemDBPort
+	// Port is always 39017 for both SYSTEMDB and tenant databases
+	port := kubedb.HanaDBSystemDBSQLPort
 
 	// Build connection string with database parameter if specified
 	dbParam := ""
@@ -144,7 +129,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	encodedUser := url.QueryEscape(user)
 	encodedPass := url.QueryEscape(pass)
 
-	connectionString := fmt.Sprintf("hdb://%s:%s@%s:%s%s", encodedUser, encodedPass, host, port, dbParam)
+	connectionString := fmt.Sprintf("hdb://%s:%s@%s:%d%s", encodedUser, encodedPass, host, port, dbParam)
 	return connectionString, nil
 }
 
@@ -196,7 +181,7 @@ func extractPasswordJSON(data map[string][]byte) (string, string, error) {
 		return "", "", fmt.Errorf("failed to parse password.json: %v", err)
 	}
 
-	username := "SYSTEM" // Default for HANA system DB; make configurable if needed
+	username := "SYSTEM" // Default for HANA system DB;
 	password := passwordData.MasterPassword
 	if username == "" || password == "" {
 		return "", "", errors.New("username or password not specified")

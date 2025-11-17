@@ -3360,13 +3360,44 @@ spec:
                 - Durable
                 - Ephemeral
                 type: string
-              topology:
+              systemReplication:
                 properties:
-                  mode:
-                    enum:
-                    - AvailabilityGroup
-                    - DistributedAG
-                    type: string
+                  primary:
+                    properties:
+                      name:
+                        type: string
+                    required:
+                    - name
+                    type: object
+                  secondaries:
+                    items:
+                      properties:
+                        mode:
+                          default: sync
+                          enum:
+                          - sync
+                          - syncmem
+                          - async
+                          type: string
+                        name:
+                          type: string
+                        operationMode:
+                          default: logreplay
+                          enum:
+                          - logreplay
+                          - delta_datashipping
+                          - logreplay_readaccess
+                          type: string
+                        tier:
+                          default: 2
+                          enum:
+                          - 2
+                          - 3
+                          type: integer
+                      required:
+                      - name
+                      type: object
+                    type: array
                 type: object
               version:
                 type: string

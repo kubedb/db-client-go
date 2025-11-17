@@ -73,6 +73,10 @@ func (h *HanaDB) ServiceName() string {
 	return h.OffshootName()
 }
 
+func (h *HanaDB) SecondaryServiceName() string {
+	return metautil.NameWithPrefix(h.ServiceName(), string(SecondaryServiceAlias))
+}
+
 func (h *HanaDB) GoverningServiceName() string {
 	return metautil.NameWithSuffix(h.ServiceName(), "pods")
 }
@@ -234,7 +238,11 @@ func (h *HanaDB) ConfigSecretName() string {
 }
 
 func (h *HanaDB) IsStandalone() bool {
-	return h.Spec.Topology == nil
+	return h.Spec.SystemReplication == nil
+}
+
+func (h *HanaDB) IsCluster() bool {
+	return h.Spec.SystemReplication != nil
 }
 
 func (h *HanaDB) SetHealthCheckerDefaults() {
@@ -321,6 +329,7 @@ func (h *HanaDB) assignDefaultContainerSecurityContext(hanadbVersion *catalog.Ha
 			Drop: []core.Capability{"ALL"},
 		}
 	}
+
 	if sc.RunAsNonRoot == nil {
 		sc.RunAsNonRoot = pointer.BoolP(true)
 	}
@@ -328,7 +337,7 @@ func (h *HanaDB) assignDefaultContainerSecurityContext(hanadbVersion *catalog.Ha
 		sc.RunAsUser = hanadbVersion.Spec.SecurityContext.RunAsUser
 	}
 	if sc.RunAsGroup == nil {
-		sc.RunAsGroup = hanadbVersion.Spec.SecurityContext.RunAsUser
+		sc.RunAsGroup = hanadbVersion.Spec.SecurityContext.RunAsGroup
 	}
 	if sc.SeccompProfile == nil {
 		sc.SeccompProfile = secomp.DefaultSeccompProfile()
