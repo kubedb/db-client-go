@@ -3149,7 +3149,7 @@ kmodules.xyz/offshoot-api/api/v1
 kmodules.xyz/offshoot-api/api/v1/conversion
 kmodules.xyz/offshoot-api/api/v2
 kmodules.xyz/offshoot-api/util
-# kubedb.dev/apimachinery v0.59.1-0.20251119052506-17e43e465893
+# kubedb.dev/apimachinery v0.59.1-0.20251119093352-84ea6669e4f7 => ../apimachinery
 ## explicit; go 1.24.0
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog
@@ -3273,4 +3273,3 @@ xorm.io/xorm/tags
 # sigs.k8s.io/controller-runtime => github.com/kmodules/controller-runtime v0.20.3-0.20250221050548-8eabe54e7dda
 # github.com/imdario/mergo => github.com/imdario/mergo v0.3.6
 # k8s.io/apiserver => github.com/kmodules/apiserver v0.32.3-0.20250221062720-35dc674c7dd6
-# kubedb.dev/apimachinery v0.59.1-0.20251117070959-a38124c23201 => ../apimachinery

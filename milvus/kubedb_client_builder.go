@@ -2,18 +2,14 @@ package milvus
 
 import (
 	"context"
-	"fmt"
-	"time"
-
-	"github.com/cenkalti/backoff/v4"
 	"github.com/milvus-io/milvus/client/v2/milvusclient"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	core "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"time"
 )
 
 type KubeDBClientBuilder struct {
@@ -40,77 +36,62 @@ func (o *KubeDBClientBuilder) GetMilvusClient() (*milvusclient.Client, error) {
 	}
 
 	addr := o.db.ServiceDNS()
-
 	var username, password string
-	if !o.db.Spec.DisableSecurity {
-		var err error
-		username, err = o.db.GetUsername(o.ctx, o.kc)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to read username from auth secret")
-		}
-		password, err = o.db.GetPassword(o.ctx, o.kc)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to read password from auth secret")
-		}
-	} else {
-		username, password = core.BasicAuthUsernameKey, core.BasicAuthPasswordKey
-	}
 
 	config := &milvusclient.ClientConfig{
-		Address:  addr,
-		Username: username,
-		Password: password,
+		Address: addr,
 	}
 
+	// Case 1: Security disabled
+	if !o.db.Spec.DisableSecurity {
+		if o.db.Spec.AuthSecret != nil && o.db.Spec.AuthSecret.ExternallyManaged {
+			// Case 2: Auth externally managed → fetch from Secret
+			var err error
+			username, err = o.db.GetUsername(o.ctx, o.kc)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to read username from auth secret")
+			}
+			password, err = o.db.GetPassword(o.ctx, o.kc)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to read password from auth secret")
+			}
+			config.Username = username
+			config.Password = password
+		}
+	}
 	// store the client outside the retry function
 	var milvusClient *milvusclient.Client
 
-	operation := func() error {
-		// Step 1: Dial
-		conn, err := grpc.Dial(config.Address,
-			grpc.WithTransportCredentials(insecure.NewCredentials()),
-			grpc.WithBlock(),
-			grpc.WithTimeout(10*time.Second),
-		)
-		if err != nil {
-			klog.Warningf("gRPC dial failed: %v", err)
-			return err
-		}
-		conn.Close()
-
-		// Step 2: Create client
-		ctx, cancel := context.WithTimeout(o.ctx, 30*time.Second)
-		defer cancel()
-
-		client, err := milvusclient.New(ctx, config)
-		if err != nil {
-			klog.Warningf("Failed to create Milvus client: %v", err)
-			return err
-		}
-
-		// Step 3: Test connection
-		_, err = client.ListCollections(ctx, milvusclient.NewListCollectionOption())
-		if err != nil {
-			client.Close(ctx)
-			klog.Warningf("Failed to list collections: %v", err)
-			return err
-		}
-
-		// success
-		milvusClient = client
-		return nil
-	}
-
-	// Exponential backoff: max 5 mins
-	b := backoff.NewExponentialBackOff()
-	b.InitialInterval = 2 * time.Second
-	b.MaxInterval = 30 * time.Second
-	b.MaxElapsedTime = 5 * time.Minute
-
-	err := backoff.Retry(operation, b)
+	// Step 1: Dial
+	conn, err := grpc.Dial(config.Address,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithBlock(),
+		grpc.WithTimeout(10*time.Second),
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to Milvus after retry: %w", err)
+		klog.Warningf("gRPC dial failed: %v", err)
+		return nil, err
+	}
+	conn.Close()
+
+	// Step 2: Create client
+	ctx, cancel := context.WithTimeout(o.ctx, 30*time.Second)
+	defer cancel()
+
+	client, err := milvusclient.New(ctx, config)
+	if err != nil {
+		klog.Warningf("Failed to create Milvus client: %v", err)
+		return nil, err
 	}
 
+	// Step 3: Test connection by listing collections
+	_, err = client.ListCollections(ctx, milvusclient.NewListCollectionOption())
+	if err != nil {
+		client.Close(ctx)
+		klog.Warningf("Failed to list collections: %v", err)
+		return nil, err
+	}
+
+	milvusClient = client
 	return milvusClient, nil
 }
