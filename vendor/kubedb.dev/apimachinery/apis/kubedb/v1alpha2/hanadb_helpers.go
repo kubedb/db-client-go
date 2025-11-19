@@ -153,14 +153,6 @@ func (h *HanaDB) GetNameSpacedName() string {
 	return h.Namespace + "/" + h.Name
 }
 
-func (h *HanaDB) DefaultPodRoleName() string {
-	return metautil.NameWithSuffix(h.OffshootName(), "role")
-}
-
-func (h *HanaDB) DefaultPodRoleBindingName() string {
-	return metautil.NameWithSuffix(h.OffshootName(), "rolebinding")
-}
-
 func (r *HanaDB) Finalizer() string {
 	return fmt.Sprintf("%s/%s", apis.Finalizer, r.ResourceSingular())
 }
@@ -250,10 +242,10 @@ func (h *HanaDB) SetHealthCheckerDefaults() {
 		h.Spec.HealthChecker.PeriodSeconds = pointer.Int32P(10)
 	}
 	if h.Spec.HealthChecker.TimeoutSeconds == nil {
-		h.Spec.HealthChecker.TimeoutSeconds = pointer.Int32P(10)
+		h.Spec.HealthChecker.TimeoutSeconds = pointer.Int32P(20)
 	}
 	if h.Spec.HealthChecker.FailureThreshold == nil {
-		h.Spec.HealthChecker.FailureThreshold = pointer.Int32P(3)
+		h.Spec.HealthChecker.FailureThreshold = pointer.Int32P(1)
 	}
 }
 

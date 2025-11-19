@@ -48,14 +48,6 @@ const (
 	OperationModeLogReplayReadAccess OperationMode = "logreplay_readaccess"
 )
 
-// +kubebuilder:validation:Enum=2;3
-type ReplicationTier int
-
-const (
-	ReplicationTier2 ReplicationTier = 2
-	ReplicationTier3 ReplicationTier = 3
-)
-
 // HanaDB is the Schema for the hanadbs API
 
 // +genclient
@@ -149,10 +141,6 @@ type SystemReplicationPrimary struct {
 
 // SystemReplicationSecondary defines the secondary replica configuration
 type SystemReplicationSecondary struct {
-	// Name of the secondary replica
-	// +optional
-	Name string `json:"name,omitempty"`
-
 	// Mode specifies the replication mode (sync, syncmem, async)
 	// +optional
 	// +kubebuilder:default=sync
@@ -162,11 +150,6 @@ type SystemReplicationSecondary struct {
 	// +optional
 	// +kubebuilder:default=logreplay
 	OperationMode OperationMode `json:"operationMode,omitempty"`
-
-	// Tier specifies the replication tier (2 or 3)
-	// +optional
-	// +kubebuilder:default=2
-	Tier ReplicationTier `json:"tier,omitempty"`
 }
 
 // HanaDBStatus defines the observed state of HanaDB.
