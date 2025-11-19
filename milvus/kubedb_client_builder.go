@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	core "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -38,7 +39,7 @@ func (o *KubeDBClientBuilder) GetMilvusClient() (*milvusclient.Client, error) {
 		o.ctx = context.Background()
 	}
 
-	addr := o.db.GetGRPCAddress()
+	addr := o.db.ServiceDNS()
 
 	var username, password string
 	if !o.db.Spec.DisableSecurity {
@@ -51,6 +52,8 @@ func (o *KubeDBClientBuilder) GetMilvusClient() (*milvusclient.Client, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read password from auth secret")
 		}
+	} else {
+		username, password = core.BasicAuthUsernameKey, core.BasicAuthPasswordKey
 	}
 
 	config := &milvusclient.ClientConfig{
