@@ -38,7 +38,7 @@ require (
 	k8s.io/klog/v2 v2.130.1
 	kmodules.xyz/client-go v0.32.9
 	kmodules.xyz/custom-resources v0.32.2
-	kubedb.dev/apimachinery v0.59.1-0.20251120054024-1569ec600352
+	kubedb.dev/apimachinery v0.59.1-0.20251120082417-ae9992367f4c
 	sigs.k8s.io/controller-runtime v0.20.4
 	xorm.io/xorm v1.3.9
 )
@@ -246,5 +246,3 @@ replace sigs.k8s.io/controller-runtime => github.com/kmodules/controller-runtime
 replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.6
 
 replace k8s.io/apiserver => github.com/kmodules/apiserver v0.32.3-0.20250221062720-35dc674c7dd6
-
-replace kubedb.dev/apimachinery v0.59.1-0.20251120054024-1569ec600352 => ../apimachinery
