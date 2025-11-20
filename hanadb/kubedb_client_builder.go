@@ -145,8 +145,6 @@ func (o *KubeDBClientBuilder) getHanaDBAuthCredentials() (string, string, error)
 
 	if username, password, err := extractPasswordJSON(secret.Data); err == nil {
 		return username, password, nil
-	} else if err != errPasswordJSONNotFound {
-		return "", "", err
 	}
 
 	return "", "", errors.New("secret does not contain recognizable auth credentials")
@@ -184,7 +182,7 @@ func extractPasswordJSON(data map[string][]byte) (string, string, error) {
 	username := "SYSTEM" // Default for HANA system DB;
 	password := passwordData.MasterPassword
 	if username == "" || password == "" {
-		return "", "", errors.New("username or password not specified")
+		return "", "", errors.New("password.json does not contain master_password")
 	}
 
 	return username, password, nil
