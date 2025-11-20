@@ -38,6 +38,14 @@ const (
 	HanaDBModeSystemReplication HanaDBMode = "SystemReplication"
 )
 
+// +kubebuilder:validation:Enum=Standalone;SystemReplication
+type HanaDBMode string
+
+const (
+	HanaDBModeStandalone        HanaDBMode = "Standalone"
+	HanaDBModeSystemReplication HanaDBMode = "SystemReplication"
+)
+
 // HanaDB is the Schema for the hanadbs API
 
 // +genclient
