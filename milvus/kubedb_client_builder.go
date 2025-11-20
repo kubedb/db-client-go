@@ -2,6 +2,8 @@ package milvus
 
 import (
 	"context"
+	"time"
+
 	"github.com/milvus-io/milvus/client/v2/milvusclient"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -9,7 +11,6 @@ import (
 	"k8s.io/klog/v2"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
 )
 
 type KubeDBClientBuilder struct {
@@ -81,14 +82,6 @@ func (o *KubeDBClientBuilder) GetMilvusClient() (*milvusclient.Client, error) {
 	client, err := milvusclient.New(ctx, config)
 	if err != nil {
 		klog.Warningf("Failed to create Milvus client: %v", err)
-		return nil, err
-	}
-
-	// Step 3: Test connection by listing collections
-	_, err = client.ListCollections(ctx, milvusclient.NewListCollectionOption())
-	if err != nil {
-		client.Close(ctx)
-		klog.Warningf("Failed to list collections: %v", err)
 		return nil, err
 	}
 
