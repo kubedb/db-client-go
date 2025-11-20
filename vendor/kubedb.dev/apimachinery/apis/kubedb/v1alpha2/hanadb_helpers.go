@@ -230,11 +230,11 @@ func (h *HanaDB) ConfigSecretName() string {
 }
 
 func (h *HanaDB) IsStandalone() bool {
-	return h.Spec.SystemReplication == nil
+	return h.Spec.Topology == nil || (h.Spec.Topology.Mode != nil && *h.Spec.Topology.Mode == HanaDBModeStandalone)
 }
 
 func (h *HanaDB) IsCluster() bool {
-	return h.Spec.SystemReplication != nil
+	return h.Spec.Topology != nil
 }
 
 func (h *HanaDB) SetHealthCheckerDefaults() {

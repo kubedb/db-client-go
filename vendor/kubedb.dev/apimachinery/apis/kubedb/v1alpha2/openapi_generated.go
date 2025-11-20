@@ -569,6 +569,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.HanaDBList":                                    schema_apimachinery_apis_kubedb_v1alpha2_HanaDBList(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.HanaDBSpec":                                    schema_apimachinery_apis_kubedb_v1alpha2_HanaDBSpec(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.HanaDBStatus":                                  schema_apimachinery_apis_kubedb_v1alpha2_HanaDBStatus(ref),
+		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.HanaDBTopology":                                schema_apimachinery_apis_kubedb_v1alpha2_HanaDBTopology(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.Hazelcast":                                     schema_apimachinery_apis_kubedb_v1alpha2_Hazelcast(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.HazelcastApp":                                  schema_apimachinery_apis_kubedb_v1alpha2_HazelcastApp(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.HazelcastList":                                 schema_apimachinery_apis_kubedb_v1alpha2_HazelcastList(ref),
@@ -705,9 +706,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SolrNode":                                      schema_apimachinery_apis_kubedb_v1alpha2_SolrNode(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SolrSpec":                                      schema_apimachinery_apis_kubedb_v1alpha2_SolrSpec(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SolrStatus":                                    schema_apimachinery_apis_kubedb_v1alpha2_SolrStatus(ref),
-		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SystemReplicationPrimary":                      schema_apimachinery_apis_kubedb_v1alpha2_SystemReplicationPrimary(ref),
-		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SystemReplicationSecondary":                    schema_apimachinery_apis_kubedb_v1alpha2_SystemReplicationSecondary(ref),
-		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SystemReplicationSpec":                         schema_apimachinery_apis_kubedb_v1alpha2_SystemReplicationSpec(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SystemUserSecretsSpec":                         schema_apimachinery_apis_kubedb_v1alpha2_SystemUserSecretsSpec(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.TLSPolicy":                                     schema_apimachinery_apis_kubedb_v1alpha2_TLSPolicy(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.Topology":                                      schema_apimachinery_apis_kubedb_v1alpha2_Topology(ref),
@@ -29409,10 +29407,10 @@ func schema_apimachinery_apis_kubedb_v1alpha2_HanaDBSpec(ref common.ReferenceCal
 							Format:      "int32",
 						},
 					},
-					"systemReplication": {
+					"topology": {
 						SchemaProps: spec.SchemaProps{
-							Description: "SystemReplication configures the system replication settings.",
-							Ref:         ref("kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SystemReplicationSpec"),
+							Description: "Topology defines the deployment mode (e.g., standalone or system replication).",
+							Ref:         ref("kubedb.dev/apimachinery/apis/kubedb/v1alpha2.HanaDBTopology"),
 						},
 					},
 					"storageType": {
@@ -29479,7 +29477,7 @@ func schema_apimachinery_apis_kubedb_v1alpha2_HanaDBSpec(ref common.ReferenceCal
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.PersistentVolumeClaimSpec", "kmodules.xyz/client-go/api/v1.HealthCheckSpec", "kmodules.xyz/offshoot-api/api/v2.PodTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.NamedServiceTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SecretReference", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SystemReplicationSpec"},
+			"k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.PersistentVolumeClaimSpec", "kmodules.xyz/client-go/api/v1.HealthCheckSpec", "kmodules.xyz/offshoot-api/api/v2.PodTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.HanaDBTopology", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.NamedServiceTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SecretReference"},
 	}
 }
 
@@ -29523,6 +29521,26 @@ func schema_apimachinery_apis_kubedb_v1alpha2_HanaDBStatus(ref common.ReferenceC
 		},
 		Dependencies: []string{
 			"kmodules.xyz/client-go/api/v1.Condition"},
+	}
+}
+
+func schema_apimachinery_apis_kubedb_v1alpha2_HanaDBTopology(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "HanaDBTopology defines the deployment mode for HanaDB",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"mode": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Mode specifies the deployment mode.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -37283,106 +37301,6 @@ func schema_apimachinery_apis_kubedb_v1alpha2_SolrStatus(ref common.ReferenceCal
 		},
 		Dependencies: []string{
 			"kmodules.xyz/client-go/api/v1.Condition"},
-	}
-}
-
-func schema_apimachinery_apis_kubedb_v1alpha2_SystemReplicationPrimary(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "SystemReplicationPrimary defines the primary replica configuration",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Name of the primary replica",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-				},
-				Required: []string{"name"},
-			},
-		},
-	}
-}
-
-func schema_apimachinery_apis_kubedb_v1alpha2_SystemReplicationSecondary(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "SystemReplicationSecondary defines the secondary replica configuration",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Name of the secondary replica",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"mode": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Mode specifies the replication mode (sync, syncmem, async)",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"operationMode": {
-						SchemaProps: spec.SchemaProps{
-							Description: "OperationMode specifies the operation mode (logreplay, delta_datashipping, logreplay_readaccess)",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"tier": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Tier specifies the replication tier (2 or 3)",
-							Type:        []string{"integer"},
-							Format:      "int32",
-						},
-					},
-				},
-				Required: []string{"name"},
-			},
-		},
-	}
-}
-
-func schema_apimachinery_apis_kubedb_v1alpha2_SystemReplicationSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "SystemReplicationSpec defines the system replication configuration for HanaDB",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"primary": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Primary defines the primary replica configuration",
-							Ref:         ref("kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SystemReplicationPrimary"),
-						},
-					},
-					"secondaries": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Secondaries defines the list of secondary replicas",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SystemReplicationSecondary"),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SystemReplicationPrimary", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SystemReplicationSecondary"},
 	}
 }
 
