@@ -1,3 +1,19 @@
+/*
+Copyright AppsCode Inc. and Contributors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package weaviate
 
 import (
@@ -39,13 +55,13 @@ func (o *KubeDBClientBuilder) WithAuth() *KubeDBClientBuilder {
 	err := o.kc.Get(o.ctx, types.NamespacedName{Name: o.db.GetAuthSecretName(), Namespace: o.db.Namespace}, secret)
 	if err != nil {
 		klog.Errorf("Failed to get auth secret: %v", err)
-		return o // Error handled in caller
+		return o
 	}
 	// Fetch the correct key for Weaviate API key auth (matches secret creation)
-	apiKey, ok := secret.Data["AUTHENTICATION_APIKEY_ALLOWED_KEYS"]
+	apiKey, ok := secret.Data[kubedb.WeaviateAPIKey]
 	if !ok || len(apiKey) == 0 {
 		klog.Errorf("Missing or empty AUTHENTICATION_APIKEY_ALLOWED_KEYS in secret")
-		return o // Error handled in caller
+		return o
 	}
 	o.authConfig = auth.ApiKey{Value: string(apiKey)}
 	return o
@@ -84,7 +100,7 @@ func (o *KubeDBClientBuilder) GetWeaviateClient() (*weaviate.Client, error) {
 
 	addr := o.url
 	if addr == "" {
-		addr = fmt.Sprintf("localhost:%d", 8082)
+		addr = fmt.Sprintf("%s:%d", o.GetServiceAddress(), kubedb.WeaviateHTTPPort)
 	}
 
 	secret := &v1.Secret{}
@@ -95,22 +111,22 @@ func (o *KubeDBClientBuilder) GetWeaviateClient() (*weaviate.Client, error) {
 		return nil, fmt.Errorf("failed to get weaviate auth secret: %w", err)
 	}
 
-	val, _ := secret.Data[kubedb.WeaviateAPIKey]
+	val, ok := secret.Data[kubedb.WeaviateAPIKey]
+	if !ok || len(val) == 0 {
+		return nil, fmt.Errorf("weaviate auth secret key %s is missing or empty", kubedb.WeaviateAPIKey)
+	}
 	cfg := auth.ApiKey{Value: string(val)}
-
-	config := &weaviate.Config{
+	wvconfig := &weaviate.Config{
 		Host:       addr,
-		Scheme:     "http", // "https" if TLS
+		Scheme:     o.db.GetConnectionScheme(),
 		AuthConfig: cfg,
 	}
 
 	// Create client
-	weaviateClient, err := weaviate.NewClient(*config)
-
+	weaviateClient, err := weaviate.NewClient(*wvconfig)
 	if err != nil {
-		return nil, fmt.Errorf("failed to test Weaviate client connection: %w", err)
+		return nil, fmt.Errorf("failed to create Weaviate client: %w", err)
 	}
-
 	return weaviateClient, nil
 }
 
@@ -118,8 +134,5 @@ func (o *KubeDBClientBuilder) GetServiceAddress() string {
 	if o.url != "" {
 		return o.url
 	}
-
-	serviceName := o.db.ServiceName()
-	namespace := o.db.Namespace
-	return fmt.Sprintf("%s.%s.svc.cluster.local", serviceName, namespace)
+	return fmt.Sprintf("%s.%s.svc.cluster.local", o.db.ServiceName(), o.db.GetNamespace())
 }
