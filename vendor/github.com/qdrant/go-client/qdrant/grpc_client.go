@@ -35,16 +35,12 @@ func NewGrpcClient(config *Config) (*GrpcClient, error) {
 	// We append config.GrpcOptions in the end
 	// so that user's explicit options take precedence
 	clientVersion := getClientVersion()
-	var grpcOptions []grpc.DialOption
-	grpcOptions = append(grpcOptions,
+	config.GrpcOptions = append([]grpc.DialOption{
 		config.getTransportCreds(),
 		config.getAPIKeyInterceptor(),
 		config.getRateLimitInterceptor(),
 		grpc.WithUserAgent(fmt.Sprintf("go-client/%s", clientVersion)),
-	)
-	grpcOptions = append(grpcOptions, config.getKeepAliveParams()...)
-
-	config.GrpcOptions = append(grpcOptions, config.GrpcOptions...)
+	}, config.GrpcOptions...)
 
 	conn, err := grpc.NewClient(config.getAddr(), config.GrpcOptions...)
 
@@ -58,11 +54,11 @@ func NewGrpcClient(config *Config) (*GrpcClient, error) {
 		serverVersion := getServerVersion(newGrpcClientFromConn)
 		logger := slog.Default()
 		if serverVersion == unknownVersion {
-			logger.Warn("Failed to obtain server version. " + //nolint:noctx // We don't have context here.
+			logger.Warn("Failed to obtain server version. " +
 				"Unable to check client-server compatibility. " +
 				"Set SkipCompatibilityCheck=true to skip version check.")
 		} else if !IsCompatible(clientVersion, serverVersion) {
-			logger.Warn("Client version is not compatible with server version. "+ //nolint:noctx // We don't have context here.
+			logger.Warn("Client version is not compatible with server version. "+
 				"Major versions should match and minor version difference must not exceed 1. "+
 				"Set SkipCompatibilityCheck=true to skip version check.",
 				"clientVersion", clientVersion, "serverVersion", serverVersion)

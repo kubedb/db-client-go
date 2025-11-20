@@ -4,9 +4,7 @@
 
 package qdrant
 
-import (
-	"google.golang.org/protobuf/types/known/timestamppb"
-)
+import "google.golang.org/protobuf/types/known/timestamppb"
 
 // Creates a *VectorsConfig instance from *VectorParams.
 func NewVectorsConfig(params *VectorParams) *VectorsConfig {
@@ -114,17 +112,6 @@ func NewQuantizationDiffDisabled() *QuantizationConfigDiff {
 	return &QuantizationConfigDiff{
 		Quantization: &QuantizationConfigDiff_Disabled{
 			Disabled: &Disabled{},
-		},
-	}
-}
-
-// Creates a *BinaryQuantizationQueryEncoding instance with a specific setting.
-//
-//nolint:lll	// Ignoring the long line length for naming consistency.
-func NewBinaryQuantizationQueryEncodingSetting(setting BinaryQuantizationQueryEncoding_Setting) *BinaryQuantizationQueryEncoding {
-	return &BinaryQuantizationQueryEncoding{
-		Variant: &BinaryQuantizationQueryEncoding_Setting_{
-			Setting: setting,
 		},
 	}
 }
@@ -545,38 +532,30 @@ func NewVector(values ...float32) *Vector {
 // Creates a *Vector instance for dense vectors.
 func NewVectorDense(vector []float32) *Vector {
 	return &Vector{
-		Vector: &Vector_Dense{
-			Dense: &DenseVector{
-				Data: vector,
-			},
-		},
+		Data: vector,
 	}
 }
 
 // Creates a *Vector instance for sparse vectors.
 func NewVectorSparse(indices []uint32, values []float32) *Vector {
 	return &Vector{
-		Vector: &Vector_Sparse{
-			Sparse: &SparseVector{
-				Indices: indices,
-				Values:  values,
-			},
+		Data: values,
+		Indices: &SparseIndices{
+			Data: indices,
 		},
 	}
 }
 
 // Creates a *Vector instance for multi vectors.
 func NewVectorMulti(vectors [][]float32) *Vector {
-	denseVecs := make([]*DenseVector, len(vectors))
-	for i, vector := range vectors {
-		denseVecs[i] = &DenseVector{Data: vector}
+	vectorsCount := uint32(len(vectors))
+	var flattenedVec []float32
+	for _, vector := range vectors {
+		flattenedVec = append(flattenedVec, vector...)
 	}
 	return &Vector{
-		Vector: &Vector_MultiDense{
-			MultiDense: &MultiDenseVector{
-				Vectors: denseVecs,
-			},
-		},
+		Data:         flattenedVec,
+		VectorsCount: &vectorsCount,
 	}
 }
 
@@ -720,11 +699,6 @@ func NewQueryID(id *PointId) *Query {
 	return NewQueryNearest(NewVectorInputID(id))
 }
 
-// Creates a *Query instance for a nearest query from a *Document input.
-func NewQueryDocument(document *Document) *Query {
-	return NewQueryNearest(NewVectorInputDocument(document))
-}
-
 // Creates a *Query instance for recommend query from *RecommendInput.
 func NewQueryRecommend(recommend *RecommendInput) *Query {
 	return &Query{
@@ -770,15 +744,6 @@ func NewQueryFusion(fusion Fusion) *Query {
 	}
 }
 
-// Creates a *Query instance for combining prefetch results with RRF (Reciprocal Rank Fusion).
-func NewQueryRRF(rrf *Rrf) *Query {
-	return &Query{
-		Variant: &Query_Rrf{
-			Rrf: rrf,
-		},
-	}
-}
-
 // Creates a *Query instance for sampling points.
 func NewQuerySample(sample Sample) *Query {
 	return &Query{
@@ -793,18 +758,6 @@ func NewQueryFormula(formula *Formula) *Query {
 	return &Query{
 		Variant: &Query_Formula{
 			Formula: formula,
-		},
-	}
-}
-
-// Creates a *Query instance for re-ranking points with MMR (Maximal Marginal Relevance).
-func NewQueryMMR(nearest *VectorInput, mmr *Mmr) *Query {
-	return &Query{
-		Variant: &Query_NearestWithMmr{
-			NearestWithMmr: &NearestInputWithMmr{
-				Nearest: nearest,
-				Mmr:     mmr,
-			},
 		},
 	}
 }
@@ -1147,111 +1100,6 @@ func NewExpressionLinDecay(linDecay *DecayParamsExpression) *Expression {
 	return &Expression{
 		Variant: &Expression_LinDecay{
 			LinDecay: linDecay,
-		},
-	}
-}
-
-// Creates a *StemmingAlgorithm instance using Snowball stemmer.
-func NewStemmingAlgorithmSnowball(snowBall *SnowballParams) *StemmingAlgorithm {
-	return &StemmingAlgorithm{
-		StemmingParams: &StemmingAlgorithm_Snowball{
-			Snowball: snowBall,
-		},
-	}
-}
-
-// Creates a *UpdateCollectionClusterSetupRequest to move a shard.
-//
-//nolint:lll	// Ignoring the long line length for naming consistency.
-func NewUpdateCollectionClusterMoveShard(collectionName string, moveShard *MoveShard) *UpdateCollectionClusterSetupRequest {
-	return &UpdateCollectionClusterSetupRequest{
-		CollectionName: collectionName,
-		Operation: &UpdateCollectionClusterSetupRequest_MoveShard{
-			MoveShard: moveShard,
-		},
-	}
-}
-
-// Creates a *UpdateCollectionClusterSetupRequest to replicate a shard.
-//
-//nolint:lll	// Ignoring the long line length for naming consistency.
-func NewUpdateCollectionClusterReplicateShard(collectionName string, replicateShard *ReplicateShard) *UpdateCollectionClusterSetupRequest {
-	return &UpdateCollectionClusterSetupRequest{
-		CollectionName: collectionName,
-		Operation: &UpdateCollectionClusterSetupRequest_ReplicateShard{
-			ReplicateShard: replicateShard,
-		},
-	}
-}
-
-// Creates a *UpdateCollectionClusterSetupRequest to abort a shard transfer.
-//
-//nolint:lll	// Ignoring the long line length for naming consistency.
-func NewUpdateCollectionClusterAbortTransfer(collectionName string, abortTransfer *AbortShardTransfer) *UpdateCollectionClusterSetupRequest {
-	return &UpdateCollectionClusterSetupRequest{
-		CollectionName: collectionName,
-		Operation: &UpdateCollectionClusterSetupRequest_AbortTransfer{
-			AbortTransfer: abortTransfer,
-		},
-	}
-}
-
-// Creates a *UpdateCollectionClusterSetupRequest to drop a replica.
-//
-//nolint:lll	// Ignoring the long line length for naming consistency.
-func NewUpdateCollectionClusterDropReplica(collectionName string, dropReplica *Replica) *UpdateCollectionClusterSetupRequest {
-	return &UpdateCollectionClusterSetupRequest{
-		CollectionName: collectionName,
-		Operation: &UpdateCollectionClusterSetupRequest_DropReplica{
-			DropReplica: dropReplica,
-		},
-	}
-}
-
-// Creates a *UpdateCollectionClusterSetupRequest to create a shard key.
-//
-//nolint:lll	// Ignoring the long line length for naming consistency.
-func NewUpdateCollectionClusterCreateShardKey(collectionName string, createShardKey *CreateShardKey) *UpdateCollectionClusterSetupRequest {
-	return &UpdateCollectionClusterSetupRequest{
-		CollectionName: collectionName,
-		Operation: &UpdateCollectionClusterSetupRequest_CreateShardKey{
-			CreateShardKey: createShardKey,
-		},
-	}
-}
-
-// Creates a *UpdateCollectionClusterSetupRequest to delete a shard key.
-//
-//nolint:lll	// Ignoring the long line length for naming consistency.
-func NewUpdateCollectionClusterDeleteShardKey(collectionName string, deleteShardKey *DeleteShardKey) *UpdateCollectionClusterSetupRequest {
-	return &UpdateCollectionClusterSetupRequest{
-		CollectionName: collectionName,
-		Operation: &UpdateCollectionClusterSetupRequest_DeleteShardKey{
-			DeleteShardKey: deleteShardKey,
-		},
-	}
-}
-
-// Creates a *UpdateCollectionClusterSetupRequest to restart a transfer.
-//
-//nolint:lll	// Ignoring the long line length for naming consistency.
-func NewUpdateCollectionClusterRestartTransfer(collectionName string, restartTransfer *RestartTransfer) *UpdateCollectionClusterSetupRequest {
-	return &UpdateCollectionClusterSetupRequest{
-		CollectionName: collectionName,
-		Operation: &UpdateCollectionClusterSetupRequest_RestartTransfer{
-			RestartTransfer: restartTransfer,
-		},
-	}
-}
-
-// Creates a *UpdateCollectionClusterSetupRequest to replicate points.
-//
-//nolint:lll	// Ignoring the long line length for naming consistency.
-func NewUpdateCollectionClusterReplicatePoints(collectionName string, replicatePoints *ReplicatePoints) *UpdateCollectionClusterSetupRequest {
-	return &UpdateCollectionClusterSetupRequest{
-		CollectionName: collectionName,
-		Operation: &UpdateCollectionClusterSetupRequest_ReplicatePoints{
-			ReplicatePoints: replicatePoints,
 		},
 	}
 }
