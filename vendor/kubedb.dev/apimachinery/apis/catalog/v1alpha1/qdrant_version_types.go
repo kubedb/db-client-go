@@ -1,5 +1,5 @@
 /*
-Copyright AppsCode Inc. and Contributors
+Copyright 2024.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,60 +21,61 @@ import (
 )
 
 const (
-	ResourceCodeMilvusVersion     = "mvversion"
-	ResourceKindMilvusVersion     = "MilvusVersion"
-	ResourceSingularMilvusVersion = "milvusversion"
-	ResourcePluralMilvusVersion   = "milvusversions"
+	ResourceCodeQdrantVersion     = "qdversion"
+	ResourceKindQdrantVersion     = "QdrantVersion"
+	ResourceSingularQdrantVersion = "qdrantversion"
+	ResourcePluralQdrantVersion   = "qdrantversions"
 )
 
-// Package v1alpha2 contains API Schema definitions for the  v1alpha2 API group.
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +kubebuilder:object:root=true
+// QdrantVersion defines a Qdrant database version.
+
+// +genclient
 // +genclient:nonNamespaced
-// +kubebuilder:resource:path=milvusversions,singular=milvusversion,scope=Cluster,shortName=mvversion,categories={catalog,kubedb,appscode}
+// +genclient:skipVerbs=updateStatus
+// +k8s:openapi-gen=true
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// +kubebuilder:object:root=true
+// +kubebuilder:resource:path=qdrantversions,singular=qdrantversion,scope=Cluster,shortName=qdversion,categories={catalog,kubedb,appscode}
 // +kubebuilder:printcolumn:name="Version",type="string",JSONPath=".spec.version"
 // +kubebuilder:printcolumn:name="DB_IMAGE",type="string",JSONPath=".spec.db.image"
 // +kubebuilder:printcolumn:name="Deprecated",type="boolean",JSONPath=".spec.deprecated"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
-type MilvusVersion struct {
-	metav1.TypeMeta   `json:",inline"`
+type QdrantVersion struct {
+	metav1.TypeMeta   `json:",inline,omitempty"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              MilvusVersionSpec `json:"spec,omitempty"`
+	Spec              QdrantVersionSpec `json:"spec,omitempty"`
 }
 
-// +k8s:deepcopy-gen=true
-type MilvusVersionSpec struct {
+// QdrantVersionSpec is the spec for Qdrant version
+type QdrantVersionSpec struct {
 	// Version
 	Version string `json:"version"`
-
-	// Etcd Version
-	EtcdVersion string `json:"etcdVersion"`
-
 	// Database Image
-	DB MilvusDatabase `json:"db"`
-
+	DB QdrantVersionDatabase `json:"db"`
 	// Deprecated versions usable but regarded as obsolete and best avoided, typically due to having been superseded.
 	// +optional
 	Deprecated bool `json:"deprecated,omitempty"`
-
 	// SecurityContext is for the additional config for the DB container
 	// +optional
 	SecurityContext SecurityContext `json:"securityContext"`
-
-	// +optional
-	UI []ChartInfo `json:"ui,omitempty"`
 	// update constraints
 	UpdateConstraints UpdateConstraints `json:"updateConstraints,omitempty"`
+	// +optional
+	UI []ChartInfo `json:"ui,omitempty"`
 }
 
-// +k8s:deepcopy-gen=true
-type MilvusDatabase struct {
+// QdrantVersionDatabase is the Qdrant Database image
+type QdrantVersionDatabase struct {
 	Image string `json:"image"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type MilvusVersionList struct {
+
+// QdrantVersionList is a list of QdrantVersions
+type QdrantVersionList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []MilvusVersion `json:"items"`
+	// Items is a list of QdrantVersion CRD objects
+	Items []QdrantVersion `json:"items"`
 }

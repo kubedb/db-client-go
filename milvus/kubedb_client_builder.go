@@ -2,12 +2,13 @@ package milvus
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/milvus-io/milvus/client/v2/milvusclient"
-	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	core "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -37,33 +38,39 @@ func (o *KubeDBClientBuilder) GetMilvusClient() (*milvusclient.Client, error) {
 	}
 
 	addr := o.db.ServiceDNS()
-	var username, password string
 
 	config := &milvusclient.ClientConfig{
 		Address: addr,
 	}
 
-	// Case 1: Security disabled
 	if !o.db.Spec.DisableSecurity {
-		if o.db.Spec.AuthSecret != nil && o.db.Spec.AuthSecret.ExternallyManaged {
-			// Case 2: Auth externally managed → fetch from Secret
-			var err error
-			username, err = o.db.GetUsername(o.ctx, o.kc)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to read username from auth secret")
-			}
-			password, err = o.db.GetPassword(o.ctx, o.kc)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to read password from auth secret")
-			}
-			config.Username = username
-			config.Password = password
+		if o.db.Spec.AuthSecret == nil {
+			return nil, fmt.Errorf("auth secret is not specified")
 		}
-	}
-	// store the client outside the retry function
-	var milvusClient *milvusclient.Client
 
-	// Step 1: Dial
+		secretName := o.db.GetAuthSecretName()
+		var secret core.Secret
+		if err := o.kc.Get(o.ctx, client.ObjectKey{
+			Namespace: o.db.Namespace,
+			Name:      secretName,
+		}, &secret); err != nil {
+			return nil, fmt.Errorf("failed to get auth secret %q: %w", secretName, err)
+		}
+
+		user, ok := secret.Data[core.BasicAuthUsernameKey]
+		if !ok {
+			return nil, fmt.Errorf("username is missing in secret %q", secretName)
+		}
+
+		pass, ok := secret.Data[core.BasicAuthPasswordKey]
+		if !ok {
+			return nil, fmt.Errorf("password is missing in secret %q", secretName)
+		}
+
+		config.Username = string(user)
+		config.Password = string(pass)
+	}
+
 	conn, err := grpc.Dial(config.Address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithBlock(),
@@ -75,7 +82,6 @@ func (o *KubeDBClientBuilder) GetMilvusClient() (*milvusclient.Client, error) {
 	}
 	conn.Close()
 
-	// Step 2: Create client
 	ctx, cancel := context.WithTimeout(o.ctx, 30*time.Second)
 	defer cancel()
 
@@ -85,6 +91,5 @@ func (o *KubeDBClientBuilder) GetMilvusClient() (*milvusclient.Client, error) {
 		return nil, err
 	}
 
-	milvusClient = client
-	return milvusClient, nil
+	return client, nil
 }

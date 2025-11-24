@@ -4,7 +4,7 @@ metadata:
   creationTimestamp: null
   labels:
     app.kubernetes.io/name: kubedb
-  name: milvusversions.catalog.kubedb.com
+  name: qdrantversions.catalog.kubedb.com
 spec:
   group: catalog.kubedb.com
   names:
@@ -12,12 +12,12 @@ spec:
     - catalog
     - kubedb
     - appscode
-    kind: MilvusVersion
-    listKind: MilvusVersionList
-    plural: milvusversions
+    kind: QdrantVersion
+    listKind: QdrantVersionList
+    plural: qdrantversions
     shortNames:
-    - mvversion
-    singular: milvusversion
+    - qdversion
+    singular: qdrantversion
   scope: Cluster
   versions:
   - additionalPrinterColumns:
@@ -54,8 +54,6 @@ spec:
                 type: object
               deprecated:
                 type: boolean
-              etcdVersion:
-                type: string
               securityContext:
                 properties:
                   runAsUser:
@@ -92,7 +90,6 @@ spec:
                 type: string
             required:
             - db
-            - etcdVersion
             - version
             type: object
         type: object
