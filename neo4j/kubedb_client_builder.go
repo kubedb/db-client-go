@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"strings"
+
 	"github.com/go-logr/logr"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	core "k8s.io/api/core/v1"
@@ -14,7 +17,6 @@ import (
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	apiutils "kubedb.dev/apimachinery/pkg/utils"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 )
 
 type KubeDBClientBuilder struct {
@@ -49,7 +51,7 @@ func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 		return nil, fmt.Errorf("KubeDBClientBuilder is nil")
 	}
 	if o.db == nil {
-		return nil, fmt.Errorf("Neo4j object is nil")
+		return nil, fmt.Errorf("neo4j object is nil")
 	}
 	if o.kc == nil {
 		return nil, fmt.Errorf("kubernetes client is nil")
@@ -65,14 +67,13 @@ func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 	}
 
 	// Construct URL - use default service if podName not provided
-	//if o.podName != "" {
-	//	o.url = fmt.Sprintf("neo4j://%s.%s.%s.svc.%s:%d", o.podName, o.db.ServiceName(), o.db.Namespace, domain, api.Neo4jBoltPort)
-	//} else {
-	//	o.url = fmt.Sprintf("neo4j://%s.%s.svc.%s:%d", o.db.GoverningServiceName(), o.db.Namespace, domain, api.Neo4jBoltPort)
-	//}
-	o.url = fmt.Sprintf("neo4j://localhost:%d", kubedb.Neo4jBoltPort)
+	if o.podName != "" {
+		o.url = fmt.Sprintf("neo4j://%s.%s.%s.svc.%s:%d", o.podName, o.db.GoverningServiceName(), o.db.Namespace, domain, kubedb.Neo4jBoltPort)
+	} else {
+		o.url = fmt.Sprintf("neo4j://%s.%s.svc.%s:%d", o.db.ServiceName(), o.db.Namespace, domain, kubedb.Neo4jBoltPort)
+	}
 
-	klog.V(2).Infof("Attempting to connect to Neo4j at: %s", o.url)
+	klog.V(3).Infof("Attempting to connect to Neo4j at: %s", o.url)
 
 	var dbUser, dbPassword string
 	authSecret := &core.Secret{}
@@ -133,6 +134,7 @@ func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 		DriverWithContext: driver,
 	}, nil
 }
+
 func (c *Client) ExecuteQuery(ctx context.Context, query string, params map[string]any, dbName string) (*neo4j.EagerResult, error) {
 	return neo4j.ExecuteQuery(ctx, c, query, params, neo4j.EagerResultTransformer,
 		neo4j.ExecuteQueryWithDatabase(dbName))
