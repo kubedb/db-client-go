@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"strings"
 
@@ -111,7 +112,13 @@ func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 	}
 
 	// Create driver and check for errors immediately
-	driver, err := neo4j.NewDriverWithContext(o.url, neo4j.BasicAuth(dbUser, dbPassword, ""))
+	driver, err := neo4j.NewDriverWithContext(o.url, neo4j.BasicAuth(dbUser, dbPassword, ""), func(c *neo4j.Config) {
+		c.SocketConnectTimeout = 60 * time.Second
+		c.ConnectionAcquisitionTimeout = 60 * time.Second
+		c.MaxTransactionRetryTime = 60 * time.Second
+		c.MaxConnectionLifetime = 30 * time.Minute
+		c.MaxConnectionPoolSize = 100
+	})
 	if o.db.Spec.DisableSecurity {
 		driver, err = neo4j.NewDriverWithContext(o.url, neo4j.NoAuth())
 	}
