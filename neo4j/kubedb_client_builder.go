@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/config"
 	core "k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -112,7 +113,7 @@ func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 	}
 
 	// Create driver and check for errors immediately
-	driver, err := neo4j.NewDriverWithContext(o.url, neo4j.BasicAuth(dbUser, dbPassword, ""), func(c *neo4j.Config) {
+	driver, err := neo4j.NewDriverWithContext(o.url, neo4j.BasicAuth(dbUser, dbPassword, ""), func(c *config.Config) {
 		c.SocketConnectTimeout = 60 * time.Second
 		c.ConnectionAcquisitionTimeout = 60 * time.Second
 		c.MaxTransactionRetryTime = 60 * time.Second
