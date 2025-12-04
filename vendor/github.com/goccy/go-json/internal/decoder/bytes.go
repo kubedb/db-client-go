@@ -23,8 +23,9 @@ func byteUnmarshalerSliceDecoder(typ *runtime.Type, structName string, fieldName
 		unmarshalDecoder = newUnmarshalJSONDecoder(runtime.PtrTo(typ), structName, fieldName)
 	case runtime.PtrTo(typ).Implements(unmarshalTextType):
 		unmarshalDecoder = newUnmarshalTextDecoder(runtime.PtrTo(typ), structName, fieldName)
-	default:
-		unmarshalDecoder, _ = compileUint8(typ, structName, fieldName)
+	}
+	if unmarshalDecoder == nil {
+		return nil
 	}
 	return newSliceDecoder(unmarshalDecoder, typ, 1, structName, fieldName)
 }

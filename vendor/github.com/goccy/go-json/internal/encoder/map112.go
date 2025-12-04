@@ -1,4 +1,3 @@
-//go:build !go1.13
 // +build !go1.13
 
 package encoder
@@ -6,4 +5,4 @@ package encoder
 import "unsafe"
 
 //go:linkname MapIterValue reflect.mapitervalue
-func MapIterValue(it *mapIter) unsafe.Pointer
+func MapIterValue(it unsafe.Pointer) unsafe.Pointer
