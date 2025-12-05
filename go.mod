@@ -25,6 +25,7 @@ require (
 	github.com/lib/pq v1.10.7
 	github.com/michaelklishin/rabbit-hole/v3 v3.1.0
 	github.com/microsoft/go-mssqldb v1.6.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.28.4
 	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/pkg/errors v0.9.1
