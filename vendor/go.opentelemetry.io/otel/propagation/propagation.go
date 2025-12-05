@@ -19,7 +19,7 @@ type TextMapCarrier interface {
 	// must never be done outside of a new major release.
 
 	// Set stores the key-value pair.
-	Set(key, value string)
+	Set(key string, value string)
 	// DO NOT CHANGE: any modification will not be backwards compatible and
 	// must never be done outside of a new major release.
 
@@ -64,7 +64,7 @@ func (hc HeaderCarrier) Get(key string) string {
 }
 
 // Set stores the key-value pair.
-func (hc HeaderCarrier) Set(key, value string) {
+func (hc HeaderCarrier) Set(key string, value string) {
 	http.Header(hc).Set(key, value)
 }
 

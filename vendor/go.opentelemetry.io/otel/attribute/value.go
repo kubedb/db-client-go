@@ -23,7 +23,7 @@ type Value struct {
 	vtype    Type
 	numeric  uint64
 	stringly string
-	slice    any
+	slice    interface{}
 }
 
 const (
@@ -200,8 +200,8 @@ func (v Value) asStringSlice() []string {
 
 type unknownValueType struct{}
 
-// AsInterface returns Value's data as any.
-func (v Value) AsInterface() any {
+// AsInterface returns Value's data as interface{}.
+func (v Value) AsInterface() interface{} {
 	switch v.Type() {
 	case BOOL:
 		return v.AsBool()
@@ -263,7 +263,7 @@ func (v Value) Emit() string {
 func (v Value) MarshalJSON() ([]byte, error) {
 	var jsonVal struct {
 		Type  string
-		Value any
+		Value interface{}
 	}
 	jsonVal.Type = v.Type().String()
 	jsonVal.Value = v.AsInterface()
