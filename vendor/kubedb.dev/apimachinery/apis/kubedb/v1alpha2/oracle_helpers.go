@@ -294,6 +294,13 @@ func (o *Oracle) SetDefaults(kc client.Client) {
 		o.Spec.StorageType = StorageTypeDurable
 	}
 
+	if o.Spec.AuthSecret == nil {
+		o.Spec.AuthSecret = &SecretReference{}
+	}
+	if o.Spec.AuthSecret.Kind == "" {
+		o.Spec.AuthSecret.Kind = kubedb.ResourceKindSecret
+	}
+
 	o.SetListenerDefaults()
 	o.initializePodTemplates()
 
