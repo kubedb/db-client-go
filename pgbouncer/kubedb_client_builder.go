@@ -22,8 +22,10 @@ import (
 
 	"kubedb.dev/apimachinery/apis/kubedb"
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
+	"kubedb.dev/apimachinery/pkg/lib"
 
 	_ "github.com/lib/pq"
+	vsecretapi "go.virtual-secrets.dev/apimachinery/apis/virtual/v1alpha1"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
@@ -152,23 +154,32 @@ func (o *KubeDBClientBuilder) GetBackendAuth() (string, string, error) {
 		return "", "", fmt.Errorf("backend postgres auth secret unspecified for pgBouncer %s/%s", o.pgbouncer.Namespace, o.pgbouncer.Name)
 	}
 
-	var secret core.Secret
-	err = o.kc.Get(o.ctx, client.ObjectKey{Namespace: appBinding.Namespace, Name: appBinding.Spec.Secret.Name}, &secret)
-	if err != nil {
-		return "", "", err
-	}
+	if appBinding.Spec.Secret.APIGroup != vsecretapi.GroupName {
+		var secret core.Secret
+		err = o.kc.Get(o.ctx, client.ObjectKey{Namespace: appBinding.Namespace, Name: appBinding.Spec.Secret.Name}, &secret)
+		if err != nil {
+			return "", "", err
+		}
 
-	user, present := secret.Data[core.BasicAuthUsernameKey]
-	if !present {
-		return "", "", fmt.Errorf("error getting backend username")
-	}
+		if err = lib.ValidateAuthSecret(&secret); err != nil {
+			return "", "", err
+		}
+		return string(secret.Data[core.BasicAuthUsernameKey]), string(secret.Data[core.BasicAuthPasswordKey]), nil
+	} else {
+		vSecret := &vsecretapi.Secret{}
+		err = o.kc.Get(context.TODO(), types.NamespacedName{
+			Name:      appBinding.Spec.Secret.Name,
+			Namespace: appBinding.Namespace,
+		}, vSecret)
+		if err != nil {
+			return "", "", err
+		}
 
-	pass, present := secret.Data[core.BasicAuthPasswordKey]
-	if !present {
-		return "", "", fmt.Errorf("error getting backend password")
+		if err = lib.ValidateVirtualAuthSecret(vSecret); err != nil {
+			return "", "", err
+		}
+		return string(vSecret.Data[core.BasicAuthUsernameKey]), string(vSecret.Data[core.BasicAuthPasswordKey]), nil
 	}
-
-	return string(user), string(pass), nil
 }
 
 func (o *KubeDBClientBuilder) getTLSConfig(ctx context.Context) (*certholder.Paths, error) {
