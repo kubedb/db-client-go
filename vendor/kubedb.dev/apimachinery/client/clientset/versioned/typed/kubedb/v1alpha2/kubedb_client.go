@@ -35,6 +35,7 @@ type KubedbV1alpha2Interface interface {
 	ElasticsearchesGetter
 	EtcdsGetter
 	FerretDBsGetter
+	HanaDBsGetter
 	HazelcastsGetter
 	IgnitesGetter
 	KafkasGetter
@@ -43,12 +44,14 @@ type KubedbV1alpha2Interface interface {
 	MemcachedsGetter
 	MongoDBsGetter
 	MySQLsGetter
+	Neo4jsGetter
 	OraclesGetter
 	PerconaXtraDBsGetter
 	PgBouncersGetter
 	PgpoolsGetter
 	PostgresesGetter
 	ProxySQLsGetter
+	QdrantsGetter
 	RabbitMQsGetter
 	RedisesGetter
 	RedisSentinelsGetter
@@ -86,6 +89,10 @@ func (c *KubedbV1alpha2Client) FerretDBs(namespace string) FerretDBInterface {
 	return newFerretDBs(c, namespace)
 }
 
+func (c *KubedbV1alpha2Client) HanaDBs(namespace string) HanaDBInterface {
+	return newHanaDBs(c, namespace)
+}
+
 func (c *KubedbV1alpha2Client) Hazelcasts(namespace string) HazelcastInterface {
 	return newHazelcasts(c, namespace)
 }
@@ -118,6 +125,10 @@ func (c *KubedbV1alpha2Client) MySQLs(namespace string) MySQLInterface {
 	return newMySQLs(c, namespace)
 }
 
+func (c *KubedbV1alpha2Client) Neo4js(namespace string) Neo4jInterface {
+	return newNeo4js(c, namespace)
+}
+
 func (c *KubedbV1alpha2Client) Oracles(namespace string) OracleInterface {
 	return newOracles(c, namespace)
 }
@@ -140,6 +151,10 @@ func (c *KubedbV1alpha2Client) Postgreses(namespace string) PostgresInterface {
 
 func (c *KubedbV1alpha2Client) ProxySQLs(namespace string) ProxySQLInterface {
 	return newProxySQLs(c, namespace)
+}
+
+func (c *KubedbV1alpha2Client) Qdrants(namespace string) QdrantInterface {
+	return newQdrants(c, namespace)
 }
 
 func (c *KubedbV1alpha2Client) RabbitMQs(namespace string) RabbitMQInterface {

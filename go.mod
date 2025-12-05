@@ -34,13 +34,13 @@ require (
 	go.mongodb.org/mongo-driver v1.14.0
 	go.virtual-secrets.dev/apimachinery v0.0.1
 	gomodules.xyz/pointer v0.1.0
-	k8s.io/api v0.32.3
-	k8s.io/apimachinery v0.32.3
-	k8s.io/client-go v0.32.3
+	k8s.io/api v0.32.8
+	k8s.io/apimachinery v0.32.8
+	k8s.io/client-go v0.32.8
 	k8s.io/klog/v2 v2.130.1
-	kmodules.xyz/client-go v0.32.7
+	kmodules.xyz/client-go v0.32.9
 	kmodules.xyz/custom-resources v0.32.2
-	kubedb.dev/apimachinery v0.59.0
+	kubedb.dev/apimachinery v0.59.1-0.20251204132717-657fbb84a6dd
 	sigs.k8s.io/controller-runtime v0.20.4
 	xorm.io/xorm v1.3.9
 )
@@ -161,17 +161,17 @@ require (
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.32.3 // indirect
+	k8s.io/apiextensions-apiserver v0.32.8 // indirect
 	k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff // indirect
 	k8s.io/utils v0.0.0-20241210054802-24370beab758 // indirect
 	kmodules.xyz/apiversion v0.2.0 // indirect
-	kmodules.xyz/monitoring-agent-api v0.32.1 // indirect
+	kmodules.xyz/monitoring-agent-api v0.32.4 // indirect
 	kmodules.xyz/objectstore-api v0.32.0 // indirect
 	kmodules.xyz/offshoot-api v0.32.0 // indirect
 	kmodules.xyz/prober v0.32.0 // indirect
 	kmodules.xyz/resource-metadata v0.32.1 // indirect
 	kubeops.dev/operator-shard-manager v0.0.3 // indirect
-	kubeops.dev/petset v0.0.12 // indirect
+	kubeops.dev/petset v0.0.14 // indirect
 	kubeops.dev/sidekick v0.0.11 // indirect
 	kubestash.dev/apimachinery v0.21.0 // indirect
 	modernc.org/memory v1.5.0 // indirect

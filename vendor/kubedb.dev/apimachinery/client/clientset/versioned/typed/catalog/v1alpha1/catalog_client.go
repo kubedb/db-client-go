@@ -35,6 +35,7 @@ type CatalogV1alpha1Interface interface {
 	ElasticsearchVersionsGetter
 	EtcdVersionsGetter
 	FerretDBVersionsGetter
+	HanaDBVersionsGetter
 	HazelcastVersionsGetter
 	IgniteVersionsGetter
 	KafkaConnectorVersionsGetter
@@ -44,12 +45,14 @@ type CatalogV1alpha1Interface interface {
 	MemcachedVersionsGetter
 	MongoDBVersionsGetter
 	MySQLVersionsGetter
+	Neo4jVersionsGetter
 	OracleVersionsGetter
 	PerconaXtraDBVersionsGetter
 	PgBouncerVersionsGetter
 	PgpoolVersionsGetter
 	PostgresVersionsGetter
 	ProxySQLVersionsGetter
+	QdrantVersionsGetter
 	RabbitMQVersionsGetter
 	RedisVersionsGetter
 	SchemaRegistryVersionsGetter
@@ -85,6 +88,10 @@ func (c *CatalogV1alpha1Client) EtcdVersions() EtcdVersionInterface {
 
 func (c *CatalogV1alpha1Client) FerretDBVersions() FerretDBVersionInterface {
 	return newFerretDBVersions(c)
+}
+
+func (c *CatalogV1alpha1Client) HanaDBVersions() HanaDBVersionInterface {
+	return newHanaDBVersions(c)
 }
 
 func (c *CatalogV1alpha1Client) HazelcastVersions() HazelcastVersionInterface {
@@ -123,6 +130,10 @@ func (c *CatalogV1alpha1Client) MySQLVersions() MySQLVersionInterface {
 	return newMySQLVersions(c)
 }
 
+func (c *CatalogV1alpha1Client) Neo4jVersions() Neo4jVersionInterface {
+	return newNeo4jVersions(c)
+}
+
 func (c *CatalogV1alpha1Client) OracleVersions() OracleVersionInterface {
 	return newOracleVersions(c)
 }
@@ -145,6 +156,10 @@ func (c *CatalogV1alpha1Client) PostgresVersions() PostgresVersionInterface {
 
 func (c *CatalogV1alpha1Client) ProxySQLVersions() ProxySQLVersionInterface {
 	return newProxySQLVersions(c)
+}
+
+func (c *CatalogV1alpha1Client) QdrantVersions() QdrantVersionInterface {
+	return newQdrantVersions(c)
 }
 
 func (c *CatalogV1alpha1Client) RabbitMQVersions() RabbitMQVersionInterface {
