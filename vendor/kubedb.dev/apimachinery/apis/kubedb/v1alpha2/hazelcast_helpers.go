@@ -24,6 +24,7 @@ import (
 
 	"kubedb.dev/apimachinery/apis"
 	catalog "kubedb.dev/apimachinery/apis/catalog/v1alpha1"
+	"kubedb.dev/apimachinery/apis/kubedb"
 	kube "kubedb.dev/apimachinery/apis/kubedb"
 	"kubedb.dev/apimachinery/crds"
 
@@ -233,6 +234,15 @@ func (h *Hazelcast) setDefaultProbes(podTemplate *ofst.PodTemplateSpec) {
 }
 
 func (h *Hazelcast) SetTLSDefaults() {
+	if !h.Spec.DisableSecurity {
+		if h.Spec.AuthSecret == nil {
+			h.Spec.AuthSecret = &SecretReference{}
+		}
+		if h.Spec.AuthSecret.Kind == "" {
+			h.Spec.AuthSecret.Kind = kube.ResourceKindSecret
+		}
+	}
+
 	if h.Spec.TLS == nil || h.Spec.TLS.IssuerRef == nil {
 		return
 	}
@@ -425,4 +435,28 @@ func (h *Hazelcast) CertSecretVolumeName(alias HazelcastCertificateAlias) string
 // CertSecretVolumeMountPath returns the CertSecretVolumeMountPath
 func (h *Hazelcast) CertSecretVolumeMountPath(configDir string, cert string) string {
 	return filepath.Join(configDir, cert)
+}
+
+type HazelcastBind struct {
+	*Hazelcast
+}
+
+var _ DBBindInterface = &HazelcastBind{}
+
+func (d *HazelcastBind) ServiceNames() (string, string) {
+	return d.ServiceName(), d.ServiceName()
+}
+
+func (d *HazelcastBind) Ports() (int, int) {
+	dbPort := kubedb.HazelcastRestPort
+	uiPort := kubedb.HazelcastUIPort
+	return dbPort, uiPort
+}
+
+func (d *HazelcastBind) SecretName() string {
+	return d.GetAuthSecretName()
+}
+
+func (d *HazelcastBind) CertSecretName() string {
+	return d.GetCertSecretName(HazelcastClientCert)
 }

@@ -258,6 +258,15 @@ func (r *Redis) SetDefaults(rdVersion *catalog.RedisVersion) error {
 		r.Spec.StorageType = StorageTypeDurable
 	}
 
+	if !r.Spec.DisableAuth {
+		if r.Spec.AuthSecret == nil {
+			r.Spec.AuthSecret = &SecretReference{}
+		}
+		if r.Spec.AuthSecret.Kind == "" {
+			r.Spec.AuthSecret.Kind = kubedb.ResourceKindSecret
+		}
+	}
+
 	r.setDefaultContainerSecurityContext(rdVersion, &r.Spec.PodTemplate)
 	r.setDefaultContainerResourceLimits(&r.Spec.PodTemplate)
 
@@ -313,7 +322,7 @@ func (r *RedisSpec) GetPersistentSecrets() []string {
 	}
 
 	var secrets []string
-	if r.AuthSecret != nil {
+	if !IsVirtualAuthSecretReferred(r.AuthSecret) && r.AuthSecret != nil && r.AuthSecret.Name != "" {
 		secrets = append(secrets, r.AuthSecret.Name)
 	}
 	return secrets
