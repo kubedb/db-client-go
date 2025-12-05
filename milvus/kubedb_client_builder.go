@@ -71,19 +71,21 @@ func (o *KubeDBClientBuilder) GetMilvusClient() (*milvusclient.Client, error) {
 		config.Password = string(pass)
 	}
 
-	conn, err := grpc.Dial(config.Address,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
-		grpc.WithTimeout(10*time.Second),
-	)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	conn, err := grpc.NewClient(config.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		klog.Warningf("gRPC dial failed: %v", err)
+		return nil, err
+	}
+	defer conn.Close()
+
 	if err != nil {
 		klog.Warningf("gRPC dial failed: %v", err)
 		return nil, err
 	}
 	conn.Close()
-
-	ctx, cancel := context.WithTimeout(o.ctx, 30*time.Second)
-	defer cancel()
 
 	client, err := milvusclient.New(ctx, config)
 	if err != nil {
