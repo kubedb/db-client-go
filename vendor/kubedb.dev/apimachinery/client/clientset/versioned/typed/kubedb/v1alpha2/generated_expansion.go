@@ -30,6 +30,8 @@ type EtcdExpansion interface{}
 
 type FerretDBExpansion interface{}
 
+type HanaDBExpansion interface{}
+
 type HazelcastExpansion interface{}
 
 type IgniteExpansion interface{}
@@ -46,6 +48,8 @@ type MongoDBExpansion interface{}
 
 type MySQLExpansion interface{}
 
+type Neo4jExpansion interface{}
+
 type OracleExpansion interface{}
 
 type PerconaXtraDBExpansion interface{}
@@ -57,6 +61,8 @@ type PgpoolExpansion interface{}
 type PostgresExpansion interface{}
 
 type ProxySQLExpansion interface{}
+
+type QdrantExpansion interface{}
 
 type RabbitMQExpansion interface{}
 

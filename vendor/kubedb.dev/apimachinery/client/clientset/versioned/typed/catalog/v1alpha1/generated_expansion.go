@@ -30,6 +30,8 @@ type EtcdVersionExpansion interface{}
 
 type FerretDBVersionExpansion interface{}
 
+type HanaDBVersionExpansion interface{}
+
 type HazelcastVersionExpansion interface{}
 
 type IgniteVersionExpansion interface{}
@@ -48,6 +50,8 @@ type MongoDBVersionExpansion interface{}
 
 type MySQLVersionExpansion interface{}
 
+type Neo4jVersionExpansion interface{}
+
 type OracleVersionExpansion interface{}
 
 type PerconaXtraDBVersionExpansion interface{}
@@ -59,6 +63,8 @@ type PgpoolVersionExpansion interface{}
 type PostgresVersionExpansion interface{}
 
 type ProxySQLVersionExpansion interface{}
+
+type QdrantVersionExpansion interface{}
 
 type RabbitMQVersionExpansion interface{}
 
