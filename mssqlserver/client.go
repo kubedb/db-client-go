@@ -26,7 +26,7 @@ type XormClient struct {
 
 func (xc *XormClient) Close() error {
 	if xc.Engine != nil {
-		return xc.Engine.Close()
+		return xc.Engine.Close() // nolint:errcheck
 	}
 	return nil
 }

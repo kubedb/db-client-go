@@ -21,8 +21,9 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/go-logr/logr"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+
+	"github.com/go-logr/logr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 

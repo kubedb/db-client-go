@@ -23,8 +23,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-resty/resty/v2"
 	kapi "kubedb.dev/apimachinery/apis/kafka/v1alpha1"
+
+	"github.com/go-resty/resty/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -92,5 +93,4 @@ func (o *KubeDBClientBuilder) GetSchemaRegistryClient() (*Client, error) {
 
 func GetConnectionURL(registry *kapi.SchemaRegistry) string {
 	return fmt.Sprintf("%s://%s.%s.svc:%d", registry.GetConnectionScheme(), registry.ServiceName(), registry.Namespace, kapi.ApicurioRegistryRESTPort)
-
 }

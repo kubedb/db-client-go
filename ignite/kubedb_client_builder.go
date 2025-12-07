@@ -25,6 +25,10 @@ import (
 	"net"
 	"time"
 
+	"kubedb.dev/apimachinery/apis/kubedb"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	apiutils "kubedb.dev/apimachinery/pkg/utils"
+
 	ignite "github.com/amsokol/ignite-go-client/binary/v1"
 	_ "github.com/amsokol/ignite-go-client/sql"
 	"github.com/go-logr/logr"
@@ -32,9 +36,6 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
-	"kubedb.dev/apimachinery/apis/kubedb"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
-	apiutils "kubedb.dev/apimachinery/pkg/utils"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -101,7 +102,7 @@ func (o *KubeDBClientBuilder) GetIgniteBinaryClient() (*BinaryClient, error) {
 	igniteConnectionInfo := o.GetIgniteConnectionInfo()
 
 	if !o.db.Spec.DisableSecurity {
-		err, username, password := o.GetUsernamePassword()
+		username, password, err := o.GetUsernamePassword()
 		if err != nil {
 			return nil, err
 		}
@@ -144,7 +145,7 @@ func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
 	dataSource := o.GetIgniteDataSource()
 
 	if !o.db.Spec.DisableSecurity {
-		err, username, password := o.GetUsernamePassword()
+		username, password, err := o.GetUsernamePassword()
 		if err != nil {
 			return nil, nil
 		}
@@ -169,7 +170,7 @@ func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
 	}, nil
 }
 
-func (o *KubeDBClientBuilder) GetUsernamePassword() (error, string, string) {
+func (o *KubeDBClientBuilder) GetUsernamePassword() (string, string, error) {
 	authSecret := &core.Secret{}
 
 	err := o.kc.Get(o.ctx, types.NamespacedName{
@@ -178,12 +179,12 @@ func (o *KubeDBClientBuilder) GetUsernamePassword() (error, string, string) {
 	}, authSecret)
 	if err != nil {
 		o.log.Error(err, "Failed to get auth-secret")
-		return errors.New("auth-secret is not found"), "", ""
+		return "", "", errors.New("auth-secret is not found")
 	}
 
 	username := string(authSecret.Data[core.BasicAuthUsernameKey])
 	password := string(authSecret.Data[core.BasicAuthPasswordKey])
-	return nil, username, password
+	return username, password, nil
 }
 
 func (igBin *BinaryClient) CreateCache(cacheName string) error {

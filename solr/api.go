@@ -67,7 +67,7 @@ type SLClient interface {
 	GetConfig() *Config
 	GetClient() *resty.Client
 	GetLog() logr.Logger
-	DecodeBackupResponse(data map[string]interface{}, collection string) ([]byte, error)
+	DecodeBackupResponse(data map[string]any, collection string) ([]byte, error)
 	MoveReplica(target string, replica string, collection string, async string) (*Response, error)
 	BalanceReplica(async string) (*Response, error)
 	AddRole(role, node string) (*Response, error)

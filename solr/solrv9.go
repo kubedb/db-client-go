@@ -337,11 +337,11 @@ func (sc *SLClientV9) GetLog() logr.Logger {
 	return sc.Config.log
 }
 
-func (sc *SLClientV9) DecodeBackupResponse(data map[string]interface{}, collection string) ([]byte, error) {
+func (sc *SLClientV9) DecodeBackupResponse(data map[string]any, collection string) ([]byte, error) {
 	sc.Config.log.V(5).Info("Decode Backup Data")
-	backupResponse, ok := data["response"].(map[string]interface{})
+	backupResponse, ok := data["response"].(map[string]any)
 	if !ok {
-		err := fmt.Errorf("didn't find status for collection %s\n", collection)
+		err := fmt.Errorf("didn't find status for collection %s", collection)
 		return nil, err
 	}
 	klog.Info("backup response ", backupResponse)
