@@ -44,9 +44,9 @@ type ResponseBody struct {
 }
 
 type Check struct {
-	Name   string                 `json:"name"`
-	Status string                 `json:"status"`
-	Data   map[string]interface{} `json:"data,omitempty"`
+	Name   string         `json:"name"`
+	Status string         `json:"status"`
+	Data   map[string]any `json:"data,omitempty"`
 }
 
 type Config struct {
@@ -76,7 +76,7 @@ func (cc *Client) GetSchemaRegistryHealth() (*Response, error) {
 // return overall status of the server
 func (cc *Client) IsSchemaRegistryHealthy(response *Response) (bool, error) {
 	defer func(Body io.ReadCloser) {
-		err := Body.Close()
+		err := Body.Close() // nolint:errcheck
 		if err != nil {
 			err1 := errors.Wrap(err, "failed to parse response body")
 			if err1 != nil {

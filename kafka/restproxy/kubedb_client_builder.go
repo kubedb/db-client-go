@@ -23,8 +23,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-resty/resty/v2"
 	kapi "kubedb.dev/apimachinery/apis/kafka/v1alpha1"
+
+	"github.com/go-resty/resty/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -92,5 +93,4 @@ func (o *KubeDBClientBuilder) GetRestProxyClient() (*Client, error) {
 
 func GetConnectionURL(restproxy *kapi.RestProxy) string {
 	return fmt.Sprintf("%s://%s.%s.svc:%d", restproxy.GetConnectionScheme(), restproxy.ServiceName(), restproxy.Namespace, kapi.RestProxyRESTPort)
-
 }

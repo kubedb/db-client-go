@@ -143,7 +143,7 @@ func (o *KubeDBClientBuilder) GetPostgresClient() (*Client, error) {
 	// ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	// defer cancel()
 	if err := db.PingContext(o.ctx); err != nil {
-		closeErr := db.Close()
+		closeErr := db.Close() // nolint:errcheck
 		if closeErr != nil {
 			klog.Errorf("Failed to close client. error: %v", closeErr)
 		}

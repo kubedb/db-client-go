@@ -73,7 +73,7 @@ func (cc *Client) GetKafkaBrokerList() (*Response, error) {
 // return overall status of the server
 func (cc *Client) IsBrokerAvailableForRequest(response *Response) (bool, error) {
 	defer func(Body io.ReadCloser) {
-		err := Body.Close()
+		err := Body.Close() // nolint:errcheck
 		if err != nil {
 			err1 := errors.Wrap(err, "failed to parse response body")
 			if err1 != nil {

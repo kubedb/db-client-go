@@ -102,7 +102,7 @@ func (o *KubeDBClientBuilder) GetRedisClient(ctx context.Context) (*Client, erro
 	rdClient := rd.NewClient(rdOpts)
 	_, err = rdClient.Ping(ctx).Result()
 	if err != nil {
-		closeErr := rdClient.Close()
+		closeErr := rdClient.Close() // nolint:errcheck
 		if closeErr != nil {
 			klog.Errorf("Failed to close client. error: %v", closeErr)
 		}
@@ -143,7 +143,7 @@ func (o *KubeDBClientBuilder) GetRedisClusterClient(ctx context.Context) (*Clust
 	rdClient := rd.NewClusterClient(rdClusterOpts)
 	_, err = rdClient.Ping(ctx).Result()
 	if err != nil {
-		closeErr := rdClient.Close()
+		closeErr := rdClient.Close() // nolint:errcheck
 		if closeErr != nil {
 			klog.Errorf("Failed to close client. error: %v", closeErr)
 		}

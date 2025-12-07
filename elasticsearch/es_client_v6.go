@@ -42,23 +42,23 @@ type ESClientV6 struct {
 	client *esv6.Client
 }
 
-func (es *ESClientV6) ClusterHealthInfo() (map[string]interface{}, error) {
+func (es *ESClientV6) ClusterHealthInfo() (map[string]any, error) {
 	res, err := es.client.Cluster.Health(
 		es.client.Cluster.Health.WithPretty(),
 	)
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer res.Body.Close() // nolint:errcheck
 
-	response := make(map[string]interface{})
+	response := make(map[string]any)
 	if err2 := json.NewDecoder(res.Body).Decode(&response); err2 != nil {
 		return nil, errors.Wrap(err2, "failed to parse the response body")
 	}
 	return response, nil
 }
 
-func (es *ESClientV6) NodesStats() (map[string]interface{}, error) {
+func (es *ESClientV6) NodesStats() (map[string]any, error) {
 	// todo: need to implement for version 6
 	return nil, nil
 }
@@ -76,7 +76,7 @@ func (es *ESClientV6) ShardStats() ([]ShardInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() // nolint:errcheck
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -92,7 +92,7 @@ func (es *ESClientV6) ShardStats() ([]ShardInfo, error) {
 }
 
 // GetIndicesInfo will return the indices info of an Elasticsearch database
-func (es *ESClientV6) GetIndicesInfo() ([]interface{}, error) {
+func (es *ESClientV6) GetIndicesInfo() ([]any, error) {
 	req := esapi.CatIndicesRequest{
 		Bytes:  "b", // will return resource size field into byte unit
 		Format: "json",
@@ -104,9 +104,9 @@ func (es *ESClientV6) GetIndicesInfo() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() // nolint:errcheck
 
-	indicesInfo := make([]interface{}, 0)
+	indicesInfo := make([]any, 0)
 	if err := json.NewDecoder(resp.Body).Decode(&indicesInfo); err != nil {
 		return nil, fmt.Errorf("failed to deserialize the response: %v", err)
 	}
@@ -121,9 +121,9 @@ func (es *ESClientV6) ClusterStatus() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer res.Body.Close()
+	defer res.Body.Close() // nolint:errcheck
 
-	response := make(map[string]interface{})
+	response := make(map[string]any)
 	if err2 := json.NewDecoder(res.Body).Decode(&response); err2 != nil {
 		return "", errors.Wrap(err2, "failed to parse the response body")
 	}
@@ -184,14 +184,14 @@ func (es *ESClientV6) GetClusterWriteStatus(ctx context.Context, db *dbapi.Elast
 
 	defer func(res *esapi.Response) {
 		if res != nil {
-			err3 = res.Body.Close()
+			err3 = res.Body.Close() // nolint:errcheck
 			if err3 != nil {
 				klog.Errorf("Failed to close write request response body, reason: %s", err3)
 			}
 		}
 	}(res)
 
-	responseBody := make(map[string]interface{})
+	responseBody := make(map[string]any)
 	if err4 := json.NewDecoder(res.Body).Decode(&responseBody); err4 != nil {
 		return errors.Wrap(err4, "Failed to decode response from write request")
 	}
@@ -223,7 +223,7 @@ func (es *ESClientV6) GetClusterReadStatus(ctx context.Context, db *dbapi.Elasti
 
 	defer func(res *esapi.Response) {
 		if res != nil {
-			err = res.Body.Close()
+			err = res.Body.Close() // nolint:errcheck
 			if err != nil {
 				klog.Errorf("failed to close read request response body, reason: %s", err)
 			}
@@ -268,7 +268,7 @@ func (es *ESClientV6) CountData(index string) (int, error) {
 	return 0, errors.New("not supported in es version 6")
 }
 
-func (es *ESClientV6) PutData(index, id string, data map[string]interface{}) error {
+func (es *ESClientV6) PutData(index, id string, data map[string]any) error {
 	return errors.New("not supported in es version 6")
 }
 
@@ -284,7 +284,7 @@ func (es *ESClientV6) DisableShardAllocation() error {
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+	defer res.Body.Close() // nolint:errcheck
 
 	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("received status code: %d", res.StatusCode)
@@ -305,7 +305,7 @@ func (es *ESClientV6) ReEnableShardAllocation() error {
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+	defer res.Body.Close() // nolint:errcheck
 
 	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("received status code: %d", res.StatusCode)
@@ -324,7 +324,7 @@ func (es *ESClientV6) CheckVersion() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer res.Body.Close()
+	defer res.Body.Close() // nolint:errcheck
 
 	nodeInfo := new(Info)
 	if err := json.NewDecoder(res.Body).Decode(&nodeInfo); err != nil {
@@ -345,9 +345,9 @@ func (es *ESClientV6) GetClusterStatus() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer res.Body.Close()
+	defer res.Body.Close() // nolint:errcheck
 
-	response := make(map[string]interface{})
+	response := make(map[string]any)
 	if err2 := json.NewDecoder(res.Body).Decode(&response); err2 != nil {
 		return "", errors.Wrap(err2, "failed to parse the response body")
 	}
@@ -368,20 +368,20 @@ func (es *ESClientV6) CountIndex() (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer res.Body.Close()
+	defer res.Body.Close() // nolint:errcheck
 
 	if res.IsError() {
 		return 0, fmt.Errorf("received status code: %d", res.StatusCode)
 	}
 
-	response := make(map[string]interface{})
+	response := make(map[string]any)
 	if err2 := json.NewDecoder(res.Body).Decode(&response); err2 != nil {
 		return 0, errors.Wrap(err2, "failed to parse the response body")
 	}
 	return len(response), nil
 }
 
-func (es *ESClientV6) GetData(_index, _type, _id string) (map[string]interface{}, error) {
+func (es *ESClientV6) GetData(_index, _type, _id string) (map[string]any, error) {
 	req := esapi.GetRequest{
 		Index:        _index,
 		DocumentType: _type,
@@ -394,13 +394,13 @@ func (es *ESClientV6) GetData(_index, _type, _id string) (map[string]interface{}
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer res.Body.Close() // nolint:errcheck
 
 	if res.IsError() {
 		return nil, fmt.Errorf("received status code: %d", res.StatusCode)
 	}
 
-	response := make(map[string]interface{})
+	response := make(map[string]any)
 	if err2 := json.NewDecoder(res.Body).Decode(&response); err2 != nil {
 		return nil, errors.Wrap(err2, "failed to parse the response body")
 	}
@@ -418,7 +418,7 @@ func (es *ESClientV6) CountNodes() (int64, error) {
 	if err != nil {
 		return -1, err
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() // nolint:errcheck
 
 	nodeInfo := new(NodeInfo)
 	if err := json.NewDecoder(resp.Body).Decode(&nodeInfo); err != nil {
@@ -446,7 +446,7 @@ func (es *ESClientV6) AddVotingConfigExclusions(nodes []string) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() // nolint:errcheck
 
 	if resp.StatusCode > 299 {
 		return fmt.Errorf("failed with response.StatusCode: %d", resp.StatusCode)
@@ -464,7 +464,7 @@ func (es *ESClientV6) DeleteVotingConfigExclusions() error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() // nolint:errcheck
 
 	if resp.StatusCode > 299 {
 		return fmt.Errorf("failed with response.StatusCode: %d", resp.StatusCode)
@@ -493,7 +493,7 @@ func (es *ESClientV6) ExcludeNodeAllocation(nodes []string) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() // nolint:errcheck
 
 	if resp.IsError() {
 		return fmt.Errorf("received status code: %d", resp.StatusCode)
@@ -514,7 +514,7 @@ func (es *ESClientV6) DeleteNodeAllocationExclusion() error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() // nolint:errcheck
 
 	if resp.IsError() {
 		return fmt.Errorf("received status code: %d", resp.StatusCode)
@@ -535,7 +535,7 @@ func (es *ESClientV6) GetUsedDataNodes() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() // nolint:errcheck
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -572,7 +572,7 @@ func (es *ESClientV6) AssignedShardsSize(node string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() // nolint:errcheck
 
 	response := new(NodesStats)
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {

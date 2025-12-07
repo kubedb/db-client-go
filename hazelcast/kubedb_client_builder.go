@@ -26,17 +26,17 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-resty/resty/v2"
+	"kubedb.dev/apimachinery/apis/kubedb"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	apiutils "kubedb.dev/apimachinery/pkg/utils"
 
 	"github.com/go-logr/logr"
+	"github.com/go-resty/resty/v2"
 	hazelcast "github.com/hazelcast/hazelcast-go-client"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
-	"kubedb.dev/apimachinery/apis/kubedb"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
-	apiutils "kubedb.dev/apimachinery/pkg/utils"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -139,7 +139,6 @@ func (o *KubeDBClientBuilder) GetTLSConfig() (*tls.Config, error) {
 func (o *KubeDBClientBuilder) GetHazelcastClient() (*Client, error) {
 	if o.podName != "" {
 		o.url = fmt.Sprintf("%s.%s.%s.svc.%s:%d", o.podName, o.db.GoverningServiceName(), o.db.GetNamespace(), apiutils.FindDomain(), kubedb.HazelcastRestPort)
-
 	}
 
 	if o.url == "" {
@@ -258,7 +257,7 @@ func (client *HZRestyClient) ChangeClusterState(state string) (string, error) {
 		return "", errors.New("response can not be nil")
 	}
 	body := res.RawBody()
-	responseBody := make(map[string]interface{})
+	responseBody := make(map[string]any)
 	if err := json.NewDecoder(body).Decode(&responseBody); err != nil {
 		return "", fmt.Errorf("failed to deserialize the response: %v", err)
 	}
@@ -288,7 +287,7 @@ func (client *HZRestyClient) GetClusterState() (string, error) {
 		return "", errors.New("response can not be nil")
 	}
 	body := res.RawBody()
-	responseBody := make(map[string]interface{})
+	responseBody := make(map[string]any)
 	if err := json.NewDecoder(body).Decode(&responseBody); err != nil {
 		return "", fmt.Errorf("failed to deserialize the response: %v", err)
 	}

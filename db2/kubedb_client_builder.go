@@ -7,12 +7,13 @@ import (
 	"net/http"
 	"time"
 
+	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
-	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
