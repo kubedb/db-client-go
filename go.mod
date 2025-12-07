@@ -2,8 +2,6 @@ module kubedb.dev/db-client-go
 
 go 1.24.0
 
-toolchain go1.24.5
-
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.23.2
 	github.com/IBM/sarama v1.45.2
