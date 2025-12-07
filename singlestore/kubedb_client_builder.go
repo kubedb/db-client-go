@@ -21,14 +21,14 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"database/sql"
-
 	"fmt"
+
+	"kubedb.dev/apimachinery/apis/kubedb"
+	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	sql_driver "github.com/go-sql-driver/mysql"
 	core "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
-	"kubedb.dev/apimachinery/apis/kubedb"
-	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"xorm.io/xorm"
 )
@@ -81,7 +81,7 @@ func (o *KubeDBClientBuilder) GetSinglestoreClient() (*Client, error) {
 
 	// ping to database to check the connection
 	if err := db.PingContext(o.ctx); err != nil {
-		closeErr := db.Close()
+		closeErr := db.Close() // nolint:errcheck
 		if closeErr != nil {
 			klog.Errorf("Failed to close client. error: %v", closeErr)
 		}

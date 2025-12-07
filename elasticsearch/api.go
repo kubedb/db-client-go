@@ -174,10 +174,8 @@ func GetElasticClient(kc kubernetes.Interface, dc cs.Interface, db *dbapi.Elasti
 		return nil, -1, errors.Wrap(err, "failed to parse version")
 	}
 
-	switch {
-	case esVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginXpack ||
-		esVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginSearchGuard ||
-		esVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginOpenDistro:
+	switch esVersion.Spec.AuthPlugin {
+	case catalog.ElasticsearchAuthPluginXpack, catalog.ElasticsearchAuthPluginSearchGuard, catalog.ElasticsearchAuthPluginOpenDistro:
 		switch {
 		case version.Major() == 6:
 			client, err := esv6.NewClient(esv6.Config{
@@ -208,7 +206,7 @@ func GetElasticClient(kc kubernetes.Interface, dc cs.Interface, db *dbapi.Elasti
 			if err != nil {
 				return nil, -1, errors.Wrap(err, "failed to perform health check")
 			}
-			defer res.Body.Close()
+			defer res.Body.Close() // nolint:errcheck
 
 			if res.IsError() {
 				return &ESClientV6{client: client}, res.StatusCode, fmt.Errorf("health check failed with status code: %d", res.StatusCode)
@@ -244,7 +242,7 @@ func GetElasticClient(kc kubernetes.Interface, dc cs.Interface, db *dbapi.Elasti
 			if err != nil {
 				return nil, -1, errors.Wrap(err, "failed to perform health check")
 			}
-			defer res.Body.Close()
+			defer res.Body.Close() // nolint:errcheck
 
 			if res.IsError() {
 				return &ESClientV7{client: client}, res.StatusCode, fmt.Errorf("health check failed with status code: %d", res.StatusCode)
@@ -280,7 +278,7 @@ func GetElasticClient(kc kubernetes.Interface, dc cs.Interface, db *dbapi.Elasti
 			if err != nil {
 				return nil, -1, errors.Wrap(err, "failed to perform health check")
 			}
-			defer res.Body.Close()
+			defer res.Body.Close() // nolint:errcheck
 
 			if res.IsError() {
 				return &ESClientV8{client: client}, res.StatusCode, fmt.Errorf("health check failed with status code: %d", res.StatusCode)
@@ -316,7 +314,7 @@ func GetElasticClient(kc kubernetes.Interface, dc cs.Interface, db *dbapi.Elasti
 			if err != nil {
 				return nil, -1, errors.Wrap(err, "failed to perform health check")
 			}
-			defer res.Body.Close()
+			defer res.Body.Close() // nolint:errcheck
 
 			if res.IsError() {
 				return &ESClientV9{client: client}, res.StatusCode, fmt.Errorf("health check failed with status code: %d", res.StatusCode)
@@ -324,7 +322,7 @@ func GetElasticClient(kc kubernetes.Interface, dc cs.Interface, db *dbapi.Elasti
 			return &ESClientV9{client: client}, res.StatusCode, nil
 		}
 
-	case esVersion.Spec.AuthPlugin == catalog.ElasticsearchAuthPluginOpenSearch:
+	case catalog.ElasticsearchAuthPluginOpenSearch:
 		switch {
 		case version.Major() == 1:
 			client, err := opensearchv1.NewClient(opensearchv1.Config{
@@ -355,7 +353,7 @@ func GetElasticClient(kc kubernetes.Interface, dc cs.Interface, db *dbapi.Elasti
 			if err != nil {
 				return nil, -1, errors.Wrap(err, "failed to perform health check")
 			}
-			defer res.Body.Close()
+			defer res.Body.Close() // nolint:errcheck
 
 			if res.IsError() {
 				return &OSClientV1{client: client}, res.StatusCode, fmt.Errorf("health check failed with status code: %d", res.StatusCode)
@@ -390,10 +388,10 @@ func GetElasticClient(kc kubernetes.Interface, dc cs.Interface, db *dbapi.Elasti
 			if err != nil {
 				return nil, -1, errors.Wrap(err, "Failed to perform health check")
 			}
-			defer res.Body.Close()
+			defer res.Body.Close() // nolint:errcheck
 
 			if res.IsError() {
-				return &OSClientV2{client: client}, res.StatusCode, fmt.Errorf("Health check failed with status code: %d", res.StatusCode)
+				return &OSClientV2{client: client}, res.StatusCode, fmt.Errorf("health check failed with status code: %d", res.StatusCode)
 			}
 			return &OSClientV2{client: client}, res.StatusCode, nil
 		}
@@ -453,28 +451,28 @@ type WriteRequestIndexBody struct {
 }
 
 type ESClient interface {
-	ClusterHealthInfo() (map[string]interface{}, error)
+	ClusterHealthInfo() (map[string]any, error)
 	ClusterStatus() (string, error)
 	CountData(index string) (int, error)
 	CreateDBUserRole(ctx context.Context) error
 	CreateIndex(index string) error
 	DeleteIndex(index string) error
-	GetIndicesInfo() ([]interface{}, error)
+	GetIndicesInfo() ([]any, error)
 	GetClusterWriteStatus(ctx context.Context, db *dbapi.Elasticsearch) error
 	GetClusterReadStatus(ctx context.Context, db *dbapi.Elasticsearch) error
 	GetTotalDiskUsage(ctx context.Context) (string, error)
 	GetDBUserRole(ctx context.Context) (error, bool)
 	IndexExistsOrNot(index string) error
-	NodesStats() (map[string]interface{}, error)
+	NodesStats() (map[string]any, error)
 	ShardStats() ([]ShardInfo, error)
-	PutData(index, id string, data map[string]interface{}) error
+	PutData(index, id string, data map[string]any) error
 	SyncCredentialFromSecret(secret *core.Secret) error
 	DisableShardAllocation() error
 	ReEnableShardAllocation() error
 	CheckVersion() (string, error)
 	GetClusterStatus() (string, error)
 	CountIndex() (int, error)
-	GetData(_index, _type, _id string) (map[string]interface{}, error)
+	GetData(_index, _type, _id string) (map[string]any, error)
 	CountNodes() (int64, error)
 	AddVotingConfigExclusions(nodes []string) error
 	DeleteVotingConfigExclusions() error

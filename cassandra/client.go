@@ -97,6 +97,6 @@ func (c *Client) PingCassandra() error {
 
 func (c *Client) CloseCassandraClient() {
 	if c != nil {
-		c.Close()
+		c.Close() // nolint:errcheck
 	}
 }

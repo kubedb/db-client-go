@@ -21,18 +21,18 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"time"
 
-	"fmt"
+	kapi "kubedb.dev/apimachinery/apis/kafka/v1alpha1"
+	"kubedb.dev/apimachinery/apis/kubedb"
 
 	"github.com/go-resty/resty/v2"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
-	kapi "kubedb.dev/apimachinery/apis/kafka/v1alpha1"
-	"kubedb.dev/apimachinery/apis/kubedb"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 

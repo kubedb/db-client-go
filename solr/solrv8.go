@@ -321,14 +321,14 @@ func (sc *SLClientV8) GetLog() logr.Logger {
 	return sc.Config.log
 }
 
-func (sc *SLClientV8) DecodeBackupResponse(data map[string]interface{}, collection string) ([]byte, error) {
+func (sc *SLClientV8) DecodeBackupResponse(data map[string]any, collection string) ([]byte, error) {
 	sc.Config.log.V(5).Info("Decode Backup Data")
-	backupResponse, ok := data["response"].([]interface{})
+	backupResponse, ok := data["response"].([]any)
 	if !ok {
-		err := fmt.Errorf("didn't find status for collection %s\n", collection)
+		err := fmt.Errorf("didn't find status for collection %s", collection)
 		return nil, err
 	}
-	mp := make(map[string]interface{})
+	mp := make(map[string]any)
 	for i := 0; i < len(backupResponse); i += 2 {
 		a := backupResponse[i].(string)
 		b := backupResponse[i+1]
@@ -340,7 +340,6 @@ func (sc *SLClientV8) DecodeBackupResponse(data map[string]interface{}, collecti
 		return nil, err
 	}
 	return b, nil
-
 }
 
 func (sc *SLClientV8) MoveReplica(target string, replica string, collection string, async string) (*Response, error) {

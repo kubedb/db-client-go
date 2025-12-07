@@ -46,7 +46,7 @@ func (c *HTTPClient) IsAllNodesRunningInCluster(replicas int) (bool, error) {
 }
 
 func (c *HTTPClient) GetQueues() ([]rmqhttp.QueueInfo, error) {
-	queues, err := c.Client.ListQueues()
+	queues, err := c.ListQueues()
 	if err != nil {
 		klog.Error(err, "Failed to get queue lists")
 		return nil, err

@@ -93,7 +93,7 @@ func (o *KubeDBClientBuilder) GetRedisSentinelClient(ctx context.Context) (*Clie
 	rdClient := rd.NewSentinelClient(rdOpts)
 	_, err = rdClient.Ping(ctx).Result()
 	if err != nil {
-		closeErr := rdClient.Close()
+		closeErr := rdClient.Close() // nolint:errcheck
 		if closeErr != nil {
 			klog.Errorf("Failed to close client. error: %v", closeErr)
 		}

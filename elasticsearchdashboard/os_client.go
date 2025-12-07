@@ -61,7 +61,7 @@ func (h *OSClient) GetStateFromHealthResponse(health *Health) (esapi.DashboardSe
 	resStatus := health.ConnectionResponse
 
 	defer func(Body io.ReadCloser) {
-		err := Body.Close()
+		err := Body.Close() // nolint:errcheck
 		if err != nil {
 			err1 := errors.Wrap(err, "failed to parse response body")
 			if err1 != nil {
@@ -78,7 +78,7 @@ func (h *OSClient) GetStateFromHealthResponse(health *Health) (esapi.DashboardSe
 		return "", errors.Wrap(err, "Failed to parse response body")
 	}
 
-	if overallStatus, ok := responseBody.Status["overall"].(map[string]interface{}); ok {
+	if overallStatus, ok := responseBody.Status["overall"].(map[string]any); ok {
 		if overallState, ok := overallStatus["state"].(string); ok {
 			health.OverallState = overallState
 		} else {
@@ -90,9 +90,9 @@ func (h *OSClient) GetStateFromHealthResponse(health *Health) (esapi.DashboardSe
 
 	// get the statuses for plugins stored,
 	// so that the plugins which are not available or ready can be shown from condition message
-	if statuses, ok := responseBody.Status["statuses"].([]interface{}); ok {
+	if statuses, ok := responseBody.Status["statuses"].([]any); ok {
 		for _, sts := range statuses {
-			if curr, ok := sts.(map[string]interface{}); ok {
+			if curr, ok := sts.(map[string]any); ok {
 				if curr["state"].(string) != string(esapi.StateGreen) {
 					health.StateFailedReason[curr["id"].(string)] = strings.Join([]string{curr["state"].(string), curr["message"].(string)}, ",")
 				}

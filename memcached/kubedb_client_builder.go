@@ -24,15 +24,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
-	core "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"kubedb.dev/apimachinery/apis/kubedb"
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 
 	"github.com/kubedb/gomemcache/memcache"
+	"github.com/pkg/errors"
+	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -153,7 +152,7 @@ func (o *KubeDBClientBuilder) GetSecret() (*core.Secret, error) {
 func (o *KubeDBClientBuilder) GetTLSSecret() (*core.Secret, error) {
 	var tlsSecret core.Secret
 	err := o.kc.Get(context.TODO(), types.NamespacedName{
-		Name:      o.db.GetCertSecretName(api.MemcachedClientCert),
+		Name:      o.db.GetCertSecretName(dbapi.MemcachedClientCert),
 		Namespace: o.db.Namespace,
 	}, &tlsSecret)
 	if err != nil {
