@@ -23,14 +23,14 @@ import (
 	"errors"
 	"fmt"
 
+	"kubedb.dev/apimachinery/apis/kubedb"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+
+	"github.com/gocql/gocql"
 	core "k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
-	"kubedb.dev/apimachinery/apis/kubedb"
-
-	"github.com/gocql/gocql"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -63,6 +63,7 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 	o.ctx = ctx
 	return o
 }
+
 func (o *KubeDBClientBuilder) GetCassandraClient() (*Client, error) {
 	host := o.url
 	cluster := gocql.NewCluster(host)

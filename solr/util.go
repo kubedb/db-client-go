@@ -26,15 +26,15 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/klog/v2"
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	"github.com/pkg/errors"
+	"k8s.io/klog/v2"
 )
 
-func (sc *Client) DecodeResponse(response *Response) (map[string]interface{}, error) {
+func (sc *Client) DecodeResponse(response *Response) (map[string]any, error) {
 	defer func(Body io.ReadCloser) {
-		err := Body.Close()
+		err := Body.Close() // nolint:errcheck
 		if err != nil {
 			err1 := errors.Wrap(err, "failed to parse response body")
 			if err1 != nil {
@@ -44,7 +44,7 @@ func (sc *Client) DecodeResponse(response *Response) (map[string]interface{}, er
 		}
 	}(response.body)
 
-	responseBody := make(map[string]interface{})
+	responseBody := make(map[string]any)
 	if err := json.NewDecoder(response.body).Decode(&responseBody); err != nil {
 		return nil, fmt.Errorf("failed to deserialize the response: %v", err)
 	}
@@ -52,22 +52,20 @@ func (sc *Client) DecodeResponse(response *Response) (map[string]interface{}, er
 	return responseBody, nil
 }
 
-func (sc *Client) GetResponseStatus(responseBody map[string]interface{}) (int, error) {
-	err, ok := responseBody["error"].(map[string]interface{})
+func (sc *Client) GetResponseStatus(responseBody map[string]any) (int, error) {
+	err, ok := responseBody["error"].(map[string]any)
 	if ok {
 		msg, ok := err["msg"].(string)
 		if !ok {
 			return -1, errors.New("no msg found in error message while getting response status")
-
 		}
 		code, ok := err["code"].(float64)
 		if !ok {
 			return -1, errors.New("error occurred but didn't found error code while getting response status")
-
 		}
 		return -1, errors.New(fmt.Sprintf("Error: %v with code %d", msg, int(code)))
 	}
-	responseHeader, ok := responseBody["responseHeader"].(map[string]interface{})
+	responseHeader, ok := responseBody["responseHeader"].(map[string]any)
 	if !ok {
 		return -1, errors.New("didn't find responseHeader")
 	}
@@ -81,14 +79,13 @@ func (sc *Client) GetResponseStatus(responseBody map[string]interface{}) (int, e
 		msg, ok := responseBody["message"].(string)
 		if !ok {
 			return -1, errors.New("no msg found in error message")
-
 		}
 		return -1, errors.New(fmt.Sprintf("Error: %v with code %d", msg, int(status)))
 	}
 	return int(status), nil
 }
 
-func (sc *Client) GetVal(ival interface{}, ss string) float64 {
+func (sc *Client) GetVal(ival any, ss string) float64 {
 	val := reflect.ValueOf(ival)
 	fmt.Println(ss, ival, reflect.TypeOf(ival), val, val.Type(), val.Kind())
 
@@ -97,18 +94,19 @@ func (sc *Client) GetVal(ival interface{}, ss string) float64 {
 	return realVal
 }
 
-func (sc *Client) RetrieveMetrics(responseBody map[string]interface{}) (*Metrics, error) {
+func (sc *Client) RetrieveMetrics(responseBody map[string]any) (*Metrics, error) {
 	metrics := &Metrics{}
 
-	responseMetrics, ok := responseBody["metrics"].(map[string]interface{})
+	responseMetrics, ok := responseBody["metrics"].(map[string]any)
 	if !ok {
 		return nil, errors.New("didn't find metrics")
 	}
 
 	for metricsKey, metricsVal := range responseMetrics {
-		if metricsKey == "solr.jvm" {
+		switch metricsKey {
+		case "solr.jvm":
 			metrics.JVM = JVM{}
-			jvmMetrics := metricsVal.(map[string]interface{})
+			jvmMetrics := metricsVal.(map[string]any)
 			for jvmKey, jvmVal := range jvmMetrics {
 				val := jvmVal
 				switch jvmKey {
@@ -140,9 +138,9 @@ func (sc *Client) RetrieveMetrics(responseBody map[string]interface{}) (*Metrics
 					klog.Info(fmt.Sprintf("Unsupported metrics key: %s", jvmKey))
 				}
 			}
-		} else if metricsKey == "solr.jetty" {
+		case "solr.jetty":
 			metrics.Jetty = Jetty{}
-			jettyMetrics := metricsVal.(map[string]interface{})
+			jettyMetrics := metricsVal.(map[string]any)
 			for jettyKey, jettyVal := range jettyMetrics {
 				pos := 0
 				pos = strings.LastIndex(jettyKey, ".")
@@ -165,8 +163,8 @@ func (sc *Client) RetrieveMetrics(responseBody map[string]interface{}) (*Metrics
 	return metrics, nil
 }
 
-func (sc *Client) GetAsyncStatus(responseBody map[string]interface{}) (string, error) {
-	status, ok := responseBody["status"].(map[string]interface{})
+func (sc *Client) GetAsyncStatus(responseBody map[string]any) (string, error) {
+	status, ok := responseBody["status"].(map[string]any)
 	if !ok {
 		return "unknown", errors.New("didn't find status")
 	}
@@ -179,17 +177,17 @@ func (sc *Client) GetAsyncStatus(responseBody map[string]interface{}) (string, e
 	return state, nil
 }
 
-func (sc *Client) DecodeCollectionHealth(responseBody map[string]interface{}) error {
-	clusterInfo, ok := responseBody["cluster"].(map[string]interface{})
+func (sc *Client) DecodeCollectionHealth(responseBody map[string]any) error {
+	clusterInfo, ok := responseBody["cluster"].(map[string]any)
 	if !ok {
 		return errors.New(fmt.Sprintf("did not find cluster %v\n", responseBody))
 	}
-	collections, ok := clusterInfo["collections"].(map[string]interface{})
+	collections, ok := clusterInfo["collections"].(map[string]any)
 	if !ok {
 		return errors.New("didn't find collections")
 	}
 	for name, info := range collections {
-		collectionInfo := info.(map[string]interface{})
+		collectionInfo := info.(map[string]any)
 		health, ok := collectionInfo["health"].(string)
 		if !ok {
 			return errors.New("didn't find health")
@@ -220,8 +218,8 @@ func (sc *Client) DecodeCollectionHealth(responseBody map[string]interface{}) er
 	return nil
 }
 
-func (sc *Client) GetCollectionList(responseBody map[string]interface{}) ([]string, error) {
-	collectionList, ok := responseBody["collections"].([]interface{})
+func (sc *Client) GetCollectionList(responseBody map[string]any) ([]string, error) {
+	collectionList, ok := responseBody["collections"].([]any)
 	if !ok {
 		return []string{}, errors.New("didn't find collection list")
 	}
@@ -394,17 +392,17 @@ func (sc *Client) Balance() error {
 		defer wg.Done()
 		resp, err := sc.BalanceReplica(async)
 		if err != nil {
-			klog.Error(fmt.Errorf("failed to do balance request. err %v", err))
+			klog.Errorf("failed to do balance request. err %v", err)
 			errr = err
 		}
 		responseBody, err := sc.DecodeResponse(resp)
 		if err != nil {
-			klog.Error(fmt.Errorf("failed to decode response for async %s, err %v", async, err))
+			klog.Errorf("failed to decode response for async %s, err %v", async, err)
 			errr = err
 		}
 		_, err = sc.GetResponseStatus(responseBody)
 		if err != nil {
-			klog.Error(fmt.Errorf("failed to decode response for async %s, err %v", async, err))
+			klog.Errorf("failed to decode response for async %s, err %v", async, err)
 			errr = err
 		}
 
@@ -436,17 +434,17 @@ func (sc *Client) Run(lst []UpdateList) error {
 			defer wg.Done()
 			resp, err := sc.MoveReplica(target, replica, collection, async)
 			if err != nil {
-				klog.Error(fmt.Errorf("failed to do request for target %s, replica %s, collection %s, err %v", target, replica, collection, err))
+				klog.Errorf("failed to do request for target %s, replica %s, collection %s, err %v", target, replica, collection, err)
 				errr = err
 			}
 			responseBody, err := sc.DecodeResponse(resp)
 			if err != nil {
-				klog.Error(fmt.Errorf("failed to decode response for target %s, replica %s, collection %s, err %v", target, replica, collection, err))
+				klog.Errorf("failed to decode response for target %s, replica %s, collection %s, err %v", target, replica, collection, err)
 				errr = err
 			}
 			_, err = sc.GetResponseStatus(responseBody)
 			if err != nil {
-				klog.Error(fmt.Errorf("failed to decode response for target %s, replica %s, collection %s, err %v, responsebody %v", target, replica, collection, err, responseBody))
+				klog.Errorf("failed to decode response for target %s, replica %s, collection %s, err %v, responsebody %v", target, replica, collection, err, responseBody)
 				errr = err
 			}
 
@@ -489,6 +487,7 @@ func (sc *Client) Down(nodeList []string, x int, mp map[string][]CoreList) error
 	err := sc.Run(ar)
 	return err
 }
+
 func (sc *Client) Up(nodeList []string, mp map[string][]CoreList) error {
 	for _, x := range nodeList {
 		if _, ok := mp[x]; !ok {
@@ -533,7 +532,6 @@ func (sc *Client) Up(nodeList []string, mp map[string][]CoreList) error {
 }
 
 func (sc *Client) UpReplicaManual(db *dbapi.Solr) error {
-
 	response, err := sc.GetClusterStatus()
 	if err != nil {
 		klog.Error(err)
@@ -552,23 +550,23 @@ func (sc *Client) UpReplicaManual(db *dbapi.Solr) error {
 		return err
 	}
 
-	clusterInfo, ok := responseBody["cluster"].(map[string]interface{})
+	clusterInfo, ok := responseBody["cluster"].(map[string]any)
 	if !ok {
-		klog.Error(fmt.Errorf("did not find cluster %v\n", responseBody))
+		klog.Errorf("did not find cluster %v", responseBody)
 	}
-	collections, ok := clusterInfo["collections"].(map[string]interface{})
+	collections, ok := clusterInfo["collections"].(map[string]any)
 	if !ok {
 		klog.Error("didn't find collections")
 	}
 	mp := make(map[string][]CoreList)
 	for collection, info := range collections {
-		collectionInfo := info.(map[string]interface{})
-		shardInfo := collectionInfo["shards"].(map[string]interface{})
+		collectionInfo := info.(map[string]any)
+		shardInfo := collectionInfo["shards"].(map[string]any)
 		for _, info := range shardInfo {
-			shardInfo := info.(map[string]interface{})
-			replicaInfo := shardInfo["replicas"].(map[string]interface{})
+			shardInfo := info.(map[string]any)
+			replicaInfo := shardInfo["replicas"].(map[string]any)
 			for core, info := range replicaInfo {
-				coreInfo := info.(map[string]interface{})
+				coreInfo := info.(map[string]any)
 				nodeName := coreInfo["node_name"].(string)
 				if _, ok := mp[nodeName]; !ok {
 					mp[nodeName] = make([]CoreList, 0)
@@ -587,7 +585,7 @@ func (sc *Client) UpReplicaManual(db *dbapi.Solr) error {
 	if !ok {
 		return errors.New("Failed to get livenodes")
 	}
-	xx := liveNodes.([]interface{})
+	xx := liveNodes.([]any)
 	for _, node := range xx {
 		x := node.(string)
 		nodeList = append(nodeList, x)
@@ -614,7 +612,6 @@ func (sc *Client) UpReplicaManual(db *dbapi.Solr) error {
 }
 
 func (sc *Client) BalanceReplicaManual(db *dbapi.Solr, desired int) error {
-
 	response, err := sc.GetClusterStatus()
 	if err != nil {
 		klog.Error(err)
@@ -633,23 +630,23 @@ func (sc *Client) BalanceReplicaManual(db *dbapi.Solr, desired int) error {
 		return err
 	}
 
-	clusterInfo, ok := responseBody["cluster"].(map[string]interface{})
+	clusterInfo, ok := responseBody["cluster"].(map[string]any)
 	if !ok {
-		klog.Error(fmt.Errorf("did not find cluster %v\n", responseBody))
+		klog.Errorf("did not find cluster %v", responseBody)
 	}
-	collections, ok := clusterInfo["collections"].(map[string]interface{})
+	collections, ok := clusterInfo["collections"].(map[string]any)
 	if !ok {
 		klog.Error("didn't find collections")
 	}
 	mp := make(map[string][]CoreList)
 	for collection, info := range collections {
-		collectionInfo := info.(map[string]interface{})
-		shardInfo := collectionInfo["shards"].(map[string]interface{})
+		collectionInfo := info.(map[string]any)
+		shardInfo := collectionInfo["shards"].(map[string]any)
 		for _, info := range shardInfo {
-			shardInfo := info.(map[string]interface{})
-			replicaInfo := shardInfo["replicas"].(map[string]interface{})
+			shardInfo := info.(map[string]any)
+			replicaInfo := shardInfo["replicas"].(map[string]any)
 			for core, info := range replicaInfo {
-				coreInfo := info.(map[string]interface{})
+				coreInfo := info.(map[string]any)
 				nodeName := coreInfo["node_name"].(string)
 				if _, ok := mp[nodeName]; !ok {
 					mp[nodeName] = make([]CoreList, 0)
@@ -668,7 +665,7 @@ func (sc *Client) BalanceReplicaManual(db *dbapi.Solr, desired int) error {
 	if !ok {
 		return errors.New("Failed to get livenodes")
 	}
-	xx := liveNodes.([]interface{})
+	xx := liveNodes.([]any)
 	for _, node := range xx {
 		x := node.(string)
 		nodeList = append(nodeList, x)

@@ -45,7 +45,7 @@ const (
 )
 
 func (c *Client) CloseDruidClient() {
-	err := c.Close()
+	err := c.Close() // nolint:errcheck
 	if err != nil {
 		klog.Error(err, "Failed to close druid middleManagers client")
 		return
@@ -103,7 +103,7 @@ func (c *Client) CheckNodeDiscoveryStatus() (bool, error) {
 func (c *Client) CheckDataSourceExistence() (bool, error) {
 	path := "druid/v2/sql"
 
-	data := map[string]interface{}{
+	data := map[string]any{
 		"query": "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'druid' AND TABLE_NAME = 'kubedb-datasource'",
 	}
 
@@ -113,7 +113,7 @@ func (c *Client) CheckDataSourceExistence() (bool, error) {
 	}
 	rawMessage := json.RawMessage(jsonData)
 
-	var result []map[string]interface{}
+	var result []map[string]any
 	_, err = c.ExecuteRequest(http.MethodPost, path, rawMessage, &result)
 	if err != nil {
 		klog.Error("Failed to execute request", err)
@@ -192,7 +192,7 @@ func (c *Client) GetData() (string, error) {
 
 func (c *Client) runSelectQuery() (string, error) {
 	path := "druid/v2/sql"
-	data := map[string]interface{}{
+	data := map[string]any{
 		"query": "SELECT * FROM \"kubedb-datasource\"",
 	}
 
@@ -202,7 +202,7 @@ func (c *Client) runSelectQuery() (string, error) {
 	}
 	rawMessage := json.RawMessage(jsonData)
 
-	var result []map[string]interface{}
+	var result []map[string]any
 	_, err = c.ExecuteRequest(http.MethodPost, path, rawMessage, &result)
 	if err != nil {
 		klog.Error("Failed to execute POST query request", err)
@@ -214,7 +214,7 @@ func (c *Client) runSelectQuery() (string, error) {
 }
 
 func (c *Client) updateCoordinatorsWaitBeforeDeletingConfig(value int32) error {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"millisToWaitBeforeDeleting": value,
 	}
 	if err := c.updateCoordinatorDynamicConfig(data); err != nil {
@@ -224,7 +224,7 @@ func (c *Client) updateCoordinatorsWaitBeforeDeletingConfig(value int32) error {
 	return nil
 }
 
-func (c *Client) updateCoordinatorDynamicConfig(data map[string]interface{}) error {
+func (c *Client) updateCoordinatorDynamicConfig(data map[string]any) error {
 	path := "druid/coordinator/v1/config"
 
 	jsonData, err := json.Marshal(data)
@@ -274,7 +274,7 @@ func (c *Client) submitTask(taskType DruidTaskType, dataSource string, data stri
 	rawMessage := json.RawMessage(task)
 	path := "druid/indexer/v1/task"
 
-	var result map[string]interface{}
+	var result map[string]any
 	_, err := c.ExecuteRequest(http.MethodPost, path, rawMessage, &result)
 	if err != nil {
 		klog.Error("Failed to execute POST ingestion or kill task request", err)
@@ -339,7 +339,7 @@ func GetKillTaskDefinition() string {
 func (c *Client) CheckTaskStatus(taskID string) (bool, error) {
 	path := fmt.Sprintf("druid/indexer/v1/task/%s/status", taskID)
 
-	var result map[string]interface{}
+	var result map[string]any
 	_, err := c.ExecuteRequest(http.MethodGet, path, nil, &result)
 	if err != nil {
 		klog.Error("Failed to execute GET task status request", err)
@@ -347,7 +347,7 @@ func (c *Client) CheckTaskStatus(taskID string) (bool, error) {
 	}
 
 	statusRes := result["status"]
-	statusMap := statusRes.(map[string]interface{})
+	statusMap := statusRes.(map[string]any)
 	status := statusMap["status"].(string)
 
 	return status == "SUCCESS", nil
@@ -375,7 +375,7 @@ func (c *Client) checkDBReadAccess(oldData string) error {
 func (c *Client) UpdateDruidPassword(password string) error {
 	path := "druid-ext/basic-security/authentication/db/basic/users/admin/credentials"
 
-	data := map[string]interface{}{
+	data := map[string]any{
 		"password": password,
 	}
 	jsonData, err := json.Marshal(data)

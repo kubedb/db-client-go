@@ -23,12 +23,13 @@ import (
 	"errors"
 	"strings"
 
+	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
+
 	kafkago "github.com/IBM/sarama"
 	core "k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
-	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 

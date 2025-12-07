@@ -20,9 +20,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/qdrant/go-client/qdrant"
 	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+
+	"github.com/qdrant/go-client/qdrant"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 

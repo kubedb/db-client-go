@@ -87,11 +87,11 @@ type Response struct {
 }
 
 type ResponseBody struct {
-	Name    string                 `json:"name"`
-	UUID    string                 `json:"uuid"`
-	Version map[string]interface{} `json:"version"`
-	Status  map[string]interface{} `json:"status"`
-	Metrics map[string]interface{} `json:"metrics"`
+	Name    string         `json:"name"`
+	UUID    string         `json:"uuid"`
+	Version map[string]any `json:"version"`
+	Status  map[string]any `json:"status"`
+	Metrics map[string]any `json:"metrics"`
 }
 
 type Space struct {

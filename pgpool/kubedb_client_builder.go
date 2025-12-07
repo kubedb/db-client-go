@@ -91,7 +91,7 @@ func (o *KubeDBClientBuilder) GetPgpoolXormClient() (*XormClient, error) {
 	}
 	_, err = engine.Query("SELECT 1")
 	if err != nil {
-		err = engine.Close()
+		err = engine.Close() // nolint:errcheck
 		if err != nil {
 			return nil, err
 		}

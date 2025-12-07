@@ -119,7 +119,7 @@ func (o *KubeDBClientBuilder) GetPgBouncerXormClient() (*XormClient, error) {
 		return nil, err
 	}
 	if engine == nil {
-		return nil, fmt.Errorf("Xorm Engine can't be build for pgbouncer")
+		return nil, fmt.Errorf("xorm engine can't be build for pgbouncer")
 	}
 
 	engine.SetDefaultContext(o.ctx)
@@ -211,7 +211,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		o.url = o.getURL()
 	}
 
-	var listeningPort int = kubedb.PgBouncerDatabasePort
+	listeningPort := kubedb.PgBouncerDatabasePort
 	if o.pbContainerPort != nil {
 		listeningPort = int(*o.pbContainerPort)
 	}
@@ -263,7 +263,7 @@ func GetXormClientList(kc client.Client, pb *dbapi.PgBouncer, ctx context.Contex
 	clientlist.WG.Wait()
 
 	if len(clientlist.List) != int(*pb.Spec.Replicas) {
-		return clientlist, fmt.Errorf("Failed to generate Xorm Client List")
+		return clientlist, fmt.Errorf("failed to generate xorm client list")
 	}
 
 	return clientlist, nil

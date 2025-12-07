@@ -45,7 +45,7 @@ endif
 ### These variables should not need tweaking.
 ###
 
-SRC_PKGS := elasticsearch elasticsearchdashboard mariadb mongodb mysql oracle perconaxtradb pgbouncer postgres proxysql redis redissentinel pgpool
+SRC_PKGS := cassandra clickhouse db2 druid elasticsearch elasticsearchdashboard hack hazelcast ignite kafka mariadb memcached mongodb mssqlserver mysql neo4j oracle perconaxtradb pgbouncer pgpool postgres proxysql qdrant rabbitmq redis redissentinel singlestore solr zookeeper
 SRC_DIRS := $(SRC_PKGS)
 
 DOCKER_PLATFORMS := linux/amd64 linux/arm linux/arm64
@@ -177,8 +177,6 @@ test: $(BUILD_DIRS)
 	        ./hack/test.sh $(SRC_PKGS)                          \
 	    "
 
-ADDTL_LINTERS   := gofmt,goimports,unparam
-
 .PHONY: lint
 lint: $(BUILD_DIRS)
 	@echo "running linter"
@@ -196,7 +194,7 @@ lint: $(BUILD_DIRS)
 	    --env GO111MODULE=on                                    \
 	    --env GOFLAGS="-mod=vendor"                             \
 	    $(BUILD_IMAGE)                                          \
-	    golangci-lint run --enable $(ADDTL_LINTERS) --timeout=10m --exclude-files="generated.*\.go$\" --exclude-dirs-use-default
+	    golangci-lint run
 
 $(BUILD_DIRS):
 	@mkdir -p $@

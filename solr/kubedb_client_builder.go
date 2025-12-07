@@ -21,23 +21,22 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"time"
 
+	"kubedb.dev/apimachinery/apis/kubedb"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	apiutils "kubedb.dev/apimachinery/pkg/utils"
+
 	"github.com/Masterminds/semver/v3"
+	"github.com/go-logr/logr"
+	"github.com/go-resty/resty/v2"
 	gerr "github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
-	"kubedb.dev/apimachinery/apis/kubedb"
-	apiutils "kubedb.dev/apimachinery/pkg/utils"
-
-	"fmt"
-
-	"github.com/go-logr/logr"
-	"github.com/go-resty/resty/v2"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -184,7 +183,6 @@ func (o *KubeDBClientBuilder) GetSolrClient() (*Client, error) {
 	}
 
 	return nil, fmt.Errorf("unknown version: %s", o.db.Spec.Version)
-
 }
 
 func (o *KubeDBClientBuilder) GetHostPath(db *api.Solr) string {

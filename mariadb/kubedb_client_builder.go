@@ -85,7 +85,7 @@ func (o *KubeDBClientBuilder) GetMariaDBClient() (*Client, error) {
 
 	// ping to database to check the connection
 	if err := db.PingContext(o.ctx); err != nil {
-		closeErr := db.Close()
+		closeErr := db.Close() // nolint:errcheck
 		if closeErr != nil {
 			klog.Errorf("Failed to close client. error: %v", closeErr)
 		}

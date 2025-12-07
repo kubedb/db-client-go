@@ -92,7 +92,7 @@ func (o *OracleClientBuilder) GetOracleClient() (*sql.DB, error) {
 	}
 
 	if err := db.PingContext(o.ctx); err != nil {
-		cerr := db.Close()
+		cerr := db.Close() // nolint:errcheck
 		if cerr != nil {
 			err = errors.Wrapf(err, "failed to close Oracle connection: %v", cerr)
 		}

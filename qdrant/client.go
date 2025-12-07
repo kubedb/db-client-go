@@ -24,7 +24,7 @@ type QdrantClient struct {
 
 func (qc *QdrantClient) Close() error {
 	if qc.Client != nil {
-		return qc.Client.Close()
+		return qc.Client.Close() // nolint:errcheck
 	}
 	return nil
 }

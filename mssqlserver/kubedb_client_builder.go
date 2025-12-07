@@ -18,12 +18,11 @@ package mssql
 
 import (
 	"context"
-
 	"fmt"
 
-	_ "github.com/microsoft/go-mssqldb"
 	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
+	_ "github.com/microsoft/go-mssqldb"
 	core "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"xorm.io/xorm"
