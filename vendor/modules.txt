@@ -2251,14 +2251,14 @@ go.uber.org/zap/zapcore
 ## explicit; go 1.23.0
 go.virtual-secrets.dev/apimachinery/apis/virtual/v1alpha1
 go.virtual-secrets.dev/apimachinery/crds
-# golang.org/x/crypto v0.38.0
-## explicit; go 1.23.0
+# golang.org/x/crypto v0.45.0
+## explicit; go 1.24.0
 golang.org/x/crypto/md4
 golang.org/x/crypto/ocsp
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/scrypt
-# golang.org/x/net v0.40.0
-## explicit; go 1.23.0
+# golang.org/x/net v0.47.0
+## explicit; go 1.24.0
 golang.org/x/net/html
 golang.org/x/net/html/atom
 golang.org/x/net/html/charset
@@ -2277,21 +2277,21 @@ golang.org/x/net/trace
 golang.org/x/oauth2
 golang.org/x/oauth2/clientcredentials
 golang.org/x/oauth2/internal
-# golang.org/x/sync v0.14.0
-## explicit; go 1.23.0
+# golang.org/x/sync v0.18.0
+## explicit; go 1.24.0
 golang.org/x/sync/errgroup
 golang.org/x/sync/singleflight
-# golang.org/x/sys v0.33.0
-## explicit; go 1.23.0
+# golang.org/x/sys v0.38.0
+## explicit; go 1.24.0
 golang.org/x/sys/cpu
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/term v0.32.0
-## explicit; go 1.23.0
+# golang.org/x/term v0.37.0
+## explicit; go 1.24.0
 golang.org/x/term
-# golang.org/x/text v0.25.0
-## explicit; go 1.23.0
+# golang.org/x/text v0.31.0
+## explicit; go 1.24.0
 golang.org/x/text/encoding
 golang.org/x/text/encoding/charmap
 golang.org/x/text/encoding/htmlindex
@@ -2942,7 +2942,7 @@ kmodules.xyz/prober/api/v1
 kmodules.xyz/resource-metadata/apis/node
 kmodules.xyz/resource-metadata/apis/node/v1alpha1
 kmodules.xyz/resource-metadata/crds
-# kubedb.dev/apimachinery v0.59.1-0.20251205110528-3d10db600e5d
+# kubedb.dev/apimachinery v0.59.1-0.20251206162050-0562e8d159a7
 ## explicit; go 1.24.0
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/archiver/v1alpha1
