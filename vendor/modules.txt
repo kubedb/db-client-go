@@ -26,6 +26,19 @@ github.com/Masterminds/semver
 # github.com/Masterminds/semver/v3 v3.3.1
 ## explicit; go 1.21
 github.com/Masterminds/semver/v3
+# github.com/SAP/go-hdb v1.12.0
+## explicit; go 1.22
+github.com/SAP/go-hdb/driver
+github.com/SAP/go-hdb/driver/dial
+github.com/SAP/go-hdb/driver/internal/protocol
+github.com/SAP/go-hdb/driver/internal/protocol/auth
+github.com/SAP/go-hdb/driver/internal/protocol/cache
+github.com/SAP/go-hdb/driver/internal/protocol/encoding
+github.com/SAP/go-hdb/driver/internal/protocol/julian
+github.com/SAP/go-hdb/driver/internal/protocol/levenshtein
+github.com/SAP/go-hdb/driver/internal/rand/alphanum
+github.com/SAP/go-hdb/driver/internal/unsafe
+github.com/SAP/go-hdb/driver/unicode/cesu8
 # github.com/Shopify/zk v1.0.12
 ## explicit; go 1.22
 github.com/Shopify/zk
