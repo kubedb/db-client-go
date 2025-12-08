@@ -79,13 +79,8 @@ func (o *KubeDBClientBuilder) GetMilvusClient() (*milvusclient.Client, error) {
 		klog.Warningf("gRPC dial failed: %v", err)
 		return nil, err
 	}
-	defer conn.Close()
-
-	if err != nil {
-		klog.Warningf("gRPC dial failed: %v", err)
-		return nil, err
-	}
-	conn.Close()
+	defer conn.Close() // nolint:errcheck
+	conn.Close()       // nolint:errcheck
 
 	client, err := milvusclient.New(ctx, config)
 	if err != nil {
