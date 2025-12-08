@@ -6,6 +6,7 @@ require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.23.2
 	github.com/IBM/sarama v1.45.2
 	github.com/Masterminds/semver/v3 v3.3.1
+	github.com/SAP/go-hdb v1.12.0
 	github.com/Shopify/zk v1.0.12
 	github.com/amsokol/ignite-go-client v0.12.2
 	github.com/elastic/go-elasticsearch/v5 v5.6.1
