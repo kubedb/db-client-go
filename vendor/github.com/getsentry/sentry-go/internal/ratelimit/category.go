@@ -1,6 +1,11 @@
 package ratelimit
 
-import "strings"
+import (
+	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+)
 
 // Reference:
 // https://github.com/getsentry/relay/blob/0424a2e017d193a93918053c90cdae9472d164bf/relay-common/src/constants.rs#L116-L127
@@ -27,15 +32,14 @@ var knownCategories = map[Category]struct{}{
 
 // String returns the category formatted for debugging.
 func (c Category) String() string {
-	switch c {
-	case "":
+	if c == "" {
 		return "CategoryAll"
-	default:
-		var b strings.Builder
-		b.WriteString("Category")
-		for _, w := range strings.Fields(string(c)) {
-			b.WriteString(strings.Title(w))
-		}
-		return b.String()
 	}
+
+	caser := cases.Title(language.English)
+	rv := "Category"
+	for _, w := range strings.Fields(string(c)) {
+		rv += caser.String(w)
+	}
+	return rv
 }

@@ -2,12 +2,12 @@ package sentry
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"sync"
@@ -39,11 +39,13 @@ type Transport interface {
 
 func getProxyConfig(options ClientOptions) func(*http.Request) (*url.URL, error) {
 	if options.HTTPSProxy != "" {
-		return func(_ *http.Request) (*url.URL, error) {
+		return func(*http.Request) (*url.URL, error) {
 			return url.Parse(options.HTTPSProxy)
 		}
-	} else if options.HTTPProxy != "" {
-		return func(_ *http.Request) (*url.URL, error) {
+	}
+
+	if options.HTTPProxy != "" {
+		return func(*http.Request) (*url.URL, error) {
 			return url.Parse(options.HTTPProxy)
 		}
 	}
@@ -53,6 +55,8 @@ func getProxyConfig(options ClientOptions) func(*http.Request) (*url.URL, error)
 
 func getTLSConfig(options ClientOptions) *tls.Config {
 	if options.CaCerts != nil {
+		// #nosec G402 -- We should be using `MinVersion: tls.VersionTLS12`,
+		// 				 but we don't want to break peoples code without the major bump.
 		return &tls.Config{
 			RootCAs: options.CaCerts,
 		}
@@ -91,64 +95,210 @@ func getRequestBodyFromEvent(event *Event) []byte {
 	return nil
 }
 
-func transactionEnvelopeFromBody(eventID EventID, sentAt time.Time, body json.RawMessage) (*bytes.Buffer, error) {
+func marshalMetrics(metrics []Metric) []byte {
 	var b bytes.Buffer
-	enc := json.NewEncoder(&b)
-	// envelope header
-	err := enc.Encode(struct {
-		EventID EventID   `json:"event_id"`
-		SentAt  time.Time `json:"sent_at"`
-	}{
-		EventID: eventID,
-		SentAt:  sentAt,
-	})
-	if err != nil {
-		return nil, err
+	for i, metric := range metrics {
+		b.WriteString(metric.GetKey())
+		if unit := metric.GetUnit(); unit != "" {
+			b.WriteString(fmt.Sprintf("@%s", unit))
+		}
+		b.WriteString(fmt.Sprintf("%s|%s", metric.SerializeValue(), metric.GetType()))
+		if serializedTags := metric.SerializeTags(); serializedTags != "" {
+			b.WriteString(fmt.Sprintf("|#%s", serializedTags))
+		}
+		b.WriteString(fmt.Sprintf("|T%d", metric.GetTimestamp()))
+
+		if i < len(metrics)-1 {
+			b.WriteString("\n")
+		}
 	}
-	// item header
-	err = enc.Encode(struct {
+	return b.Bytes()
+}
+
+func encodeMetric(enc *json.Encoder, b io.Writer, metrics []Metric) error {
+	body := marshalMetrics(metrics)
+	// Item header
+	err := enc.Encode(struct {
 		Type   string `json:"type"`
 		Length int    `json:"length"`
 	}{
-		Type:   transactionType,
+		Type:   metricType,
 		Length: len(body),
+	})
+	if err != nil {
+		return err
+	}
+
+	// metric payload
+	if _, err = b.Write(body); err != nil {
+		return err
+	}
+
+	// "Envelopes should be terminated with a trailing newline."
+	//
+	// [1]: https://develop.sentry.dev/sdk/envelopes/#envelopes
+	if _, err := b.Write([]byte("\n")); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func encodeAttachment(enc *json.Encoder, b io.Writer, attachment *Attachment) error {
+	// Attachment header
+	err := enc.Encode(struct {
+		Type        string `json:"type"`
+		Length      int    `json:"length"`
+		Filename    string `json:"filename"`
+		ContentType string `json:"content_type,omitempty"`
+	}{
+		Type:        "attachment",
+		Length:      len(attachment.Payload),
+		Filename:    attachment.Filename,
+		ContentType: attachment.ContentType,
+	})
+	if err != nil {
+		return err
+	}
+
+	// Attachment payload
+	if _, err = b.Write(attachment.Payload); err != nil {
+		return err
+	}
+
+	// "Envelopes should be terminated with a trailing newline."
+	//
+	// [1]: https://develop.sentry.dev/sdk/envelopes/#envelopes
+	if _, err := b.Write([]byte("\n")); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func encodeEnvelopeItem(enc *json.Encoder, itemType string, body json.RawMessage) error {
+	// Item header
+	err := enc.Encode(struct {
+		Type   string `json:"type"`
+		Length int    `json:"length"`
+	}{
+		Type:   itemType,
+		Length: len(body),
+	})
+	if err == nil {
+		// payload
+		err = enc.Encode(body)
+	}
+	return err
+}
+
+func envelopeFromBody(event *Event, dsn *Dsn, sentAt time.Time, body json.RawMessage) (*bytes.Buffer, error) {
+	var b bytes.Buffer
+	enc := json.NewEncoder(&b)
+
+	// Construct the trace envelope header
+	var trace = map[string]string{}
+	if dsc := event.sdkMetaData.dsc; dsc.HasEntries() {
+		for k, v := range dsc.Entries {
+			trace[k] = v
+		}
+	}
+
+	// Envelope header
+	err := enc.Encode(struct {
+		EventID EventID           `json:"event_id"`
+		SentAt  time.Time         `json:"sent_at"`
+		Dsn     string            `json:"dsn"`
+		Sdk     map[string]string `json:"sdk"`
+		Trace   map[string]string `json:"trace,omitempty"`
+	}{
+		EventID: event.EventID,
+		SentAt:  sentAt,
+		Trace:   trace,
+		Dsn:     dsn.String(),
+		Sdk: map[string]string{
+			"name":    event.Sdk.Name,
+			"version": event.Sdk.Version,
+		},
 	})
 	if err != nil {
 		return nil, err
 	}
-	// payload
-	err = enc.Encode(body)
+
+	switch event.Type {
+	case transactionType, checkInType:
+		err = encodeEnvelopeItem(enc, event.Type, body)
+	case metricType:
+		err = encodeMetric(enc, &b, event.Metrics)
+	default:
+		err = encodeEnvelopeItem(enc, eventType, body)
+	}
+
 	if err != nil {
 		return nil, err
 	}
+
+	// Attachments
+	for _, attachment := range event.Attachments {
+		if err := encodeAttachment(enc, &b, attachment); err != nil {
+			return nil, err
+		}
+	}
+
+	// Profile data
+	if event.sdkMetaData.transactionProfile != nil {
+		body, err = json.Marshal(event.sdkMetaData.transactionProfile)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeEnvelopeItem(enc, profileType, body)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &b, nil
 }
 
-func getRequestFromEvent(event *Event, dsn *Dsn) (r *http.Request, err error) {
+func getRequestFromEvent(ctx context.Context, event *Event, dsn *Dsn) (r *http.Request, err error) {
 	defer func() {
 		if r != nil {
-			r.Header.Set("User-Agent", userAgent)
+			r.Header.Set("User-Agent", fmt.Sprintf("%s/%s", event.Sdk.Name, event.Sdk.Version))
+			r.Header.Set("Content-Type", "application/x-sentry-envelope")
+
+			auth := fmt.Sprintf("Sentry sentry_version=%s, "+
+				"sentry_client=%s/%s, sentry_key=%s", apiVersion, event.Sdk.Name, event.Sdk.Version, dsn.publicKey)
+
+			// The key sentry_secret is effectively deprecated and no longer needs to be set.
+			// However, since it was required in older self-hosted versions,
+			// it should still passed through to Sentry if set.
+			if dsn.secretKey != "" {
+				auth = fmt.Sprintf("%s, sentry_secret=%s", auth, dsn.secretKey)
+			}
+
+			r.Header.Set("X-Sentry-Auth", auth)
 		}
 	}()
+
 	body := getRequestBodyFromEvent(event)
 	if body == nil {
 		return nil, errors.New("event could not be marshaled")
 	}
-	if event.Type == transactionType {
-		b, err := transactionEnvelopeFromBody(event.EventID, time.Now(), body)
-		if err != nil {
-			return nil, err
-		}
-		return http.NewRequest(
-			http.MethodPost,
-			dsn.EnvelopeAPIURL().String(),
-			b,
-		)
+
+	envelope, err := envelopeFromBody(event, dsn, time.Now(), body)
+	if err != nil {
+		return nil, err
 	}
-	return http.NewRequest(
+
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	return http.NewRequestWithContext(
+		ctx,
 		http.MethodPost,
-		dsn.StoreAPIURL().String(),
-		bytes.NewReader(body),
+		dsn.GetAPIURL().String(),
+		envelope,
 	)
 }
 
@@ -209,7 +359,6 @@ func NewHTTPTransport() *HTTPTransport {
 	transport := HTTPTransport{
 		BufferSize: defaultBufferSize,
 		Timeout:    defaultTimeout,
-		limits:     make(ratelimit.Map),
 	}
 	return &transport
 }
@@ -256,8 +405,13 @@ func (t *HTTPTransport) Configure(options ClientOptions) {
 	})
 }
 
-// SendEvent assembles a new packet out of Event and sends it to remote server.
+// SendEvent assembles a new packet out of Event and sends it to the remote server.
 func (t *HTTPTransport) SendEvent(event *Event) {
+	t.SendEventWithContext(context.Background(), event)
+}
+
+// SendEventWithContext assembles a new packet out of Event and sends it to the remote server.
+func (t *HTTPTransport) SendEventWithContext(ctx context.Context, event *Event) {
 	if t.dsn == nil {
 		return
 	}
@@ -268,13 +422,9 @@ func (t *HTTPTransport) SendEvent(event *Event) {
 		return
 	}
 
-	request, err := getRequestFromEvent(event, t.dsn)
+	request, err := getRequestFromEvent(ctx, event, t.dsn)
 	if err != nil {
 		return
-	}
-
-	for headerKey, headerValue := range t.dsn.RequestHeaders() {
-		request.Header.Set(headerKey, headerValue)
 	}
 
 	// <-t.buffer is equivalent to acquiring a lock to access the current batch.
@@ -302,7 +452,7 @@ func (t *HTTPTransport) SendEvent(event *Event) {
 			eventType = fmt.Sprintf("%s event", event.Level)
 		}
 		Logger.Printf(
-			"Sending %s [%s] to %s project: %d",
+			"Sending %s [%s] to %s project: %s",
 			eventType,
 			event.EventID,
 			t.dsn.host,
@@ -394,12 +544,24 @@ func (t *HTTPTransport) worker() {
 				Logger.Printf("There was an issue with sending an event: %v", err)
 				continue
 			}
+			if response.StatusCode >= 400 && response.StatusCode <= 599 {
+				b, err := io.ReadAll(response.Body)
+				if err != nil {
+					Logger.Printf("Error while reading response code: %v", err)
+				}
+				Logger.Printf("Sending %s failed with the following error: %s", eventType, string(b))
+			}
+
 			t.mu.Lock()
+			if t.limits == nil {
+				t.limits = make(ratelimit.Map)
+			}
 			t.limits.Merge(ratelimit.FromResponse(response))
 			t.mu.Unlock()
+
 			// Drain body up to a limit and close it, allowing the
 			// transport to reuse TCP connections.
-			_, _ = io.CopyN(ioutil.Discard, response.Body, maxDrainResponseBytes)
+			_, _ = io.CopyN(io.Discard, response.Body, maxDrainResponseBytes)
 			response.Body.Close()
 		}
 
@@ -483,8 +645,13 @@ func (t *HTTPSyncTransport) Configure(options ClientOptions) {
 	}
 }
 
-// SendEvent assembles a new packet out of Event and sends it to remote server.
+// SendEvent assembles a new packet out of Event and sends it to the remote server.
 func (t *HTTPSyncTransport) SendEvent(event *Event) {
+	t.SendEventWithContext(context.Background(), event)
+}
+
+// SendEventWithContext assembles a new packet out of Event and sends it to the remote server.
+func (t *HTTPSyncTransport) SendEventWithContext(ctx context.Context, event *Event) {
 	if t.dsn == nil {
 		return
 	}
@@ -493,23 +660,22 @@ func (t *HTTPSyncTransport) SendEvent(event *Event) {
 		return
 	}
 
-	request, err := getRequestFromEvent(event, t.dsn)
+	request, err := getRequestFromEvent(ctx, event, t.dsn)
 	if err != nil {
 		return
 	}
 
-	for headerKey, headerValue := range t.dsn.RequestHeaders() {
-		request.Header.Set(headerKey, headerValue)
-	}
-
 	var eventType string
-	if event.Type == transactionType {
+	switch {
+	case event.Type == transactionType:
 		eventType = "transaction"
-	} else {
+	case event.Type == metricType:
+		eventType = metricType
+	default:
 		eventType = fmt.Sprintf("%s event", event.Level)
 	}
 	Logger.Printf(
-		"Sending %s [%s] to %s project: %d",
+		"Sending %s [%s] to %s project: %s",
 		eventType,
 		event.EventID,
 		t.dsn.host,
@@ -521,13 +687,25 @@ func (t *HTTPSyncTransport) SendEvent(event *Event) {
 		Logger.Printf("There was an issue with sending an event: %v", err)
 		return
 	}
+	if response.StatusCode >= 400 && response.StatusCode <= 599 {
+		b, err := io.ReadAll(response.Body)
+		if err != nil {
+			Logger.Printf("Error while reading response code: %v", err)
+		}
+		Logger.Printf("Sending %s failed with the following error: %s", eventType, string(b))
+	}
+
 	t.mu.Lock()
+	if t.limits == nil {
+		t.limits = make(ratelimit.Map)
+	}
+
 	t.limits.Merge(ratelimit.FromResponse(response))
 	t.mu.Unlock()
 
 	// Drain body up to a limit and close it, allowing the
 	// transport to reuse TCP connections.
-	_, _ = io.CopyN(ioutil.Discard, response.Body, maxDrainResponseBytes)
+	_, _ = io.CopyN(io.Discard, response.Body, maxDrainResponseBytes)
 	response.Body.Close()
 }
 
@@ -554,14 +732,16 @@ func (t *HTTPSyncTransport) disabled(c ratelimit.Category) bool {
 // Only used internally when an empty DSN is provided, which effectively disables the SDK.
 type noopTransport struct{}
 
-func (t *noopTransport) Configure(options ClientOptions) {
+var _ Transport = noopTransport{}
+
+func (noopTransport) Configure(ClientOptions) {
 	Logger.Println("Sentry client initialized with an empty DSN. Using noopTransport. No events will be delivered.")
 }
 
-func (t *noopTransport) SendEvent(event *Event) {
+func (noopTransport) SendEvent(*Event) {
 	Logger.Println("Event dropped due to noopTransport usage.")
 }
 
-func (t *noopTransport) Flush(_ time.Duration) bool {
+func (noopTransport) Flush(time.Duration) bool {
 	return true
 }
