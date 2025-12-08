@@ -82,11 +82,11 @@ func (o *KubeDBClientBuilder) GetMilvusClient() (*milvusclient.Client, error) {
 	defer conn.Close() // nolint:errcheck
 	conn.Close()       // nolint:errcheck
 
-	client, err := milvusclient.New(ctx, config)
+	c, err := milvusclient.New(ctx, config)
 	if err != nil {
 		klog.Warningf("Failed to create Milvus client: %v", err)
 		return nil, err
 	}
 
-	return client, nil
+	return c, nil
 }
