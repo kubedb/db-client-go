@@ -17,11 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"kubeops.dev/sidekick/crds"
+	"kubeops.dev/operator-shard-manager/crds"
 
 	"kmodules.xyz/client-go/apiextensions"
 )
 
-func (Sidekick) CustomResourceDefinition() *apiextensions.CustomResourceDefinition {
-	return crds.MustCustomResourceDefinition(SchemeGroupVersion.WithResource(ResourceSidekicks))
+func (ShardConfiguration) CustomResourceDefinition() *apiextensions.CustomResourceDefinition {
+	return crds.MustCustomResourceDefinition(SchemeGroupVersion.WithResource(ResourceShardConfigurations))
 }
