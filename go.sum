@@ -1111,7 +1111,7 @@ kmodules.xyz/resource-metadata v0.32.1 h1:hWQbL0Xb+GaF7qn+rY0CNh7FUfKZw29VBUKTxj
 kmodules.xyz/resource-metadata v0.32.1/go.mod h1:wHC24BVzKb1gzkDCSI5l9CXK4AKD5gMamxEqVys50lI=
 kubedb.dev/apimachinery v0.60.0-rc.0 h1:NQJXW6gFkirPlfjLooIZrPSWxhVVqOTi438LwtSNYYg=
 kubedb.dev/apimachinery v0.60.0-rc.0/go.mod h1:dv6yszikZE7a0sSLOACJz3zr15ddp42dd3uC8KE/LeU=
-kubeops.dev/operator-shard-manager v0.0.4 h1:vQ76QLd5eBl2mmJ95ZS0lhTApcyfeK/f3/xft66Kdh0=
+kubeops.dev/operator-shard-manager v0.0.4 h1:LEKALN18RyRZT7CndHhhyQh9/JGCfS/5MemCMsBjiew=
 kubeops.dev/operator-shard-manager v0.0.4/go.mod h1:mAp2tnPBgFpE5zSEMnb+RgDhRoM/P2VFLDMvDHqqBjo=
 kubeops.dev/petset v0.0.15 h1:iwTRFAp0RNw0A87sw2c97UZ6WIA9H/nhJBpDhXLa7fk=
 kubeops.dev/petset v0.0.15/go.mod h1:sw96WiXfzhpmKpXj4a5AdmEHs0Bx4QMhf+iW15zY4Gg=

@@ -1,6 +1,6 @@
 module kubedb.dev/db-client-go
 
-go 1.25.5
+go 1.25
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.23.2
