@@ -88,7 +88,20 @@ func (statement *Statement) Value2Interface(col *schemas.Column, fieldValue refl
 		if fieldType.ConvertibleTo(schemas.TimeType) {
 			t := fieldValue.Convert(schemas.TimeType).Interface().(time.Time)
 			tf, err := dialects.FormatColumnTime(statement.dialect, statement.defaultTimeZone, col, t)
-			return tf, err
+			if val, ok := tf.(string); ok {
+				var layout string
+				switch col.SQLType.Name {
+				case schemas.Date:
+					layout = "yyyy-MM-dd"
+				case schemas.Time:
+					layout = "HH24:mi:ss"
+				default:
+					layout = "yyyy-MM-dd HH24:mi:ss"
+				}
+				return &DateTimeString{Layout: layout, Str: val}, err
+			} else {
+				return tf, err
+			}
 		} else if fieldType.ConvertibleTo(nullFloatType) {
 			t := fieldValue.Convert(nullFloatType).Interface().(sql.NullFloat64)
 			if !t.Valid {

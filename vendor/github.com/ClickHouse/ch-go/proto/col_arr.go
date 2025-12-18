@@ -80,6 +80,18 @@ func (c *ColArr[T]) Infer(t ColumnType) error {
 	return nil
 }
 
+// RowLen returns i-th row array length.
+func (c ColArr[T]) RowLen(i int) int {
+	var start int
+	if i > 0 {
+		start = int(c.Offsets[i-1])
+	}
+
+	end := int(c.Offsets[i])
+
+	return end - start
+}
+
 // RowAppend appends i-th row to target and returns it.
 func (c ColArr[T]) RowAppend(i int, target []T) []T {
 	var start int
@@ -128,6 +140,12 @@ func (c *ColArr[T]) Reset() {
 func (c ColArr[T]) EncodeColumn(b *Buffer) {
 	c.Offsets.EncodeColumn(b)
 	c.Data.EncodeColumn(b)
+}
+
+// WriteColumn implements ColInput.
+func (c ColArr[T]) WriteColumn(w *Writer) {
+	c.Offsets.WriteColumn(w)
+	c.Data.WriteColumn(w)
 }
 
 // Append appends new row to column.

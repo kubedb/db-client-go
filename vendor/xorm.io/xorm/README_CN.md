@@ -49,6 +49,9 @@ v1.0.0 相对于 v0.8.2 有以下不兼容的变更：
 * MsSql
   - [github.com/microsoft/go-mssqldb](https://github.com/microsoft/go-mssqldb)
 
+* GBase8s
+  - [https://gitee.com/GBase8s/go-gci](https://gitee.com/GBase8s/go-gci)
+
 * Oracle
   - [github.com/godror/godror](https://github.com/godror/godror) (试验性支持)
   - [github.com/mattn/go-oci8](https://github.com/mattn/go-oci8) (试验性支持)

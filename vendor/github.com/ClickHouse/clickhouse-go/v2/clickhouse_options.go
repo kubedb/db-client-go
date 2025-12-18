@@ -1,34 +1,18 @@
-// Licensed to ClickHouse, Inc. under one or more contributor
-// license agreements. See the NOTICE file distributed with
-// this work for additional information regarding copyright
-// ownership. ClickHouse, Inc. licenses this file to you under
-// the Apache License, Version 2.0 (the "License"); you may
-// not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
 package clickhouse
 
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/ClickHouse/ch-go/compress"
-	"github.com/pkg/errors"
 )
 
 type CompressionMethod byte
@@ -41,6 +25,8 @@ func (c CompressionMethod) String() string {
 		return "zstd"
 	case CompressionLZ4:
 		return "lz4"
+	case CompressionLZ4HC:
+		return "lz4hc"
 	case CompressionGZIP:
 		return "gzip"
 	case CompressionDeflate:
@@ -55,6 +41,7 @@ func (c CompressionMethod) String() string {
 const (
 	CompressionNone    = CompressionMethod(compress.None)
 	CompressionLZ4     = CompressionMethod(compress.LZ4)
+	CompressionLZ4HC   = CompressionMethod(compress.LZ4HC)
 	CompressionZSTD    = CompressionMethod(compress.ZSTD)
 	CompressionGZIP    = CompressionMethod(0x95)
 	CompressionDeflate = CompressionMethod(0x96)
@@ -65,6 +52,7 @@ var compressionMap = map[string]CompressionMethod{
 	"none":    CompressionNone,
 	"zstd":    CompressionZSTD,
 	"lz4":     CompressionLZ4,
+	"lz4hc":   CompressionLZ4HC,
 	"gzip":    CompressionGZIP,
 	"deflate": CompressionDeflate,
 	"br":      CompressionBrotli,
@@ -72,13 +60,14 @@ var compressionMap = map[string]CompressionMethod{
 
 type Auth struct { // has_control_character
 	Database string
+
 	Username string
 	Password string
 }
 
 type Compression struct {
 	Method CompressionMethod
-	// this only applies to zlib and brotli compression algorithms
+	// this only applies to lz4, lz4hc, zlib, and brotli compression algorithms
 	Level int
 }
 
@@ -87,6 +76,7 @@ type ConnOpenStrategy uint8
 const (
 	ConnOpenInOrder ConnOpenStrategy = iota
 	ConnOpenRoundRobin
+	ConnOpenRandom
 )
 
 type Protocol int
@@ -117,8 +107,10 @@ func ParseDSN(dsn string) (*Options, error) {
 
 type Dial func(ctx context.Context, addr string, opt *Options) (DialResult, error)
 type DialResult struct {
-	conn *connect
+	conn nativeTransport
 }
+
+type HTTPProxy func(*http.Request) (*url.URL, error)
 
 type Options struct {
 	Protocol   Protocol
@@ -141,11 +133,28 @@ type Options struct {
 	FreeBufOnConnRelease bool              // drop preserved memory buffer after each query
 	HttpHeaders          map[string]string // set additional headers on HTTP requests
 	HttpUrlPath          string            // set additional URL path for HTTP requests
+	HttpMaxConnsPerHost  int               // MaxConnsPerHost for http.Transport
 	BlockBufferSize      uint8             // default 2 - can be overwritten on query
-	MaxCompressionBuffer int               // default 10485760 - measured in bytes  i.e. 10MiB
+	MaxCompressionBuffer int               // default 10485760 - measured in bytes  i.e.
 
-	scheme      string
+	// HTTPProxy specifies an HTTP proxy URL to use for requests made by the client.
+	HTTPProxyURL *url.URL
+
+	// GetJWT should return a JWT for authentication with ClickHouse Cloud.
+	// This is called per connection/request, so you may cache the token in your app if needed.
+	// Use this instead of Auth.Username and Auth.Password if you're using JWT auth.
+	GetJWT GetJWTFunc
+
+	scheme string
+
+	// ReadTimeout is the maximum duration the client will wait for ClickHouse
+	// to respond to a single Read call for bytes over the connection.
+	// Can be overridden with context.WithDeadline.
 	ReadTimeout time.Duration
+
+	// Set a custom transport for the http client.
+	// The default transport configured by the library is passed in as an argument.
+	TransportFunc func(*http.Transport) (http.RoundTripper, error)
 }
 
 func (o *Options) fromDSN(in string) error {
@@ -199,7 +208,7 @@ func (o *Options) fromDSN(in string) error {
 		case "compress_level":
 			level, err := strconv.ParseInt(params.Get(v), 10, 8)
 			if err != nil {
-				return errors.Wrap(err, "compress_level invalid value")
+				return fmt.Errorf("compress_level invalid value: %w", err)
 			}
 
 			if o.Compression == nil {
@@ -215,7 +224,7 @@ func (o *Options) fromDSN(in string) error {
 		case "max_compression_buffer":
 			max, err := strconv.Atoi(params.Get(v))
 			if err != nil {
-				return errors.Wrap(err, "max_compression_buffer invalid value")
+				return fmt.Errorf("max_compression_buffer invalid value: %w", err)
 			}
 			o.MaxCompressionBuffer = max
 		case "dial_timeout":
@@ -265,29 +274,33 @@ func (o *Options) fromDSN(in string) error {
 				o.ConnOpenStrategy = ConnOpenInOrder
 			case "round_robin":
 				o.ConnOpenStrategy = ConnOpenRoundRobin
+			case "random":
+				o.ConnOpenStrategy = ConnOpenRandom
 			}
 		case "max_open_conns":
 			maxOpenConns, err := strconv.Atoi(params.Get(v))
 			if err != nil {
-				return errors.Wrap(err, "max_open_conns invalid value")
+				return fmt.Errorf("max_open_conns invalid value: %w", err)
 			}
 			o.MaxOpenConns = maxOpenConns
 		case "max_idle_conns":
 			maxIdleConns, err := strconv.Atoi(params.Get(v))
 			if err != nil {
-				return errors.Wrap(err, "max_idle_conns invalid value")
+				return fmt.Errorf("max_idle_conns invalid value: %w", err)
 			}
 			o.MaxIdleConns = maxIdleConns
 		case "conn_max_lifetime":
 			connMaxLifetime, err := time.ParseDuration(params.Get(v))
 			if err != nil {
-				return errors.Wrap(err, "conn_max_lifetime invalid value")
+				return fmt.Errorf("conn_max_lifetime invalid value: %w", err)
 			}
 			o.ConnMaxLifetime = connMaxLifetime
 		case "username":
 			o.Auth.Username = params.Get(v)
 		case "password":
 			o.Auth.Password = params.Get(v)
+		case "database":
+			o.Auth.Database = params.Get(v)
 		case "client_info_product":
 			chunks := strings.Split(params.Get(v), ",")
 
@@ -299,6 +312,18 @@ func (o *Options) fromDSN(in string) error {
 					version,
 				})
 			}
+		case "http_proxy":
+			proxyURL, err := url.Parse(params.Get(v))
+			if err != nil {
+				return fmt.Errorf("clickhouse [dsn parse]: http_proxy: %s", err)
+			}
+			o.HTTPProxyURL = proxyURL
+		case "http_path":
+			path := params.Get(v)
+			if path != "" && !strings.HasPrefix(path, "/") {
+				path = "/" + path
+			}
+			o.HttpUrlPath = path
 		default:
 			switch p := strings.ToLower(params.Get(v)); p {
 			case "true":

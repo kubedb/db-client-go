@@ -1,23 +1,7 @@
-// Licensed to ClickHouse, Inc. under one or more contributor
-// license agreements. See the NOTICE file distributed with
-// this work for additional information regarding copyright
-// ownership. ClickHouse, Inc. licenses this file to you under
-// the Apache License, Version 2.0 (the "License"); you may
-// not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
 package column
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"encoding/binary"
 	"fmt"
@@ -98,6 +82,8 @@ func (col *IPv4) ScanRow(dest any, row int) error {
 		}
 		*d = new(uint32)
 		**d = binary.BigEndian.Uint32(ipV4[:])
+	case sql.Scanner:
+		return d.Scan(col.row(row))
 	default:
 		return &ColumnConverterError{
 			Op:   "ScanRow",
@@ -145,7 +131,7 @@ func (col *IPv4) Append(v any) (nulls []uint8, err error) {
 		ips := make([]netip.Addr, len(v), len(v))
 		for i := range v {
 			switch {
-			case v != nil:
+			case v[i] != nil:
 				ip, err := strToIPV4(*v[i])
 				if err != nil {
 					return nulls, err
@@ -164,7 +150,7 @@ func (col *IPv4) Append(v any) (nulls []uint8, err error) {
 		nulls = make([]uint8, len(v))
 		for i := range v {
 			switch {
-			case v != nil:
+			case v[i] != nil:
 				col.col.Append(proto.ToIPv4(*v[i]))
 			default:
 				nulls[i] = 1
@@ -196,7 +182,7 @@ func (col *IPv4) Append(v any) (nulls []uint8, err error) {
 		nulls = make([]uint8, len(v))
 		for i := range v {
 			switch {
-			case v != nil:
+			case v[i] != nil:
 				col.col.Append(proto.IPv4(*v[i]))
 			default:
 				nulls[i] = 1

@@ -1,20 +1,3 @@
-// Licensed to ClickHouse, Inc. under one or more contributor
-// license agreements. See the NOTICE file distributed with
-// this work for additional information regarding copyright
-// ownership. ClickHouse, Inc. licenses this file to you under
-// the Apache License, Version 2.0 (the "License"); you may
-// not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
 package column
 
 import (
@@ -31,6 +14,10 @@ type Enum8 struct {
 	chType Type
 	name   string
 	col    proto.ColEnum8
+
+	// Encoding of the enums that have been specified by the user.
+	// Using this when appending rows, to validate the enum is valud.
+	enumValuesBitset [4]uint64
 }
 
 func (col *Enum8) Reset() {
@@ -183,27 +170,25 @@ func (col *Enum8) AppendRow(elem any) error {
 	case *int8:
 		return col.AppendRow(int(*elem))
 	case int:
-		v := proto.Enum8(elem)
-		_, ok := col.vi[v]
-		if !ok {
+		// Check if the enum value is defined
+		if col.enumValuesBitset[uint8(elem)>>6]&(1<<(elem&63)) == 0 {
 			return &Error{
 				Err:        fmt.Errorf("unknown element %v", elem),
 				ColumnType: string(col.chType),
 			}
 		}
-		col.col.Append(v)
+		col.col.Append(proto.Enum8(elem))
 	case *int:
 		switch {
 		case elem != nil:
-			v := proto.Enum8(*elem)
-			_, ok := col.vi[v]
-			if !ok {
+			// Check if the enum value is defined
+			if col.enumValuesBitset[uint8(*elem)>>6]&(1<<(*elem&63)) == 0 {
 				return &Error{
 					Err:        fmt.Errorf("unknown element %v", *elem),
 					ColumnType: string(col.chType),
 				}
 			}
-			col.col.Append(v)
+			col.col.Append(proto.Enum8(*elem))
 		default:
 			col.col.Append(0)
 		}

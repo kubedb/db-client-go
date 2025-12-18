@@ -1,30 +1,12 @@
-// Licensed to ClickHouse, Inc. under one or more contributor
-// license agreements. See the NOTICE file distributed with
-// this work for additional information regarding copyright
-// ownership. ClickHouse, Inc. licenses this file to you under
-// the Apache License, Version 2.0 (the "License"); you may
-// not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
 package column
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"fmt"
+	"github.com/ClickHouse/ch-go/proto"
 	"reflect"
 	"strings"
-	"time"
-
-	"github.com/ClickHouse/ch-go/proto"
 )
 
 // https://github.com/ClickHouse/ClickHouse/blob/master/src/Columns/ColumnMap.cpp
@@ -64,7 +46,7 @@ func (col *Map) Name() string {
 	return col.name
 }
 
-func (col *Map) parse(t Type, tz *time.Location) (_ Interface, err error) {
+func (col *Map) parse(t Type, sc *ServerContext) (_ Interface, err error) {
 	col.chType = t
 	types := make([]string, 2, 2)
 	typeParams := t.params()
@@ -77,17 +59,20 @@ func (col *Map) parse(t Type, tz *time.Location) (_ Interface, err error) {
 		types[1] = typeParams[idx+1:]
 	}
 	if types[0] != "" && types[1] != "" {
-		if col.keys, err = Type(strings.TrimSpace(types[0])).Column(col.name, tz); err != nil {
+		if col.keys, err = Type(strings.TrimSpace(types[0])).Column(col.name, sc); err != nil {
 			return nil, err
 		}
-		if col.values, err = Type(strings.TrimSpace(types[1])).Column(col.name, tz); err != nil {
+		if col.values, err = Type(strings.TrimSpace(types[1])).Column(col.name, sc); err != nil {
 			return nil, err
 		}
-		col.scanType = reflect.MapOf(
-			col.keys.ScanType(),
-			col.values.ScanType(),
-		)
-		return col, nil
+
+		if col.keys.ScanType().Comparable() {
+			col.scanType = reflect.MapOf(
+				col.keys.ScanType(),
+				col.values.ScanType(),
+			)
+			return col, nil
+		}
 	}
 	return nil, &UnsupportedColumnTypeError{
 		t: t,
@@ -111,6 +96,9 @@ func (col *Map) Row(i int, ptr bool) any {
 }
 
 func (col *Map) ScanRow(dest any, i int) error {
+	if scanner, ok := dest.(sql.Scanner); ok {
+		return scanner.Scan(col.row(i).Interface())
+	}
 	value := reflect.Indirect(reflect.ValueOf(dest))
 	if value.Type() == col.scanType {
 		value.Set(col.row(i))
@@ -169,6 +157,12 @@ func (col *Map) Append(v any) (nulls []uint8, err error) {
 }
 
 func (col *Map) AppendRow(v any) error {
+	if v == nil {
+		// NOTE: successful Map.parse() make sure we have
+		// valid col.scanType
+		v = reflect.Zero(col.scanType).Interface()
+	}
+
 	value := reflect.Indirect(reflect.ValueOf(v))
 	if value.Type() == col.scanType {
 		var (
@@ -319,9 +313,19 @@ func (col *Map) row(n int) reflect.Value {
 		from = int(prev)
 	)
 	for next := 0; next < size; next++ {
+		mapValue := col.values.Row(from+next, false)
+		var mapReflectValue reflect.Value
+		if mapValue == nil {
+			// Convert interface{} nil to typed nil (such as nil *string) to preserve map element
+			// https://github.com/ClickHouse/clickhouse-go/issues/1515
+			mapReflectValue = reflect.New(value.Type().Elem()).Elem()
+		} else {
+			mapReflectValue = reflect.ValueOf(mapValue)
+		}
+
 		value.SetMapIndex(
 			reflect.ValueOf(col.keys.Row(from+next, false)),
-			reflect.ValueOf(col.values.Row(from+next, false)),
+			mapReflectValue,
 		)
 	}
 	return value

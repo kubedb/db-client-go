@@ -1,20 +1,3 @@
-// Licensed to ClickHouse, Inc. under one or more contributor
-// license agreements. See the NOTICE file distributed with
-// this work for additional information regarding copyright
-// ownership. ClickHouse, Inc. licenses this file to you under
-// the Apache License, Version 2.0 (the "License"); you may
-// not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
 package column
 
 import (
@@ -84,10 +67,10 @@ func (col *LowCardinality) Name() string {
 	return col.name
 }
 
-func (col *LowCardinality) parse(t Type, tz *time.Location) (_ *LowCardinality, err error) {
+func (col *LowCardinality) parse(t Type, sc *ServerContext) (_ *LowCardinality, err error) {
 	col.chType = t
 	col.append.index = make(map[any]int)
-	if col.index, err = Type(t.params()).Column(col.name, tz); err != nil {
+	if col.index, err = Type(t.params()).Column(col.name, sc); err != nil {
 		return nil, err
 	}
 	if nullable, ok := col.index.(*Nullable); ok {
@@ -220,6 +203,9 @@ func (col *LowCardinality) Encode(buffer *proto.Buffer) {
 	}()
 	ixLen := uint64(len(col.append.index))
 	switch {
+	case col.keys().Rows() > 0:
+		// We already have keys, so this column is probably in a block directly decoded from the server, and we should
+		// not reset them
 	case ixLen < math.MaxUint8:
 		col.key = keyUInt8
 		for _, v := range col.append.keys {

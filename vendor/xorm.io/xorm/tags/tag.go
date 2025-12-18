@@ -124,10 +124,16 @@ var defaultTagHandlers = map[string]Handler{
 	"EXTENDS":  ExtendsTagHandler,
 	"UNSIGNED": UnsignedTagHandler,
 	"COLLATE":  CollateTagHandler,
+	"JSON":     JSONTagHandler,
+	"JSONB":    JSONBTagHandler,
 }
 
 func init() {
 	for k := range schemas.SqlTypes {
+		// don't override default tag handlers
+		if _, ok := defaultTagHandlers[k]; ok {
+			continue
+		}
 		defaultTagHandlers[k] = SQLTypeTagHandler
 	}
 }
@@ -293,12 +299,20 @@ func CollateTagHandler(ctx *Context) error {
 	return nil
 }
 
+func JSONTagHandler(ctx *Context) error {
+	ctx.col.IsJSON = true
+	return nil
+}
+
+func JSONBTagHandler(ctx *Context) error {
+	ctx.col.IsJSONB = true
+	ctx.col.IsJSON = true // jsonb is also json
+	return nil
+}
+
 // SQLTypeTagHandler describes SQL Type tag handler
 func SQLTypeTagHandler(ctx *Context) error {
 	ctx.col.SQLType = schemas.SQLType{Name: ctx.tagUname}
-	if ctx.tagUname == "JSON" || ctx.tagUname == "JSONB" {
-		ctx.col.IsJSON = true
-	}
 	if len(ctx.params) == 0 {
 		return nil
 	}

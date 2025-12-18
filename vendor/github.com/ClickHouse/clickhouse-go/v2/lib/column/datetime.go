@@ -1,30 +1,14 @@
-// Licensed to ClickHouse, Inc. under one or more contributor
-// license agreements. See the NOTICE file distributed with
-// this work for additional information regarding copyright
-// ownership. ClickHouse, Inc. licenses this file to you under
-// the Apache License, Version 2.0 (the "License"); you may
-// not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
 package column
 
 import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
-	"github.com/ClickHouse/ch-go/proto"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/ClickHouse/ch-go/proto"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/timezone"
 )
@@ -94,6 +78,11 @@ func (col *DateTime) ScanRow(dest any, row int) error {
 	case **time.Time:
 		*d = new(time.Time)
 		**d = col.row(row)
+	case *int64:
+		*d = col.row(row).Unix()
+	case **int64:
+		*d = new(int64)
+		**d = col.row(row).Unix()
 	case *sql.NullTime:
 		return d.Scan(col.row(row))
 	default:
@@ -121,7 +110,7 @@ func (col *DateTime) Append(v any) (nulls []uint8, err error) {
 		nulls = make([]uint8, len(v))
 		for i := range v {
 			switch {
-			case v != nil:
+			case v[i] != nil:
 				col.col.Append(time.Unix(*v[i], 0))
 			default:
 				col.col.Append(time.Time{})
@@ -131,9 +120,6 @@ func (col *DateTime) Append(v any) (nulls []uint8, err error) {
 	case []time.Time:
 		nulls = make([]uint8, len(v))
 		for i := range v {
-			if err := dateOverflow(minDateTime, maxDateTime, v[i], defaultDateTimeFormatNoZone); err != nil {
-				return nil, err
-			}
 			col.col.Append(v[i])
 		}
 
@@ -142,9 +128,6 @@ func (col *DateTime) Append(v any) (nulls []uint8, err error) {
 		for i := range v {
 			switch {
 			case v[i] != nil:
-				if err := dateOverflow(minDateTime, maxDateTime, *v[i], defaultDateTimeFormatNoZone); err != nil {
-					return nil, err
-				}
 				col.col.Append(*v[i])
 			default:
 				nulls[i] = 1
@@ -223,16 +206,10 @@ func (col *DateTime) AppendRow(v any) error {
 			col.col.Append(time.Time{})
 		}
 	case time.Time:
-		if err := dateOverflow(minDateTime, maxDateTime, v, defaultDateTimeFormatNoZone); err != nil {
-			return err
-		}
 		col.col.Append(v)
 	case *time.Time:
 		switch {
 		case v != nil:
-			if err := dateOverflow(minDateTime, maxDateTime, *v, defaultDateTimeFormatNoZone); err != nil {
-				return err
-			}
 			col.col.Append(*v)
 		default:
 			col.col.Append(time.Time{})
@@ -309,19 +286,11 @@ func (col *DateTime) row(i int) time.Time {
 }
 
 func (col *DateTime) parseDateTime(value string) (tv time.Time, err error) {
-	defer func() {
-		if err == nil {
-			err = dateOverflow(minDateTime, maxDateTime, tv, defaultDateFormatNoZone)
-		}
-	}()
-
 	if tv, err = time.Parse(defaultDateTimeFormatWithZone, value); err == nil {
 		return tv, nil
 	}
 	if tv, err = time.Parse(defaultDateTimeFormatNoZone, value); err == nil {
-		return time.Date(
-			tv.Year(), tv.Month(), tv.Day(), tv.Hour(), tv.Minute(), tv.Second(), tv.Nanosecond(), time.Local,
-		), nil
+		return getTimeWithDifferentLocation(tv, time.Local), nil
 	}
 	return time.Time{}, err
 }

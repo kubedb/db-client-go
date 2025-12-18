@@ -12,7 +12,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"hash/crc32"
 	"io"
 	"reflect"
 	"strconv"
@@ -77,8 +76,8 @@ type Session struct {
 	afterClosures   []func(interface{})
 	afterProcessors []executedProcessor
 
-	stmtCache   map[uint32]*core.Stmt // key: hash.Hash32 of (queryStr, len(queryStr))
-	txStmtCache map[uint32]*core.Stmt // for tx statement
+	stmtCache   map[string]*core.Stmt // key: full SQL string
+	txStmtCache map[string]*core.Stmt // for tx statement
 
 	lastSQL     string
 	lastSQLArgs []interface{}
@@ -128,8 +127,8 @@ func newSession(engine *Engine) *Session {
 		beforeClosures:   make([]func(interface{}), 0),
 		afterClosures:    make([]func(interface{}), 0),
 		afterProcessors:  make([]executedProcessor, 0),
-		stmtCache:        make(map[uint32]*core.Stmt),
-		txStmtCache:      make(map[uint32]*core.Stmt),
+		stmtCache:        make(map[string]*core.Stmt),
+		txStmtCache:      make(map[string]*core.Stmt),
 
 		lastSQL:     "",
 		lastSQLArgs: make([]interface{}, 0),
@@ -364,33 +363,29 @@ func (session *Session) canCache() bool {
 }
 
 func (session *Session) doPrepare(db *core.DB, sqlStr string) (stmt *core.Stmt, err error) {
-	crc := crc32.ChecksumIEEE([]byte(sqlStr))
-	// TODO try hash(sqlStr+len(sqlStr))
-	var has bool
-	stmt, has = session.stmtCache[crc]
-	if !has {
-		stmt, err = db.PrepareContext(session.ctx, sqlStr)
-		if err != nil {
-			return nil, err
-		}
-		session.stmtCache[crc] = stmt
+	key := sqlStr
+	if s, ok := session.stmtCache[key]; ok {
+		return s, nil
 	}
-	return
+	stmt, err = db.PrepareContext(session.ctx, sqlStr)
+	if err != nil {
+		return nil, err
+	}
+	session.stmtCache[key] = stmt
+	return stmt, nil
 }
 
 func (session *Session) doPrepareTx(sqlStr string) (stmt *core.Stmt, err error) {
-	crc := crc32.ChecksumIEEE([]byte(sqlStr))
-	// TODO try hash(sqlStr+len(sqlStr))
-	var has bool
-	stmt, has = session.txStmtCache[crc]
-	if !has {
-		stmt, err = session.tx.PrepareContext(session.ctx, sqlStr)
-		if err != nil {
-			return nil, err
-		}
-		session.txStmtCache[crc] = stmt
+	key := sqlStr
+	if s, ok := session.txStmtCache[key]; ok {
+		return s, nil
 	}
-	return
+	stmt, err = session.tx.PrepareContext(session.ctx, sqlStr)
+	if err != nil {
+		return nil, err
+	}
+	session.txStmtCache[key] = stmt
+	return stmt, nil
 }
 
 func getField(dataStruct *reflect.Value, table *schemas.Table, field *QueryedField) (*schemas.Column, *reflect.Value, error) {

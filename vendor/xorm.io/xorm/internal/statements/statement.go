@@ -436,6 +436,11 @@ func (statement *Statement) asDBCond(fieldValue reflect.Value, fieldType reflect
 			val, _ := valNul.Value()
 			if val == nil && !requiredField {
 				return nil, false, nil
+			} else if parsed, ok := val.(string); ok {
+				// parsed == "0" is to be compatible with the github.com/shopspring/decimal
+				if (parsed == "" || parsed == "0") && !requiredField {
+					return nil, false, nil
+				}
 			}
 			return val, true, nil
 		} else {

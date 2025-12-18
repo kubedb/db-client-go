@@ -5,9 +5,22 @@
 package statements
 
 import (
+	"database/sql/driver"
+	"fmt"
+
 	"xorm.io/builder"
 	"xorm.io/xorm/schemas"
 )
+
+type DateTimeString struct {
+	Layout string
+	Str    string
+}
+
+// Value implements the driver Valuer interface.
+func (n DateTimeString) Value() (driver.Value, error) {
+	return n.Str, nil
+}
 
 // WriteArg writes an arg
 func (statement *Statement) WriteArg(w *builder.BytesWriter, arg interface{}) error {
@@ -22,6 +35,17 @@ func (statement *Statement) WriteArg(w *builder.BytesWriter, arg interface{}) er
 		if _, err := w.WriteString(")"); err != nil {
 			return err
 		}
+	case *DateTimeString:
+		if statement.dialect.URI().DBType == schemas.ORACLE {
+			if _, err := fmt.Fprintf(w, `TO_DATE(?,'%s')`, argv.Layout); err != nil {
+				return err
+			}
+		} else {
+			if err := w.WriteByte('?'); err != nil {
+				return err
+			}
+		}
+		w.Append(arg)
 	default:
 		if err := w.WriteByte('?'); err != nil {
 			return err

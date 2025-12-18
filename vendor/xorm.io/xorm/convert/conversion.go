@@ -7,13 +7,14 @@ package convert
 import (
 	"database/sql"
 	"database/sql/driver"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
 	"reflect"
 	"strconv"
 	"time"
+
+	"xorm.io/xorm/internal/json"
 )
 
 // ConversionFrom is an inteface to allow retrieve data from database
@@ -392,7 +393,7 @@ func AssignValue(dv reflect.Value, src interface{}) error {
 		if dv.Kind() != reflect.Ptr {
 			dv = dv.Addr()
 		}
-		return json.Unmarshal(data, dv.Interface())
+		return json.DefaultJSONHandler.Unmarshal(data, dv.Interface())
 	default:
 		return fmt.Errorf("convert.AssignValue: unsupported Scan, storing driver.Value type %T into type %T", src, dv.Interface())
 	}

@@ -109,6 +109,9 @@ func newEngine(driverName, dataSourceName string, dialect dialects.Dialect, db *
 // NewEngineWithParams new a db manager with params. The params will be passed to dialects.
 func NewEngineWithParams(driverName string, dataSourceName string, params map[string]string) (*Engine, error) {
 	engine, err := NewEngine(driverName, dataSourceName)
+	if err != nil {
+		return nil, err
+	}
 	engine.dialect.SetParams(params)
 	return engine, err
 }
@@ -795,6 +798,22 @@ func (engine *Engine) dumpTables(ctx context.Context, tables []*schemas.Table, w
 							}
 						} else {
 							if _, err = io.WriteString(w, "N'"+strings.ReplaceAll(s.String, "'", "''")+"'"); err != nil {
+								return err
+							}
+						}
+					} else if sess.engine.dialect.URI().DBType == schemas.GBASE8S {
+						stp.Name = strings.Replace(stp.Name, "SQLT_", "", 1)
+						if stp.IsTime() && len(s.String) == 20 { // "2025-06-10T07:55:31Z"
+							t, err := time.Parse(time.RFC3339, s.String)
+							if err != nil {
+								return fmt.Errorf("failed to parse time %s: %v", s.String, err)
+							}
+							r := t.Format("2006-01-02 15:04:05")
+							if _, err = io.WriteString(w, "'"+r+"'"); err != nil {
+								return err
+							}
+						} else {
+							if _, err = io.WriteString(w, "'"+strings.ReplaceAll(s.String, "'", "''")+"'"); err != nil {
 								return err
 							}
 						}

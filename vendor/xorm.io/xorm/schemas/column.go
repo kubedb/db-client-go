@@ -26,6 +26,7 @@ type Column struct {
 	FieldIndex      []int  // Available only when parsed from a struct
 	SQLType         SQLType
 	IsJSON          bool
+	IsJSONB         bool
 	Length          int64
 	Length2         int64
 	Nullable        bool

@@ -8,10 +8,12 @@ import (
 	"math"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/microsoft/go-mssqldb/internal/cp"
 	"github.com/microsoft/go-mssqldb/internal/decimal"
+	"github.com/microsoft/go-mssqldb/msdsn"
 )
 
 // fixed-length data types
@@ -121,7 +123,7 @@ type xmlInfo struct {
 	XmlSchemaCollection string
 }
 
-func readTypeInfo(r *tdsBuffer, typeId byte, c *cryptoMetadata) (res typeInfo) {
+func readTypeInfo(r *tdsBuffer, typeId byte, c *cryptoMetadata, encoding msdsn.EncodeParameters) (res typeInfo) {
 	res.TypeId = typeId
 	switch typeId {
 	case typeNull, typeInt1, typeBit, typeInt2, typeInt4, typeDateTim4,
@@ -142,13 +144,13 @@ func readTypeInfo(r *tdsBuffer, typeId byte, c *cryptoMetadata) (res typeInfo) {
 		res.Reader = readFixedType
 		res.Buffer = make([]byte, res.Size)
 	default: // all others are VARLENTYPE
-		readVarLen(&res, r, c)
+		readVarLen(&res, r, c, encoding)
 	}
 	return
 }
 
 // https://msdn.microsoft.com/en-us/library/dd358284.aspx
-func writeTypeInfo(w io.Writer, ti *typeInfo) (err error) {
+func writeTypeInfo(w io.Writer, ti *typeInfo, out bool, encoding msdsn.EncodeParameters) (err error) {
 	err = binary.Write(w, binary.LittleEndian, ti.TypeId)
 	if err != nil {
 		return
@@ -162,7 +164,7 @@ func writeTypeInfo(w io.Writer, ti *typeInfo) (err error) {
 	case typeTvp:
 		ti.Writer = writeFixedType
 	default: // all others are VARLENTYPE
-		err = writeVarLen(w, ti)
+		err = writeVarLen(w, ti, out, encoding)
 		if err != nil {
 			return
 		}
@@ -176,7 +178,7 @@ func writeFixedType(w io.Writer, ti typeInfo, buf []byte) (err error) {
 }
 
 // https://msdn.microsoft.com/en-us/library/dd358341.aspx
-func writeVarLen(w io.Writer, ti *typeInfo) (err error) {
+func writeVarLen(w io.Writer, ti *typeInfo, out bool, encoding msdsn.EncodeParameters) (err error) {
 	switch ti.TypeId {
 
 	case typeDateN:
@@ -193,7 +195,7 @@ func writeVarLen(w io.Writer, ti *typeInfo) (err error) {
 
 		// byle len types
 		if ti.Size > 0xff {
-			panic("Invalid size for BYLELEN_TYPE")
+			panic("Invalid size for BYTELEN_TYPE")
 		}
 		if err = binary.Write(w, binary.LittleEndian, uint8(ti.Size)); err != nil {
 			return
@@ -212,17 +214,21 @@ func writeVarLen(w io.Writer, ti *typeInfo) (err error) {
 		ti.Writer = writeByteLenType
 	case typeGuid:
 		if !(ti.Size == 0x10 || ti.Size == 0x00) {
-			panic("Invalid size for BYLELEN_TYPE")
+			panic("Invalid size for UNIQUEIDENTIFIER")
 		}
 		if err = binary.Write(w, binary.LittleEndian, uint8(ti.Size)); err != nil {
 			return
 		}
-		ti.Writer = writeByteLenType
+		if encoding.GuidConversion {
+			ti.Writer = writeGuidTypeWithConversion
+		} else {
+			ti.Writer = writeGuidTypeWithoutConversion
+		}
 	case typeBigVarBin, typeBigVarChar, typeBigBinary, typeBigChar,
 		typeNVarChar, typeNChar, typeXml, typeUdt:
 
 		// short len types
-		if ti.Size > 8000 || ti.Size == 0 {
+		if ti.Size > 8000 || ti.Size == 0 || out {
 			if err = binary.Write(w, binary.LittleEndian, uint16(0xffff)); err != nil {
 				return
 			}
@@ -290,7 +296,7 @@ func encodeDateTime(t time.Time) (res []byte) {
 	basedays := gregorianDays(1900, 1)
 	// days since Jan 1st 1900 (same TZ as t)
 	days := gregorianDays(t.Year(), t.YearDay()) - basedays
-	tm := 300*(t.Second()+t.Minute()*60+t.Hour()*60*60) + t.Nanosecond()*300/1e9
+	tm := 300*(t.Second()+t.Minute()*60+t.Hour()*60*60) + nanosToThreeHundredthsOfASecond(t.Nanosecond())
 	// minimum and maximum possible
 	mindays := gregorianDays(1753, 1) - basedays
 	maxdays := gregorianDays(9999, 365) - basedays
@@ -311,10 +317,18 @@ func encodeDateTime(t time.Time) (res []byte) {
 func decodeDateTime(buf []byte) time.Time {
 	days := int32(binary.LittleEndian.Uint32(buf))
 	tm := binary.LittleEndian.Uint32(buf[4:])
-	ns := int(math.Trunc(float64(tm%300)/0.3+0.5)) * 1000000
+	ns := threeHundredthsOfASecondToNanos(int(tm % 300))
 	secs := int(tm / 300)
 	return time.Date(1900, 1, 1+int(days),
 		0, 0, secs, ns, time.UTC)
+}
+
+func threeHundredthsOfASecondToNanos(ths int) int {
+	return int(math.Trunc(float64(ths)/0.3+0.5)) * 1000000
+}
+
+func nanosToThreeHundredthsOfASecond(ns int) int {
+	return int(math.Round(float64(ns) * 3 / 1e7))
 }
 
 func readFixedType(ti *typeInfo, r *tdsBuffer, c *cryptoMetadata) interface{} {
@@ -351,7 +365,7 @@ func readFixedType(ti *typeInfo, r *tdsBuffer, c *cryptoMetadata) interface{} {
 	panic("shoulnd't get here")
 }
 
-func readByteLenType(ti *typeInfo, r *tdsBuffer, c *cryptoMetadata) interface{} {
+func readByteLenTypeWithEncoding(ti *typeInfo, r *tdsBuffer, c *cryptoMetadata, encoding msdsn.EncodeParameters) interface{} {
 	var size byte
 	if c != nil {
 		size = byte(r.rsize)
@@ -376,7 +390,7 @@ func readByteLenType(ti *typeInfo, r *tdsBuffer, c *cryptoMetadata) interface{} 
 	case typeDateTimeOffsetN:
 		return decodeDateTimeOffset(ti.Scale, buf)
 	case typeGuid:
-		return decodeGuid(buf)
+		return decodeGuid(buf, encoding)
 	case typeIntN:
 		switch len(buf) {
 		case 1:
@@ -443,6 +457,14 @@ func readByteLenType(ti *typeInfo, r *tdsBuffer, c *cryptoMetadata) interface{} 
 	panic("shouldn't get here")
 }
 
+func readByteLenTypeWithGuidConversion(ti *typeInfo, r *tdsBuffer, c *cryptoMetadata) interface{} {
+	return readByteLenTypeWithEncoding(ti, r, c, msdsn.EncodeParameters{GuidConversion: true})
+}
+
+func readByteLenType(ti *typeInfo, r *tdsBuffer, c *cryptoMetadata) interface{} {
+	return readByteLenTypeWithEncoding(ti, r, c, msdsn.EncodeParameters{GuidConversion: false})
+}
+
 func writeByteLenType(w io.Writer, ti typeInfo, buf []byte) (err error) {
 	if ti.Size > 0xff {
 		panic("Invalid size for BYTELEN_TYPE")
@@ -453,6 +475,35 @@ func writeByteLenType(w io.Writer, ti typeInfo, buf []byte) (err error) {
 	}
 	_, err = w.Write(buf)
 	return
+}
+
+func writeGuidType(w io.Writer, ti typeInfo, buf []byte, encoding msdsn.EncodeParameters) (err error) {
+	if !(ti.Size == 0x10 || ti.Size == 0x00) {
+		panic("Invalid size for UNIQUEIDENTIFIER")
+	}
+	err = binary.Write(w, binary.LittleEndian, uint8(len(buf)))
+	if err != nil {
+		return
+	}
+	if ti.Size == 0x10 {
+		res := make([]byte, 0x10)
+		copy(res, buf)
+		if encoding.GuidConversion {
+			binary.BigEndian.PutUint32(res[0:4], binary.LittleEndian.Uint32(res[0:4]))
+			binary.BigEndian.PutUint16(res[4:6], binary.LittleEndian.Uint16(res[4:6]))
+			binary.BigEndian.PutUint16(res[6:8], binary.LittleEndian.Uint16(res[6:8]))
+		}
+		_, err = w.Write(res)
+	}
+	return
+}
+
+func writeGuidTypeWithConversion(w io.Writer, ti typeInfo, buf []byte) (err error) {
+	return writeGuidType(w, ti, buf, msdsn.EncodeParameters{GuidConversion: true})
+}
+
+func writeGuidTypeWithoutConversion(w io.Writer, ti typeInfo, buf []byte) (err error) {
+	return writeGuidType(w, ti, buf, msdsn.EncodeParameters{GuidConversion: false})
 }
 
 func readShortLenType(ti *typeInfo, r *tdsBuffer, c *cryptoMetadata) interface{} {
@@ -578,7 +629,7 @@ func writeCollation(w io.Writer, col cp.Collation) (err error) {
 
 // reads variant value
 // http://msdn.microsoft.com/en-us/library/dd303302.aspx
-func readVariantType(ti *typeInfo, r *tdsBuffer, c *cryptoMetadata) interface{} {
+func readVariantTypeWithEncoding(ti *typeInfo, r *tdsBuffer, c *cryptoMetadata, encoding msdsn.EncodeParameters) interface{} {
 	size := r.int32()
 	if size == 0 {
 		return nil
@@ -589,7 +640,7 @@ func readVariantType(ti *typeInfo, r *tdsBuffer, c *cryptoMetadata) interface{} 
 	case typeGuid:
 		buf := make([]byte, size-2-propbytes)
 		r.ReadFull(buf)
-		return buf
+		return decodeGuid(buf, encoding)
 	case typeBit:
 		return r.byte() != 0
 	case typeInt1:
@@ -668,6 +719,14 @@ func readVariantType(ti *typeInfo, r *tdsBuffer, c *cryptoMetadata) interface{} 
 	panic("shoulnd't get here")
 }
 
+func readVariantTypeWithGuidConversion(ti *typeInfo, r *tdsBuffer, c *cryptoMetadata) interface{} {
+	return readVariantTypeWithEncoding(ti, r, c, msdsn.EncodeParameters{GuidConversion: true})
+}
+
+func readVariantType(ti *typeInfo, r *tdsBuffer, c *cryptoMetadata) interface{} {
+	return readVariantTypeWithEncoding(ti, r, c, msdsn.EncodeParameters{GuidConversion: false})
+}
+
 // partially length prefixed stream
 // http://msdn.microsoft.com/en-us/library/dd340469.aspx
 func readPLPType(ti *typeInfo, r *tdsBuffer, c *cryptoMetadata) interface{} {
@@ -737,7 +796,7 @@ func writePLPType(w io.Writer, ti typeInfo, buf []byte) (err error) {
 	}
 }
 
-func readVarLen(ti *typeInfo, r *tdsBuffer, c *cryptoMetadata) {
+func readVarLen(ti *typeInfo, r *tdsBuffer, c *cryptoMetadata, encoding msdsn.EncodeParameters) {
 	switch ti.TypeId {
 	case typeDateN:
 		ti.Size = 3
@@ -775,7 +834,11 @@ func readVarLen(ti *typeInfo, r *tdsBuffer, c *cryptoMetadata) {
 			ti.Prec = r.byte()
 			ti.Scale = r.byte()
 		}
-		ti.Reader = readByteLenType
+		if encoding.GuidConversion {
+			ti.Reader = readByteLenTypeWithGuidConversion
+		} else {
+			ti.Reader = readByteLenType
+		}
 	case typeXml:
 		ti.XmlInfo.SchemaPresent = r.byte()
 		if ti.XmlInfo.SchemaPresent != 0 {
@@ -830,7 +893,11 @@ func readVarLen(ti *typeInfo, r *tdsBuffer, c *cryptoMetadata) {
 			}
 			ti.Reader = readLongLenType
 		case typeVariant:
-			ti.Reader = readVariantType
+			if encoding.GuidConversion {
+				ti.Reader = readVariantTypeWithGuidConversion
+			} else {
+				ti.Reader = readVariantType
+			}
 		}
 	default:
 		badStreamPanicf("Invalid type %d", ti.TypeId)
@@ -854,9 +921,14 @@ func decodeMoney4(buf []byte) []byte {
 	return decimal.ScaleBytes(strconv.FormatInt(int64(money), 10), 4)
 }
 
-func decodeGuid(buf []byte) []byte {
+func decodeGuid(buf []byte, encoding msdsn.EncodeParameters) []byte {
 	res := make([]byte, 16)
 	copy(res, buf)
+	if encoding.GuidConversion {
+		binary.LittleEndian.PutUint32(res[0:4], binary.BigEndian.Uint32(res[0:4]))
+		binary.LittleEndian.PutUint16(res[4:6], binary.BigEndian.Uint16(res[4:6]))
+		binary.LittleEndian.PutUint16(res[6:8], binary.BigEndian.Uint16(res[6:8]))
+	}
 	return res
 }
 
@@ -1137,6 +1209,8 @@ func makeGoLangScanType(ti typeInfo) reflect.Type {
 		return reflect.TypeOf([]byte{})
 	case typeVariant:
 		return reflect.TypeOf(nil)
+	case typeUdt:
+		return reflect.TypeOf([]byte{})
 	default:
 		panic(fmt.Sprintf("not implemented makeGoLangScanType for type %d", ti.TypeId))
 	}
@@ -1366,6 +1440,8 @@ func makeGoLangTypeName(ti typeInfo) string {
 		return "SQL_VARIANT"
 	case typeBigBinary:
 		return "BINARY"
+	case typeUdt:
+		return strings.ToUpper(ti.UdtInfo.TypeName)
 	default:
 		panic(fmt.Sprintf("not implemented makeGoLangTypeName for type %d", ti.TypeId))
 	}
@@ -1490,9 +1566,22 @@ func makeGoLangTypeLength(ti typeInfo) (int64, bool) {
 		return 0, false
 	case typeBigBinary:
 		return int64(ti.Size), true
+	case typeUdt:
+		switch ti.UdtInfo.TypeName {
+		case "hierarchyid":
+			// https://learn.microsoft.com/en-us/sql/t-sql/data-types/hierarchyid-data-type-method-reference?view=sql-server-ver16
+			return 892, true
+		case "geography":
+		case "geometry":
+			return 2147483647, true
+		default:
+			panic(fmt.Sprintf("not implemented makeGoLangTypeLength for user defined type %s", ti.UdtInfo.TypeName))
+		}
 	default:
 		panic(fmt.Sprintf("not implemented makeGoLangTypeLength for type %d", ti.TypeId))
 	}
+
+	return 0, false
 }
 
 // makes go/sql type precision and scale as described below
@@ -1601,6 +1690,8 @@ func makeGoLangTypePrecisionScale(ti typeInfo) (int64, int64, bool) {
 	case typeVariant:
 		return 0, 0, false
 	case typeBigBinary:
+		return 0, 0, false
+	case typeUdt:
 		return 0, 0, false
 	default:
 		panic(fmt.Sprintf("not implemented makeGoLangTypePrecisionScale for type %d", ti.TypeId))

@@ -4,7 +4,7 @@
 
 Xorm is a simple and powerful ORM for Go.
 
-[![Build Status](https://drone.gitea.com/api/badges/xorm/xorm/status.svg)](https://drone.gitea.com/xorm/xorm) [![](http://gocover.io/_badge/xorm.io/xorm)](https://gocover.io/xorm.io/xorm) [![](https://goreportcard.com/badge/xorm.io/xorm)](https://goreportcard.com/report/xorm.io/xorm) [![Join the chat at https://img.shields.io/discord/323460943201959939.svg](https://img.shields.io/discord/323460943201959939.svg)](https://discord.gg/HuR2CF3)
+[![Build Status](https://gitea.com/xorm/xorm/actions/workflows/release-tag/badge.svg)](https://gitea.com/xorm/xorm/actions) [![](http://gocover.io/_badge/xorm.io/xorm)](https://gocover.io/xorm.io/xorm) [![](https://goreportcard.com/badge/xorm.io/xorm)](https://goreportcard.com/report/xorm.io/xorm) [![Join the chat at https://img.shields.io/discord/323460943201959939.svg](https://img.shields.io/discord/323460943201959939.svg)](https://discord.gg/HuR2CF3)
 
 ## Notice
 
@@ -49,6 +49,9 @@ Drivers for Go's sql package which currently support database/sql includes:
 
 * MsSql
   - [github.com/microsoft/go-mssqldb](https://github.com/microsoft/go-mssqldb)
+
+* GBase8s
+  - [https://gitee.com/GBase8s/go-gci](https://gitee.com/GBase8s/go-gci)
 
 * Oracle
   - [github.com/godror/godror](https://github.com/godror/godror) (experiment)
@@ -465,7 +468,7 @@ res, err := engine.Transaction(func(session *xorm.Session) (interface{}, error) 
 
 ## Contributing
 
-If you want to pull request, please see [CONTRIBUTING](https://gitea.com/xorm/xorm/src/branch/master/CONTRIBUTING.md). And you can also go to [Xorm on discourse](https://xorm.discourse.group) to discuss.
+If you want to pull request, please see [CONTRIBUTING](CONTRIBUTING.md). And you can also go to [Xorm on discourse](https://xorm.discourse.group) to discuss.
 
 ## Credits
 

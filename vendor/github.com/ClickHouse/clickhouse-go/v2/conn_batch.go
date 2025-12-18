@@ -1,60 +1,29 @@
-// Licensed to ClickHouse, Inc. under one or more contributor
-// license agreements. See the NOTICE file distributed with
-// this work for additional information regarding copyright
-// ownership. ClickHouse, Inc. licenses this file to you under
-// the Apache License, Version 2.0 (the "License"); you may
-// not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
 package clickhouse
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
-	"strings"
+	"slices"
+	"syscall"
 	"time"
-
-	"github.com/pkg/errors"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/column"
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	"github.com/ClickHouse/clickhouse-go/v2/lib/proto"
 )
 
-var splitInsertRe = regexp.MustCompile(`(?i)\sVALUES\s*\(`)
+var insertMatch = regexp.MustCompile(`(?i)(?:(?:--[^\n]*|#![^\n]*|#\s[^\n]*)\n\s*)*(INSERT\s+INTO\s+[^( ]+(?:\s*\([^()]*(?:\([^()]*\)[^()]*)*\))?)(?:\s*VALUES)?`)
 var columnMatch = regexp.MustCompile(`INSERT INTO .+\s\((?P<Columns>.+)\)$`)
 
-func (c *connect) prepareBatch(ctx context.Context, query string, opts driver.PrepareBatchOptions, release func(*connect, error), acquire func(context.Context) (*connect, error)) (driver.Batch, error) {
-	//defer func() {
-	//	if err := recover(); err != nil {
-	//		fmt.Printf("panic occurred on %d:\n", c.num)
-	//	}
-	//}()
-	query = splitInsertRe.Split(query, -1)[0]
-	colMatch := columnMatch.FindStringSubmatch(query)
-	var columns []string
-	if len(colMatch) == 2 {
-		columns = strings.Split(colMatch[1], ",")
-		for i := range columns {
-			// refers to https://clickhouse.com/docs/en/sql-reference/syntax#identifiers
-			// we can use identifiers with double quotes or backticks, for example: "id", `id`, but not both, like `"id"`.
-			columns[i] = strings.Trim(strings.Trim(strings.TrimSpace(columns[i]), "\""), "`")
-		}
+func (c *connect) prepareBatch(ctx context.Context, release nativeTransportRelease, acquire nativeTransportAcquire, query string, opts driver.PrepareBatchOptions) (driver.Batch, error) {
+	query, _, queryColumns, verr := extractNormalizedInsertQueryAndColumns(query)
+	if verr != nil {
+		return nil, verr
 	}
-	if !strings.HasSuffix(strings.TrimSpace(strings.ToUpper(query)), "VALUES") {
-		query += " VALUES"
-	}
+
 	options := queryOptions(ctx)
 	if deadline, ok := ctx.Deadline(); ok {
 		c.conn.SetDeadline(deadline)
@@ -73,19 +42,32 @@ func (c *connect) prepareBatch(ctx context.Context, query string, opts driver.Pr
 		return nil, err
 	}
 	// resort batch to specified columns
-	if err = block.SortColumns(columns); err != nil {
+	if err = block.SortColumns(queryColumns); err != nil {
+		release(c, err)
 		return nil, err
 	}
 
+	connRelease := func(conn *connect, err error) {
+		release(conn, err)
+	}
+	connAcquire := func(ctx context.Context) (*connect, error) {
+		conn, err := acquire(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return conn.(*connect), nil
+	}
+
 	b := &batch{
-		ctx:         ctx,
-		query:       query,
-		conn:        c,
-		block:       block,
-		released:    false,
-		connRelease: release,
-		connAcquire: acquire,
-		onProcess:   onProcess,
+		ctx:          ctx,
+		query:        query,
+		conn:         c,
+		block:        block,
+		released:     false,
+		connRelease:  connRelease,
+		connAcquire:  connAcquire,
+		onProcess:    onProcess,
+		closeOnFlush: opts.CloseOnFlush,
 	}
 
 	if opts.ReleaseConnection {
@@ -96,16 +78,17 @@ func (c *connect) prepareBatch(ctx context.Context, query string, opts driver.Pr
 }
 
 type batch struct {
-	err         error
-	ctx         context.Context
-	query       string
-	conn        *connect
-	sent        bool // sent signalize that batch is send to ClickHouse.
-	released    bool // released signalize that conn was returned to pool and can't be used.
-	block       *proto.Block
-	connRelease func(*connect, error)
-	connAcquire func(context.Context) (*connect, error)
-	onProcess   *onProcess
+	err          error
+	ctx          context.Context
+	query        string
+	conn         *connect
+	sent         bool // sent signalize that batch is send to ClickHouse.
+	released     bool // released signalize that conn was returned to pool and can't be used.
+	closeOnFlush bool // closeOnFlush signalize that batch should close query and release conn when use Flush
+	block        *proto.Block
+	connRelease  func(*connect, error)
+	connAcquire  func(context.Context) (*connect, error)
+	onProcess    *onProcess
 }
 
 func (b *batch) release(err error) {
@@ -141,7 +124,7 @@ func (b *batch) Append(v ...any) error {
 	}
 
 	if err := b.block.Append(v...); err != nil {
-		b.err = errors.Wrap(ErrBatchInvalid, err.Error())
+		b.err = fmt.Errorf("%w: %w", ErrBatchInvalid, err)
 		b.release(err)
 		return err
 	}
@@ -298,7 +281,14 @@ func (b *batch) Flush() error {
 	}
 	if b.block.Rows() != 0 {
 		if err := b.conn.sendData(b.block, ""); err != nil {
+			// broken pipe/conn reset aren't generally recoverable on retry
+			if errors.Is(err, syscall.EPIPE) || errors.Is(err, syscall.ECONNRESET) {
+				b.release(err)
+			}
 			return err
+		}
+		if b.closeOnFlush {
+			b.release(b.closeQuery())
 		}
 	}
 	b.block.Reset()
@@ -309,14 +299,38 @@ func (b *batch) Rows() int {
 	return b.block.Rows()
 }
 
+func (b *batch) Columns() []column.Interface {
+	return slices.Clone(b.block.Columns)
+}
+
 func (b *batch) closeQuery() error {
-	if err := b.conn.sendData(&proto.Block{}, ""); err != nil {
+	if err := b.conn.sendData(proto.NewBlock(), ""); err != nil {
 		return err
 	}
 
 	if err := b.conn.process(b.ctx, b.onProcess); err != nil {
 		return err
 	}
+
+	return nil
+}
+
+// Close will end the current INSERT without sending the currently buffered rows, and release the connection.
+// This may result in zero row inserts if no rows were appended.
+// If a batch was already sent this does nothing.
+// This should be called via defer after a batch is opened to prevent
+// batches from falling out of scope and timing out.
+func (b *batch) Close() error {
+	if b.sent || b.released {
+		return nil
+	}
+
+	if err := b.closeQuery(); err != nil {
+		return err
+	}
+	b.sent = true
+
+	b.release(nil)
 
 	return nil
 }

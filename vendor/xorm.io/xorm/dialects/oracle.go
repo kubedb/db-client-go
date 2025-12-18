@@ -684,6 +684,17 @@ func (db *oracle) IndexCheckSQL(tableName, idxName string) (string, []interface{
 		`WHERE TABLE_NAME = :1 AND INDEX_NAME = :2`, args
 }
 
+func (db *oracle) DropIndexSQL(tableName string, index *schemas.Index) string {
+	quote := db.dialect.Quoter().Quote
+	var name string
+	if index.IsRegular {
+		name = index.XName(tableName)
+	} else {
+		name = index.Name
+	}
+	return fmt.Sprintf("DROP INDEX %v", quote(name))
+}
+
 func (db *oracle) IsTableExist(queryer core.Queryer, ctx context.Context, tableName string) (bool, error) {
 	return db.HasRecords(queryer, ctx, `SELECT table_name FROM user_tables WHERE table_name = :1`, tableName)
 }

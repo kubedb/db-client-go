@@ -1,20 +1,3 @@
-// Licensed to ClickHouse, Inc. under one or more contributor
-// license agreements. See the NOTICE file distributed with
-// this work for additional information regarding copyright
-// ownership. ClickHouse, Inc. licenses this file to you under
-// the Apache License, Version 2.0 (the "License"); you may
-// not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
 package clickhouse
 
 import (
@@ -101,32 +84,39 @@ func (r *rows) Close() error {
 	if r.errors == nil && r.stream == nil {
 		return r.err
 	}
-	active := 0
-	if r.errors != nil {
-		active++
+
+	if r.errors == nil {
+		for range r.stream {
+		}
+		return nil
 	}
-	if r.stream != nil {
-		active++
+
+	if r.stream == nil {
+		for err := range r.errors {
+			r.err = err
+		}
+		return r.err
 	}
+
+	errorsClosed := false
+	streamClosed := false
 	for {
 		select {
 		case _, ok := <-r.stream:
 			if !ok {
-				active--
-				if active == 0 {
-					return r.err
-				}
+				streamClosed = true
 			}
 		case err, ok := <-r.errors:
 			if err != nil {
 				r.err = err
 			}
 			if !ok {
-				active--
-				if active == 0 {
-					return r.err
-				}
+				errorsClosed = true
 			}
+		}
+
+		if errorsClosed && streamClosed {
+			return r.err
 		}
 	}
 }

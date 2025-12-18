@@ -86,8 +86,9 @@ func IsValueZero(v reflect.Value) bool {
 		return IsStructZero(v)
 	case reflect.Array:
 		return IsArrayZero(v)
+	default:
+		return false
 	}
-	return false
 }
 
 // IsStructZero returns true if the Value is a struct and all fields is zero
@@ -109,7 +110,15 @@ func IsStructZero(v reflect.Value) bool {
 		switch field.Kind() {
 		case reflect.Ptr:
 			field = field.Elem()
-			fallthrough
+			if field.Kind() == reflect.Struct {
+				if !IsStructZero(field) {
+					return false
+				}
+			} else {
+				if field.CanInterface() && !IsZero(field.Interface()) {
+					return false
+				}
+			}
 		case reflect.Struct:
 			if !IsStructZero(field) {
 				return false

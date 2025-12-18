@@ -27,6 +27,7 @@ _testmain.go
 
 coverage.txt
 .idea/**
+.vscode/**
 dev/*
 .run/**
 
@@ -39,3 +40,4 @@ pipeline.auto.tfvars
 *.tfvars
 
 .env
+go.work

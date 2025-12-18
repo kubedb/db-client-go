@@ -171,7 +171,8 @@ func (session *Session) SyncWithOptions(opts SyncOptions, beans ...interface{}) 
 							tbNameWithSchema, col.Name, curType, expectedType)
 					}
 				} else if strings.HasPrefix(curType, schemas.Varchar) && strings.HasPrefix(expectedType, schemas.Varchar) {
-					if engine.dialect.URI().DBType == schemas.MYSQL {
+					if engine.dialect.URI().DBType == schemas.POSTGRES ||
+						engine.dialect.URI().DBType == schemas.MYSQL {
 						if oriCol.Length < col.Length {
 							engine.logger.Infof("Table %s column %s change type from varchar(%d) to varchar(%d)\n",
 								tbNameWithSchema, col.Name, oriCol.Length, col.Length)
@@ -187,7 +188,8 @@ func (session *Session) SyncWithOptions(opts SyncOptions, beans ...interface{}) 
 					}
 				}
 			} else if expectedType == schemas.Varchar {
-				if engine.dialect.URI().DBType == schemas.MYSQL {
+				if engine.dialect.URI().DBType == schemas.POSTGRES ||
+					engine.dialect.URI().DBType == schemas.MYSQL {
 					if oriCol.Length < col.Length {
 						engine.logger.Infof("Table %s column %s change type from varchar(%d) to varchar(%d)\n",
 							tbNameWithSchema, col.Name, oriCol.Length, col.Length)
@@ -196,6 +198,7 @@ func (session *Session) SyncWithOptions(opts SyncOptions, beans ...interface{}) 
 				}
 			} else if col.Comment != oriCol.Comment {
 				if engine.dialect.URI().DBType == schemas.POSTGRES ||
+					engine.dialect.URI().DBType == schemas.GBASE8S ||
 					engine.dialect.URI().DBType == schemas.MYSQL {
 					_, err = session.exec(engine.dialect.ModifyColumnSQL(tbNameWithSchema, col))
 				}

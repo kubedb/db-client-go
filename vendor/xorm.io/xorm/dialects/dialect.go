@@ -279,6 +279,7 @@ func regDrvsNDialects() bool {
 		"pgx":      {"postgres", func() Driver { return &pqDriverPgx{} }, func() Dialect { return &postgres{} }},
 		"sqlite3":  {"sqlite3", func() Driver { return &sqlite3Driver{} }, func() Dialect { return &sqlite3{} }},
 		"sqlite":   {"sqlite3", func() Driver { return &sqlite3Driver{} }, func() Dialect { return &sqlite3{} }},
+		"libsql":   {"sqlite3", func() Driver { return &sqlite3Driver{} }, func() Dialect { return &sqlite3{} }},
 		"oci8":     {"oracle", func() Driver { return &oci8Driver{} }, func() Dialect { return &oracle{} }},
 		"godror":   {"oracle", func() Driver { return &godrorDriver{} }, func() Dialect { return &oracle{} }},
 		"oracle":   {"oracle", func() Driver { return &oracleDriver{} }, func() Dialect { return &oracle{} }},

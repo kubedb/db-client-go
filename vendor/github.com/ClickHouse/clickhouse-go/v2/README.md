@@ -2,28 +2,6 @@
 
 Golang SQL database client for [ClickHouse](https://clickhouse.com/).
 
-## Versions
-
-There are two version of this client, v1 and v2, available as separate branches. 
-
-**v1 is now in a state of a maintenance - we will only accept PRs for bug and security fixes.**
-
-Users should use v2 which is production ready and [significantly faster than v1](#benchmark).
-
-v2 has breaking changes for users migrating from v1. These were not properly tracked prior to this client being officially supported. We endeavour to track known differences [here](https://github.com/ClickHouse/clickhouse-go/blob/main/v1_v2_CHANGES.md) and resolve where possible.
-
-## Supported ClickHouse Versions
-
-The client is tested against the currently [supported versions](https://github.com/ClickHouse/ClickHouse/blob/master/SECURITY.md) of ClickHouse
-
-## Supported Golang Versions
-
-| Client Version | Golang Versions |
-|----------------|-----------------|
-| => 2.0 <= 2.2  | 1.17, 1.18      |
-| >= 2.3         | 1.18.4+, 1.19   |
-| >= 2.14        | 1.20, 1.21      |
-
 ## Key features
 
 * Uses ClickHouse native format for optimal performance. Utilises low level [ch-go](https://github.com/ClickHouse/ch-go) client for encoding/decoding and compression (versions >= 2.3.0).
@@ -54,6 +32,22 @@ Support for the ClickHouse protocol advanced features using `Context`:
 	* Progress
 	* Profile info
 	* Profile events
+
+
+## Supported ClickHouse Versions
+
+The client is tested against the currently [supported versions](https://github.com/ClickHouse/ClickHouse/blob/master/SECURITY.md) of ClickHouse
+
+## Supported Golang Versions
+
+| Client Version | Golang Versions        |
+|----------------|------------------------|
+| => 2.0 <= 2.2  | 1.17, 1.18             |
+| >= 2.3         | 1.18.4+, 1.19          |
+| >= 2.14        | 1.20, 1.21             |
+| >= 2.19        | 1.21, 1.22             |
+| >= 2.28        | 1.22, 1.23             |
+| >= 2.29        | 1.21, 1.22, 1.23, 1.24 |
 
 ## Documentation
 
@@ -151,33 +145,74 @@ conn.SetConnMaxLifetime(time.Hour)
 * username/password - auth credentials
 * database - select the current default database
 * dial_timeout -  a duration string is a possibly signed sequence of decimal numbers, each with optional fraction and a unit suffix such as "300ms", "1s". Valid time units are "ms", "s", "m". (default 30s)
-* connection_open_strategy - round_robin/in_order (default in_order).
-    * round_robin      - choose a round-robin server from the set
+* connection_open_strategy - random/round_robin/in_order (default in_order).
+    * random      - choose random server from the set
+    * round_robin - choose a round-robin server from the set
     * in_order    - first live server is chosen in specified order
 * debug - enable debug output (boolean value)
-* compress - compress - specify the compression algorithm - “none” (default), `zstd`, `lz4`, `gzip`, `deflate`, `br`. If set to `true`, `lz4` will be used.
-* compress_level - Level of compression (default is 0). This is algorithm specific:
-  - `gzip` - `-2` (Best Speed) to `9` (Best Compression)
-  - `deflate` - `-2` (Best Speed) to `9` (Best Compression)
-  - `br` - `0` (Best Speed) to `11` (Best Compression)
-  - `zstd`, `lz4` - ignored
+* compress - specify the compression algorithm: `none` (default), `zstd`, `lz4`, `lz4hc`, `gzip`, `deflate`, `br`. If set to `true`, `lz4` will be used.
+* compress_level - Level of compression (algorithm-specific, default is 3 when compression is enabled):
+  - `gzip`/`deflate`: `-2` (Best Speed) to `9` (Best Compression)
+  - `br`: `0` (Best Speed) to `11` (Best Compression)
+  - `zstd`/`lz4`/`lz4hc`: ignored
 * block_buffer_size - size of block buffer (default 2)
 * read_timeout - a duration string is a possibly signed sequence of decimal numbers, each with optional fraction and a unit suffix such as "300ms", "1s". Valid time units are "ms", "s", "m" (default 5m).
 * max_compression_buffer - max size (bytes) of compression buffer during column by column compression (default 10MiB)
 * client_info_product - optional list (comma separated) of product name and version pair separated with `/`. This value will be pass a part of client info. e.g. `client_info_product=my_app/1.0,my_module/0.1` More details in [Client info](#client-info) section.
+* http_proxy - HTTP proxy address
 
-SSL/TLS parameters:
+## Connection Settings Reference
 
-* secure - establish secure connection (default is false)
-* skip_verify - skip certificate verification (default is false)
+The following connection settings are available in both DSN strings and the `clickhouse.Options` struct:
+
+### Timeout Settings
+* **dial_timeout** - Connection timeout for establishing a connection to the server (default: 30s)
+* **read_timeout** - Timeout for reading server responses (default: 5m)
+
+### Connection Pool Settings
+* **max_open_conns** - Maximum number of open connections to the database (default: MaxIdleConns + 5)
+* **max_idle_conns** - Maximum number of idle connections in the pool (default: 5)
+* **conn_max_lifetime** - Maximum amount of time a connection may be reused (default: 1h)
+
+### Connection Strategy
+* **connection_open_strategy** - Strategy for selecting servers from the connection pool:
+  * `in_order` - Choose the first available server in the specified order (default)
+  * `round_robin` - Choose servers in a round-robin fashion
+  * `random` - Choose a random server from the pool
+
+### Compression Settings
+* **compress** - Enable compression with a specific algorithm: `none`, `zstd`, `lz4`, `lz4hc`, `gzip`, `deflate`, `br`. If set to `true`, `lz4` will be used (default: `none`)
+* **compress_level** - Compression level (algorithm-specific):
+  * `gzip`/`deflate`: `-2` (Best Speed) to `9` (Best Compression)
+  * `br`: `0` (Best Speed) to `11` (Best Compression)
+  * `zstd`/`lz4`: ignored
+* **max_compression_buffer** - Maximum size of compression buffer in bytes (default: 10MiB)
+
+### Buffer Settings
+* **block_buffer_size** - Size of block buffer (default: 2)
+
+### Debug Settings
+* **debug** - Enable debug output (boolean value)
+
+### SSL/TLS Settings
+* **secure** - Establish secure connection (default: false)
+* **skip_verify** - Skip certificate verification (default: false)
+
+### Client Information
+* **client_info_product** - Comma-separated list of product name and version pairs (e.g., `my_app/1.0,my_module/0.1`)
+
+### HTTP Settings
+* **http_proxy** - HTTP proxy address for HTTP protocol connections
 
 Example:
 
 ```sh
-clickhouse://username:password@host1:9000,host2:9000/database?dial_timeout=200ms&max_execution_time=60
+clickhouse://username:password@host1:9000,host2:9000/database?dial_timeout=200ms&read_timeout=30s&max_execution_time=60
 ```
 
 ### HTTP Support (Experimental)
+
+**Note**: using HTTP protocol is possible only with `database/sql` interface.
 
 The native format can be used over the HTTP protocol. This is useful in scenarios where users need to proxy traffic e.g. using [ChProxy](https://www.chproxy.org/) or via load balancers.
 
@@ -208,7 +243,19 @@ conn := clickhouse.OpenDB(&clickhouse.Options{
 })
 ```
 
-**Note**: using HTTP protocol is possible only with `database/sql` interface.
+#### Proxy support
+
+HTTP proxy can be set in the DSN string by specifying the `http_proxy` parameter.
+(make sure to URL encode the proxy address)
+
+```sh
+http://host1:8123,host2:8123/database?dial_timeout=200ms&max_execution_time=60&http_proxy=http%3A%2F%2Fproxy%3A8080
+```
+
+If you are using `clickhouse.OpenDB`, set the `HTTProxy` field in the `clickhouse.Options`.
+
+An alternative way is to enable proxy by setting the `HTTP_PROXY` (for HTTP) or `HTTPS_PROXY` (for HTTPS) environment variables.
+See more details in the [Go documentation](https://pkg.go.dev/net/http#ProxyFromEnvironment).
 
 ## Compression
 
@@ -274,16 +321,17 @@ Usage examples for [native API](examples/clickhouse_api/client_info.go) and [dat
 
 ## Async insert
 
-[Asynchronous insert](https://clickhouse.com/docs/en/optimize/asynchronous-inserts#enabling-asynchronous-inserts) is supported via dedicated `AsyncInsert` method. This allows to insert data with a non-blocking call.
-Effectively, it controls a `async_insert` setting for the query. 
+[Async insert](https://clickhouse.com/docs/optimize/asynchronous-inserts) is supported via `WithAsync()` helper on both Native and HTTP protocols. You can use it for both Go standard interface `OpenDB` and also ClickHouse interface `Open()`.
 
-### Using with batch API
+**NOTE**: You can use `WithSettings()` manually to add any async related settings. `WithAsync()` is just a simple wrapper that does that for you.
 
-Using native protocol, asynchronous insert does not support batching. It means, only inline query data is supported. Please see an example [here](examples/std/async.go).
+We have following examples to show Async Insert in action.
+1. [Native with OpenDB](examples/clickhouse_api/async_native.go)
+1. [HTTP with OpenDB](examples/clickhouse_api/async_http.go)
+1. [Native with Open](examples/std/async_native.go)
+1. [HTTP with Open](examples/std/async_http.go)
 
-HTTP protocol supports batching. It can be enabled by setting `async_insert` when using standard `Prepare` method.
-
-For more details please see [asynchronous inserts](https://clickhouse.com/docs/en/optimize/asynchronous-inserts#enabling-asynchronous-inserts) documentation.
+**NOTE**: The old `AsyncInsert()` api is deprecated and will be removed in future versions. We highly recommend to use `WithAsync()` api for all the Async Insert use cases.
 
 ## PrepareBatch options
 
@@ -292,14 +340,14 @@ Available options:
 
 ## Benchmark
 
-| [V1 (READ)](benchmark/v1/read/main.go) | [V2 (READ) std](benchmark/v2/read/main.go) | [V2 (READ) clickhouse API](benchmark/v2/read-native/main.go) |
-| -------------------------------------- | ------------------------------------------ |--------------------------------------------------------------|
-| 1.218s                                 | 924.390ms                                  | 675.721ms                                                    |
+| [V2 (READ) std](benchmark/v2/read/main.go) | [V2 (READ) clickhouse API](benchmark/v2/read-native/main.go) |
+| ------------------------------------------ |--------------------------------------------------------------|
+| 924.390ms                                  | 675.721ms                                                    |
 
 
-| [V1 (WRITE)](benchmark/v1/write/main.go) | [V2 (WRITE) std](benchmark/v2/write/main.go) | [V2 (WRITE) clickhouse API](benchmark/v2/write-native/main.go) | [V2 (WRITE) by column](benchmark/v2/write-native-columnar/main.go) |
-| ---------------------------------------- | -------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------ |
-| 1.899s                                   | 1.177s                                       | 699.203ms                                              | 661.973ms                                                          |
+| [V2 (WRITE) std](benchmark/v2/write/main.go) | [V2 (WRITE) clickhouse API](benchmark/v2/write-native/main.go) | [V2 (WRITE) by column](benchmark/v2/write-native-columnar/main.go) |
+| -------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------ |
+| 1.177s                                       | 699.203ms                                              | 661.973ms                                                          |
 
 
 
@@ -315,22 +363,28 @@ go get -u github.com/ClickHouse/clickhouse-go/v2
 
 * [batch](examples/clickhouse_api/batch.go)
 * [batch with release connection](examples/clickhouse_api/batch_release_connection.go)
-* [async insert](examples/clickhouse_api/async.go)
+* [native async insert](examples/clickhouse_api/async_native.go)
+* [http async insert](examples/clickhouse_api/async_http.go)
 * [batch struct](examples/clickhouse_api/append_struct.go)
 * [columnar](examples/clickhouse_api/columnar_insert.go)
 * [scan struct](examples/clickhouse_api/scan_struct.go)
-* [query parameters](examples/clickhouse_api/query_parameters.go) (deprecated in favour of native query parameters)
+* [query parameters](examples/clickhouse_api/query_parameters.go)
 * [bind params](examples/clickhouse_api/bind.go) (deprecated in favour of native query parameters)
 * [client info](examples/clickhouse_api/client_info.go)
 
 ### std `database/sql` interface
 
 * [batch](examples/std/batch.go)
-* [async insert](examples/std/async.go)
+* [native async insert](examples/std/async_native.go)
+* [http async insert](examples/std/async_http.go)
 * [open db](examples/std/connect.go)
 * [query parameters](examples/std/query_parameters.go)
 * [bind params](examples/std/bind.go) (deprecated in favour of native query parameters)
 * [client info](examples/std/client_info.go)
+
+## Third-party libraries
+
+* [clickhouse-go-rows-utils](https://github.com/EpicStep/clickhouse-go-rows-utils) - utilities that simplify working with rows.
 
 ## ClickHouse alternatives - ch-go
 
