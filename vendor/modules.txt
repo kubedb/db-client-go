@@ -3370,8 +3370,8 @@ kmodules.xyz/prober/api/v1
 kmodules.xyz/resource-metadata/apis/node
 kmodules.xyz/resource-metadata/apis/node/v1alpha1
 kmodules.xyz/resource-metadata/crds
-# kubedb.dev/apimachinery v0.60.0-rc.0
-## explicit; go 1.25
+# kubedb.dev/apimachinery v0.59.1-0.20251210054320-5be9c308e740
+## explicit; go 1.24.0
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/archiver/v1alpha1
 kubedb.dev/apimachinery/apis/autoscaling
