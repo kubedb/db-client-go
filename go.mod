@@ -280,6 +280,8 @@ require (
 	xorm.io/builder v0.3.13 // indirect
 )
 
+replace kubedb.dev/apimachinery => ../apimachinery
+
 replace github.com/Masterminds/sprig/v3 => github.com/gomodules/sprig/v3 v3.2.3-0.20220405051441-0a8a99bac1b8
 
 replace sigs.k8s.io/controller-runtime => github.com/kmodules/controller-runtime v0.22.5-0.20251227114913-f011264689cd
