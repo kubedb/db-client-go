@@ -31,7 +31,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/qdrant/go-client v1.15.0
 	github.com/rabbitmq/amqp091-go v1.10.0
-	github.com/redis/go-redis/v9 v9.6.3
+	github.com/redis/go-redis/v9 v9.17.2
 	github.com/sijms/go-ora/v2 v2.8.24
 	github.com/weaviate/weaviate-go-client/v5 v5.2.1
 	go.mongodb.org/mongo-driver v1.14.0
