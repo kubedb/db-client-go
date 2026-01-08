@@ -1126,7 +1126,7 @@ kmodules.xyz/resource-metadata v0.40.2 h1:2J+UvAaHXfqDStO2SKqeVkER4z/kSOqpj8Iyrc
 kmodules.xyz/resource-metadata v0.40.2/go.mod h1:38+41aUSrWqrQDeaSITKoxAiGT0ysQk5yjRODqBadpw=
 kubedb.dev/apimachinery v0.60.0-rc.1 h1:4e5bDwLjf4VravncyleYrmamtHP0+7EihXW/Z9tYzv4=
 kubedb.dev/apimachinery v0.60.0-rc.1/go.mod h1:C//93Ze70E3a56BAPTjDSXqTYK1LbTw6GXC0JngWTjI=
-kubeops.dev/operator-shard-manager v0.0.4 h1:vQ76QLd5eBl2mmJ95ZS0lhTApcyfeK/f3/xft66Kdh0=
+kubeops.dev/operator-shard-manager v0.0.4 h1:LEKALN18RyRZT7CndHhhyQh9/JGCfS/5MemCMsBjiew=
 kubeops.dev/operator-shard-manager v0.0.4/go.mod h1:mAp2tnPBgFpE5zSEMnb+RgDhRoM/P2VFLDMvDHqqBjo=
 kubeops.dev/petset v0.0.15 h1:iwTRFAp0RNw0A87sw2c97UZ6WIA9H/nhJBpDhXLa7fk=
 kubeops.dev/petset v0.0.15/go.mod h1:sw96WiXfzhpmKpXj4a5AdmEHs0Bx4QMhf+iW15zY4Gg=

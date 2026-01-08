@@ -42,3 +42,29 @@ func (cc *Client) ReadWriteCheck() (bool, error) {
 
 	return res.StatusCode() == http.StatusOK, nil
 }
+
+func (cc *Client) ConfigurePrimary(dbName string) (bool, error) {
+	req := cc.Client.R().
+		SetDoNotParseResponse(true).
+		SetQueryParam("dbName", dbName)
+
+	res, err := req.Get("/primary")
+	if err != nil {
+		klog.Error(err, "Failed to send http request")
+		return false, err
+	}
+	return res.StatusCode() == http.StatusOK, nil
+}
+
+func (cc *Client) ConfigureStandby(dbName string) (bool, error) {
+	req := cc.Client.R().
+		SetDoNotParseResponse(true).
+		SetQueryParam("dbName", dbName)
+
+	res, err := req.Get("/standby")
+	if err != nil {
+		klog.Error(err, "Failed to send http request")
+		return false, err
+	}
+	return res.StatusCode() == http.StatusOK, nil
+}
