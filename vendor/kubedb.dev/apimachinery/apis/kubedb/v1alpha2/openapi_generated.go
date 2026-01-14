@@ -786,7 +786,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.postgresStatsService":                          schema_apimachinery_apis_kubedb_v1alpha2_postgresStatsService(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.proxysqlApp":                                   schema_apimachinery_apis_kubedb_v1alpha2_proxysqlApp(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.proxysqlStatsService":                          schema_apimachinery_apis_kubedb_v1alpha2_proxysqlStatsService(ref),
-		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.qdrantStatsService":                            schema_apimachinery_apis_kubedb_v1alpha2_qdrantStatsService(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.redisApp":                                      schema_apimachinery_apis_kubedb_v1alpha2_redisApp(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.redisSentinelApp":                              schema_apimachinery_apis_kubedb_v1alpha2_redisSentinelApp(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.redisSentinelStatsService":                     schema_apimachinery_apis_kubedb_v1alpha2_redisSentinelStatsService(ref),
@@ -36176,9 +36175,9 @@ func schema_apimachinery_apis_kubedb_v1alpha2_PostgresReplication(ref common.Ref
 							Format: "int32",
 						},
 					},
-					"forceFailOverAcceptingDataLossAfter": {
+					"forceFailoverAcceptingDataLossAfter": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ForceFailOverAcceptingDataLossAfter is the maximum time to wait before running a force failover process This is helpful for a scenario where the old primary is not available and it has the most updated wal lsn Doing force failover may or may not end up loosing data depending on any wrtie transaction in the range lagged lsn between the new primary and the old primary",
+							Description: "ForceFailoverAcceptingDataLossAfter is the maximum time to wait before running a force failover process This is helpful for a scenario where the old primary is not available and it has the most updated wal lsn Doing force failover may or may not end up loosing data depending on any wrtie transaction in the range lagged lsn between the new primary and the old primary",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
@@ -36978,18 +36977,12 @@ func schema_apimachinery_apis_kubedb_v1alpha2_QdrantSpec(ref common.ReferenceCal
 							Ref:         ref("kmodules.xyz/client-go/api/v1.HealthCheckSpec"),
 						},
 					},
-					"monitor": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Monitor is used monitor database instance",
-							Ref:         ref("kmodules.xyz/monitoring-agent-api/api/v1.AgentSpec"),
-						},
-					},
 				},
 				Required: []string{"version"},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.PersistentVolumeClaimSpec", "kmodules.xyz/client-go/api/v1.HealthCheckSpec", "kmodules.xyz/monitoring-agent-api/api/v1.AgentSpec", "kmodules.xyz/offshoot-api/api/v2.PodTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.NamedServiceTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.QdrantTLSConfig", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SecretReference"},
+			"k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.PersistentVolumeClaimSpec", "kmodules.xyz/client-go/api/v1.HealthCheckSpec", "kmodules.xyz/offshoot-api/api/v2.PodTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.NamedServiceTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.QdrantTLSConfig", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SecretReference"},
 	}
 }
 
@@ -37062,13 +37055,13 @@ func schema_apimachinery_apis_kubedb_v1alpha2_QdrantTLSConfig(ref common.Referen
 							},
 						},
 					},
-					"p2pTLS": {
+					"p2p": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"boolean"},
 							Format: "",
 						},
 					},
-					"clientHTTPTLS": {
+					"client": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"boolean"},
 							Format: "",
@@ -40520,26 +40513,6 @@ func schema_apimachinery_apis_kubedb_v1alpha2_proxysqlStatsService(ref common.Re
 		},
 		Dependencies: []string{
 			"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.ProxySQL"},
-	}
-}
-
-func schema_apimachinery_apis_kubedb_v1alpha2_qdrantStatsService(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"Qdrant": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("kubedb.dev/apimachinery/apis/kubedb/v1alpha2.Qdrant"),
-						},
-					},
-				},
-				Required: []string{"Qdrant"},
-			},
-		},
-		Dependencies: []string{
-			"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.Qdrant"},
 	}
 }
 

@@ -5762,8 +5762,8 @@ func (in *PostgresReplication) DeepCopyInto(out *PostgresReplication) {
 		*out = new(int32)
 		**out = **in
 	}
-	if in.ForceFailOverAcceptingDataLossAfter != nil {
-		in, out := &in.ForceFailOverAcceptingDataLossAfter, &out.ForceFailOverAcceptingDataLossAfter
+	if in.ForceFailoverAcceptingDataLossAfter != nil {
+		in, out := &in.ForceFailoverAcceptingDataLossAfter, &out.ForceFailoverAcceptingDataLossAfter
 		*out = new(v1.Duration)
 		**out = **in
 	}
@@ -6232,11 +6232,6 @@ func (in *QdrantSpec) DeepCopyInto(out *QdrantSpec) {
 		}
 	}
 	in.HealthChecker.DeepCopyInto(&out.HealthChecker)
-	if in.Monitor != nil {
-		in, out := &in.Monitor, &out.Monitor
-		*out = new(monitoringagentapiapiv1.AgentSpec)
-		(*in).DeepCopyInto(*out)
-	}
 	return
 }
 
@@ -6277,13 +6272,13 @@ func (in *QdrantStatus) DeepCopy() *QdrantStatus {
 func (in *QdrantTLSConfig) DeepCopyInto(out *QdrantTLSConfig) {
 	*out = *in
 	in.TLSConfig.DeepCopyInto(&out.TLSConfig)
-	if in.P2PTLS != nil {
-		in, out := &in.P2PTLS, &out.P2PTLS
+	if in.P2P != nil {
+		in, out := &in.P2P, &out.P2P
 		*out = new(bool)
 		**out = **in
 	}
-	if in.ClientHTTPTLS != nil {
-		in, out := &in.ClientHTTPTLS, &out.ClientHTTPTLS
+	if in.Client != nil {
+		in, out := &in.Client, &out.Client
 		*out = new(bool)
 		**out = **in
 	}
