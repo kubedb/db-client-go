@@ -556,11 +556,12 @@ const (
 	PostgresSharedTlsVolumeName      = "certs"
 	PostgresSharedTlsVolumeMountPath = "/tls/certs"
 	PostgresCustomConfigFile         = "user.conf"
-
-	PostgresKeyFileSecretSuffix = "key"
-	PostgresPEMSecretSuffix     = "pem"
-	PostgresDefaultUsername     = "postgres"
-	PostgresPgCoordinatorStatus = "Coordinator/Status"
+	PostgresTuningConfigFile         = "pgtune.conf"
+	PostgresApplyConfigFile          = "apply.conf"
+	PostgresKeyFileSecretSuffix      = "key"
+	PostgresPEMSecretSuffix          = "pem"
+	PostgresDefaultUsername          = "postgres"
+	PostgresPgCoordinatorStatus      = "Coordinator/Status"
 	// to pause the failover for postgres. this is helpful for ops request
 	PostgresPgCoordinatorStatusPause = "Pause"
 	// to resume the failover for postgres. this is helpful for ops request
@@ -2225,6 +2226,8 @@ const (
 	QdrantDataDir       = "/qdrant/storage"
 	QdrantConfigVolName = "qdrant-config"
 	QdrantConfigDir     = "/qdrant/config"
+	QdrantTLSVolName    = "tls"
+	QdrantTLSVolDir     = "/tls"
 
 	QdrantConfigFileName = "config.yaml"
 

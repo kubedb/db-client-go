@@ -18,12 +18,16 @@ package qdrant
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 
 	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
 	"github.com/qdrant/go-client/qdrant"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -54,6 +58,38 @@ func (o *KubeDBClientBuilder) GetQdrantClient() (*qdrant.Client, error) {
 		Host:   o.db.ServiceDNS(),
 		Port:   kubedb.QdrantGRPCPort,
 		APIKey: o.db.GetAPIKey(o.ctx, o.kc),
+	}
+
+	if o.db.Spec.TLS != nil {
+		secretName := o.db.CertificateName(api.QdrantServerCert)
+
+		var secret corev1.Secret
+		if err := o.kc.Get(
+			o.ctx,
+			types.NamespacedName{
+				Name:      secretName,
+				Namespace: o.db.Namespace,
+			},
+			&secret,
+		); err != nil {
+			return nil, fmt.Errorf("failed to get Qdrant CA secret %s: %w", secretName, err)
+		}
+
+		caCert, ok := secret.Data["ca.crt"]
+		if !ok {
+			return nil, fmt.Errorf("ca.crt not found in secret %s", secretName)
+		}
+
+		caPool := x509.NewCertPool()
+		if !caPool.AppendCertsFromPEM(caCert) {
+			return nil, fmt.Errorf("failed to append CA cert from secret %s", secretName)
+		}
+
+		config.UseTLS = true
+		config.TLSConfig = &tls.Config{
+			RootCAs:    caPool,
+			ServerName: o.db.ServiceDNS(), // must match SAN
+		}
 	}
 
 	qdrantClient, err := qdrant.NewClient(config)

@@ -697,6 +697,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"kubedb.dev/apimachinery/apis/ops/v1alpha1.PostgresReconnectStandby":                         schema_apimachinery_apis_ops_v1alpha1_PostgresReconnectStandby(ref),
 		"kubedb.dev/apimachinery/apis/ops/v1alpha1.PostgresSetRaftKeyPair":                           schema_apimachinery_apis_ops_v1alpha1_PostgresSetRaftKeyPair(ref),
 		"kubedb.dev/apimachinery/apis/ops/v1alpha1.PostgresTLSSpec":                                  schema_apimachinery_apis_ops_v1alpha1_PostgresTLSSpec(ref),
+		"kubedb.dev/apimachinery/apis/ops/v1alpha1.PostgresTuningConfig":                             schema_apimachinery_apis_ops_v1alpha1_PostgresTuningConfig(ref),
 		"kubedb.dev/apimachinery/apis/ops/v1alpha1.PostgresUpdateVersionSpec":                        schema_apimachinery_apis_ops_v1alpha1_PostgresUpdateVersionSpec(ref),
 		"kubedb.dev/apimachinery/apis/ops/v1alpha1.PostgresVerticalScalingSpec":                      schema_apimachinery_apis_ops_v1alpha1_PostgresVerticalScalingSpec(ref),
 		"kubedb.dev/apimachinery/apis/ops/v1alpha1.PostgresVolumeExpansionSpec":                      schema_apimachinery_apis_ops_v1alpha1_PostgresVolumeExpansionSpec(ref),
@@ -709,6 +710,9 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"kubedb.dev/apimachinery/apis/ops/v1alpha1.ProxySQLReplicaReadinessCriteria":                 schema_apimachinery_apis_ops_v1alpha1_ProxySQLReplicaReadinessCriteria(ref),
 		"kubedb.dev/apimachinery/apis/ops/v1alpha1.ProxySQLUpdateVersionSpec":                        schema_apimachinery_apis_ops_v1alpha1_ProxySQLUpdateVersionSpec(ref),
 		"kubedb.dev/apimachinery/apis/ops/v1alpha1.ProxySQLVerticalScalingSpec":                      schema_apimachinery_apis_ops_v1alpha1_ProxySQLVerticalScalingSpec(ref),
+		"kubedb.dev/apimachinery/apis/ops/v1alpha1.QdrantOpsRequest":                                 schema_apimachinery_apis_ops_v1alpha1_QdrantOpsRequest(ref),
+		"kubedb.dev/apimachinery/apis/ops/v1alpha1.QdrantOpsRequestList":                             schema_apimachinery_apis_ops_v1alpha1_QdrantOpsRequestList(ref),
+		"kubedb.dev/apimachinery/apis/ops/v1alpha1.QdrantOpsRequestSpec":                             schema_apimachinery_apis_ops_v1alpha1_QdrantOpsRequestSpec(ref),
 		"kubedb.dev/apimachinery/apis/ops/v1alpha1.RabbitMQCustomConfigurationSpec":                  schema_apimachinery_apis_ops_v1alpha1_RabbitMQCustomConfigurationSpec(ref),
 		"kubedb.dev/apimachinery/apis/ops/v1alpha1.RabbitMQHorizontalScalingSpec":                    schema_apimachinery_apis_ops_v1alpha1_RabbitMQHorizontalScalingSpec(ref),
 		"kubedb.dev/apimachinery/apis/ops/v1alpha1.RabbitMQOpsRequest":                               schema_apimachinery_apis_ops_v1alpha1_RabbitMQOpsRequest(ref),
@@ -33901,6 +33905,11 @@ func schema_apimachinery_apis_ops_v1alpha1_PostgresCustomConfigurationSpec(ref c
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
+					"tuning": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("kubedb.dev/apimachinery/apis/ops/v1alpha1.PostgresTuningConfig"),
+						},
+					},
 					"configSecret": {
 						SchemaProps: spec.SchemaProps{
 							Ref: ref("k8s.io/api/core/v1.LocalObjectReference"),
@@ -33927,11 +33936,17 @@ func schema_apimachinery_apis_ops_v1alpha1_PostgresCustomConfigurationSpec(ref c
 							Format: "",
 						},
 					},
+					"restart": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.LocalObjectReference"},
+			"k8s.io/api/core/v1.LocalObjectReference", "kubedb.dev/apimachinery/apis/ops/v1alpha1.PostgresTuningConfig"},
 	}
 }
 
@@ -34344,6 +34359,47 @@ func schema_apimachinery_apis_ops_v1alpha1_PostgresTLSSpec(ref common.ReferenceC
 		},
 		Dependencies: []string{
 			"k8s.io/api/core/v1.TypedLocalObjectReference", "kmodules.xyz/client-go/api/v1.CertificateSpec"},
+	}
+}
+
+func schema_apimachinery_apis_ops_v1alpha1_PostgresTuningConfig(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "PostgresTuningConfig defines configuration for PostgreSQL performance tuning",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"profile": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Profile defines a predefined tuning profile for different workload types. If specified, other tuning parameters will be calculated based on this profile.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"maxConnections": {
+						SchemaProps: spec.SchemaProps{
+							Description: "MaxConnections defines the maximum number of concurrent connections. If not specified, it will be calculated based on available memory and tuning profile.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"storageType": {
+						SchemaProps: spec.SchemaProps{
+							Description: "StorageType defines the type of storage for tuning purposes. If not specified, it will be inferred from StorageClass or default to HDD.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"disableAutoTune": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DisableAutoTune disables automatic tuning entirely. If set to true, no tuning will be applied.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -34770,6 +34826,122 @@ func schema_apimachinery_apis_ops_v1alpha1_ProxySQLVerticalScalingSpec(ref commo
 		},
 		Dependencies: []string{
 			"kubedb.dev/apimachinery/apis/ops/v1alpha1.PodResources"},
+	}
+}
+
+func schema_apimachinery_apis_ops_v1alpha1_QdrantOpsRequest(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("kubedb.dev/apimachinery/apis/ops/v1alpha1.QdrantOpsRequestSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("kubedb.dev/apimachinery/apis/ops/v1alpha1.OpsRequestStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "kubedb.dev/apimachinery/apis/ops/v1alpha1.OpsRequestStatus", "kubedb.dev/apimachinery/apis/ops/v1alpha1.QdrantOpsRequestSpec"},
+	}
+}
+
+func schema_apimachinery_apis_ops_v1alpha1_QdrantOpsRequestList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "QdrantOpsRequestList is a list of QdrantOpsRequests",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Items is a list of QdrantOpsRequest CRD objects",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("kubedb.dev/apimachinery/apis/ops/v1alpha1.QdrantOpsRequest"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta", "kubedb.dev/apimachinery/apis/ops/v1alpha1.QdrantOpsRequest"},
+	}
+}
+
+func schema_apimachinery_apis_ops_v1alpha1_QdrantOpsRequestSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "QdrantOpsRequestSpec is the spec for QdrantOpsRequest",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"tls": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies information necessary for configuring TLS",
+							Ref:         ref("kubedb.dev/apimachinery/apis/ops/v1alpha1.TLSSpec"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"kubedb.dev/apimachinery/apis/ops/v1alpha1.TLSSpec"},
 	}
 }
 
