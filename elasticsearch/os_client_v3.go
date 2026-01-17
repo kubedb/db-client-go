@@ -1,11 +1,10 @@
 /*
 Copyright AppsCode Inc. and Contributors
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +12,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
 package elasticsearch
 
 import (
@@ -42,32 +40,64 @@ type OSClientV3 struct {
 }
 
 func (os *OSClientV3) ClusterHealthInfo() (map[string]interface{}, error) {
-	res, err := os.client.Cluster.Health(context.Background(), nil)
+	req, err := http.NewRequest(http.MethodGet, "/_cluster/health", nil)
 	if err != nil {
 		return nil, err
 	}
 
-	body := res.Inspect().Response.Body
-	defer body.Close()
+	q := req.URL.Query()
+	q.Add("pretty", "true")
+	q.Add("human", "true")
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := os.client.Client.Transport.Perform(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			klog.Errorf("failed to close response body for ClusterHealthInfo, reason: %s", closeErr)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("cluster health request failed with status code: %d", resp.StatusCode)
+	}
 
 	response := make(map[string]interface{})
-	if err2 := json.NewDecoder(body).Decode(&response); err2 != nil {
-		return nil, errors.Wrap(err2, "failed to parse the response body")
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, errors.Wrap(err, "failed to parse the response body")
 	}
 	return response, nil
 }
 
 func (os *OSClientV3) NodesStats() (map[string]interface{}, error) {
-	res, err := os.client.Nodes.Stats(context.Background(), nil)
+	req, err := http.NewRequest(http.MethodGet, "/_nodes/stats", nil)
 	if err != nil {
 		return nil, err
 	}
 
-	body := res.Inspect().Response.Body
-	defer body.Close()
+	q := req.URL.Query()
+	q.Add("pretty", "true")
+	q.Add("human", "true")
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := os.client.Client.Transport.Perform(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			klog.Errorf("failed to close response body for NodesStats, reason: %s", closeErr)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("nodes stats request failed with status code: %d", resp.StatusCode)
+	}
 
 	nodesStats := make(map[string]interface{})
-	if err := json.NewDecoder(body).Decode(&nodesStats); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&nodesStats); err != nil {
 		return nil, fmt.Errorf("failed to deserialize the response: %v", err)
 	}
 
@@ -75,68 +105,95 @@ func (os *OSClientV3) NodesStats() (map[string]interface{}, error) {
 }
 
 func (os *OSClientV3) DisableShardAllocation() error {
-	bodyReader := strings.NewReader(DisableShardAllocation)
+	var b strings.Builder
+	b.WriteString(DisableShardAllocation)
 
-	res, err := os.client.Cluster.PutSettings(context.Background(), osv3api.ClusterPutSettingsReq{
-		Body: bodyReader,
-	})
+	req, err := http.NewRequest(http.MethodPut, "/_cluster/settings", strings.NewReader(b.String()))
 	if err != nil {
 		return err
 	}
 
-	respBody := res.Inspect().Response.Body
-	defer respBody.Close()
+	q := req.URL.Query()
+	q.Add("pretty", "true")
+	q.Add("human", "true")
+	req.URL.RawQuery = q.Encode()
 
-	if res.Inspect().Response.StatusCode != http.StatusOK {
-		return fmt.Errorf("received status code: %d", res.Inspect().Response.StatusCode)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := os.client.Client.Transport.Perform(req)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			klog.Errorf("failed to close response body for DisableShardAllocation, reason: %s", closeErr)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("received status code: %d", resp.StatusCode)
 	}
 
 	return nil
 }
 
 func (os *OSClientV3) ShardStats() ([]ShardInfo, error) {
-	res, err := os.client.Cat.Shards(context.Background(), &osv3api.CatShardsReq{
-		Params: osv3api.CatShardsParams{
-			Bytes: "b",
-			H:     []string{"index", "shard", "prirep", "state", "unassigned.reason"},
-		},
-	})
+	req, err := http.NewRequest(http.MethodGet, "/_cat/shards", nil)
 	if err != nil {
 		return nil, err
 	}
 
-	respBody := res.Inspect().Response.Body
-	defer respBody.Close()
+	q := req.URL.Query()
+	q.Add("format", "json")
+	q.Add("bytes", "b")
+	q.Add("h", "index,shard,prirep,state,unassigned.reason")
+	req.URL.RawQuery = q.Encode()
 
-	body, err := io.ReadAll(respBody)
+	resp, err := os.client.Client.Transport.Perform(req)
 	if err != nil {
-		fmt.Println("Error reading body:", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("cat shards failed with status code: %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
 		return nil, err
 	}
 
 	var shardStats []ShardInfo
-	err = json.Unmarshal(body, &shardStats)
-	if err != nil {
+	if err := json.Unmarshal(body, &shardStats); err != nil {
 		return nil, err
 	}
 	return shardStats, nil
 }
 
 func (os *OSClientV3) GetIndicesInfo() ([]interface{}, error) {
-	res, err := os.client.Cat.Indices(context.Background(), &osv3api.CatIndicesReq{
-		Params: osv3api.CatIndicesParams{
-			Bytes: "b",
-		},
-	})
+	req, err := http.NewRequest(http.MethodGet, "/_cat/indices", nil)
 	if err != nil {
 		return nil, err
 	}
 
-	body := res.Inspect().Response.Body
-	defer body.Close()
+	q := req.URL.Query()
+	q.Add("format", "json")
+	q.Add("bytes", "b")
+	req.URL.RawQuery = q.Encode()
 
-	indicesInfo := make([]interface{}, 0)
-	if err := json.NewDecoder(body).Decode(&indicesInfo); err != nil {
+	resp, err := os.client.Client.Transport.Perform(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("cat indices failed with status code: %d", resp.StatusCode)
+	}
+
+	var indicesInfo []interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&indicesInfo); err != nil {
 		return nil, fmt.Errorf("failed to deserialize the response: %v", err)
 	}
 
@@ -144,17 +201,28 @@ func (os *OSClientV3) GetIndicesInfo() ([]interface{}, error) {
 }
 
 func (os *OSClientV3) ClusterStatus() (string, error) {
-	res, err := os.client.Cluster.Health(context.Background(), nil)
+	req, err := http.NewRequest(http.MethodGet, "/_cluster/health", nil)
 	if err != nil {
 		return "", err
 	}
 
-	body := res.Inspect().Response.Body
-	defer body.Close()
+	q := req.URL.Query()
+	q.Add("pretty", "true")
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := os.client.Client.Transport.Perform(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("cluster health request failed with status code: %d", resp.StatusCode)
+	}
 
 	response := make(map[string]interface{})
-	if err2 := json.NewDecoder(body).Decode(&response); err2 != nil {
-		return "", errors.Wrap(err2, "failed to parse the response body")
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return "", errors.Wrap(err, "failed to parse the response body")
 	}
 	if value, ok := response["status"]; ok {
 		if strValue, ok := value.(string); ok {
@@ -169,46 +237,50 @@ func (os *OSClientV3) GetClusterWriteStatus(ctx context.Context, db *dbapi.Elast
 	indexBody := WriteRequestIndexBody{
 		ID: writeRequestID,
 	}
-
 	indexReq := WriteRequestIndex{indexBody}
 	ReqBody := db.Spec
 
-	index, err1 := json.Marshal(indexReq)
-	if err1 != nil {
-		return errors.Wrap(err1, "Failed to encode index for performing write request")
+	indexJson, err := json.Marshal(indexReq)
+	if err != nil {
+		return errors.Wrap(err, "Failed to encode index for performing write request")
 	}
-	bodyData, err2 := json.Marshal(ReqBody)
-	if err2 != nil {
-		return errors.Wrap(err2, "Failed to encode request body for performing write request")
-	}
-
-	bodyReader := strings.NewReader(strings.Join([]string{string(index), string(bodyData)}, "\n") + "\n")
-
-	res, err3 := os.client.Bulk(ctx, osv3api.BulkReq{
-		Body: bodyReader,
-		Params: osv3api.BulkParams{
-			Pretty: true,
-		},
-		Index: writeRequestIndex,
-	})
-	if err3 != nil {
-		return errors.Wrap(err3, "Failed to perform write request")
+	bodyJson, err := json.Marshal(ReqBody)
+	if err != nil {
+		return errors.Wrap(err, "Failed to encode request body for performing write request")
 	}
 
-	respBody := res.Inspect().Response.Body
+	// Bulk body requires newline-delimited JSON
+	bulkBody := string(indexJson) + "\n" + string(bodyJson) + "\n"
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "/_bulk", strings.NewReader(bulkBody))
+	if err != nil {
+		return errors.Wrap(err, "Failed to create write request")
+	}
+
+	q := req.URL.Query()
+	q.Add("index", writeRequestIndex)
+	q.Add("pretty", "true")
+	req.URL.RawQuery = q.Encode()
+
+	req.Header.Set("Content-Type", "application/x-ndjson")
+
+	resp, err := os.client.Client.Transport.Perform(req)
+	if err != nil {
+		return errors.Wrap(err, "Failed to perform write request")
+	}
 	defer func() {
-		if err := respBody.Close(); err != nil {
-			klog.Errorf("Failed to close write request response body, reason: %s", err)
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			klog.Errorf("Failed to close write request response body, reason: %s", closeErr)
 		}
 	}()
 
-	if res.Inspect().Response.StatusCode >= 400 {
-		return fmt.Errorf("failed to get response from write request with error statuscode %d", res.Inspect().Response.StatusCode)
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("failed to get response from write request with error statuscode %d", resp.StatusCode)
 	}
 
 	responseBody := make(map[string]interface{})
-	if err4 := json.NewDecoder(respBody).Decode(&responseBody); err4 != nil {
-		return errors.Wrap(err4, "Failed to decode response from write request")
+	if err := json.NewDecoder(resp.Body).Decode(&responseBody); err != nil {
+		return errors.Wrap(err, "Failed to decode response from write request")
 	}
 
 	if value, ok := responseBody["errors"]; ok {
@@ -224,51 +296,48 @@ func (os *OSClientV3) GetClusterWriteStatus(ctx context.Context, db *dbapi.Elast
 }
 
 func (os *OSClientV3) GetClusterReadStatus(ctx context.Context, db *dbapi.Elasticsearch) error {
-	res, err := os.client.Document.Get(ctx, osv3api.DocumentGetReq{
-		Index:      writeRequestIndex,
-		DocumentID: writeRequestID,
-	})
+	path := fmt.Sprintf("/%s/_doc/%s", writeRequestIndex, writeRequestID)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return errors.Wrap(err, "Failed to create read request")
+	}
+
+	q := req.URL.Query()
+	q.Add("pretty", "true")
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := os.client.Client.Transport.Perform(req)
 	if err != nil {
 		return errors.Wrap(err, "Failed to perform read request")
 	}
-
-	body := res.Inspect().Response.Body
 	defer func() {
-		if err := body.Close(); err != nil {
-			klog.Errorf("failed to close read request response body, reason: %s", err)
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			klog.Errorf("failed to close read request response body, reason: %s", closeErr)
 		}
 	}()
 
-	statusCode := res.Inspect().Response.StatusCode
-	if statusCode == http.StatusNotFound {
+	if resp.StatusCode == http.StatusNotFound {
 		return kutil.ErrNotFound
 	}
-	if statusCode >= 400 {
-		return fmt.Errorf("failed to get response from read request with error statuscode %d", statusCode)
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("failed to get response from read request with error statuscode %d", resp.StatusCode)
 	}
 
 	return nil
 }
 
 func (os *OSClientV3) GetTotalDiskUsage(ctx context.Context) (string, error) {
-	// Manual POST request to /{index}/_disk_usage?run_expensive_tasks=true&expand_wildcards=all
-	// Note: diskUsageRequestIndex is likely "*" or specific indices
 	path := "/" + diskUsageRequestIndex + "/_disk_usage"
-
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, path, nil)
 	if err != nil {
 		return "", errors.Wrap(err, "Failed to create Disk Usage Request")
 	}
 
-	// Set query parameters
 	q := req.URL.Query()
 	q.Add("run_expensive_tasks", "true")
-	q.Add("expand_wildcards", diskUsageRequestWildcards) // e.g., "all"
-	// Optional: q.Add("pretty", "true")
-	// q.Add("human", "true")
+	q.Add("expand_wildcards", diskUsageRequestWildcards)
 	req.URL.RawQuery = q.Encode()
 
-	// Perform using low-level transport
 	res, err := os.client.Client.Transport.Perform(req)
 	if err != nil {
 		return "", errors.Wrap(err, "Failed to perform Disk Usage Request")
@@ -280,11 +349,9 @@ func (os *OSClientV3) GetTotalDiskUsage(ctx context.Context) (string, error) {
 	}()
 
 	if res.StatusCode != http.StatusOK {
-		// Read error body for debugging if needed
 		return "", fmt.Errorf("Disk Usage Request failed with status code: %d", res.StatusCode)
 	}
 
-	// Parse the json response to get total storage used for all index
 	totalDiskUsage, err := calculateDatabaseSize(res.Body)
 	if err != nil {
 		return "", errors.Wrap(err, "Failed to parse json response to get disk usage")
@@ -306,54 +373,60 @@ func (os *OSClientV3) CreateDBUserRole(ctx context.Context) error {
 }
 
 func (os *OSClientV3) IndexExistsOrNot(index string) error {
-	// 1. Remove the '&' (Pass by value, not pointer)
-	// 2. Use 'Indices' as the field name
-	// 3. Ensure it is a slice: []string{index}
-	res, err := os.client.Indices.Exists(context.Background(), osv3api.IndicesExistsReq{
-		Indices: []string{index},
-	})
+	req, err := http.NewRequest(http.MethodHead, "/"+index, nil)
 	if err != nil {
-		klog.Errorf("failed to get response while checking index existence: %v", err)
+		klog.Errorf("failed to create request while checking index existence %v", err)
 		return err
 	}
 
-	// Always close the body to prevent memory leaks
-	if res.Body != nil {
-		defer res.Body.Close()
+	resp, err := os.client.Client.Transport.Perform(req)
+	if err != nil {
+		klog.Errorf("failed to get response while checking either index exists or not %v", err)
+		return err
 	}
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			klog.Errorf("failed to close response body for checking the existence of index, reason: %s", closeErr)
+		}
+	}()
 
-	// In OpenSearch 'Exists' APIs:
-	// 200 OK = Index exists
-	// 404 Not Found = Index does not exist
-	if res.StatusCode == 404 {
-		return fmt.Errorf("index %s does not exist", index)
+	if resp.StatusCode == http.StatusNotFound {
+		klog.Errorf("index does not exist")
+		return fmt.Errorf("index %s does not exist (status code: 404)", index)
 	}
-
-	if res.IsError() {
-		return fmt.Errorf("error checking index existence, status: %s", res.Status())
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		klog.Errorf("failed to check index existence with status code %d", resp.StatusCode)
+		return fmt.Errorf("failed to get index with statuscode %d", resp.StatusCode)
 	}
 
 	return nil
 }
 
 func (os *OSClientV3) CreateIndex(index string) error {
-	res, err := os.client.Indices.Create(context.Background(), osv3api.IndicesCreateReq{
-		Index: index,
-	})
+	req, err := http.NewRequest(http.MethodPut, "/"+index, nil)
+	if err != nil {
+		klog.Errorf("failed to create request for creating index, reason: %s", err)
+		return err
+	}
+
+	q := req.URL.Query()
+	q.Add("pretty", "true")
+	req.URL.RawQuery = q.Encode()
+
+	res, err := os.client.Client.Transport.Perform(req)
 	if err != nil {
 		klog.Errorf("failed to apply create index request, reason: %s", err)
 		return err
 	}
-
-	body := res.Inspect().Response.Body
-	defer func() {
-		if err := body.Close(); err != nil {
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
 			klog.Errorf("failed to close response body for creating index, reason: %s", err)
 		}
-	}()
+	}(res.Body)
 
-	if res.Inspect().Response.StatusCode >= 400 {
-		klog.Errorf("creating index failed with statuscode %d", res.Inspect().Response.StatusCode)
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		klog.Errorf("creating index failed with statuscode %d", res.StatusCode)
 		return errors.New("failed to create index")
 	}
 
@@ -361,25 +434,66 @@ func (os *OSClientV3) CreateIndex(index string) error {
 }
 
 func (os *OSClientV3) DeleteIndex(index string) error {
-	res, err := os.client.Indices.Delete(context.Background(), osv3api.IndicesDeleteReq{
-		Indices: []string{index},
-	})
+	req, err := http.NewRequest(http.MethodDelete, "/"+index, nil)
 	if err != nil {
+		klog.Errorf("failed to create request for deleting index, reason: %s", err)
 		return err
 	}
 
-	// In V3 Typed API, access the underlying HTTP response via Inspect()
-	resp := res.Inspect().Response
-	if resp.Body != nil {
-		defer resp.Body.Close()
+	res, err := os.client.Client.Transport.Perform(req)
+	if err != nil {
+		klog.Errorf("failed to apply delete index request, reason: %s", err)
+		return err
 	}
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			klog.Errorf("failed to close response body for deleting index, reason: %s", err)
+		}
+	}(res.Body)
 
-	if resp.StatusCode >= 400 {
-		klog.Errorf("failed to delete index %s, status code: %d", index, resp.StatusCode)
-		return fmt.Errorf("failed to delete index, status: %d", resp.StatusCode)
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		klog.Errorf("failed to delete index with status code %d", res.StatusCode)
+		return errors.New("failed to delete index")
 	}
 
 	return nil
+}
+
+func (os *OSClientV3) CountData(index string) (int, error) {
+	path := "/" + index + "/_count"
+	req, err := http.NewRequest(http.MethodGet, path, nil)
+	if err != nil {
+		return 0, err
+	}
+
+	res, err := os.client.Client.Transport.Perform(req)
+	if err != nil {
+		return 0, err
+	}
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			klog.Errorf("failed to close response body for counting data, reason: %s", err)
+		}
+	}(res.Body)
+
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		klog.Errorf("failed to count number of documents in index with statuscode %d", res.StatusCode)
+		return 0, errors.New("failed to count number of documents in index")
+	}
+
+	var response map[string]interface{}
+	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
+		return 0, err
+	}
+
+	count, ok := response["count"]
+	if !ok {
+		return 0, errors.New("failed to parse value for index count in response body")
+	}
+
+	return int(count.(float64)), nil
 }
 
 func (os *OSClientV3) PutData(index, id string, data map[string]interface{}) error {
@@ -388,61 +502,90 @@ func (os *OSClientV3) PutData(index, id string, data map[string]interface{}) err
 		return errors.Wrap(err, "failed to Marshal data")
 	}
 
-	res, err := os.client.Document.Create(context.Background(), osv3api.DocumentCreateReq{
-		Index:      index,
-		DocumentID: id,
-		Body:       bytes.NewReader(dataBytes),
-	})
+	path := fmt.Sprintf("/%s/_doc/%s", index, id)
+	req, err := http.NewRequest(http.MethodPut, path, bytes.NewReader(dataBytes))
+	if err != nil {
+		klog.Errorf("failed to create request for putting data, reason: %s", err)
+		return err
+	}
+
+	q := req.URL.Query()
+	q.Add("pretty", "true")
+	req.URL.RawQuery = q.Encode()
+
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := os.client.Client.Transport.Perform(req)
 	if err != nil {
 		klog.Errorf("failed to put data in the index, reason: %s", err)
 		return err
 	}
-
-	body := res.Inspect().Response.Body
-	defer func() {
-		if err := body.Close(); err != nil {
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
 			klog.Errorf("failed to close response body for putting data in the index, reason: %s", err)
 		}
-	}()
+	}(res.Body)
 
-	if res.Inspect().Response.StatusCode >= 400 {
-		klog.Errorf("failed to put data in an index with statuscode %d", res.Inspect().Response.StatusCode)
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		klog.Errorf("failed to put data in an index with statuscode %d", res.StatusCode)
 		return errors.New("failed to put data in an index")
 	}
 	return nil
 }
 
 func (os *OSClientV3) ReEnableShardAllocation() error {
-	bodyReader := strings.NewReader(ReEnableShardAllocation)
+	var b strings.Builder
+	b.WriteString(ReEnableShardAllocation)
 
-	res, err := os.client.Cluster.PutSettings(context.Background(), osv3api.ClusterPutSettingsReq{
-		Body: bodyReader,
-	})
+	req, err := http.NewRequest(http.MethodPut, "/_cluster/settings", strings.NewReader(b.String()))
 	if err != nil {
 		return err
 	}
 
-	respBody := res.Inspect().Response.Body
-	defer respBody.Close()
+	q := req.URL.Query()
+	q.Add("pretty", "true")
+	q.Add("human", "true")
+	req.URL.RawQuery = q.Encode()
 
-	if res.Inspect().Response.StatusCode != http.StatusOK {
-		return fmt.Errorf("received status code: %d", res.Inspect().Response.StatusCode)
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := os.client.Client.Transport.Perform(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("received status code: %d", res.StatusCode)
 	}
 
 	return nil
 }
 
 func (os *OSClientV3) CheckVersion() (string, error) {
-	res, err := os.client.Info(context.Background(), nil)
+	req, err := http.NewRequest(http.MethodGet, "/", nil)
 	if err != nil {
 		return "", err
 	}
 
-	body := res.Inspect().Response.Body
-	defer body.Close()
+	q := req.URL.Query()
+	q.Add("pretty", "true")
+	q.Add("human", "true")
+	req.URL.RawQuery = q.Encode()
+
+	res, err := os.client.Client.Transport.Perform(req)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("info request failed with status code: %d", res.StatusCode)
+	}
 
 	nodeInfo := new(Info)
-	if err := json.NewDecoder(body).Decode(&nodeInfo); err != nil {
+	if err := json.NewDecoder(res.Body).Decode(&nodeInfo); err != nil {
 		return "", errors.Wrap(err, "failed to deserialize the response")
 	}
 
@@ -454,73 +597,93 @@ func (os *OSClientV3) CheckVersion() (string, error) {
 }
 
 func (os *OSClientV3) GetClusterStatus() (string, error) {
-	res, err := os.client.Cluster.Health(context.Background(), nil)
+	req, err := http.NewRequest(http.MethodGet, "/_cluster/health", nil)
 	if err != nil {
 		return "", err
 	}
 
-	body := res.Inspect().Response.Body
-	defer body.Close()
+	q := req.URL.Query()
+	q.Add("pretty", "true")
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := os.client.Client.Transport.Perform(req)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			klog.Errorf("failed to close response body for GetClusterStatus, reason: %s", closeErr)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("cluster health request failed with status code: %d", resp.StatusCode)
+	}
 
 	response := make(map[string]interface{})
-	if err2 := json.NewDecoder(body).Decode(&response); err2 != nil {
-		return "", errors.Wrap(err2, "failed to parse the response body")
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return "", errors.Wrap(err, "failed to parse the response body")
 	}
 	if value, ok := response["status"]; ok {
-		return value.(string), nil
+		if strValue, ok := value.(string); ok {
+			return strValue, nil
+		}
 	}
 	return "", errors.New("status is missing")
 }
 
 func (os *OSClientV3) CountIndex() (int, error) {
-	// 1. Pass by VALUE (remove &)
-	// 2. Use 'Indices' (plural) as the field name
-	res, err := os.client.Indices.Get(context.Background(), osv3api.IndicesGetReq{
-		Indices: []string{"_all"},
-	})
+	req, err := http.NewRequest(http.MethodGet, "/_all/_settings", nil)
 	if err != nil {
 		return 0, err
 	}
 
-	// 3. Access metadata via Inspect()
-	resp := res.Inspect().Response
-	if resp.Body != nil {
-		defer resp.Body.Close()
+	q := req.URL.Query()
+	q.Add("pretty", "true")
+	q.Add("human", "true")
+	req.URL.RawQuery = q.Encode()
+
+	res, err := os.client.Client.Transport.Perform(req)
+	if err != nil {
+		return 0, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		return 0, fmt.Errorf("received status code: %d", res.StatusCode)
 	}
 
-	if resp.StatusCode >= 400 {
-		return 0, fmt.Errorf("failed to get indices, status code: %d", resp.StatusCode)
+	response := make(map[string]interface{})
+	if err2 := json.NewDecoder(res.Body).Decode(&response); err2 != nil {
+		return 0, errors.Wrap(err2, "failed to parse the response body")
 	}
-
-	// 4. Decode the result map
-	// OpenSearch returns a JSON object where each key is an index name
-	var result map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return 0, fmt.Errorf("failed to parse indices response: %w", err)
-	}
-
-	// The count of top-level keys is the number of indices
-	return len(result), nil
+	return len(response), nil
 }
 
 func (os *OSClientV3) GetData(_index, _type, _id string) (map[string]interface{}, error) {
-	res, err := os.client.Document.Get(context.Background(), osv3api.DocumentGetReq{
-		Index:      _index,
-		DocumentID: _id,
-	})
+	path := fmt.Sprintf("/%s/_doc/%s", _index, _id)
+	req, err := http.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	body := res.Inspect().Response.Body
-	defer body.Close()
+	q := req.URL.Query()
+	q.Add("pretty", "true")
+	q.Add("human", "true")
+	req.URL.RawQuery = q.Encode()
 
-	if res.Inspect().Response.StatusCode >= 400 {
-		return nil, fmt.Errorf("received status code: %d", res.Inspect().Response.StatusCode)
+	res, err := os.client.Client.Transport.Perform(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		return nil, fmt.Errorf("received status code: %d", res.StatusCode)
 	}
 
 	response := make(map[string]interface{})
-	if err2 := json.NewDecoder(body).Decode(&response); err2 != nil {
+	if err2 := json.NewDecoder(res.Body).Decode(&response); err2 != nil {
 		return nil, errors.Wrap(err2, "failed to parse the response body")
 	}
 
@@ -528,16 +691,23 @@ func (os *OSClientV3) GetData(_index, _type, _id string) (map[string]interface{}
 }
 
 func (os *OSClientV3) CountNodes() (int64, error) {
-	res, err := os.client.Nodes.Info(context.Background(), nil)
+	req, err := http.NewRequest(http.MethodGet, "/_nodes", nil)
 	if err != nil {
 		return -1, err
 	}
 
-	body := res.Inspect().Response.Body
-	defer body.Close()
+	resp, err := os.client.Client.Transport.Perform(req)
+	if err != nil {
+		return -1, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return -1, fmt.Errorf("nodes info request failed with status code: %d", resp.StatusCode)
+	}
 
 	nodeInfo := new(NodeInfo)
-	if err := json.NewDecoder(body).Decode(&nodeInfo); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&nodeInfo); err != nil {
 		return -1, errors.Wrap(err, "failed to deserialize the response")
 	}
 
@@ -548,158 +718,143 @@ func (os *OSClientV3) CountNodes() (int64, error) {
 	return nodeInfo.Nodes.Total.Int64()
 }
 
-func (os *OSClientV3) CountData(index string) (int, error) {
-	// 1. Use the Indices namespace
-	// 2. Use '&' as this specific API requires a pointer
-	// 3. Use 'Indices' (plural) slice
-	res, err := os.client.Indices.Count(context.Background(), &osv3api.IndicesCountReq{
-		Indices: []string{index},
-	})
-	if err != nil {
-		klog.Errorf("failed to perform count request: %v", err)
-		return 0, err
-	}
-
-	// 4. Access the HTTP response metadata via Inspect()
-	resp := res.Inspect().Response
-	if resp.Body != nil {
-		defer resp.Body.Close()
-	}
-
-	// 5. Check for HTTP errors
-	if resp.StatusCode >= 400 {
-		klog.Errorf("count API returned error status: %d", resp.StatusCode)
-		return 0, fmt.Errorf("failed to count data in index %s, status: %d", index, resp.StatusCode)
-	}
-
-	// 6. Manually decode the "count" field from the JSON body.
-	// This is the safest way if the SDK's built-in field name is unclear.
-	var result struct {
-		Count int `json:"count"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		klog.Errorf("failed to decode count JSON: %v", err)
-		return 0, fmt.Errorf("failed to parse count response: %w", err)
-	}
-
-	return result.Count, nil
-}
-
 func (os *OSClientV3) AddVotingConfigExclusions(nodes []string) error {
 	nodeNames := strings.Join(nodes, ",")
 
-	// 1. Remove '&' (Pass by value)
-	res, err := os.client.Cluster.PostVotingConfigExclusions(context.Background(), osv3api.ClusterPostVotingConfigExclusionsReq{
-		Params: osv3api.ClusterPostVotingConfigExclusionsParams{
-			NodeNames: nodeNames,
-		},
-	})
+	req, err := http.NewRequest(http.MethodPost, "/_cluster/voting_config_exclusions", nil)
 	if err != nil {
 		return err
 	}
 
-	// 2. Access .Body and .StatusCode directly (No .Inspect())
-	if res.Body != nil {
-		defer res.Body.Close()
-	}
+	q := req.URL.Query()
+	q.Add("node_names", nodeNames)
+	req.URL.RawQuery = q.Encode()
 
-	if res.StatusCode >= 400 {
+	res, err := os.client.Client.Transport.Perform(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
 		return fmt.Errorf("failed with response.StatusCode: %d", res.StatusCode)
 	}
-
 	return nil
 }
 
 func (os *OSClientV3) DeleteVotingConfigExclusions() error {
-	// Remove '&' if the compiler throws a similar error here
-	res, err := os.client.Cluster.DeleteVotingConfigExclusions(
-		context.Background(),
-		osv3api.ClusterDeleteVotingConfigExclusionsReq{},
-	)
+	req, err := http.NewRequest(http.MethodDelete, VotingExclusionUrl, nil)
 	if err != nil {
 		return err
 	}
 
-	// Access directly
-	if res.Body != nil {
-		defer res.Body.Close()
+	resp, err := os.client.Client.Transport.Perform(req)
+	if err != nil {
+		return err
 	}
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			klog.Errorf("failed to close response body for DeleteVotingConfigExclusions, reason: %s", closeErr)
+		}
+	}()
 
-	if res.StatusCode > 299 {
-		return fmt.Errorf("failed with response.StatusCode: %d", res.StatusCode)
+	if resp.StatusCode > 299 {
+		return fmt.Errorf("failed with response.StatusCode: %d", resp.StatusCode)
 	}
-
 	return nil
 }
 
 func (os *OSClientV3) ExcludeNodeAllocation(nodes []string) error {
 	list := strings.Join(nodes, ",")
-	var bodyBuf bytes.Buffer
+	var body bytes.Buffer
 	t, err := template.New("").Parse(ExcludeNodeAllocation)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse the template")
 	}
 
-	if err := t.Execute(&bodyBuf, list); err != nil {
+	if err := t.Execute(&body, list); err != nil {
 		return err
 	}
 
-	res, err := os.client.Cluster.PutSettings(context.Background(), osv3api.ClusterPutSettingsReq{
-		Body: bytes.NewReader(bodyBuf.Bytes()),
-	})
+	req, err := http.NewRequest(http.MethodPut, "/_cluster/settings", bytes.NewReader(body.Bytes()))
 	if err != nil {
 		return err
 	}
 
-	body := res.Inspect().Response.Body
-	defer body.Close()
+	q := req.URL.Query()
+	q.Add("pretty", "true")
+	q.Add("human", "true")
+	req.URL.RawQuery = q.Encode()
 
-	if res.Inspect().Response.StatusCode >= 400 {
-		return fmt.Errorf("received status code: %d", res.Inspect().Response.StatusCode)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := os.client.Client.Transport.Perform(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("received status code: %d", resp.StatusCode)
 	}
 
 	return nil
 }
 
 func (os *OSClientV3) DeleteNodeAllocationExclusion() error {
-	bodyReader := strings.NewReader(DeleteNodeAllocationExclusion)
+	var b strings.Builder
+	b.WriteString(DeleteNodeAllocationExclusion)
 
-	res, err := os.client.Cluster.PutSettings(context.Background(), osv3api.ClusterPutSettingsReq{
-		Body: bodyReader,
-	})
+	req, err := http.NewRequest(http.MethodPut, "/_cluster/settings", strings.NewReader(b.String()))
 	if err != nil {
 		return err
 	}
 
-	body := res.Inspect().Response.Body
-	defer body.Close()
+	q := req.URL.Query()
+	q.Add("pretty", "true")
+	q.Add("human", "true")
+	req.URL.RawQuery = q.Encode()
 
-	if res.Inspect().Response.StatusCode >= 400 {
-		return fmt.Errorf("received status code: %d", res.Inspect().Response.StatusCode)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := os.client.Client.Transport.Perform(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("received status code: %d", resp.StatusCode)
 	}
 
 	return nil
 }
 
 func (os *OSClientV3) GetUsedDataNodes() ([]string, error) {
-	res, err := os.client.Cat.Shards(context.Background(), &osv3api.CatShardsReq{
-		Params: osv3api.CatShardsParams{
-			H: []string{"index,node"},
-		},
-	})
+	req, err := http.NewRequest(http.MethodGet, "/_cat/shards", nil)
 	if err != nil {
 		return nil, err
 	}
 
-	body := res.Inspect().Response.Body
-	defer body.Close()
+	q := req.URL.Query()
+	q.Add("format", "json")
+	q.Add("h", "index,node")
+	req.URL.RawQuery = q.Encode()
 
-	data, err := io.ReadAll(body)
+	resp, err := os.client.Client.Transport.Perform(req)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("cat shards request failed with status code: %d", resp.StatusCode)
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
 	var list []IndexDistribution
 	err = json.Unmarshal(data, &list)
 	if err != nil {
@@ -716,18 +871,28 @@ func (os *OSClientV3) GetUsedDataNodes() ([]string, error) {
 }
 
 func (os *OSClientV3) AssignedShardsSize(node string) (int64, error) {
-	res, err := os.client.Nodes.Stats(context.Background(), &osv3api.NodesStatsReq{
-		NodeID: []string{node},
-	})
+	path := fmt.Sprintf("/_nodes/%s/stats", node)
+	req, err := http.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return 0, err
 	}
+	q := req.URL.Query()
+	q.Add("pretty", "true")
+	q.Add("human", "true")
+	req.URL.RawQuery = q.Encode()
 
-	body := res.Inspect().Response.Body
-	defer body.Close()
+	resp, err := os.client.Client.Transport.Perform(req)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return 0, fmt.Errorf("nodes stats request failed with status code: %d", resp.StatusCode)
+	}
 
 	response := new(NodesStats)
-	if err := json.NewDecoder(body).Decode(&response); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return 0, err
 	}
 
@@ -737,10 +902,12 @@ func (os *OSClientV3) AssignedShardsSize(node string) (int64, error) {
 	return 0, errors.New("empty response body")
 }
 
+// EnableUpgradeModeML    enables upgrade modes for ML nodes.
 func (os *OSClientV3) EnableUpgradeModeML() error {
 	return nil
 }
 
+// DisableUpgradeModeML    disables upgrade modes for ML nodes.
 func (os *OSClientV3) DisableUpgradeModeML() error {
 	return nil
 }
