@@ -39,7 +39,7 @@ type OSClientV3 struct {
 	client *osv3api.Client
 }
 
-func (os *OSClientV3) ClusterHealthInfo() (map[string]interface{}, error) {
+func (os *OSClientV3) ClusterHealthInfo() (map[string]any, error) {
 	req, err := http.NewRequest(http.MethodGet, "/_cluster/health", nil)
 	if err != nil {
 		return nil, err
@@ -64,14 +64,14 @@ func (os *OSClientV3) ClusterHealthInfo() (map[string]interface{}, error) {
 		return nil, fmt.Errorf("cluster health request failed with status code: %d", resp.StatusCode)
 	}
 
-	response := make(map[string]interface{})
+	response := make(map[string]any)
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, errors.Wrap(err, "failed to parse the response body")
 	}
 	return response, nil
 }
 
-func (os *OSClientV3) NodesStats() (map[string]interface{}, error) {
+func (os *OSClientV3) NodesStats() (map[string]any, error) {
 	req, err := http.NewRequest(http.MethodGet, "/_nodes/stats", nil)
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func (os *OSClientV3) NodesStats() (map[string]interface{}, error) {
 		return nil, fmt.Errorf("nodes stats request failed with status code: %d", resp.StatusCode)
 	}
 
-	nodesStats := make(map[string]interface{})
+	nodesStats := make(map[string]any)
 	if err := json.NewDecoder(resp.Body).Decode(&nodesStats); err != nil {
 		return nil, fmt.Errorf("failed to deserialize the response: %v", err)
 	}
@@ -153,7 +153,11 @@ func (os *OSClientV3) ShardStats() ([]ShardInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			klog.Errorf("failed to close response body from ShardsStats, reason: %s", closeErr)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("cat shards failed with status code: %d", resp.StatusCode)
@@ -171,7 +175,7 @@ func (os *OSClientV3) ShardStats() ([]ShardInfo, error) {
 	return shardStats, nil
 }
 
-func (os *OSClientV3) GetIndicesInfo() ([]interface{}, error) {
+func (os *OSClientV3) GetIndicesInfo() ([]any, error) {
 	req, err := http.NewRequest(http.MethodGet, "/_cat/indices", nil)
 	if err != nil {
 		return nil, err
@@ -186,13 +190,17 @@ func (os *OSClientV3) GetIndicesInfo() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			klog.Errorf("failed to close response body from GetIndicesInfo, reason: %s", closeErr)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("cat indices failed with status code: %d", resp.StatusCode)
 	}
 
-	var indicesInfo []interface{}
+	var indicesInfo []any
 	if err := json.NewDecoder(resp.Body).Decode(&indicesInfo); err != nil {
 		return nil, fmt.Errorf("failed to deserialize the response: %v", err)
 	}
@@ -214,13 +222,17 @@ func (os *OSClientV3) ClusterStatus() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			klog.Errorf("failed to close response body from ClusterStatus, reason: %s", closeErr)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("cluster health request failed with status code: %d", resp.StatusCode)
 	}
 
-	response := make(map[string]interface{})
+	response := make(map[string]any)
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return "", errors.Wrap(err, "failed to parse the response body")
 	}
@@ -278,7 +290,7 @@ func (os *OSClientV3) GetClusterWriteStatus(ctx context.Context, db *dbapi.Elast
 		return fmt.Errorf("failed to get response from write request with error statuscode %d", resp.StatusCode)
 	}
 
-	responseBody := make(map[string]interface{})
+	responseBody := make(map[string]any)
 	if err := json.NewDecoder(resp.Body).Decode(&responseBody); err != nil {
 		return errors.Wrap(err, "Failed to decode response from write request")
 	}
@@ -349,7 +361,7 @@ func (os *OSClientV3) GetTotalDiskUsage(ctx context.Context) (string, error) {
 	}()
 
 	if res.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Disk Usage Request failed with status code: %d", res.StatusCode)
+		return "", fmt.Errorf("disk Usage Request failed with status code: %d", res.StatusCode)
 	}
 
 	totalDiskUsage, err := calculateDatabaseSize(res.Body)
@@ -483,7 +495,7 @@ func (os *OSClientV3) CountData(index string) (int, error) {
 		return 0, errors.New("failed to count number of documents in index")
 	}
 
-	var response map[string]interface{}
+	var response map[string]any
 	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
 		return 0, err
 	}
@@ -496,7 +508,7 @@ func (os *OSClientV3) CountData(index string) (int, error) {
 	return int(count.(float64)), nil
 }
 
-func (os *OSClientV3) PutData(index, id string, data map[string]interface{}) error {
+func (os *OSClientV3) PutData(index, id string, data map[string]any) error {
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
 		return errors.Wrap(err, "failed to Marshal data")
@@ -554,7 +566,11 @@ func (os *OSClientV3) ReEnableShardAllocation() error {
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+	defer func() {
+		if closeErr := res.Body.Close(); closeErr != nil {
+			klog.Errorf("failed to close response body from ReEnableShardAllocation, reason: %s", closeErr)
+		}
+	}()
 
 	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("received status code: %d", res.StatusCode)
@@ -578,8 +594,11 @@ func (os *OSClientV3) CheckVersion() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer res.Body.Close()
-
+	defer func() {
+		if closeErr := res.Body.Close(); closeErr != nil {
+			klog.Errorf("failed to close response body from CheckVersion, reason: %s", closeErr)
+		}
+	}()
 	if res.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("info request failed with status code: %d", res.StatusCode)
 	}
@@ -620,7 +639,7 @@ func (os *OSClientV3) GetClusterStatus() (string, error) {
 		return "", fmt.Errorf("cluster health request failed with status code: %d", resp.StatusCode)
 	}
 
-	response := make(map[string]interface{})
+	response := make(map[string]any)
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return "", errors.Wrap(err, "failed to parse the response body")
 	}
@@ -647,20 +666,24 @@ func (os *OSClientV3) CountIndex() (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer res.Body.Close()
+	defer func() {
+		if closeErr := res.Body.Close(); closeErr != nil {
+			klog.Errorf("failed to close response body from CountIndex, reason: %s", closeErr)
+		}
+	}()
 
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
 		return 0, fmt.Errorf("received status code: %d", res.StatusCode)
 	}
 
-	response := make(map[string]interface{})
+	response := make(map[string]any)
 	if err2 := json.NewDecoder(res.Body).Decode(&response); err2 != nil {
 		return 0, errors.Wrap(err2, "failed to parse the response body")
 	}
 	return len(response), nil
 }
 
-func (os *OSClientV3) GetData(_index, _type, _id string) (map[string]interface{}, error) {
+func (os *OSClientV3) GetData(_index, _type, _id string) (map[string]any, error) {
 	path := fmt.Sprintf("/%s/_doc/%s", _index, _id)
 	req, err := http.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
@@ -676,13 +699,17 @@ func (os *OSClientV3) GetData(_index, _type, _id string) (map[string]interface{}
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer func() {
+		if closeErr := res.Body.Close(); closeErr != nil {
+			klog.Errorf("failed to close response body from Get Data, reason: %s", closeErr)
+		}
+	}()
 
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
 		return nil, fmt.Errorf("received status code: %d", res.StatusCode)
 	}
 
-	response := make(map[string]interface{})
+	response := make(map[string]any)
 	if err2 := json.NewDecoder(res.Body).Decode(&response); err2 != nil {
 		return nil, errors.Wrap(err2, "failed to parse the response body")
 	}
@@ -700,7 +727,11 @@ func (os *OSClientV3) CountNodes() (int64, error) {
 	if err != nil {
 		return -1, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			klog.Errorf("failed to close response body from CountNodes, reason: %s", closeErr)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return -1, fmt.Errorf("nodes info request failed with status code: %d", resp.StatusCode)
@@ -734,7 +765,12 @@ func (os *OSClientV3) AddVotingConfigExclusions(nodes []string) error {
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+
+	defer func() {
+		if closeErr := res.Body.Close(); closeErr != nil {
+			klog.Errorf("failed to close response body from AddVotingConfigExclusions, reason: %s", closeErr)
+		}
+	}()
 
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
 		return fmt.Errorf("failed with response.StatusCode: %d", res.StatusCode)
@@ -792,7 +828,11 @@ func (os *OSClientV3) ExcludeNodeAllocation(nodes []string) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			klog.Errorf("failed to close response body from ExcludenodeAllocation, reason: %s", closeErr)
+		}
+	}()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("received status code: %d", resp.StatusCode)
@@ -821,7 +861,11 @@ func (os *OSClientV3) DeleteNodeAllocationExclusion() error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			klog.Errorf("failed to close response body from DeleteNodeAllocation reason: %s", closeErr)
+		}
+	}()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("received status code: %d", resp.StatusCode)
@@ -845,7 +889,11 @@ func (os *OSClientV3) GetUsedDataNodes() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			klog.Errorf("failed to close response body from GetusedDataNode, reason: %s", closeErr)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("cat shards request failed with status code: %d", resp.StatusCode)
@@ -885,7 +933,11 @@ func (os *OSClientV3) AssignedShardsSize(node string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			klog.Errorf("failed to close response body from AssignShardsize, reason: %s", closeErr)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return 0, fmt.Errorf("nodes stats request failed with status code: %d", resp.StatusCode)

@@ -22,7 +22,6 @@ import (
 
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 
-	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
 )
 
@@ -74,8 +73,6 @@ const (
 }`
 	VotingExclusionUrl = "/_cluster/voting_config_exclusions"
 )
-
-var log logr.Logger
 
 type Info struct {
 	Name        string  `json:"name"`
