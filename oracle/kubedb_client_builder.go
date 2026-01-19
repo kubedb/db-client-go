@@ -175,6 +175,10 @@ func (o *OracleClientBuilder) getConnectionString() (string, error) {
 	return connStr, nil
 }
 
+func (o *OracleClientBuilder) GetOracleAuthCredentials() (string, string, error) {
+	return o.getOracleAuthCredentials()
+}
+
 func (o *OracleClientBuilder) getOracleAuthCredentials() (string, string, error) {
 	if o.db.Spec.AuthSecret == nil {
 		return "", "", errors.New("no database secret provided")
