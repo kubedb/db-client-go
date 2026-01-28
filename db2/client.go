@@ -59,6 +59,21 @@ func (cc *Client) ConfigurePrimary(dbName string, primaryPod int, standbyPod int
 	return res.StatusCode() == http.StatusOK, nil
 }
 
+func (cc *Client) StartPrimaryBackupStream(dbName string, standbyPod int, namespace string) (bool, error) {
+	req := cc.Client.R().
+		SetDoNotParseResponse(true).
+		SetQueryParam("dbName", dbName).
+		SetQueryParam("standbyPod", strconv.Itoa(standbyPod)).
+		SetQueryParam("namespace", namespace)
+
+	res, err := req.Get("/primarybackup")
+	if err != nil {
+		klog.Error(err, "Failed to send http request")
+		return false, err
+	}
+	return res.StatusCode() == http.StatusOK, nil
+}
+
 func (cc *Client) ConfigureStandby(dbName string, primaryPod int, standbyPod int) (bool, error) {
 	req := cc.Client.R().
 		SetDoNotParseResponse(true).
