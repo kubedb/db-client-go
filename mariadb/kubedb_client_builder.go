@@ -22,6 +22,7 @@ import (
 	"crypto/x509"
 	"database/sql"
 	"fmt"
+	"os"
 
 	"kubedb.dev/apimachinery/apis/kubedb"
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
@@ -49,6 +50,12 @@ func NewKubeDBClientBuilder(kc client.Client, db *dbapi.MariaDB) *KubeDBClientBu
 	return &KubeDBClientBuilder{
 		kc: kc,
 		db: db,
+	}
+}
+
+func NewMariaDBClientBuilder(kc client.Client) *KubeDBClientBuilder {
+	return &KubeDBClientBuilder{
+		kc: kc,
 	}
 }
 
@@ -144,13 +151,23 @@ func (o *KubeDBClientBuilder) SSLEnabledMariaDB() bool {
 }
 
 func (o *KubeDBClientBuilder) getURL() string {
-	return fmt.Sprintf("%s.%s.%s.svc", o.podName, o.db.GoverningServiceName(), o.db.Namespace)
+	if o.db == nil {
+		return os.Getenv("GOVERNING_SERVICE_NAME")
+	} else {
+		return fmt.Sprintf("%s.%s.%s.svc", o.podName, o.db.GoverningServiceName(), o.db.Namespace)
+	}
 }
 
 func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
-	user, pass, err := o.getMariaDBBasicAuth()
-	if err != nil {
-		return "", err
+	var user, pass string
+	var err error
+	if o.db == nil {
+		user, pass = getMariaDBBasicAuth()
+	} else {
+		user, pass, err = o.getMariaDBBasicAuth()
+		if err != nil {
+			return "", err
+		}
 	}
 
 	if o.podName != "" {
@@ -160,8 +177,16 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	tlsConfig := ""
 	if o.SSLEnabledMariaDB() {
 		// get client-secret
+
+		var secretName string
+		if o.db == nil {
+			secretName = os.Getenv("TLS_SECRET_NAME")
+		} else {
+			secretName = o.db.GetCertSecretName(dbapi.MariaDBClientCert)
+		}
+
 		var clientSecret core.Secret
-		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.GetCertSecretName(dbapi.MariaDBClientCert)}, &clientSecret)
+		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: secretName}, &clientSecret)
 		if err != nil {
 			return "", err
 		}
@@ -170,6 +195,7 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		if !exists {
 			return "", fmt.Errorf("%v in not present in client secret", rootCAKey)
 		}
+
 		cacrt := value
 		certPool := x509.NewCertPool()
 		certPool.AppendCertsFromPEM(cacrt)
@@ -203,4 +229,8 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	}
 	connector := fmt.Sprintf("%v:%v@tcp(%s:%d)/%s?%s", user, pass, o.url, 3306, "mysql", tlsConfig)
 	return connector, nil
+}
+
+func getMariaDBBasicAuth() (string, string) {
+	return os.Getenv("MYSQL_ROOT_USERNAME"), os.Getenv("MYSQL_ROOT_PASSWORD")
 }
