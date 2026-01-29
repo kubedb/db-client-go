@@ -152,10 +152,15 @@ func (o *KubeDBClientBuilder) SSLEnabledMariaDB() bool {
 
 func (o *KubeDBClientBuilder) getURL() string {
 	if o.db == nil {
-		return os.Getenv("GOVERNING_SERVICE_NAME")
+		if o.url != "" {
+			return o.url
+		} else {
+			return os.Getenv("GOVERNING_SERVICE_NAME")
+		}
 	} else {
 		return fmt.Sprintf("%s.%s.%s.svc", o.podName, o.db.GoverningServiceName(), o.db.Namespace)
 	}
+
 }
 
 func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
