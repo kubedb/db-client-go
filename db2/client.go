@@ -44,14 +44,14 @@ func (cc *Client) ReadWriteCheck() (bool, error) {
 	return res.StatusCode() == http.StatusOK, nil
 }
 
-func (cc *Client) ConfigurePrimary(dbName string, primaryPod int, standbyPod int) (bool, error) {
+func (cc *Client) ConfigureHadrOnPrimary(dbName string, primaryPod int, standbyPod int) (bool, error) {
 	req := cc.Client.R().
 		SetDoNotParseResponse(true).
 		SetQueryParam("dbName", dbName).
 		SetQueryParam("primaryPod", strconv.Itoa(primaryPod)).
 		SetQueryParam("standbyPod", strconv.Itoa(standbyPod))
 
-	res, err := req.Get("/primary")
+	res, err := req.Get("/configureHadrOnPrimary")
 	if err != nil {
 		klog.Error(err, "Failed to send http request")
 		return false, err
@@ -59,14 +59,29 @@ func (cc *Client) ConfigurePrimary(dbName string, primaryPod int, standbyPod int
 	return res.StatusCode() == http.StatusOK, nil
 }
 
-func (cc *Client) StartPrimaryBackupStream(dbName string, standbyPod int, namespace string) (bool, error) {
+func (cc *Client) RestoreToStandby(dbName string, primaryPod int, standbyPod int) (bool, error) {
+	req := cc.Client.R().
+		SetDoNotParseResponse(true).
+		SetQueryParam("dbName", dbName).
+		SetQueryParam("primaryPod", strconv.Itoa(primaryPod)).
+		SetQueryParam("standbyPod", strconv.Itoa(standbyPod))
+
+	res, err := req.Get("/restoreToStandby")
+	if err != nil {
+		klog.Error(err, "Failed to send http request")
+		return false, err
+	}
+	return res.StatusCode() == http.StatusOK, nil
+}
+
+func (cc *Client) StartPrimaryBackupStream(dbName string, primaryPod, standbyPod int) (bool, error) {
 	req := cc.Client.R().
 		SetDoNotParseResponse(true).
 		SetQueryParam("dbName", dbName).
 		SetQueryParam("standbyPod", strconv.Itoa(standbyPod)).
-		SetQueryParam("namespace", namespace)
+		SetQueryParam("primaryPod", strconv.Itoa(primaryPod))
 
-	res, err := req.Get("/primarybackup")
+	res, err := req.Get("/triggerBackup")
 	if err != nil {
 		klog.Error(err, "Failed to send http request")
 		return false, err
@@ -74,26 +89,26 @@ func (cc *Client) StartPrimaryBackupStream(dbName string, standbyPod int, namesp
 	return res.StatusCode() == http.StatusOK, nil
 }
 
-func (cc *Client) ConfigureStandby(dbName string, primaryPod int, standbyPod int) (bool, error) {
+func (cc *Client) StartHadrOnStandby(dbName string, primaryPod int, standbyPod int) (bool, error) {
 	req := cc.Client.R().
 		SetDoNotParseResponse(true).
 		SetQueryParam("dbName", dbName).
 		SetQueryParam("primaryPod", strconv.Itoa(primaryPod)).
 		SetQueryParam("standbyPod", strconv.Itoa(standbyPod))
 
-	res, err := req.Get("/standby")
+	res, err := req.Get("/startHadrOnStandby")
 	if err != nil {
 		klog.Error(err, "Failed to send http request")
 		return false, err
 	}
 	return res.StatusCode() == http.StatusOK, nil
 }
-func (cc *Client) StartHADR(dbName string) (bool, error) {
+func (cc *Client) StartHadrOnPrimay(dbName string) (bool, error) {
 	req := cc.Client.R().
 		SetDoNotParseResponse(true).
 		SetQueryParam("dbName", dbName)
 
-	res, err := req.Get("/starthadr")
+	res, err := req.Get("/startHadrOnPrimary")
 	if err != nil {
 		klog.Error(err, "Failed to send http request")
 		return false, err
