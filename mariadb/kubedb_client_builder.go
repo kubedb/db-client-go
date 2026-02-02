@@ -147,6 +147,9 @@ func (o *KubeDBClientBuilder) getMariaDBBasicAuth() (string, string, error) {
 }
 
 func (o *KubeDBClientBuilder) SSLEnabledMariaDB() bool {
+	if o.db == nil {
+		return os.Getenv("REQUIRE_SSL") == "TRUE" || os.Getenv("REQUIRE_SSL") == "ON"
+	}
 	return o.db.Spec.TLS != nil && o.db.Spec.RequireSSL
 }
 
