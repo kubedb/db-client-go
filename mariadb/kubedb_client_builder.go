@@ -160,7 +160,6 @@ func (o *KubeDBClientBuilder) getURL() string {
 	} else {
 		return fmt.Sprintf("%s.%s.%s.svc", o.podName, o.db.GoverningServiceName(), o.db.Namespace)
 	}
-
 }
 
 func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
