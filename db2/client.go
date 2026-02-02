@@ -44,6 +44,21 @@ func (cc *Client) ReadWriteCheck() (bool, error) {
 	return res.StatusCode() == http.StatusOK, nil
 }
 
+func (cc *Client) CreateDB(dbName string, primaryPod int, standbyPod int) (bool, error) {
+	req := cc.Client.R().
+		SetDoNotParseResponse(true).
+		SetQueryParam("dbName", dbName).
+		SetQueryParam("primaryPod", strconv.Itoa(primaryPod)).
+		SetQueryParam("standbyPod", strconv.Itoa(standbyPod))
+
+	res, err := req.Get("/createDB")
+	if err != nil {
+		klog.Error(err, "Failed to send http request for create database %s", dbName)
+		return false, err
+	}
+	return res.StatusCode() == http.StatusOK, nil
+}
+
 func (cc *Client) ConfigureHadrOnPrimary(dbName string, primaryPod int, standbyPod int) (bool, error) {
 	req := cc.Client.R().
 		SetDoNotParseResponse(true).
@@ -67,21 +82,6 @@ func (cc *Client) RestoreToStandby(dbName string, primaryPod int, standbyPod int
 		SetQueryParam("standbyPod", strconv.Itoa(standbyPod))
 
 	res, err := req.Get("/restoreToStandby")
-	if err != nil {
-		klog.Error(err, "Failed to send http request")
-		return false, err
-	}
-	return res.StatusCode() == http.StatusOK, nil
-}
-
-func (cc *Client) StartPrimaryBackupStream(dbName string, primaryPod, standbyPod int) (bool, error) {
-	req := cc.Client.R().
-		SetDoNotParseResponse(true).
-		SetQueryParam("dbName", dbName).
-		SetQueryParam("standbyPod", strconv.Itoa(standbyPod)).
-		SetQueryParam("primaryPod", strconv.Itoa(primaryPod))
-
-	res, err := req.Get("/triggerBackup")
 	if err != nil {
 		klog.Error(err, "Failed to send http request")
 		return false, err
