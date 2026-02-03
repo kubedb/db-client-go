@@ -59,12 +59,13 @@ func (cc *Client) CreateDB(dbName string, primaryPod int, standbyPod int) (bool,
 	return res.StatusCode() == http.StatusOK, nil
 }
 
-func (cc *Client) ConfigureHadrOnPrimary(dbName string, primaryPod int, standbyPod int) (bool, error) {
+func (cc *Client) ConfigureHadrOnPrimary(dbName string, primaryPod int, standbyPod int, portNumber int) (bool, error) {
 	req := cc.Client.R().
 		SetDoNotParseResponse(true).
 		SetQueryParam("dbName", dbName).
 		SetQueryParam("primaryPod", strconv.Itoa(primaryPod)).
-		SetQueryParam("standbyPod", strconv.Itoa(standbyPod))
+		SetQueryParam("standbyPod", strconv.Itoa(standbyPod)).
+		SetQueryParam("portNumber", strconv.Itoa(portNumber))
 
 	res, err := req.Get("/configureHadrOnPrimary")
 	if err != nil {
@@ -89,12 +90,13 @@ func (cc *Client) RestoreToStandby(dbName string, primaryPod int, standbyPod int
 	return res.StatusCode() == http.StatusOK, nil
 }
 
-func (cc *Client) StartHadrOnStandby(dbName string, primaryPod int, standbyPod int) (bool, error) {
+func (cc *Client) StartHadrOnStandby(dbName string, primaryPod int, standbyPod int, portNumber int) (bool, error) {
 	req := cc.Client.R().
 		SetDoNotParseResponse(true).
 		SetQueryParam("dbName", dbName).
 		SetQueryParam("primaryPod", strconv.Itoa(primaryPod)).
-		SetQueryParam("standbyPod", strconv.Itoa(standbyPod))
+		SetQueryParam("standbyPod", strconv.Itoa(standbyPod)).
+		SetQueryParam("portNumber", strconv.Itoa(portNumber))
 
 	res, err := req.Get("/startHadrOnStandby")
 	if err != nil {
