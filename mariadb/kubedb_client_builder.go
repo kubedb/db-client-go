@@ -53,12 +53,6 @@ func NewKubeDBClientBuilder(kc client.Client, db *dbapi.MariaDB) *KubeDBClientBu
 	}
 }
 
-func NewMariaDBClientBuilder(kc client.Client) *KubeDBClientBuilder {
-	return &KubeDBClientBuilder{
-		kc: kc,
-	}
-}
-
 func (o *KubeDBClientBuilder) WithURL(url string) *KubeDBClientBuilder {
 	o.url = url
 	return o
@@ -161,7 +155,11 @@ func (o *KubeDBClientBuilder) getURL() string {
 			return os.Getenv("GOVERNING_SERVICE_NAME")
 		}
 	} else {
-		return fmt.Sprintf("%s.%s.%s.svc", o.podName, o.db.GoverningServiceName(), o.db.Namespace)
+		if o.db.Spec.Distributed {
+			return fmt.Sprintf("%s.%s.%s.svc%s", o.podName, o.db.GoverningServiceName(), o.db.Namespace, kubedb.KubeSliceDomainSuffix)
+		} else {
+			return fmt.Sprintf("%s.%s.%s.svc", o.podName, o.db.GoverningServiceName(), o.db.Namespace)
+		}
 	}
 }
 
