@@ -73,12 +73,6 @@ func (o *KubeDBClientBuilder) WithLog(log logr.Logger) *KubeDBClientBuilder {
 }
 
 func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
-	// Get domain and fallback to cluster.local if not found
-	domain := apiutils.FindDomain()
-	if domain == "" {
-		domain = "cluster.local"
-	}
-
 	// Construct URL - use default service if podName not provided
 	o.url = o.buildConnectionURL()
 
