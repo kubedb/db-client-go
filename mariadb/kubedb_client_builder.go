@@ -156,7 +156,7 @@ func (o *KubeDBClientBuilder) getURL() string {
 		}
 	} else {
 		if o.db.Spec.Distributed {
-			return fmt.Sprintf("%s.%s.%s.svc%s", o.podName, o.db.GoverningServiceName(), o.db.Namespace, kubedb.KubeSliceDomainSuffix)
+			return fmt.Sprintf("%s.%s.%s.svc.%s", o.podName, o.db.GoverningServiceName(), o.db.Namespace, kubedb.KubeSliceDomainSuffix)
 		} else {
 			return fmt.Sprintf("%s.%s.%s.svc", o.podName, o.db.GoverningServiceName(), o.db.Namespace)
 		}

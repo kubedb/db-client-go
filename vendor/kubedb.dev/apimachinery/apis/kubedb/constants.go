@@ -46,31 +46,6 @@ const (
 	InlineConfigKeyPrefix   = "inline"
 	InlineConfigKeyPrefixZZ = "zz-inline"
 
-	// distributed const
-	DistributedDatabaseLabel                   = GroupName + "/distributed"
-	DistributedCustomConfigSecretNameSuffix    = "custom-config"
-	DistributedRBACNameSuffix                  = "rbac"
-	DistributedServiceExportNameSuffix         = "serviceexports"
-	DistributedTLSSecretNameSuffix             = "tls-secrets"
-	DistributedGRPCSecretNameSuffix            = "grpc-secrets"
-	DistributedAuthSecretNameSuffix            = "auth"
-	DistributedPromethuesSecretNameSuffix      = "prometheus-data"
-	DistributedPromethuesSecretVolumeName      = "prometheus-data"
-	DistributedPromethuesSecretVolumeMountPath = "/var/prometheus-data"
-	DistributedMonitoringAgentENV              = "MONITORING_AGENT"
-	DistributedMonitoringAgentPrometheus       = "prometheus"
-	DistributedDBReplicaENV                    = "DB_REPLICAS"
-	DistributedMaxVolumeUsed                   = "max_used"
-	DistributedVolumeCapacity                  = "capacity"
-	KubesliceContainerExcludeLabel             = "kubeslice.io/exclude"
-	KubeSliceDomainSuffix                      = ".slice.local"
-	DistributedPrimaryServiceExportSuffix      = "primary-serviceexport"
-
-	KubeSliceNSMIPKey         = "kubeslice.io/nsmIP"
-	KubeSlicePodIPVolumeName  = "podip"
-	KubeSlicePodIPFileName    = "podip"
-	KubeSliceNSMContainerName = "cmd-nsc-grpc"
-
 	ReplicationModeDetectorContainerName = "replication-mode-detector"
 	DatabasePodPrimary                   = "primary"
 	DatabasePodStandby                   = "standby"
@@ -154,7 +129,9 @@ const (
 	ElasticsearchVolumeData                      = "data"
 	ElasticsearchVolumeTemp                      = "temp"
 	ElasticsearchConfigFileName                  = "elasticsearch.yml"
-	ElasticsearchScriptFileName                  = "config-merger.sh"
+	ElasticsearchScriptFileName                  = "startup.sh"
+	ElasticsearchVolumeScriptFileName            = "startup-script"
+	ElasticsearchVolumeScriptDir                 = "/script"
 
 	// Ref:
 	//	- https://www.elastic.co/guide/en/elasticsearch/reference/7.6/heap-size.html#heap-size
@@ -401,38 +378,16 @@ const (
 	DatabasePodMasterComponent  = "Master"
 	DatabasePodSlaveComponent   = "Slave"
 
-	MariaDBDistributedUpgradeCommand            = "mariadb-upgrade"
-	MariaDBDistributedPodMetricGetCommand       = "get-pod-metrics"
-	MariaDBDistributedPodGetCommand             = "get-pod"
-	MariaDBDistributedVolumeUsageGetCommand     = "get-volume-usage"
-	MariaDBDistributedVolumeCapacityGetCommand  = "get-volume-capacity"
-	MariaDBDistributedBackupCommand             = "take-backup"
-	MariaDBDistributedRestoreCommand            = "restore-backup"
-	MariaDBDistributedVolumeSnapshot            = "take-volume-snapshot"
-	MariaDBDistributedRecoveryFileCreateCommand = "create-recovery-done-file"
-	MariaDBArchiverPVCRestorerSuffix            = "pvc-restorer"
-	MariaDBBinlogRestoreSidekickSuffix          = "binlog-restorer"
-	MariaDBBinlogRestoreServiceSuffix           = "binlog-restore"
-	MariaDBXtraBackupInfoFile                   = "/var/lib/mysql/mariadb_backup_binlog_info"
-	MariaDBBackupInfoFile                       = "/var/lib/mysql/xtrabackup_binlog_info"
-	MariaDBArchiverRestoreRecoveryFileName      = "/tmp/recovery.done"
-	MariaDBArchiverBackupJobSelector            = GroupName + "/archiver-job-name"
-	MariaDBSidekickNameLabelKey                 = GroupName + "/sidekick-name"
-	MariaDBArchiverBaseBackupRestic             = "Restic"
-	MariaDBArchiverBaseBackupVolumeSnapshooter  = "VolumeSnapshotter"
-
-	// Distributed Archiver
-	BackupsessionAnnotation                 = "kubestash.com/backupsession"
-	RestoresessionAnnotation                = "kubestash.com/restoresession"
-	BackupconfigurationAnnotation           = "kubestash.com/backupconfiguration"
-	DistributedSnapshotinfoAnnotation       = "kubestash.com/distributedsnapshotinfo"
-	SnapshotsKey                            = "snapshots"
-	RestoreSessionKey                       = "restoresession"
-	DistributedArchiverBackupCMNameSuffix   = "backup"
-	DistributedArchiverRestoreCMNameSuffix  = "restore"
-	DistributedArchiverSnapshotCMNameSuffix = "snapshots"
-	MariaDBKubestashBackupContainerName     = "physical-backup-1"
-	MariaDBKubestashRestoreContainerName    = "distributed-physical-backup-restore-0"
+	MariaDBArchiverPVCRestorerSuffix           = "pvc-restorer"
+	MariaDBBinlogRestoreSidekickSuffix         = "binlog-restorer"
+	MariaDBBinlogRestoreServiceSuffix          = "binlog-restore"
+	MariaDBXtraBackupInfoFile                  = "/var/lib/mysql/mariadb_backup_binlog_info"
+	MariaDBBackupInfoFile                      = "/var/lib/mysql/xtrabackup_binlog_info"
+	MariaDBArchiverRestoreRecoveryFileName     = "/tmp/recovery.done"
+	MariaDBArchiverBackupJobSelector           = GroupName + "/archiver-job-name"
+	MariaDBSidekickNameLabelKey                = GroupName + "/sidekick-name"
+	MariaDBArchiverBaseBackupRestic            = "Restic"
+	MariaDBArchiverBaseBackupVolumeSnapshooter = "VolumeSnapshotter"
 
 	// Maxscale
 	MaxscaleCommonName            = "mx"
@@ -560,6 +515,7 @@ const (
 	PostgresDatabasePort              = 5432
 	PostgresPodPrimary                = "primary"
 	PostgresPodStandby                = "standby"
+	PostgresPodReadReplica            = "read-replica"
 	EnvPostgresUser                   = "POSTGRES_USER"
 	EnvPostgresPassword               = "POSTGRES_PASSWORD"
 	PostgresRootUser                  = "postgres"
@@ -616,8 +572,10 @@ const (
 	SYS_RESOURCE              = "SYS_RESOURCE"
 	DropCapabilityALL         = "ALL"
 
-	PostgresGRPCIssuerName           = "grpc-issuer"
-	PostgresGRPCSelfSignedIssuerName = "grpc-selfsigned"
+	PostgresGRPCIssuerName              = "grpc-issuer"
+	PostgresGRPCSelfSignedIssuerName    = "grpc-selfsigned"
+	PostgresDatabaseClusterLabelKey     = "postgreses.kubedb.com/database.cluster"
+	PostgresDatabaseReadReplicaLabelKey = "postgreses.kubedb.com/database.read-replica"
 
 	// =========================== ProxySQL Constants ============================
 	LabelProxySQLName                  = ProxySQLKey + "/name"
@@ -926,15 +884,18 @@ const (
 const (
 	MilvusUsername = "root"
 
-	MilvusGrpcPortName = "grpc"
-	MilvusGrpcPort     = int32(19530)
+	MilvusGrpcPortName    = "grpc"
+	MilvusMetricsPortName = "metrics"
+	MilvusGrpcPort        = int32(19530)
 
 	MilvusVolumeNameData = "data"
-	MilvusDataDir        = "/var/lib/milvus"
 	MilvusConfigVolName  = "milvus-config"
-	MilvusConfigDir      = "/milvus/configs/milvus.yaml"
 	MilvusConfigFileName = "milvus.yaml"
-	MilvusContainerName  = "milvus"
+	MilvusLogFileName    = "glog.conf"
+
+	MilvusDataDir       = "/var/lib/milvus"
+	MilvusConfigVolDir  = "/milvus/configs"
+	MilvusContainerName = "milvus"
 
 	EtcdEndpointsName = "ETCD_ENDPOINTS"
 	EtcdAPIVersion    = "operator.etcd.io/v1alpha1"
@@ -945,9 +906,14 @@ const (
 	MinioAddressName   = "MINIO_ADDRESS"
 	MinioAddressKey    = "address"
 	MinioAccessKeyName = "MINIO_ACCESS_KEY"
-	MinioAccessKey     = "accessKeyId"
+	MinioAccessKey     = "accesskey"
 	MinioSecretKeyName = "MINIO_SECRET_KEY"
-	MinioSecretKey     = "secretAccessKey"
+	MinioSecretKey     = "secretkey"
+
+	MilvusMetricsPort       = 9091
+	MilvusPortDataNode      = 21124
+	MilvusPortQueryNode     = 21123
+	MilvusPortStreamingNode = 22222
 )
 
 const (
@@ -1103,6 +1069,16 @@ const (
 	KafkaAdminTopicConfigProvider = "com.linkedin.kafka.cruisecontrol.config.KafkaAdminTopicConfigProvider"
 	KafkaCCMetricReporter         = "com.linkedin.kafka.cruisecontrol.metricsreporter.CruiseControlMetricsReporter"
 	KafkaJMXMetricReporter        = "org.apache.kafka.common.metrics.JmxReporter"
+
+	// Kafka Tiered Storage Constants
+	KafkaAivenTieredStorageClassName      = "io.aiven.kafka.tieredstorage.RemoteStorageManager"
+	KafkaVolumeTieredStoragePlugins       = "tiered-plugins"
+	KafkaTieredStoragePluginDir           = "/opt/kafka/libs/tiered-plugins"
+	KafkaVolumeTieredStorageChunkCache    = "tiered-chunk-cache"
+	KafkaTieredStorageChunkCacheDir       = "/opt/kafka/tiered-storage/cache"
+	KafkaVolumeTieredStorageGCSCredential = "gcs-credential"
+	KafkaTieredStorageGCSCredentialDir    = "/etc/credentials"
+	KafkaVolumeTieredStorageLocalDir      = "tiered-local"
 
 	// =========================== Solr Constants ============================
 	SolrPortName          = "http"
@@ -2270,6 +2246,18 @@ const (
 
 	QdrantAPIKey         = "api-key"
 	QdrantReadOnlyAPIKey = "read-only-api-key"
+
+	QdrantTLSCA   = "ca.crt"
+	QdrantTLSCert = "tls.crt"
+	QdrantTLSKey  = "tls.key"
+
+	QdrantServerCAPath   = "ca.pem"
+	QdrantServerCertPath = "cert.pem"
+	QdrantServerKeyPath  = "key.pem"
+
+	QdrantClientCAPath   = "ca.crt"
+	QdrantClientCertPath = "client.crt"
+	QdrantClientKeyPath  = "client.key"
 )
 
 // =========================== HanaDB Constants ============================
@@ -2324,4 +2312,51 @@ const (
 
 	// TenantDatabaseName is the name of the KubeDB managed tenant database
 	KubeDBTenantDatabaseName = "KUBEDB_HEALTH_CHECK"
+)
+
+// =========================== Distributed Constants ============================
+const (
+	DistributedDatabaseLabel                   = GroupName + "/distributed"
+	DistributedCustomConfigSecretNameSuffix    = "custom-config"
+	DistributedRBACNameSuffix                  = "rbac"
+	DistributedServiceExportNameSuffix         = "serviceexports"
+	DistributedTLSSecretNameSuffix             = "tls-secrets"
+	DistributedGRPCSecretNameSuffix            = "grpc-secrets"
+	DistributedAuthSecretNameSuffix            = "auth"
+	DistributedPromethuesSecretNameSuffix      = "prometheus-data"
+	DistributedPromethuesSecretVolumeName      = "prometheus-data"
+	DistributedPromethuesSecretVolumeMountPath = "/var/prometheus-data"
+	DistributedMonitoringAgentENV              = "MONITORING_AGENT"
+	DistributedMonitoringAgentPrometheus       = "prometheus"
+	DistributedDBReplicaENV                    = "DB_REPLICAS"
+	DistributedMaxVolumeUsed                   = "max_used"
+	DistributedVolumeCapacity                  = "capacity"
+	DistributedPrimaryServiceExportSuffix      = "primary-serviceexport"
+	DistributedPhysicalBackupContainerName     = "physical-backup-1"
+	DistributedPhysicalRestoreContainerName    = "distributed-physical-backup-restore-0"
+	KubesliceContainerExcludeLabel             = "kubeslice.io/exclude"
+	KubeSliceDomainSuffix                      = "slice.local"
+	KubeSliceNSMIPKey                          = "kubeslice.io/nsmIP"
+	KubeSlicePodIPVolumeName                   = "podip"
+	KubeSlicePodIPFileName                     = "podip"
+	KubeSliceNSMContainerName                  = "cmd-nsc-grpc"
+
+	// Archiver
+	DistributedArchiverSnapshotInfoAnnotation = "distributedsnapshotinfo"
+	DistributedArchiverCMKeySnapshots         = "snapshots"
+	DistributedArchiverCMKeyRestoreSession    = "restoresession"
+	DistributedArchiverBackupCMNameSuffix     = "backup"
+	DistributedArchiverRestoreCMNameSuffix    = "restore"
+	DistributedArchiverSnapshotCMNameSuffix   = "snapshots"
+
+	// GRPC commands
+	DistributedCommandDatabasePodGet     = "get_pod"
+	DistributedCommandDatabseUpgrade     = "database-upgrade"
+	DistributedCommandRecoveryFileCreate = "kubedb_create_recovery_done_file"
+	DistributedCommandBackup             = "kubestash_backup"
+	DistributedCommandRestore            = "kubestash_backup_restore"
+	DistributedCommandVolumeSnapshot     = "kubestash_volume_snapshot"
+	DistributedCommandPodMetric          = "kubedb_autoscaler_get_pod_metrics"
+	DistributedCommandVolumeUsage        = "kubedb_autoscaler_volume_usage"
+	DistributedCommandVolumeCapacity     = "kubedb_autoscaler_volume_capacity"
 )
