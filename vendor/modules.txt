@@ -3417,12 +3417,12 @@ kmodules.xyz/offshoot-api/util
 # kmodules.xyz/prober v0.34.0
 ## explicit; go 1.24.0
 kmodules.xyz/prober/api/v1
-# kmodules.xyz/resource-metadata v0.41.0
+# kmodules.xyz/resource-metadata v0.42.1
 ## explicit; go 1.25
 kmodules.xyz/resource-metadata/apis/node
 kmodules.xyz/resource-metadata/apis/node/v1alpha1
 kmodules.xyz/resource-metadata/crds
-# kubedb.dev/apimachinery v0.60.2-0.20260213100621-46868bd03949
+# kubedb.dev/apimachinery v0.61.0-rc.0
 ## explicit; go 1.25.0
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog

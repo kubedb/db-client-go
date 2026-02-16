@@ -1122,10 +1122,10 @@ kmodules.xyz/offshoot-api v0.34.0 h1:HnOOp8FrCjTWjtNApRDo6Ahe79tOlLrJmyye4xxO4Kk
 kmodules.xyz/offshoot-api v0.34.0/go.mod h1:F+B59yYw4CZJ4uD4xu6C+mMLzIXUtuH7E+SbDICl9jE=
 kmodules.xyz/prober v0.34.0 h1:ElZkZYCjLaytAA0M8EH42To7i9gh1IIX+d0qfaIohys=
 kmodules.xyz/prober v0.34.0/go.mod h1:rsu/fxxfNxY70GDbH6Ju8G66459hi7AhWSSBoiIp8ic=
-kmodules.xyz/resource-metadata v0.41.0 h1:9wUOg2EvAOW3n8I+tbZnE1PJDdolX+94/Mn7FBZZy9w=
-kmodules.xyz/resource-metadata v0.41.0/go.mod h1:xntcQko2QLbLEHwGE4TQ7I/80fcBQzcexbep97Akstk=
-kubedb.dev/apimachinery v0.60.2-0.20260213100621-46868bd03949 h1:4fXF3Zw8IJV2iFIkyqIdktJL2CGSQzUma+/6GTyFT9E=
-kubedb.dev/apimachinery v0.60.2-0.20260213100621-46868bd03949/go.mod h1:aCE7ly0M7DsStDdWwBql5dCG7cVUrqEwDu3tGokLwCo=
+kmodules.xyz/resource-metadata v0.42.1 h1:RxAi354cKOeCVLoZI+WjR+tooU4lEq/axIafm1SYa20=
+kmodules.xyz/resource-metadata v0.42.1/go.mod h1:xntcQko2QLbLEHwGE4TQ7I/80fcBQzcexbep97Akstk=
+kubedb.dev/apimachinery v0.61.0-rc.0 h1:jxmBu5wndg2hj2vFDLoYrdbat1fYApLV571tNsV1f6I=
+kubedb.dev/apimachinery v0.61.0-rc.0/go.mod h1:2zrZDkZyxlEcRaFqQlQLpXSwlDFoYgLQcCy4jY6vU6Q=
 kubeops.dev/operator-shard-manager v0.0.5 h1:i7VnyUfIa9u3RQhSTVWNsooXcgmrWWxJyI9gJ10onE8=
 kubeops.dev/operator-shard-manager v0.0.5/go.mod h1:NE6GzlhwLRiwiUUpqi4Uf+J7e/gniITM0uJnE5r1mzY=
 kubeops.dev/petset v0.0.15 h1:iwTRFAp0RNw0A87sw2c97UZ6WIA9H/nhJBpDhXLa7fk=
