@@ -42,6 +42,27 @@ spec:
             type: object
           spec:
             properties:
+              apply:
+                default: IfReady
+                enum:
+                - IfReady
+                - Always
+                type: string
+              databaseRef:
+                properties:
+                  name:
+                    default: ""
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+              maxRetries:
+                default: 1
+                format: int32
+                type: integer
+              restart:
+                type: object
+              timeout:
+                type: string
               tls:
                 properties:
                   certificates:
@@ -147,6 +168,13 @@ spec:
                   rotateCertificates:
                     type: boolean
                 type: object
+              type:
+                enum:
+                - Restart
+                type: string
+            required:
+            - databaseRef
+            - type
             type: object
           status:
             properties:
