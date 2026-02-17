@@ -115,7 +115,7 @@ func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 
 	tlsConfig := &tls.Config{}
 
-	if o.db.Spec.TLS != nil && o.db.Spec.TLS.IssuerRef != nil {
+	if o.db.Spec.TLS != nil && o.db.Spec.TLS.IssuerRef != nil && *o.db.Spec.TLS.Bolt.Enabled {
 		certSecret := &core.Secret{}
 		err := o.kc.Get(o.ctx, types.NamespacedName{
 			Namespace: o.db.Namespace,
@@ -197,7 +197,7 @@ func (c *Client) ExecuteQuery(ctx context.Context, query string, params map[stri
 func (o *KubeDBClientBuilder) buildConnectionURL() string {
 	scheme := "neo4j"
 
-	if o.db.Spec.TLS != nil && o.db.Spec.TLS.IssuerRef != nil {
+	if o.db.Spec.TLS != nil && o.db.Spec.TLS.IssuerRef != nil && *o.db.Spec.TLS.Bolt.Enabled {
 		scheme = "neo4j+s"
 	}
 
