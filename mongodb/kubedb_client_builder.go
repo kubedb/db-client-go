@@ -216,6 +216,8 @@ func (o *KubeDBClientBuilder) getMongoDBClientOpts() (*mgoptions.ClientOptions, 
 		clientOpts = mgoptions.Client().ApplyURI(fmt.Sprintf("mongodb://%s@%s/admin?%v%v", cred, o.url, repSetConfig, authDatabase))
 	}
 
+	clientOpts.SetMaxConnIdleTime(time.Second * 30)
+	clientOpts.SetMaxPoolSize(20)
 	clientOpts.SetDirect(o.direct)
 	clientOpts.SetConnectTimeout(5 * time.Second)
 
