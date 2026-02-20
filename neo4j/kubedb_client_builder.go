@@ -18,12 +18,15 @@ package neo4j
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	"kubedb.dev/apimachinery/apis/kubedb"
+	v1api "kubedb.dev/apimachinery/apis/kubedb/v1"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	apiutils "kubedb.dev/apimachinery/pkg/utils"
 
@@ -34,6 +37,7 @@ import (
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -53,6 +57,11 @@ func NewKubeDBClientBuilder(kc client.Client, db *api.Neo4j) *KubeDBClientBuilde
 	}
 }
 
+func (o *KubeDBClientBuilder) WithPodName(podName string) *KubeDBClientBuilder {
+	o.podName = podName
+	return o
+}
+
 func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
 	o.ctx = ctx
 	return o
@@ -64,32 +73,8 @@ func (o *KubeDBClientBuilder) WithLog(log logr.Logger) *KubeDBClientBuilder {
 }
 
 func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
-	// Guard against nil receiver or missing required fields to avoid nil deref
-	if o == nil {
-		return nil, fmt.Errorf("KubeDBClientBuilder is nil")
-	}
-	if o.db == nil {
-		return nil, fmt.Errorf("neo4j object is nil")
-	}
-	if o.kc == nil {
-		return nil, fmt.Errorf("kubernetes client is nil")
-	}
-	// Ensure context is non-nil
-	if o.ctx == nil {
-		o.ctx = context.TODO()
-	}
-	// Get domain and fallback to cluster.local if not found
-	domain := apiutils.FindDomain()
-	if domain == "" {
-		domain = "cluster.local"
-	}
-
 	// Construct URL - use default service if podName not provided
-	if o.podName != "" {
-		o.url = fmt.Sprintf("neo4j://%s.%s.%s.svc.%s:%d", o.podName, o.db.GoverningServiceName(), o.db.Namespace, domain, kubedb.Neo4jBoltPort)
-	} else {
-		o.url = fmt.Sprintf("neo4j://%s.%s.svc.%s:%d", o.db.ServiceName(), o.db.Namespace, domain, kubedb.Neo4jBoltPort)
-	}
+	o.url = o.buildConnectionURL()
 
 	klog.V(3).Infof("Attempting to connect to Neo4j at: %s", o.url)
 
@@ -128,13 +113,53 @@ func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 		klog.Info("Security is disabled for Neo4j, no credentials will be used.")
 	}
 
+	tlsConfig := &tls.Config{}
+
+	if o.db.Spec.TLS != nil && o.db.Spec.TLS.Bolt.Mode != api.TLSModeDisabled {
+		certSecret := &core.Secret{}
+		err := o.kc.Get(o.ctx, types.NamespacedName{
+			Namespace: o.db.Namespace,
+			Name:      o.db.GetCertSecretName(api.Neo4jCertificateTypeClient),
+		}, certSecret)
+		if err != nil {
+			if kerr.IsNotFound(err) {
+				klog.Error(err, "Client certificate secret not found")
+				return nil, errors.New("client certificate secret is not found")
+			}
+			klog.Error(err, "Failed to get client certificate Secret")
+			return nil, err
+		}
+
+		// get tls cert, clientCA and rootCA for tls config
+		clientCA := x509.NewCertPool()
+		rootCA := x509.NewCertPool()
+
+		crt, err := tls.X509KeyPair(certSecret.Data[core.TLSCertKey], certSecret.Data[core.TLSPrivateKeyKey])
+		if err != nil {
+			klog.Error(err, "Failed to parse private key pair")
+			return nil, err
+		}
+		clientCA.AppendCertsFromPEM(certSecret.Data[v1api.TLSCACertFileName])
+		rootCA.AppendCertsFromPEM(certSecret.Data[v1api.TLSCACertFileName])
+		tlsConfig = &tls.Config{
+			Certificates: []tls.Certificate{crt},
+			ClientAuth:   tls.RequireAndVerifyClientCert,
+			ClientCAs:    clientCA,
+			RootCAs:      rootCA,
+			MaxVersion:   tls.VersionTLS13,
+		}
+	}
+
 	// Create driver and check for errors immediately
 	driver, err := neo4j.NewDriverWithContext(o.url, neo4j.BasicAuth(dbUser, dbPassword, ""), func(c *config.Config) {
 		c.SocketConnectTimeout = 60 * time.Second
 		c.ConnectionAcquisitionTimeout = 60 * time.Second
 		c.MaxTransactionRetryTime = 60 * time.Second
 		c.MaxConnectionLifetime = 30 * time.Minute
-		c.MaxConnectionPoolSize = 100
+		c.MaxConnectionPoolSize = 20
+		if o.db.Spec.TLS != nil {
+			c.TlsConfig = tlsConfig
+		}
 	})
 	if o.db.Spec.DisableSecurity {
 		driver, err = neo4j.NewDriverWithContext(o.url, neo4j.NoAuth())
@@ -152,7 +177,12 @@ func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 		return nil, err
 	}
 
-	fmt.Println("Connection established.")
+	log := ctrl.Log.WithValues(api.ResourceSingularNeo4j, types.NamespacedName{
+		Namespace: o.db.Namespace,
+		Name:      o.db.OffshootName(),
+	})
+
+	log.V(2).Info("Connection established successfully to Neo4j at: %s", o.url)
 
 	return &Client{
 		DriverWithContext: driver,
@@ -162,4 +192,18 @@ func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 func (c *Client) ExecuteQuery(ctx context.Context, query string, params map[string]any, dbName string) (*neo4j.EagerResult, error) {
 	return neo4j.ExecuteQuery(ctx, c, query, params, neo4j.EagerResultTransformer,
 		neo4j.ExecuteQueryWithDatabase(dbName))
+}
+
+func (o *KubeDBClientBuilder) buildConnectionURL() string {
+	scheme := "neo4j"
+
+	if o.db.Spec.TLS != nil && o.db.Spec.TLS.Bolt.Mode != api.TLSModeDisabled {
+		scheme = "neo4j+s"
+	}
+
+	if o.podName != "" {
+		return fmt.Sprintf("%s://%s.%s.%s.svc.%s:%d", scheme, o.podName, o.db.OffshootName(), o.db.Namespace, apiutils.FindDomain(), kubedb.Neo4jBoltPort)
+	}
+
+	return fmt.Sprintf("%s://%s.%s.svc.%s:%d", scheme, o.db.ServiceName(), o.db.Namespace, apiutils.FindDomain(), kubedb.Neo4jBoltPort)
 }

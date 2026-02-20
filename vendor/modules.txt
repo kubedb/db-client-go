@@ -1,4 +1,4 @@
-# filippo.io/edwards25519 v1.1.0
+# filippo.io/edwards25519 v1.1.1
 ## explicit; go 1.20
 filippo.io/edwards25519
 filippo.io/edwards25519/field
@@ -56,6 +56,9 @@ github.com/amsokol/ignite-go-client/sql/v1
 ## explicit; go 1.22
 github.com/andybalholm/brotli
 github.com/andybalholm/brotli/matchfinder
+# github.com/armon/circbuf v0.0.0-20190214190532-5111143e8da2
+## explicit
+github.com/armon/circbuf
 # github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 ## explicit; go 1.13
 github.com/asaskevich/govalidator
@@ -134,6 +137,9 @@ github.com/cockroachdb/redact/internal/markers
 github.com/cockroachdb/redact/internal/redact
 github.com/cockroachdb/redact/internal/rfmt
 github.com/cockroachdb/redact/internal/rfmt/fmtsort
+# github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0
+## explicit
+github.com/codegangsta/inject
 # github.com/containerd/cgroups/v3 v3.0.3
 ## explicit; go 1.18
 github.com/containerd/cgroups/v3
@@ -2777,6 +2783,9 @@ golang.org/x/time/rate
 # gomodules.xyz/clock v0.0.0-20200817085942-06523dba733f
 ## explicit; go 1.14
 gomodules.xyz/clock
+# gomodules.xyz/go-sh v0.2.0
+## explicit; go 1.15
+gomodules.xyz/go-sh
 # gomodules.xyz/jsonpatch/v2 v2.5.0
 ## explicit; go 1.20
 gomodules.xyz/jsonpatch/v2
@@ -2786,6 +2795,9 @@ gomodules.xyz/mergo
 # gomodules.xyz/pointer v0.1.0
 ## explicit; go 1.15
 gomodules.xyz/pointer
+# gomodules.xyz/restic v0.1.0
+## explicit; go 1.25
+gomodules.xyz/restic
 # gomodules.xyz/sync v0.1.0
 ## explicit; go 1.15
 gomodules.xyz/sync
@@ -3422,7 +3434,7 @@ kmodules.xyz/prober/api/v1
 kmodules.xyz/resource-metadata/apis/node
 kmodules.xyz/resource-metadata/apis/node/v1alpha1
 kmodules.xyz/resource-metadata/crds
-# kubedb.dev/apimachinery v0.61.0-rc.0
+# kubedb.dev/apimachinery v0.61.0-rc.0.0.20260220081356-913319e2ecb3
 ## explicit; go 1.25.0
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog
@@ -3456,7 +3468,7 @@ kubeops.dev/petset/crds
 kubeops.dev/sidekick/apis/apps
 kubeops.dev/sidekick/apis/apps/v1alpha1
 kubeops.dev/sidekick/crds
-# kubestash.dev/apimachinery v0.23.1-0.20260209084525-80db980e861f
+# kubestash.dev/apimachinery v0.24.0-rc.0
 ## explicit; go 1.25.0
 kubestash.dev/apimachinery/apis
 kubestash.dev/apimachinery/apis/core/v1alpha1
