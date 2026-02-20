@@ -157,7 +157,7 @@ func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 		c.MaxTransactionRetryTime = 60 * time.Second
 		c.MaxConnectionLifetime = 30 * time.Minute
 		c.MaxConnectionPoolSize = 20
-		if o.db.Spec.TLS != nil && o.db.Spec.TLS.IssuerRef != nil {
+		if o.db.Spec.TLS != nil {
 			c.TlsConfig = tlsConfig
 		}
 	})
