@@ -44,7 +44,7 @@ require (
 	k8s.io/klog/v2 v2.130.1
 	kmodules.xyz/client-go v0.34.2
 	kmodules.xyz/custom-resources v0.34.0
-	kubedb.dev/apimachinery v0.61.0-rc.1
+	kubedb.dev/apimachinery v0.61.0-rc.1.0.20260224045112-8a1decd57883
 	sigs.k8s.io/controller-runtime v0.22.4
 	xorm.io/xorm v1.3.11
 )
