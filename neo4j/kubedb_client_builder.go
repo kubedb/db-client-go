@@ -198,7 +198,11 @@ func (c *Client) ReloadTLS(ctx context.Context) error {
 	session := c.NewSession(ctx, neo4j.SessionConfig{
 		AccessMode: neo4j.AccessModeRead,
 	})
-	defer session.Close(ctx)
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
 
 	timeoutCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
