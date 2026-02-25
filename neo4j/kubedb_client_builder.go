@@ -194,6 +194,25 @@ func (c *Client) ExecuteQuery(ctx context.Context, query string, params map[stri
 		neo4j.ExecuteQueryWithDatabase(dbName))
 }
 
+func (c *Client) ReloadTLS(ctx context.Context) error {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode: neo4j.AccessModeRead,
+	})
+	defer session.Close(ctx)
+
+	timeoutCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	_, err := session.Run(timeoutCtx, `
+	CALL dbms.security.reloadTLS()
+	`, nil)
+	if err != nil {
+		return fmt.Errorf("failed to execute TLS reload procedure: %w", err)
+	}
+
+	return nil
+}
+
 func (o *KubeDBClientBuilder) buildConnectionURL() string {
 	scheme := "neo4j"
 
@@ -202,7 +221,7 @@ func (o *KubeDBClientBuilder) buildConnectionURL() string {
 	}
 
 	if o.podName != "" {
-		return fmt.Sprintf("%s://%s.%s.%s.svc.%s:%d", scheme, o.podName, o.db.OffshootName(), o.db.Namespace, apiutils.FindDomain(), kubedb.Neo4jBoltPort)
+		return fmt.Sprintf("%s://%s.%s.svc.%s:%d", scheme, o.podName, o.db.Namespace, apiutils.FindDomain(), kubedb.Neo4jBoltPort)
 	}
 
 	return fmt.Sprintf("%s://%s.%s.svc.%s:%d", scheme, o.db.ServiceName(), o.db.Namespace, apiutils.FindDomain(), kubedb.Neo4jBoltPort)
