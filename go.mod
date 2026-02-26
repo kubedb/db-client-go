@@ -44,7 +44,7 @@ require (
 	k8s.io/klog/v2 v2.130.1
 	kmodules.xyz/client-go v0.34.3
 	kmodules.xyz/custom-resources v0.34.0
-	kubedb.dev/apimachinery v0.61.0
+	kubedb.dev/apimachinery v0.62.0
 	sigs.k8s.io/controller-runtime v0.22.4
 	xorm.io/xorm v1.3.11
 )
@@ -247,7 +247,7 @@ require (
 	gomodules.xyz/go-sh v0.2.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
 	gomodules.xyz/mergo v0.3.13 // indirect
-	gomodules.xyz/restic v0.1.0 // indirect
+	gomodules.xyz/restic v0.2.0 // indirect
 	gomodules.xyz/sync v0.1.0 // indirect
 	gomodules.xyz/wait v0.2.0 // indirect
 	gomodules.xyz/x v0.0.17 // indirect
@@ -273,8 +273,8 @@ require (
 	kubeops.dev/operator-shard-manager v0.0.5 // indirect
 	kubeops.dev/petset v0.0.15 // indirect
 	kubeops.dev/sidekick v0.0.12 // indirect
-	kubestash.dev/apimachinery v0.24.0 // indirect
-	open-cluster-management.io/api v1.1.1-0.20251222023835-510285203ee6 // indirect
+	kubestash.dev/apimachinery v0.25.0 // indirect
+	open-cluster-management.io/api v1.2.0 // indirect
 	sigs.k8s.io/gateway-api v1.4.0 // indirect
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
