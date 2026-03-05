@@ -22,7 +22,6 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"kubedb.dev/apimachinery/apis/kubedb"
@@ -41,6 +40,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+type credential struct {
+	username string
+	password string
+}
+
 type KubeDBClientBuilder struct {
 	kc      client.Client
 	db      *api.Neo4j
@@ -48,6 +52,7 @@ type KubeDBClientBuilder struct {
 	url     string
 	podName string
 	ctx     context.Context
+	auth    credential
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *api.Neo4j) *KubeDBClientBuilder {
@@ -72,16 +77,23 @@ func (o *KubeDBClientBuilder) WithLog(log logr.Logger) *KubeDBClientBuilder {
 	return o
 }
 
+func (o *KubeDBClientBuilder) WithAuth(username, password string) *KubeDBClientBuilder {
+	o.auth = credential{
+		username: username,
+		password: password,
+	}
+	return o
+}
+
 func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 	// Construct URL - use default service if podName not provided
 	o.url = o.buildConnectionURL()
 
 	klog.V(3).Infof("Attempting to connect to Neo4j at: %s", o.url)
 
-	var dbUser, dbPassword string
 	authSecret := &core.Secret{}
 
-	if !o.db.Spec.DisableSecurity {
+	if !o.db.Spec.DisableSecurity && o.auth.username == "" && o.auth.password == "" {
 		err := o.kc.Get(o.ctx, types.NamespacedName{
 			Namespace: o.db.Namespace,
 			Name:      o.db.GetAuthSecretName(),
@@ -94,21 +106,8 @@ func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 			klog.Error(err, "Failed to get auth-secret")
 			return nil, err
 		}
-
-		// Extract NEO4J_AUTH from Secret.Data
-		auth, ok := authSecret.Data["NEO4J_AUTH"]
-		if !ok {
-			return nil, fmt.Errorf("secret %s/%s does not contain key NEO4J_AUTH", o.db.Namespace, o.db.GetAuthSecretName())
-		}
-		authStr := strings.TrimSpace(string(auth))
-
-		// Expect "username/password", split safely
-		parts := strings.SplitN(authStr, "/", 2)
-		if len(parts) != 2 || parts[0] == "" {
-			return nil, fmt.Errorf("invalid NEO4J_AUTH format in secret %s/%s. Expected \"username/password\"", o.db.Namespace, o.db.GetAuthSecretName())
-		}
-		dbUser = parts[0]
-		dbPassword = parts[1]
+		o.auth.username = string(authSecret.Data[core.BasicAuthUsernameKey])
+		o.auth.password = string(authSecret.Data[core.BasicAuthPasswordKey])
 	} else {
 		klog.Info("Security is disabled for Neo4j, no credentials will be used.")
 	}
@@ -151,7 +150,7 @@ func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 	}
 
 	// Create driver and check for errors immediately
-	driver, err := neo4j.NewDriverWithContext(o.url, neo4j.BasicAuth(dbUser, dbPassword, ""), func(c *config.Config) {
+	driver, err := neo4j.NewDriverWithContext(o.url, neo4j.BasicAuth(o.auth.username, o.auth.password, ""), func(c *config.Config) {
 		c.SocketConnectTimeout = 60 * time.Second
 		c.ConnectionAcquisitionTimeout = 60 * time.Second
 		c.MaxTransactionRetryTime = 60 * time.Second
@@ -214,6 +213,136 @@ func (c *Client) ReloadTLS(ctx context.Context) error {
 		return fmt.Errorf("failed to execute TLS reload procedure: %w", err)
 	}
 
+	return nil
+}
+
+func (c *Client) CreateUser(ctx context.Context, username, password string) error {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := fmt.Sprintf("CREATE USER `%s` IF NOT EXISTS SET PASSWORD $password CHANGE NOT REQUIRED", username)
+
+	params := map[string]any{
+		"password": password,
+	}
+
+	_, err := session.Run(ctx, query, params)
+	if err != nil {
+		return fmt.Errorf("failed to create user %s: %w", username, err)
+	}
+
+	return nil
+}
+
+func (c *Client) DropUser(ctx context.Context, username string) error {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := fmt.Sprintf("DROP USER `%s` IF EXISTS", username)
+
+	_, err := session.Run(ctx, query, nil)
+	if err != nil {
+		return fmt.Errorf("failed to drop user %s: %w", username, err)
+	}
+
+	return nil
+}
+
+func (c *Client) GrantRoleToUser(ctx context.Context, username, role string) error {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := fmt.Sprintf("GRANT ROLE `%s` TO `%s`", role, username)
+
+	_, err := session.Run(ctx, query, nil)
+	if err != nil {
+		return fmt.Errorf("failed to grant role %s to user %s: %w", role, username, err)
+	}
+	return nil
+}
+
+func (c *Client) RenameUser(ctx context.Context, oldUsername, newUsername string) error {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := fmt.Sprintf("RENAME USER `%s` to `%s`", oldUsername, newUsername)
+
+	_, err := session.Run(ctx, query, nil)
+	if err != nil {
+		return fmt.Errorf("failed to rename user from %s to %s: %w", oldUsername, newUsername, err)
+	}
+	return nil
+}
+
+func (c *Client) UpdateUserPassword(ctx context.Context, username, newPassword string) error {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := fmt.Sprintf("ALTER USER `%s` SET PASSWORD $password", username)
+
+	params := map[string]any{
+		"password": newPassword,
+	}
+
+	_, err := session.Run(ctx, query, params)
+	if err != nil {
+		return fmt.Errorf("failed to update password for user %s, pass %s: %w", username, newPassword, err)
+	}
+	return nil
+}
+
+func (c *Client) SetConfigValue(ctx context.Context, key, value string) error {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := fmt.Sprintf("CALL dbms.setConfigValue('%s', '%s')", key, value)
+
+	_, err := session.Run(ctx, query, nil)
+	if err != nil {
+		return fmt.Errorf("failed to set config value for key %s to %s: %w", key, value, err)
+	}
 	return nil
 }
 
