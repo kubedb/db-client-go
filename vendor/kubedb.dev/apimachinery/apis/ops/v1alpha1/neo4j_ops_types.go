@@ -75,10 +75,37 @@ type Neo4jOpsRequestSpec struct {
 	MaxRetries int32 `json:"maxRetries,omitempty"`
 }
 
+// ReallocateStrategy defines how reallocation should be performed
+type ReallocateStrategy string
+
+const (
+	StrategyIncremental ReallocateStrategy = "incremental" // safe, batch by batch
+	StrategyFull        ReallocateStrategy = "full"        // all at once
+	StrategyNone        ReallocateStrategy = "none"        // no reallocation
+)
+
+// ReallocateConfig defines reallocation behaviour
+type ReallocateConfig struct {
+	// +kubebuilder:validation:Enum=incremental;full;none
+	// +kubebuilder:default=incremental
+	Strategy ReallocateStrategy `json:"strategy,omitempty"`
+	// only used when Strategy == incremental
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=10
+	// +kubebuilder:default=1
+	// +optional
+	BatchSize *int32 `json:"batchSize,omitempty"`
+}
+
 // Neo4jHorizontalScalingSpec contains the horizontal scaling information of a Neo4j cluster
 type Neo4jHorizontalScalingSpec struct {
 	// Number of server
-	Server *int32 `json:"node,omitempty"`
+	// +kubebuilder:validation:Minimum=1
+	Server *int32 `json:"server,omitempty"`
+	// how to handle reallocation after scaling
+	// +optional
+	// +kubebuilder:default={strategy: "incremental", batchSize: 1}
+	Reallocate *ReallocateConfig `json:"reallocate,omitempty"`
 }
 
 type Neo4jTLSSpec struct {
@@ -95,8 +122,8 @@ type Neo4jTLSSpec struct {
 	Remove bool `json:"remove,omitempty"`
 }
 
-// +kubebuilder:validation:Enum=Restart;ReconfigureTLS
-// ENUM(Restart,ReconfigureTLS)
+// +kubebuilder:validation:Enum=Restart;ReconfigureTLS;RotateAuth;Reconfigure;HorizontalScaling
+// ENUM(Restart,ReconfigureTLS,RotateAuth,Reconfigure,HorizontalScaling)
 type Neo4jOpsRequestType string
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

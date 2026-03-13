@@ -98,8 +98,28 @@ spec:
                 x-kubernetes-map-type: atomic
               horizontalScaling:
                 properties:
-                  node:
+                  reallocate:
+                    default:
+                      batchSize: 1
+                      strategy: incremental
+                    properties:
+                      batchSize:
+                        default: 1
+                        format: int32
+                        maximum: 10
+                        minimum: 1
+                        type: integer
+                      strategy:
+                        default: incremental
+                        enum:
+                        - incremental
+                        - full
+                        - none
+                        type: string
+                    type: object
+                  server:
                     format: int32
+                    minimum: 1
                     type: integer
                 type: object
               maxRetries:
@@ -270,6 +290,9 @@ spec:
                 enum:
                 - Restart
                 - ReconfigureTLS
+                - RotateAuth
+                - Reconfigure
+                - HorizontalScaling
                 type: string
             required:
             - databaseRef
