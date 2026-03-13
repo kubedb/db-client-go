@@ -28,6 +28,7 @@ import (
 	"kubedb.dev/apimachinery/apis/kubedb"
 	v1api "kubedb.dev/apimachinery/apis/kubedb/v1"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	opsapi "kubedb.dev/apimachinery/apis/ops/v1alpha1"
 	apiutils "kubedb.dev/apimachinery/pkg/utils"
 
 	"github.com/go-logr/logr"
@@ -41,6 +42,19 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+type credential struct {
+	username string
+	password string
+}
+
+type serverInfo struct {
+	name    string
+	address string
+	health  string
+	state   string
+	id      string
+}
+
 type KubeDBClientBuilder struct {
 	kc      client.Client
 	db      *api.Neo4j
@@ -48,6 +62,7 @@ type KubeDBClientBuilder struct {
 	url     string
 	podName string
 	ctx     context.Context
+	auth    credential
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *api.Neo4j) *KubeDBClientBuilder {
@@ -72,16 +87,23 @@ func (o *KubeDBClientBuilder) WithLog(log logr.Logger) *KubeDBClientBuilder {
 	return o
 }
 
+func (o *KubeDBClientBuilder) WithAuth(username, password string) *KubeDBClientBuilder {
+	o.auth = credential{
+		username: username,
+		password: password,
+	}
+	return o
+}
+
 func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 	// Construct URL - use default service if podName not provided
 	o.url = o.buildConnectionURL()
 
 	klog.V(3).Infof("Attempting to connect to Neo4j at: %s", o.url)
 
-	var dbUser, dbPassword string
 	authSecret := &core.Secret{}
 
-	if !o.db.Spec.DisableSecurity {
+	if !o.db.Spec.DisableSecurity && o.auth.username == "" && o.auth.password == "" {
 		err := o.kc.Get(o.ctx, types.NamespacedName{
 			Namespace: o.db.Namespace,
 			Name:      o.db.GetAuthSecretName(),
@@ -94,21 +116,8 @@ func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 			klog.Error(err, "Failed to get auth-secret")
 			return nil, err
 		}
-
-		// Extract NEO4J_AUTH from Secret.Data
-		auth, ok := authSecret.Data["NEO4J_AUTH"]
-		if !ok {
-			return nil, fmt.Errorf("secret %s/%s does not contain key NEO4J_AUTH", o.db.Namespace, o.db.GetAuthSecretName())
-		}
-		authStr := strings.TrimSpace(string(auth))
-
-		// Expect "username/password", split safely
-		parts := strings.SplitN(authStr, "/", 2)
-		if len(parts) != 2 || parts[0] == "" {
-			return nil, fmt.Errorf("invalid NEO4J_AUTH format in secret %s/%s. Expected \"username/password\"", o.db.Namespace, o.db.GetAuthSecretName())
-		}
-		dbUser = parts[0]
-		dbPassword = parts[1]
+		o.auth.username = string(authSecret.Data[core.BasicAuthUsernameKey])
+		o.auth.password = string(authSecret.Data[core.BasicAuthPasswordKey])
 	} else {
 		klog.Info("Security is disabled for Neo4j, no credentials will be used.")
 	}
@@ -151,12 +160,13 @@ func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 	}
 
 	// Create driver and check for errors immediately
-	driver, err := neo4j.NewDriverWithContext(o.url, neo4j.BasicAuth(dbUser, dbPassword, ""), func(c *config.Config) {
-		c.SocketConnectTimeout = 60 * time.Second
-		c.ConnectionAcquisitionTimeout = 60 * time.Second
-		c.MaxTransactionRetryTime = 60 * time.Second
+	driver, err := neo4j.NewDriverWithContext(o.url, neo4j.BasicAuth(o.auth.username, o.auth.password, ""), func(c *config.Config) {
+		c.SocketConnectTimeout = 15 * time.Second
+		c.ConnectionAcquisitionTimeout = 30 * time.Second
+		c.MaxTransactionRetryTime = 30 * time.Second
 		c.MaxConnectionLifetime = 30 * time.Minute
 		c.MaxConnectionPoolSize = 20
+		c.SocketKeepalive = true
 		if o.db.Spec.TLS != nil {
 			c.TlsConfig = tlsConfig
 		}
@@ -194,9 +204,37 @@ func (c *Client) ExecuteQuery(ctx context.Context, query string, params map[stri
 		neo4j.ExecuteQueryWithDatabase(dbName))
 }
 
+func (c *Client) RenameServer(ctx context.Context) error {
+	servers, err := c.GetServersInfo(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get server info: %w", err)
+	}
+
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	for _, server := range servers {
+		podName := strings.Split(server.address, ".")[0]
+		if podName != server.name {
+			_, err := session.Run(ctx, "RENAME SERVER $current TO $desired", map[string]any{"current": server.name, "desired": podName})
+			if err != nil {
+				return fmt.Errorf("failed to rename server from %s to %s: %w", server.name, podName, err)
+			}
+		}
+	}
+	return nil
+}
+
 func (c *Client) ReloadTLS(ctx context.Context) error {
 	session := c.NewSession(ctx, neo4j.SessionConfig{
-		AccessMode: neo4j.AccessModeRead,
+		AccessMode: neo4j.AccessModeWrite,
 	})
 	defer func() {
 		if err := session.Close(ctx); err != nil {
@@ -214,6 +252,359 @@ func (c *Client) ReloadTLS(ctx context.Context) error {
 		return fmt.Errorf("failed to execute TLS reload procedure: %w", err)
 	}
 
+	return nil
+}
+
+func (c *Client) CreateUser(ctx context.Context, username, password string) error {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := fmt.Sprintf("CREATE USER `%s` IF NOT EXISTS SET PASSWORD $password CHANGE NOT REQUIRED", username)
+
+	params := map[string]any{
+		"password": password,
+	}
+
+	_, err := session.Run(ctx, query, params)
+	if err != nil {
+		return fmt.Errorf("failed to create user %s: %w", username, err)
+	}
+
+	return nil
+}
+
+func (c *Client) DropUser(ctx context.Context, username string) error {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := fmt.Sprintf("DROP USER `%s` IF EXISTS", username)
+
+	_, err := session.Run(ctx, query, nil)
+	if err != nil {
+		return fmt.Errorf("failed to drop user %s: %w", username, err)
+	}
+
+	return nil
+}
+
+func (c *Client) GrantRoleToUser(ctx context.Context, username, role string) error {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := fmt.Sprintf("GRANT ROLE `%s` TO `%s`", role, username)
+
+	_, err := session.Run(ctx, query, nil)
+	if err != nil {
+		return fmt.Errorf("failed to grant role %s to user %s: %w", role, username, err)
+	}
+	return nil
+}
+
+func (c *Client) RenameUser(ctx context.Context, oldUsername, newUsername string) error {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := fmt.Sprintf("RENAME USER `%s` to `%s`", oldUsername, newUsername)
+
+	_, err := session.Run(ctx, query, nil)
+	if err != nil {
+		return fmt.Errorf("failed to rename user from %s to %s: %w", oldUsername, newUsername, err)
+	}
+	return nil
+}
+
+func (c *Client) UpdateUserPassword(ctx context.Context, username, newPassword string) error {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := fmt.Sprintf("ALTER USER `%s` SET PASSWORD $password", username)
+
+	params := map[string]any{
+		"password": newPassword,
+	}
+
+	_, err := session.Run(ctx, query, params)
+	if err != nil {
+		return fmt.Errorf("failed to update password for user %s, pass %s: %w", username, newPassword, err)
+	}
+	return nil
+}
+
+func (c *Client) SetConfigValue(ctx context.Context, key, value string) error {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := fmt.Sprintf("CALL dbms.setConfigValue('%s', '%s')", key, value)
+
+	_, err := session.Run(ctx, query, nil)
+	if err != nil {
+		return fmt.Errorf("failed to set config value for key %s to %s: %w", key, value, err)
+	}
+	return nil
+}
+
+func (c *Client) GetServersInfo(ctx context.Context) ([]serverInfo, error) {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeRead,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := "SHOW SERVERS YIELD name, address, health, state, serverId RETURN name, address, health, state, serverId"
+
+	result, err := session.Run(ctx, query, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute query to get server info: %w", err)
+	}
+
+	records, err := result.Collect(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to collect query results to get server info: %w", err)
+	}
+
+	var servers []serverInfo
+	for _, record := range records {
+		name, _ := record.Get("name")
+		address, _ := record.Get("address")
+		health, _ := record.Get("health")
+		state, _ := record.Get("state")
+		id, _ := record.Get("serverId")
+
+		servers = append(servers, serverInfo{
+			name:    name.(string),
+			address: address.(string),
+			health:  health.(string),
+			state:   state.(string),
+			id:      id.(string),
+		})
+	}
+
+	return servers, nil
+}
+
+func (c *Client) NumberOfHealthyServers(ctx context.Context) (int32, error) {
+	servers, err := c.GetServersInfo(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get server info: %w", err)
+	}
+	var count int32 = 0
+	for _, server := range servers {
+		if server.health == "Available" {
+			count++
+		}
+	}
+	return count, nil
+}
+
+func (c *Client) IsDryRunEmpty(ctx context.Context) (bool, error) {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := "DRYRUN REALLOCATE DATABASES"
+
+	result, err := session.Run(ctx, query, nil)
+	if err != nil {
+		return false, fmt.Errorf("DRYRUN failed: %w", err)
+	}
+
+	records, err := result.Collect(ctx)
+	if err != nil {
+		return false, fmt.Errorf("collecting DRYRUN results: %w", err)
+	}
+
+	if len(records) > 0 {
+		klog.Infof("DRYRUN: %d reallocation(s) pending", len(records))
+	}
+
+	return len(records) == 0, nil
+}
+
+func (c *Client) FullDeallocation(ctx context.Context, serverName string) error {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	timeoutCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	query := fmt.Sprintf("DEALLOCATE SERVER `%s`", serverName)
+
+	_, err := session.Run(timeoutCtx, query, nil)
+	if err != nil {
+		return fmt.Errorf("full deallocation failed for server %s: %w", serverName, err)
+	}
+	klog.Info("Full deallocation triggered successfully")
+
+	return nil
+}
+
+func (c *Client) CheckServerStateDeallocated(ctx context.Context, serverName string) (bool, error) {
+	servers, err := c.GetServersInfo(ctx)
+	if err != nil {
+		return false, fmt.Errorf("failed to get server info: %w", err)
+	}
+
+	for _, server := range servers {
+		if server.name == serverName {
+			if server.state == "Deallocated" {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
+
+func (c *Client) CheckDatabaseHealth(ctx context.Context) (bool, error) {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := "SHOW DATABASES YIELD name, currentStatus"
+	result, err := session.Run(ctx, query, nil)
+	if err != nil {
+		return false, fmt.Errorf("failed to execute database health check query: %w", err)
+	}
+
+	records, err := result.Collect(ctx)
+	if err != nil {
+		return false, fmt.Errorf("failed to collect database health check results: %w", err)
+	}
+
+	for _, record := range records {
+		name, _ := record.Get("name")
+		status, _ := record.Get("currentStatus")
+
+		if status.(string) != "online" {
+			klog.Infof("Database %s is not healthy. Current status: %s", name, status)
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
+
+func (c *Client) IncrementalReallocation(ctx context.Context, batchSize int32, types string) error {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := "CALL dbms.cluster.reallocateNumberOfDatabases($n)"
+
+	if types == opsapi.HorizontalScaleDown {
+		query = "CALL dbms.cluster.deallocateNumberOfDatabases($n)"
+	}
+
+	_, err := session.Run(ctx, query, map[string]any{"n": batchSize})
+	if err != nil {
+		return fmt.Errorf("reallocateNumberOfDatabases failed: %w", err)
+	}
+
+	klog.Info("Batch of %d triggered successfully", batchSize)
+
+	return nil
+}
+
+func (c *Client) FullReallocation(ctx context.Context) error {
+	isEmpty, err := c.IsDryRunEmpty(ctx)
+	if err != nil {
+		return fmt.Errorf("DRYRUN check failed: %w", err)
+	}
+	if isEmpty {
+		return nil
+	}
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	timeoutCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	query := "REALLOCATE DATABASES"
+
+	_, err = session.Run(timeoutCtx, query, nil)
+	if err != nil {
+		return fmt.Errorf("full reallocation failed: %w", err)
+	}
+
+	klog.Info("Full reallocation triggered successfully")
 	return nil
 }
 
