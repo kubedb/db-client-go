@@ -32,9 +32,10 @@ import (
 )
 
 type KubeDBClientBuilder struct {
-	kc  client.Client
-	db  *api.Qdrant
-	ctx context.Context
+	kc         client.Client
+	db         *api.Qdrant
+	podOrdinal string
+	ctx        context.Context
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *api.Qdrant) *KubeDBClientBuilder {
@@ -49,13 +50,25 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 	return o
 }
 
+func (o *KubeDBClientBuilder) WithPodOrdinal(ordinal string) *KubeDBClientBuilder {
+	o.podOrdinal = ordinal
+	return o
+}
+
 func (o *KubeDBClientBuilder) GetQdrantClient() (*qdrant.Client, error) {
 	if o.ctx == nil {
 		o.ctx = context.Background()
 	}
 
+	var host string
+	if o.podOrdinal == "" {
+		host = o.db.ServiceDNS()
+	} else {
+		host = o.db.PodDNS(o.podOrdinal)
+	}
+
 	config := &qdrant.Config{
-		Host:   o.db.ServiceDNS(),
+		Host:   host,
 		Port:   kubedb.QdrantHTTPPort,
 		APIKey: o.db.GetAPIKey(o.ctx, o.kc),
 	}
