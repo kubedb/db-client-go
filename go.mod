@@ -30,7 +30,6 @@ require (
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/opensearch-project/opensearch-go/v3 v3.1.0
 	github.com/pkg/errors v0.9.1
-	github.com/qdrant/go-client v1.15.0
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/redis/go-redis/v9 v9.17.2
 	github.com/sijms/go-ora/v2 v2.8.24
@@ -44,12 +43,10 @@ require (
 	k8s.io/klog/v2 v2.130.1
 	kmodules.xyz/client-go v0.34.3
 	kmodules.xyz/custom-resources v0.34.0
-	kubedb.dev/apimachinery v0.63.0
+	kubedb.dev/apimachinery v0.63.1-0.20260330061310-3f6084bee931
 	sigs.k8s.io/controller-runtime v0.22.4
 	xorm.io/xorm v1.3.11
 )
-
-replace kubedb.dev/apimachinery => ../apimachinery
 
 require (
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
@@ -82,7 +79,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
-	github.com/cert-manager/cert-manager v1.19.3 // indirect
+	github.com/cert-manager/cert-manager v1.19.4 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cilium/ebpf v0.11.0 // indirect
 	github.com/cockroachdb/errors v1.9.1 // indirect
