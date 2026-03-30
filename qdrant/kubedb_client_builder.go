@@ -56,7 +56,7 @@ func (o *KubeDBClientBuilder) GetQdrantClient() (*qdrant.Client, error) {
 
 	config := &qdrant.Config{
 		Host:   o.db.ServiceDNS(),
-		Port:   kubedb.QdrantGRPCPort,
+		Port:   kubedb.QdrantHTTPPort,
 		APIKey: o.db.GetAPIKey(o.ctx, o.kc),
 	}
 
