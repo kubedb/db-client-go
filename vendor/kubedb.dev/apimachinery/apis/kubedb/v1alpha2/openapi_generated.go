@@ -772,6 +772,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.Qdrant":                                        schema_apimachinery_apis_kubedb_v1alpha2_Qdrant(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.QdrantApp":                                     schema_apimachinery_apis_kubedb_v1alpha2_QdrantApp(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.QdrantList":                                    schema_apimachinery_apis_kubedb_v1alpha2_QdrantList(ref),
+		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.QdrantRestoreSpec":                             schema_apimachinery_apis_kubedb_v1alpha2_QdrantRestoreSpec(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.QdrantSpec":                                    schema_apimachinery_apis_kubedb_v1alpha2_QdrantSpec(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.QdrantStatus":                                  schema_apimachinery_apis_kubedb_v1alpha2_QdrantStatus(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.QdrantTLSConfig":                               schema_apimachinery_apis_kubedb_v1alpha2_QdrantTLSConfig(ref),
@@ -43987,6 +43988,26 @@ func schema_apimachinery_apis_kubedb_v1alpha2_QdrantList(ref common.ReferenceCal
 	}
 }
 
+func schema_apimachinery_apis_kubedb_v1alpha2_QdrantRestoreSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"snapshotName": {
+						SchemaProps: spec.SchemaProps{
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
+						},
+					},
+				},
+				Required: []string{"snapshotName"},
+			},
+		},
+	}
+}
+
 func schema_apimachinery_apis_kubedb_v1alpha2_QdrantSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -44047,6 +44068,12 @@ func schema_apimachinery_apis_kubedb_v1alpha2_QdrantSpec(ref common.ReferenceCal
 							Ref: ref("kubedb.dev/apimachinery/apis/kubedb/v1alpha2.ConfigurationSpec"),
 						},
 					},
+					"init": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Init is used to initialize a database",
+							Ref:         ref("kubedb.dev/apimachinery/apis/kubedb/v1alpha2.InitSpec"),
+						},
+					},
 					"podTemplate": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PodTemplate is an optional configuration for pods used to expose database",
@@ -44105,7 +44132,7 @@ func schema_apimachinery_apis_kubedb_v1alpha2_QdrantSpec(ref common.ReferenceCal
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.PersistentVolumeClaimSpec", "kmodules.xyz/client-go/api/v1.HealthCheckSpec", "kmodules.xyz/monitoring-agent-api/api/v1.AgentSpec", "kmodules.xyz/offshoot-api/api/v2.PodTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.ConfigurationSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.NamedServiceTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.QdrantTLSConfig", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SecretReference"},
+			"k8s.io/api/core/v1.PersistentVolumeClaimSpec", "kmodules.xyz/client-go/api/v1.HealthCheckSpec", "kmodules.xyz/monitoring-agent-api/api/v1.AgentSpec", "kmodules.xyz/offshoot-api/api/v2.PodTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.ConfigurationSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.InitSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.NamedServiceTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.QdrantTLSConfig", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SecretReference"},
 	}
 }
 

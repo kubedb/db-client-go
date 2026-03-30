@@ -16,15 +16,14 @@ limitations under the License.
 
 package qdrant
 
-import "github.com/qdrant/go-client/qdrant"
+import "kubedb.dev/apimachinery/pkg/utils/http/qdrant"
 
-type QdrantClient struct {
+type Client struct {
 	*qdrant.Client
 }
 
-func (qc *QdrantClient) Close() error {
+func (qc *Client) Close() {
 	if qc.Client != nil {
-		return qc.Client.Close() // nolint:errcheck
+		qc.Client.Close()
 	}
-	return nil
 }

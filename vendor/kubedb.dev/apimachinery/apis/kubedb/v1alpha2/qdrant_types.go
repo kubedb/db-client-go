@@ -98,6 +98,10 @@ type QdrantSpec struct {
 	// +optional
 	Configuration *ConfigurationSpec `json:"configuration,omitempty"`
 
+	// Init is used to initialize a database
+	// +optional
+	Init *InitSpec `json:"init,omitempty"`
+
 	// PodTemplate is an optional configuration for pods used to expose database
 	// +optional
 	PodTemplate *ofst.PodTemplateSpec `json:"podTemplate,omitempty"`
@@ -133,6 +137,10 @@ type QdrantTLSConfig struct {
 	P2P *bool `json:"p2p,omitempty"`
 	// +optional
 	Client *bool `json:"client,omitempty"`
+}
+
+type QdrantRestoreSpec struct {
+	SnapshotName string `json:"snapshotName"`
 }
 
 // QdrantStatus defines the observed state of Qdrant.

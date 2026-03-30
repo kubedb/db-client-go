@@ -22,12 +22,11 @@ import (
 	"crypto/x509"
 	"fmt"
 
-	"kubedb.dev/apimachinery/apis/kubedb"
-	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
-
-	"github.com/qdrant/go-client/qdrant"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"kubedb.dev/apimachinery/apis/kubedb"
+	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	"kubedb.dev/apimachinery/pkg/utils/http/qdrant"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -88,7 +87,7 @@ func (o *KubeDBClientBuilder) GetQdrantClient() (*qdrant.Client, error) {
 		config.UseTLS = true
 		config.TLSConfig = &tls.Config{
 			RootCAs:    caPool,
-			ServerName: o.db.ServiceDNS(), // must match SAN
+			ServerName: o.db.ServiceDNS(),
 		}
 	}
 

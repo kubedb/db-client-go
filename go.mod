@@ -49,6 +49,8 @@ require (
 	xorm.io/xorm v1.3.11
 )
 
+replace kubedb.dev/apimachinery => ../apimachinery
+
 require (
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/go-openapi/swag/cmdutils v0.25.1 // indirect
