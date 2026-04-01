@@ -28,7 +28,6 @@ import (
 	"kubedb.dev/apimachinery/apis/kubedb"
 	v1api "kubedb.dev/apimachinery/apis/kubedb/v1"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
-	opsapi "kubedb.dev/apimachinery/apis/ops/v1alpha1"
 	apiutils "kubedb.dev/apimachinery/pkg/utils"
 
 	"github.com/go-logr/logr"
@@ -222,7 +221,7 @@ func (c *Client) RenameServer(ctx context.Context) error {
 
 	for _, server := range servers {
 		podName := strings.Split(server.address, ".")[0]
-		if podName != server.name {
+		if podName != server.name && server.address != "" {
 			_, err := session.Run(ctx, "RENAME SERVER $current TO $desired", map[string]any{"current": server.name, "desired": podName})
 			if err != nil {
 				return fmt.Errorf("failed to rename server from %s to %s: %w", server.name, podName, err)
@@ -411,14 +410,21 @@ func (c *Client) GetServersInfo(ctx context.Context) ([]serverInfo, error) {
 	var servers []serverInfo
 	for _, record := range records {
 		name, _ := record.Get("name")
-		address, _ := record.Get("address")
+		addressV, _ := record.Get("address")
 		health, _ := record.Get("health")
 		state, _ := record.Get("state")
 		id, _ := record.Get("serverId")
 
+		var address string
+		if addressV != nil {
+			if s, ok := addressV.(string); ok {
+				address = s
+			}
+		}
+
 		servers = append(servers, serverInfo{
 			name:    name.(string),
-			address: address.(string),
+			address: address,
 			health:  health.(string),
 			state:   state.(string),
 			id:      id.(string),
@@ -426,6 +432,62 @@ func (c *Client) GetServersInfo(ctx context.Context) ([]serverInfo, error) {
 	}
 
 	return servers, nil
+}
+
+func (c *Client) GetServerState(ctx context.Context, serverName string) (string, error) {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := fmt.Sprintf("SHOW SERVERS YIELD name, state WHERE name = '%s' RETURN state", serverName)
+	result, err := session.Run(ctx, query, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to execute query to get server state for server %s: %w", serverName, err)
+	}
+	records, err := result.Collect(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to collect query results to get server state for server %s: %w", serverName, err)
+	}
+	if len(records) == 0 {
+		return "", fmt.Errorf("no server found with name %s", serverName)
+	}
+	state, _ := records[0].Get("state")
+	return state.(string), nil
+}
+
+func (c *Client) IsServerDeallocated(ctx context.Context, serverName string) (bool, error) {
+	state, err := c.GetServerState(ctx, serverName)
+	if err != nil {
+		return false, fmt.Errorf("failed to get server state: %w", err)
+	}
+	return strings.EqualFold(state, "Deallocated"), nil
+}
+
+func (c *Client) DropServer(ctx context.Context, serverName string) error {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+	query := fmt.Sprintf("DROP SERVER '%s'", serverName)
+	_, err := session.Run(ctx, query, nil)
+	if err != nil {
+		return fmt.Errorf("failed to drop server %s: %w", serverName, err)
+	}
+
+	klog.Infof("dropped server %s", serverName)
+
+	return nil
 }
 
 func (c *Client) NumberOfHealthyServers(ctx context.Context) (int32, error) {
@@ -472,7 +534,15 @@ func (c *Client) IsDryRunEmpty(ctx context.Context) (bool, error) {
 	return len(records) == 0, nil
 }
 
-func (c *Client) FullDeallocation(ctx context.Context, serverName string) error {
+func (c *Client) IsDryRunEmptyForDeallocation(ctx context.Context, serverName string) (bool, error) {
+	state, err := c.GetServerState(ctx, serverName)
+	if err != nil {
+		return false, fmt.Errorf("failed to check if server %s is deallocated: %w", serverName, err)
+	}
+	if state == "Deallocated" || state == "Deallocating" || state == "Dropped" {
+		return true, nil
+	}
+
 	session := c.NewSession(ctx, neo4j.SessionConfig{
 		AccessMode:   neo4j.AccessModeWrite,
 		DatabaseName: "system",
@@ -483,18 +553,23 @@ func (c *Client) FullDeallocation(ctx context.Context, serverName string) error 
 		}
 	}()
 
-	timeoutCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
+	query := fmt.Sprintf("DRYRUN DEALLOCATE DATABASES FROM SERVER '%s'", serverName)
 
-	query := fmt.Sprintf("DEALLOCATE SERVER `%s`", serverName)
-
-	_, err := session.Run(timeoutCtx, query, nil)
+	result, err := session.Run(ctx, query, nil)
 	if err != nil {
-		return fmt.Errorf("full deallocation failed for server %s: %w", serverName, err)
+		return false, fmt.Errorf("DRYRUN failed: %w", err)
 	}
-	klog.Info("Full deallocation triggered successfully")
 
-	return nil
+	records, err := result.Collect(ctx)
+	if err != nil {
+		return false, fmt.Errorf("collecting DRYRUN results: %w", err)
+	}
+
+	if len(records) > 0 {
+		klog.Infof("DRYRUN: %d deallocation(s) pending", len(records))
+	}
+
+	return len(records) == 0, nil
 }
 
 func (c *Client) CheckServerStateDeallocated(ctx context.Context, serverName string) (bool, error) {
@@ -549,7 +624,16 @@ func (c *Client) CheckDatabaseHealth(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
-func (c *Client) IncrementalReallocation(ctx context.Context, batchSize int32, types string) error {
+func (c *Client) IncrementalReallocation(ctx context.Context, batchSize int32) error {
+	// wait for cluster to stabilise after batch
+	online, err := c.CheckDatabaseHealth(ctx)
+	if err != nil {
+		return err
+	}
+	if !online {
+		return fmt.Errorf("waiting for databases to be healthy before triggering reallocation")
+	}
+
 	session := c.NewSession(ctx, neo4j.SessionConfig{
 		AccessMode:   neo4j.AccessModeWrite,
 		DatabaseName: "system",
@@ -562,17 +646,58 @@ func (c *Client) IncrementalReallocation(ctx context.Context, batchSize int32, t
 
 	query := "CALL dbms.cluster.reallocateNumberOfDatabases($n)"
 
-	if types == opsapi.HorizontalScaleDown {
-		query = "CALL dbms.cluster.deallocateNumberOfDatabases($n)"
-	}
-
-	_, err := session.Run(ctx, query, map[string]any{"n": batchSize})
+	_, err = session.Run(ctx, query, map[string]any{"n": batchSize})
 	if err != nil {
 		return fmt.Errorf("reallocateNumberOfDatabases failed: %w", err)
 	}
 
-	klog.Info("Batch of %d triggered successfully", batchSize)
+	klog.Infof("Batch of %d triggered successfully", batchSize)
 
+	return nil
+}
+
+func (c *Client) IncrementalDeallocation(ctx context.Context, batchSize int32, serverName string) error {
+	// wait for cluster to stabilise before triggering next batch
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Minute)
+	defer cancel()
+
+	for {
+		online, err := c.CheckDatabaseHealth(waitCtx)
+		if err != nil {
+			klog.Errorf("failed to check database health: %v", err)
+		} else if online {
+			break // healthy, proceed with next batch
+		} else {
+			klog.Info("waiting for databases to be healthy before triggering next batch...")
+		}
+
+		select {
+		case <-waitCtx.Done():
+			return fmt.Errorf("timeout waiting for databases to be healthy before next batch")
+		case <-time.After(30 * time.Second):
+		}
+	}
+
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := "CALL dbms.cluster.deallocateNumberOfDatabases($name,$n)"
+	result, err := session.Run(ctx, query, map[string]any{"name": serverName, "n": batchSize})
+	if err != nil {
+		return fmt.Errorf("deallocateNumberOfDatabases failed: %w", err)
+	}
+	if _, err := result.Consume(ctx); err != nil {
+		return fmt.Errorf("consuming result failed: %w", err)
+	}
+
+	klog.Infof("Batch of %d triggered successfully", batchSize)
 	return nil
 }
 
@@ -584,6 +709,16 @@ func (c *Client) FullReallocation(ctx context.Context) error {
 	if isEmpty {
 		return nil
 	}
+
+	// wait for cluster to stabilise after batch
+	online, err := c.CheckDatabaseHealth(ctx)
+	if err != nil {
+		return err
+	}
+	if !online {
+		return fmt.Errorf("waiting for databases to be healthy before triggering reallocation")
+	}
+
 	session := c.NewSession(ctx, neo4j.SessionConfig{
 		AccessMode:   neo4j.AccessModeWrite,
 		DatabaseName: "system",
@@ -605,6 +740,47 @@ func (c *Client) FullReallocation(ctx context.Context) error {
 	}
 
 	klog.Info("Full reallocation triggered successfully")
+	return nil
+}
+
+func (c *Client) FullDeallocation(ctx context.Context, serverName string) error {
+	state, err := c.GetServerState(ctx, serverName)
+	if err != nil {
+		return fmt.Errorf("failed to check if server %s is deallocated: %w", serverName, err)
+	}
+	if state == "Deallocated" || state == "Deallocating" || state == "Dropped" {
+		return nil
+	}
+
+	// wait for cluster to stabilise after batch
+	online, err := c.CheckDatabaseHealth(ctx)
+	if err != nil {
+		return err
+	}
+	if !online {
+		return fmt.Errorf("waiting for databases to be healthy before triggering reallocation")
+	}
+
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	timeoutCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	query := fmt.Sprintf("DEALLOCATE DATABASES FROM SERVER '%s'", serverName)
+	_, err = session.Run(timeoutCtx, query, nil)
+	if err != nil {
+		return fmt.Errorf("full deallocation failed for server %s: %w", serverName, err)
+	}
+	klog.Info("Full deallocation triggered successfully for server %s: ", serverName)
+
 	return nil
 }
 
