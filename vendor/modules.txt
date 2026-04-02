@@ -3435,7 +3435,7 @@ kmodules.xyz/prober/api/v1
 kmodules.xyz/resource-metadata/apis/node
 kmodules.xyz/resource-metadata/apis/node/v1alpha1
 kmodules.xyz/resource-metadata/crds
-# kubedb.dev/apimachinery v0.63.1-0.20260313113352-02954da492d1 => ../apimachinery
+# kubedb.dev/apimachinery v0.63.1-0.20260313113352-02954da492d1
 ## explicit; go 1.25.0
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog
@@ -3582,5 +3582,3 @@ xorm.io/xorm/tags
 # sigs.k8s.io/controller-runtime => github.com/kmodules/controller-runtime v0.22.5-0.20251227114913-f011264689cd
 # github.com/imdario/mergo => github.com/imdario/mergo v0.3.6
 # k8s.io/apiserver => github.com/kmodules/apiserver v0.34.4-0.20251227112449-07fa35efc6fc
-# kubedb.dev/apimachinery => ../apimachinery
-# kubedb.dev/neo4j => ../neo4j

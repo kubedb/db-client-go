@@ -539,7 +539,7 @@ func (c *Client) IsDryRunEmptyForDeallocation(ctx context.Context, serverName st
 	if err != nil {
 		return false, fmt.Errorf("failed to check if server %s is deallocated: %w", serverName, err)
 	}
-	if state == "Deallocated" || state == "Deallocating" || state == "Dropped" {
+	if isDeallocationTerminalState(state) {
 		return true, nil
 	}
 
@@ -572,28 +572,11 @@ func (c *Client) IsDryRunEmptyForDeallocation(ctx context.Context, serverName st
 	return len(records) == 0, nil
 }
 
-func (c *Client) CheckServerStateDeallocated(ctx context.Context, serverName string) (bool, error) {
-	servers, err := c.GetServersInfo(ctx)
-	if err != nil {
-		return false, fmt.Errorf("failed to get server info: %w", err)
-	}
-
-	for _, server := range servers {
-		if server.name == serverName {
-			if server.state == "Deallocated" {
-				return true, nil
-			}
-		}
-	}
-	return false, nil
-}
-
 func (c *Client) CheckDatabaseHealth(ctx context.Context) (bool, error) {
 	session := c.NewSession(ctx, neo4j.SessionConfig{
 		AccessMode:   neo4j.AccessModeWrite,
 		DatabaseName: "system",
 	})
-
 	defer func() {
 		if err := session.Close(ctx); err != nil {
 			klog.Error(err, "failed to close neo4j session")
@@ -748,7 +731,7 @@ func (c *Client) FullDeallocation(ctx context.Context, serverName string) error 
 	if err != nil {
 		return fmt.Errorf("failed to check if server %s is deallocated: %w", serverName, err)
 	}
-	if state == "Deallocated" || state == "Deallocating" || state == "Dropped" {
+	if isDeallocationTerminalState(state) {
 		return nil
 	}
 
@@ -782,6 +765,10 @@ func (c *Client) FullDeallocation(ctx context.Context, serverName string) error 
 	klog.Info("Full deallocation triggered successfully for server %s: ", serverName)
 
 	return nil
+}
+
+func isDeallocationTerminalState(state string) bool {
+	return state == "Deallocated" || state == "Deallocating" || state == "Dropped"
 }
 
 func (o *KubeDBClientBuilder) buildConnectionURL() string {
