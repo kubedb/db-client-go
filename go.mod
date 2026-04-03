@@ -43,12 +43,10 @@ require (
 	k8s.io/klog/v2 v2.130.1
 	kmodules.xyz/client-go v0.34.3
 	kmodules.xyz/custom-resources v0.34.0
-	kubedb.dev/apimachinery v0.63.1-0.20260330061310-3f6084bee931
+	kubedb.dev/apimachinery v0.63.1-0.20260403094322-4ba19fe95a91
 	sigs.k8s.io/controller-runtime v0.22.4
 	xorm.io/xorm v1.3.11
 )
-
-replace kubedb.dev/apimachinery => ../apimachinery
 
 require (
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect

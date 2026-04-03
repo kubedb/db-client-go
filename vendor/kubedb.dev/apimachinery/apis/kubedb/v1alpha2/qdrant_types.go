@@ -98,10 +98,6 @@ type QdrantSpec struct {
 	// +optional
 	Configuration *ConfigurationSpec `json:"configuration,omitempty"`
 
-	// Init is used to initialize a database
-	// +optional
-	Init *InitSpec `json:"init,omitempty"`
-
 	// PodTemplate is an optional configuration for pods used to expose database
 	// +optional
 	PodTemplate *ofst.PodTemplateSpec `json:"podTemplate,omitempty"`
@@ -137,10 +133,14 @@ type QdrantTLSConfig struct {
 	P2P *bool `json:"p2p,omitempty"`
 	// +optional
 	Client *bool `json:"client,omitempty"`
-}
 
-type QdrantRestoreSpec struct {
-	SnapshotName string `json:"snapshotName"`
+	// RotateCertificates tells operator to initiate certificate rotation
+	// +optional
+	RotateCertificates bool `json:"rotateCertificates,omitempty"`
+
+	// Remove tells operator to remove TLS configuration
+	// +optional
+	Remove bool `json:"remove,omitempty"`
 }
 
 // QdrantStatus defines the observed state of Qdrant.
@@ -164,4 +164,22 @@ type QdrantList struct {
 	meta.TypeMeta `json:",inline"`
 	meta.ListMeta `json:"metadata,omitempty"`
 	Items         []Qdrant `json:"items"`
+}
+
+var _ Accessor = &Qdrant{}
+
+func (q *Qdrant) GetObjectMeta() meta.ObjectMeta {
+	return q.ObjectMeta
+}
+
+func (q *Qdrant) GetConditions() []kmapi.Condition {
+	return q.Status.Conditions
+}
+
+func (q *Qdrant) SetCondition(cond kmapi.Condition) {
+	q.Status.Conditions = setCondition(q.Status.Conditions, cond)
+}
+
+func (q *Qdrant) RemoveCondition(typ string) {
+	q.Status.Conditions = removeCondition(q.Status.Conditions, typ)
 }

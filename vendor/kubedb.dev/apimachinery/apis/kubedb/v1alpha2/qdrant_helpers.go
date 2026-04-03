@@ -80,13 +80,7 @@ func (q QdrantApp) Type() appcat.AppType {
 }
 
 func (q *Qdrant) GetConnectionScheme() string {
-	var scheme string
-	if q.Spec.TLS == nil {
-		scheme = "http"
-	} else {
-		scheme = "https"
-	}
-
+	scheme := "grpc"
 	return scheme
 }
 
@@ -121,12 +115,13 @@ func (q *Qdrant) ServiceDNS() string {
 	return fmt.Sprintf("%s.%s.svc", q.ServiceName(), q.Namespace)
 }
 
-func (q *Qdrant) PodDNS(ordinal string) string {
-	return fmt.Sprintf("%s-%d.%s.%s.svc",
+func (q *Qdrant) GetPodAddress(i int) string {
+	return fmt.Sprintf("%s-%d.%s.%s.svc:%d",
 		q.OffshootName(),
-		ordinal,
+		i,
 		q.GoverningServiceName(),
 		q.Namespace,
+		kubedb.QdrantHTTPPort,
 	)
 }
 
