@@ -4,7 +4,7 @@ metadata:
   creationTimestamp: null
   labels:
     app.kubernetes.io/name: kubedb
-  name: pgpoolopsrequests.ops.kubedb.com
+  name: milvusopsrequests.ops.kubedb.com
 spec:
   group: ops.kubedb.com
   names:
@@ -12,12 +12,12 @@ spec:
     - ops
     - kubedb
     - appscode
-    kind: PgpoolOpsRequest
-    listKind: PgpoolOpsRequestList
-    plural: pgpoolopsrequests
+    kind: MilvusOpsRequest
+    listKind: MilvusOpsRequestList
+    plural: milvusopsrequests
     shortNames:
-    - ppops
-    singular: pgpoolopsrequest
+    - mvops
+    singular: milvusopsrequest
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
@@ -42,100 +42,6 @@ spec:
             type: object
           spec:
             properties:
-              apply:
-                default: IfReady
-                enum:
-                - IfReady
-                - Always
-                type: string
-              authentication:
-                properties:
-                  secretRef:
-                    properties:
-                      apiGroup:
-                        default: ""
-                        type: string
-                      kind:
-                        default: Secret
-                        type: string
-                      name:
-                        type: string
-                    required:
-                    - kind
-                    - name
-                    type: object
-                    x-kubernetes-map-type: atomic
-                type: object
-              configuration:
-                properties:
-                  applyConfig:
-                    additionalProperties:
-                      type: string
-                    type: object
-                  backend:
-                    properties:
-                      delete:
-                        items:
-                          type: string
-                        type: array
-                      sync:
-                        items:
-                          properties:
-                            flag:
-                              type: string
-                            groupName:
-                              type: string
-                            hostName:
-                              type: string
-                            port:
-                              format: int32
-                              type: integer
-                            weight:
-                              format: int32
-                              type: integer
-                          required:
-                          - weight
-                          type: object
-                        type: array
-                    type: object
-                  configSecret:
-                    properties:
-                      name:
-                        default: ""
-                        type: string
-                    type: object
-                    x-kubernetes-map-type: atomic
-                  removeCustomConfig:
-                    type: boolean
-                  restart:
-                    default: auto
-                    enum:
-                    - auto
-                    - "true"
-                    - "false"
-                    type: string
-                type: object
-              databaseRef:
-                properties:
-                  name:
-                    default: ""
-                    type: string
-                type: object
-                x-kubernetes-map-type: atomic
-              horizontalScaling:
-                properties:
-                  node:
-                    format: int32
-                    type: integer
-                type: object
-              maxRetries:
-                default: 1
-                format: int32
-                type: integer
-              restart:
-                type: object
-              timeout:
-                type: string
               tls:
                 properties:
                   certificates:
@@ -223,12 +129,6 @@ spec:
                       - alias
                       type: object
                     type: array
-                  clientAuthMode:
-                    enum:
-                    - md5
-                    - scram
-                    - cert
-                    type: string
                   issuerRef:
                     properties:
                       apiGroup:
@@ -246,85 +146,7 @@ spec:
                     type: boolean
                   rotateCertificates:
                     type: boolean
-                  sslMode:
-                    enum:
-                    - disable
-                    - allow
-                    - prefer
-                    - require
-                    - verify-ca
-                    - verify-full
-                    type: string
                 type: object
-              type:
-                enum:
-                - UpdateVersion
-                - VerticalScaling
-                - Reconfigure
-                - Restart
-                - HorizontalScaling
-                - ReconfigureTLS
-                - RotateAuth
-                type: string
-              updateVersion:
-                properties:
-                  targetVersion:
-                    type: string
-                type: object
-              verticalScaling:
-                properties:
-                  node:
-                    properties:
-                      nodeSelectionPolicy:
-                        type: string
-                      resources:
-                        properties:
-                          claims:
-                            items:
-                              properties:
-                                name:
-                                  type: string
-                                request:
-                                  type: string
-                              required:
-                              - name
-                              type: object
-                            type: array
-                            x-kubernetes-list-map-keys:
-                            - name
-                            x-kubernetes-list-type: map
-                          limits:
-                            additionalProperties:
-                              anyOf:
-                              - type: integer
-                              - type: string
-                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                              x-kubernetes-int-or-string: true
-                            type: object
-                          requests:
-                            additionalProperties:
-                              anyOf:
-                              - type: integer
-                              - type: string
-                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                              x-kubernetes-int-or-string: true
-                            type: object
-                        type: object
-                      topology:
-                        properties:
-                          key:
-                            type: string
-                          value:
-                            type: string
-                        required:
-                        - key
-                        - value
-                        type: object
-                    type: object
-                type: object
-            required:
-            - databaseRef
-            - type
             type: object
           status:
             properties:

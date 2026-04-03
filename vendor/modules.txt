@@ -74,7 +74,7 @@ github.com/cenkalti/backoff/v4
 # github.com/cenkalti/backoff/v5 v5.0.3
 ## explicit; go 1.23
 github.com/cenkalti/backoff/v5
-# github.com/cert-manager/cert-manager v1.19.3
+# github.com/cert-manager/cert-manager v1.19.4
 ## explicit; go 1.25.0
 github.com/cert-manager/cert-manager/pkg/apis/acme
 github.com/cert-manager/cert-manager/pkg/apis/acme/v1
@@ -3435,7 +3435,7 @@ kmodules.xyz/prober/api/v1
 kmodules.xyz/resource-metadata/apis/node
 kmodules.xyz/resource-metadata/apis/node/v1alpha1
 kmodules.xyz/resource-metadata/crds
-# kubedb.dev/apimachinery v0.63.0
+# kubedb.dev/apimachinery v0.63.1-0.20260403071414-578056252e6d
 ## explicit; go 1.25.0
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog

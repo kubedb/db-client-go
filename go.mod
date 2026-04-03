@@ -44,7 +44,7 @@ require (
 	k8s.io/klog/v2 v2.130.1
 	kmodules.xyz/client-go v0.34.3
 	kmodules.xyz/custom-resources v0.34.0
-	kubedb.dev/apimachinery v0.63.0
+	kubedb.dev/apimachinery v0.63.1-0.20260403071414-578056252e6d
 	sigs.k8s.io/controller-runtime v0.22.4
 	xorm.io/xorm v1.3.11
 )
@@ -80,7 +80,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
-	github.com/cert-manager/cert-manager v1.19.3 // indirect
+	github.com/cert-manager/cert-manager v1.19.4 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cilium/ebpf v0.11.0 // indirect
 	github.com/cockroachdb/errors v1.9.1 // indirect
