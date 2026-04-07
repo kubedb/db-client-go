@@ -762,7 +762,8 @@ func (c *Client) FullDeallocation(ctx context.Context, serverName string) error 
 	if err != nil {
 		return fmt.Errorf("full deallocation failed for server %s: %w", serverName, err)
 	}
-	klog.Info("Full deallocation triggered successfully for server %s: ", serverName)
+
+	klog.Infof("Full deallocation triggered successfully for server %s: ", serverName)
 
 	return nil
 }
