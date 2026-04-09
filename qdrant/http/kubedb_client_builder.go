@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package qdrant
+package http
 
 import (
 	"context"
@@ -29,31 +29,31 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type KubeDBHTTPClientBuilder struct {
+type ClientBuilderHTTP struct {
 	kc         client.Client
 	db         *api.Qdrant
 	podOrdinal string
 	ctx        context.Context
 }
 
-func NewKubeDBHTTPClientBuilder(kc client.Client, db *api.Qdrant) *KubeDBHTTPClientBuilder {
-	return &KubeDBHTTPClientBuilder{
+func NewClientBuilderHTTP(kc client.Client, db *api.Qdrant) *ClientBuilderHTTP {
+	return &ClientBuilderHTTP{
 		kc: kc,
 		db: db,
 	}
 }
 
-func (o *KubeDBHTTPClientBuilder) WithContext(ctx context.Context) *KubeDBHTTPClientBuilder {
+func (o *ClientBuilderHTTP) WithContext(ctx context.Context) *ClientBuilderHTTP {
 	o.ctx = ctx
 	return o
 }
 
-func (o *KubeDBHTTPClientBuilder) WithPodOrdinal(ordinal string) *KubeDBHTTPClientBuilder {
+func (o *ClientBuilderHTTP) WithPodOrdinal(ordinal string) *ClientBuilderHTTP {
 	o.podOrdinal = ordinal
 	return o
 }
 
-func (o *KubeDBHTTPClientBuilder) GetQdrantHTTPClient() (*Client, error) {
+func (o *ClientBuilderHTTP) GetClient() (*Client, error) {
 	if o.ctx == nil {
 		o.ctx = context.Background()
 	}
@@ -103,10 +103,10 @@ func (o *KubeDBHTTPClientBuilder) GetQdrantHTTPClient() (*Client, error) {
 		}
 	}
 
-	qdrantClient, err := NewClient(config)
+	client, err := NewClient(config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Qdrant client: %w", err)
 	}
 
-	return qdrantClient, nil
+	return client, nil
 }

@@ -14,15 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package qdrant
+package grpc
 
 import "github.com/qdrant/go-client/qdrant"
 
-type QdrantGRPCClient struct {
+type GRPCClient struct {
 	*qdrant.Client
 }
 
-func (qc *QdrantGRPCClient) Close() error {
+func (qc *GRPCClient) Close() error {
 	if qc.Client != nil {
 		return qc.Client.Close()
 	}

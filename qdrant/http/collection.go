@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package qdrant
+package http
 
 import (
 	"context"
@@ -45,34 +45,6 @@ func (c *Client) ListCollections(ctx context.Context) (*ListCollectionsResponse,
 	}
 
 	var response ListCollectionsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return nil, fmt.Errorf("decoding response: %w", err)
-	}
-
-	return &response, nil
-}
-
-// GetCollectionDetails retrieves parameters from the specified collection.
-func (c *Client) GetCollectionDetails(ctx context.Context, collectionName string) (*GetCollectionDetailsResponse, error) {
-	path := fmt.Sprintf("/collections/%s", collectionName)
-
-	req, err := c.NewRequest(ctx, http.MethodGet, path, nil)
-	if err != nil {
-		return nil, fmt.Errorf("creating request: %w", err)
-	}
-
-	resp, err := c.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("executing request: %w", err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("unexpected status code %d: %s", resp.StatusCode, string(bodyBytes))
-	}
-
-	var response GetCollectionDetailsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, fmt.Errorf("decoding response: %w", err)
 	}
@@ -134,6 +106,34 @@ func (c *Client) CreateCollection(ctx context.Context, collectionName string, re
 	}
 
 	var response CreateCollectionResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("decoding response: %w", err)
+	}
+
+	return &response, nil
+}
+
+// GetCollectionDetails retrieves parameters from the specified collection.
+func (c *Client) GetCollectionDetails(ctx context.Context, collectionName string) (*GetCollectionDetailsResponse, error) {
+	path := fmt.Sprintf("/collections/%s", collectionName)
+
+	req, err := c.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, fmt.Errorf("creating request: %w", err)
+	}
+
+	resp, err := c.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("executing request: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("unexpected status code %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	var response GetCollectionDetailsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, fmt.Errorf("decoding response: %w", err)
 	}

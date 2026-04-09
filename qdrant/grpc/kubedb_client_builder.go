@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package qdrant
+package grpc
 
 import (
 	"context"
@@ -31,25 +31,25 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type KubeDBGRPCClientBuilder struct {
+type ClientBuilderGRPC struct {
 	kc  client.Client
 	db  *api.Qdrant
 	ctx context.Context
 }
 
-func NewKubeDBGRPCClientBuilder(kc client.Client, db *api.Qdrant) *KubeDBGRPCClientBuilder {
-	return &KubeDBGRPCClientBuilder{
+func NewClientBuilderGRPC(kc client.Client, db *api.Qdrant) *ClientBuilderGRPC {
+	return &ClientBuilderGRPC{
 		kc: kc,
 		db: db,
 	}
 }
 
-func (o *KubeDBGRPCClientBuilder) WithContext(ctx context.Context) *KubeDBGRPCClientBuilder {
+func (o *ClientBuilderGRPC) WithContext(ctx context.Context) *ClientBuilderGRPC {
 	o.ctx = ctx
 	return o
 }
 
-func (o *KubeDBGRPCClientBuilder) GetQdrantGRPCClient() (*qdrant.Client, error) {
+func (o *ClientBuilderGRPC) GetGRPCClient() (*qdrant.Client, error) {
 	if o.ctx == nil {
 		o.ctx = context.Background()
 	}
@@ -92,10 +92,10 @@ func (o *KubeDBGRPCClientBuilder) GetQdrantGRPCClient() (*qdrant.Client, error) 
 		}
 	}
 
-	qdrantClient, err := qdrant.NewClient(config)
+	client, err := qdrant.NewClient(config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Qdrant client: %w", err)
 	}
 
-	return qdrantClient, nil
+	return client, nil
 }

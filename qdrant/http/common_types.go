@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package qdrant
+package http
 
 // Result represents the result of an operation
 type Result struct {
