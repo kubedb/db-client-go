@@ -31,25 +31,25 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type KubeDBClientBuilder struct {
+type KubeDBGRPCClientBuilder struct {
 	kc  client.Client
 	db  *api.Qdrant
 	ctx context.Context
 }
 
-func NewKubeDBClientBuilder(kc client.Client, db *api.Qdrant) *KubeDBClientBuilder {
-	return &KubeDBClientBuilder{
+func NewKubeDBGRPCClientBuilder(kc client.Client, db *api.Qdrant) *KubeDBGRPCClientBuilder {
+	return &KubeDBGRPCClientBuilder{
 		kc: kc,
 		db: db,
 	}
 }
 
-func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
+func (o *KubeDBGRPCClientBuilder) WithContext(ctx context.Context) *KubeDBGRPCClientBuilder {
 	o.ctx = ctx
 	return o
 }
 
-func (o *KubeDBClientBuilder) GetQdrantClient() (*qdrant.Client, error) {
+func (o *KubeDBGRPCClientBuilder) GetQdrantGRPCClient() (*qdrant.Client, error) {
 	if o.ctx == nil {
 		o.ctx = context.Background()
 	}
@@ -88,7 +88,7 @@ func (o *KubeDBClientBuilder) GetQdrantClient() (*qdrant.Client, error) {
 		config.UseTLS = true
 		config.TLSConfig = &tls.Config{
 			RootCAs:    caPool,
-			ServerName: o.db.ServiceDNS(), // must match SAN
+			ServerName: o.db.ServiceDNS(),
 		}
 	}
 

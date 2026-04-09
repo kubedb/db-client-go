@@ -18,11 +18,11 @@ package qdrant
 
 import "github.com/qdrant/go-client/qdrant"
 
-type QdrantClient struct {
+type QdrantGRPCClient struct {
 	*qdrant.Client
 }
 
-func (qc *QdrantClient) Close() error {
+func (qc *QdrantGRPCClient) Close() error {
 	if qc.Client != nil {
 		return qc.Client.Close()
 	}
