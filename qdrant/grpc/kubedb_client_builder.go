@@ -49,7 +49,7 @@ func (o *ClientBuilderGRPC) WithContext(ctx context.Context) *ClientBuilderGRPC 
 	return o
 }
 
-func (o *ClientBuilderGRPC) GetGRPCClient() (*qdrant.Client, error) {
+func (o *ClientBuilderGRPC) GetClient() (*qdrant.Client, error) {
 	if o.ctx == nil {
 		o.ctx = context.Background()
 	}
