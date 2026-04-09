@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package http
+package grpc
 
 import (
 	"context"
@@ -25,50 +25,38 @@ import (
 	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 
+	"github.com/qdrant/go-client/qdrant"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type ClientBuilderHTTP struct {
-	kc         client.Client
-	db         *api.Qdrant
-	podOrdinal string
-	ctx        context.Context
+type GRPCClientBuilder struct {
+	kc  client.Client
+	db  *api.Qdrant
+	ctx context.Context
 }
 
-func NewClientBuilderHTTP(kc client.Client, db *api.Qdrant) *ClientBuilderHTTP {
-	return &ClientBuilderHTTP{
+func NewGRPCClientBuilder(kc client.Client, db *api.Qdrant) *GRPCClientBuilder {
+	return &GRPCClientBuilder{
 		kc: kc,
 		db: db,
 	}
 }
 
-func (o *ClientBuilderHTTP) WithContext(ctx context.Context) *ClientBuilderHTTP {
+func (o *GRPCClientBuilder) WithContext(ctx context.Context) *GRPCClientBuilder {
 	o.ctx = ctx
 	return o
 }
 
-func (o *ClientBuilderHTTP) WithPodOrdinal(ordinal string) *ClientBuilderHTTP {
-	o.podOrdinal = ordinal
-	return o
-}
-
-func (o *ClientBuilderHTTP) GetClient() (*Client, error) {
+func (o *GRPCClientBuilder) GetClient() (*qdrant.Client, error) {
 	if o.ctx == nil {
 		o.ctx = context.Background()
 	}
 
-	var host string
-	if o.podOrdinal == "" {
-		host = o.db.ServiceDNS()
-	} else {
-		host = o.db.PodDNS(o.podOrdinal)
-	}
-
-	config := &Config{
-		Host:   host,
-		Port:   kubedb.QdrantHTTPPort,
+	config := &qdrant.Config{
+		Host:   o.db.ServiceDNS(),
+		Port:   kubedb.QdrantGRPCPort,
 		APIKey: o.db.GetAPIKey(o.ctx, o.kc),
 	}
 
@@ -104,7 +92,7 @@ func (o *ClientBuilderHTTP) GetClient() (*Client, error) {
 		}
 	}
 
-	client, err := NewClient(config)
+	client, err := qdrant.NewClient(config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Qdrant client: %w", err)
 	}
