@@ -17,6 +17,7 @@ limitations under the License.
 package http
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -33,7 +34,7 @@ func (c *Client) Upsert(ctx context.Context, collectionName string, req *UpsertP
 		return nil, fmt.Errorf("marshaling request body: %w", err)
 	}
 
-	httpReq, err := c.NewRequest(ctx, http.MethodPut, path, toReader(bodyBytes))
+	httpReq, err := c.NewRequest(ctx, http.MethodPut, path, bytes.NewReader(bodyBytes))
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
 	}
@@ -67,7 +68,7 @@ func (c *Client) Get(ctx context.Context, collectionName string, req *GetPointsR
 		return nil, fmt.Errorf("marshaling request body: %w", err)
 	}
 
-	httpReq, err := c.NewRequest(ctx, http.MethodPost, path, toReader(bodyBytes))
+	httpReq, err := c.NewRequest(ctx, http.MethodPost, path, bytes.NewReader(bodyBytes))
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
 	}

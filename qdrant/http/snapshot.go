@@ -28,24 +28,6 @@ import (
 	"path/filepath"
 )
 
-type byteReader struct {
-	data []byte
-	pos  int
-}
-
-func (r *byteReader) Read(p []byte) (n int, err error) {
-	if r.pos >= len(r.data) {
-		return 0, io.EOF
-	}
-	n = copy(p, r.data[r.pos:])
-	r.pos += n
-	return n, nil
-}
-
-func toReader(b []byte) io.Reader {
-	return &byteReader{data: b}
-}
-
 // CreateFullSnapshot creates a snapshot of the entire Qdrant instance.
 func (c *Client) CreateFullSnapshot(ctx context.Context) (*CreateSnapshotResponse, error) {
 	path := "/snapshots"
@@ -143,7 +125,7 @@ func (c *Client) RecoverFullSnapshot(ctx context.Context, location string) (*Rec
 		return nil, fmt.Errorf("marshaling request body: %w", err)
 	}
 
-	req, err := c.NewRequest(ctx, http.MethodPut, path, toReader(bodyBytes))
+	req, err := c.NewRequest(ctx, http.MethodPut, path, bytes.NewReader(bodyBytes))
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
 	}
@@ -259,57 +241,63 @@ func (c *Client) RecoverCollectionSnapshot(
 	collectionName string,
 	snapshotPath string,
 ) (*RecoverSnapshotResponse, error) {
-	// Endpoint
 	urlPath := fmt.Sprintf("/collections/%s/snapshots/upload", collectionName)
 
-	// Open snapshot file
 	file, err := os.Open(snapshotPath)
 	if err != nil {
 		return nil, fmt.Errorf("opening snapshot file: %w", err)
 	}
 	defer func() { _ = file.Close() }()
 
-	// Prepare multipart body
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
+	pr, pw := io.Pipe()
 
-	part, err := writer.CreateFormFile("snapshot", filepath.Base(snapshotPath))
-	if err != nil {
-		return nil, fmt.Errorf("creating form file: %w", err)
-	}
+	writer := multipart.NewWriter(pw)
 
-	_, err = io.Copy(part, file)
-	if err != nil {
-		return nil, fmt.Errorf("copying file data: %w", err)
-	}
+	errChan := make(chan error, 1)
 
-	err = writer.Close()
-	if err != nil {
-		return nil, fmt.Errorf("closing multipart writer: %w", err)
-	}
+	go func() {
+		defer func() {
+			_ = writer.Close()
+			_ = pw.Close()
+		}()
 
-	// Create request
-	req, err := c.NewRequest(ctx, http.MethodPost, urlPath, body)
+		part, err := writer.CreateFormFile("snapshot", filepath.Base(snapshotPath))
+		if err != nil {
+			errChan <- fmt.Errorf("creating form file: %w", err)
+			return
+		}
+
+		_, err = io.Copy(part, file)
+		if err != nil {
+			errChan <- fmt.Errorf("copying file data: %w", err)
+			return
+		}
+
+		errChan <- nil
+	}()
+
+	req, err := c.NewRequest(ctx, http.MethodPost, urlPath, pr)
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
 	}
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
-	// Execute request
 	resp, err := c.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("executing request: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	// Handle non-200 response
+	if err := <-errChan; err != nil {
+		return nil, err
+	}
+
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("unexpected status code %d: %s", resp.StatusCode, string(bodyBytes))
 	}
 
-	// Decode response
 	var response RecoverSnapshotResponse
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, fmt.Errorf("decoding response: %w", err)
@@ -370,7 +358,6 @@ func (c *Client) CreateShardSnapshot(ctx context.Context, collectionName string,
 }
 
 // ListShardSnapshots lists all snapshots of a specific shard.
-// ListShardSnapshots lists all snapshots of a specific shard.
 func (c *Client) ListShardSnapshots(ctx context.Context, collectionName string, shardID string) (*ListSnapshotsResponse, error) {
 	path := fmt.Sprintf("/collections/%s/shards/%s/snapshots", collectionName, shardID)
 
@@ -398,7 +385,6 @@ func (c *Client) ListShardSnapshots(ctx context.Context, collectionName string, 
 	return &response, nil
 }
 
-// DeleteShardSnapshot deletes a specific snapshot of a shard.
 // DeleteShardSnapshot deletes a specific snapshot of a shard.
 func (c *Client) DeleteShardSnapshot(ctx context.Context, collectionName string, shardID string, snapshotName string) (*DeleteSnapshotResponse, error) {
 	path := fmt.Sprintf("/collections/%s/shards/%s/snapshots/%s", collectionName, shardID, snapshotName)
@@ -440,7 +426,7 @@ func (c *Client) RecoverShardSnapshot(ctx context.Context, collectionName string
 		return nil, fmt.Errorf("marshaling request body: %w", err)
 	}
 
-	req, err := c.NewRequest(ctx, http.MethodPut, path, toReader(bodyBytes))
+	req, err := c.NewRequest(ctx, http.MethodPut, path, bytes.NewReader(bodyBytes))
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
 	}

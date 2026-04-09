@@ -1,19 +1,3 @@
-/*
-Copyright AppsCode Inc. and Contributors
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package http
 
 import (
@@ -24,21 +8,24 @@ import (
 )
 
 const (
-	defaultHost             = "localhost"
-	defaultPort             = 6333
-	defaultKeepAliveTime    = 90
-	defaultKeepAliveTimeout = 30
+	defaultHost = "localhost"
+	defaultPort = 6333
+
+	defaultRequestTimeout  = 30 * time.Second
+	defaultIdleConnTimeout = 90 * time.Second
 )
 
 // Config holds the configuration for a Qdrant HTTP client.
 type Config struct {
-	Host             string
-	Port             int
-	APIKey           string
-	UseTLS           bool
-	TLSConfig        *tls.Config
-	KeepAliveTime    int
-	KeepAliveTimeout uint
+	Host string
+	Port int
+
+	APIKey    string
+	UseTLS    bool
+	TLSConfig *tls.Config
+
+	RequestTimeout  time.Duration
+	IdleConnTimeout time.Duration
 }
 
 func (c *Config) getBaseURL() string {
@@ -61,18 +48,18 @@ func (c *Config) getBaseURL() string {
 }
 
 func (c *Config) getHTTPClient() *http.Client {
-	keepAliveTime := defaultKeepAliveTime
-	if c.KeepAliveTime > 0 {
-		keepAliveTime = c.KeepAliveTime
+	reqTimeout := defaultRequestTimeout
+	if c.RequestTimeout > 0 {
+		reqTimeout = c.RequestTimeout
 	}
 
-	keepAliveTimeout := defaultKeepAliveTimeout
-	if c.KeepAliveTimeout > 0 {
-		keepAliveTimeout = int(c.KeepAliveTimeout)
+	idleTimeout := defaultIdleConnTimeout
+	if c.IdleConnTimeout > 0 {
+		idleTimeout = c.IdleConnTimeout
 	}
 
 	transport := &http.Transport{
-		IdleConnTimeout:     time.Duration(keepAliveTime) * time.Second,
+		IdleConnTimeout:     idleTimeout,
 		MaxIdleConns:        100,
 		MaxIdleConnsPerHost: 10,
 	}
@@ -85,10 +72,8 @@ func (c *Config) getHTTPClient() *http.Client {
 		transport.TLSClientConfig = tlsCfg
 	}
 
-	httpClient := &http.Client{
+	return &http.Client{
 		Transport: transport,
-		Timeout:   time.Duration(keepAliveTimeout) * time.Second,
+		Timeout:   reqTimeout,
 	}
-
-	return httpClient
 }

@@ -40,10 +40,6 @@ func NewClient(config *Config) (*Client, error) {
 		config.Port = 6333
 	}
 
-	if config.KeepAliveTimeout == 0 {
-		config.KeepAliveTimeout = 30
-	}
-
 	return &Client{
 		client:  config.getHTTPClient(),
 		baseURL: config.getBaseURL(),
