@@ -20,7 +20,6 @@ import (
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kmapi "kmodules.xyz/client-go/api/v1"
-	mona "kmodules.xyz/monitoring-agent-api/api/v1"
 	ofst "kmodules.xyz/offshoot-api/api/v2"
 )
 
@@ -112,10 +111,6 @@ type HanaDBSpec struct {
 	// +optional
 	Configuration *ConfigurationSpec `json:"configuration,omitempty"`
 
-	// Monitor is used monitor database instance
-	// +optional
-	Monitor *mona.AgentSpec `json:"monitor,omitempty"`
-
 	// PodTemplate is an optional configuration for pods used to expose database
 	// +optional
 	PodTemplate *ofst.PodTemplateSpec `json:"podTemplate,omitempty"`
@@ -132,10 +127,6 @@ type HanaDBSpec struct {
 	// +optional
 	// +kubebuilder:default={periodSeconds: 20, timeoutSeconds: 10, failureThreshold: 3}
 	HealthChecker kmapi.HealthCheckSpec `json:"healthChecker"`
-
-	// Arbiter controls spec for arbiter pods
-	// +optional
-	Arbiter *ArbiterSpec `json:"arbiter,omitempty"`
 }
 
 // HanaDBTopology defines the deployment mode for HanaDB

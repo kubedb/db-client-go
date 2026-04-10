@@ -20,12 +20,8 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"reflect"
 	"slices"
 	"time"
-
-	v1 "kubedb.dev/apimachinery/apis/kubedb/v1"
-	"kubedb.dev/apimachinery/pkg/double_optin"
 
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
@@ -41,7 +37,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 const (
@@ -111,10 +106,10 @@ func WaitForShardIdUpdate(kc client.Client, shardConfigName string) {
 
 type Predicator interface {
 	GetOwnerObject(obj client.Object) (*unstructured.Unstructured, error)
-	GetPredicateFuncsForSelf() predicate.Funcs
-	GetPredicateFuncsForOwnedObjects() predicate.Funcs
-	GetArchiverToDatabasesMappingFunc(ctx context.Context, obj client.Object) []reconcile.Request
+	GetPredicateFuncsForDatabase() predicate.Funcs
+	GetPredicateFuncsForOwnerObjects() predicate.Funcs
 }
+
 type dbPredicate struct {
 	kc            client.Client
 	shardConfig   string
@@ -160,7 +155,7 @@ func (p *dbPredicate) GetOwnerObject(obj client.Object) (*unstructured.Unstructu
 	return &un, err
 }
 
-func (p *dbPredicate) GetPredicateFuncsForSelf() predicate.Funcs {
+func (p *dbPredicate) GetPredicateFuncsForDatabase() predicate.Funcs {
 	return predicate.Funcs{
 		CreateFunc: func(e event.CreateEvent) bool {
 			obj := e.Object
@@ -191,101 +186,54 @@ func (p *dbPredicate) GetPredicateFuncsForSelf() predicate.Funcs {
 	}
 }
 
-func (p *dbPredicate) GetPredicateFuncsForDatabase() predicate.Funcs {
-	return p.GetPredicateFuncsForSelf()
-}
-
-func (p *dbPredicate) GetPredicateFuncsForOwnedObjects() predicate.Funcs {
+func (p *dbPredicate) GetPredicateFuncsForOwnerObjects() predicate.Funcs {
 	return predicate.Funcs{
 		CreateFunc: func(e event.CreateEvent) bool {
-			ownerObj, err := p.GetOwnerObject(e.Object)
+			dbObj, err := p.GetOwnerObject(e.Object)
 			if err != nil && !kerr.IsNotFound(err) {
 				klog.Errorln(err)
 				return false
 			}
-			if ownerObj == nil {
+			if dbObj == nil {
 				return false
 			}
-			rq := scutil.ShouldEnqueueObjectForShard(p.kc, p.shardConfig, ownerObj.GetLabels())
+			rq := scutil.ShouldEnqueueObjectForShard(p.kc, p.shardConfig, dbObj.GetLabels())
 			if !rq && p.healthChecker != nil {
-				p.healthChecker.Stop(ownerObj.GetNamespace() + "/" + ownerObj.GetName())
+				p.healthChecker.Stop(dbObj.GetNamespace() + "/" + dbObj.GetName())
 			}
 			return rq
 		},
 
 		UpdateFunc: func(e event.UpdateEvent) bool {
-			ownerObj, err := p.GetOwnerObject(e.ObjectNew)
+			dbObj, err := p.GetOwnerObject(e.ObjectNew)
 			if err != nil && !kerr.IsNotFound(err) {
 				klog.Errorln(err)
 				return false
 			}
-			if ownerObj == nil {
+			if dbObj == nil {
 				return false
 			}
-			rq := scutil.ShouldEnqueueObjectForShard(p.kc, p.shardConfig, ownerObj.GetLabels())
+			rq := scutil.ShouldEnqueueObjectForShard(p.kc, p.shardConfig, dbObj.GetLabels())
 			if !rq && p.healthChecker != nil {
-				p.healthChecker.Stop(ownerObj.GetNamespace() + "/" + ownerObj.GetName())
+				p.healthChecker.Stop(dbObj.GetNamespace() + "/" + dbObj.GetName())
 			}
 			return rq
 		},
 
 		DeleteFunc: func(e event.DeleteEvent) bool {
-			ownerObj, err := p.GetOwnerObject(e.Object)
+			dbObj, err := p.GetOwnerObject(e.Object)
 			if err != nil && !kerr.IsNotFound(err) {
 				klog.Errorln(err)
 				return false
 			}
-			if ownerObj == nil {
+			if dbObj == nil {
 				return false
 			}
-			rq := scutil.ShouldEnqueueObjectForShard(p.kc, p.shardConfig, ownerObj.GetLabels())
+			rq := scutil.ShouldEnqueueObjectForShard(p.kc, p.shardConfig, dbObj.GetLabels())
 			if !rq && p.healthChecker != nil {
-				p.healthChecker.Stop(ownerObj.GetNamespace() + "/" + ownerObj.GetName())
+				p.healthChecker.Stop(dbObj.GetNamespace() + "/" + dbObj.GetName())
 			}
 			return rq
 		},
 	}
-}
-
-func (p *dbPredicate) GetArchiverToDatabasesMappingFunc(ctx context.Context, obj client.Object) (matched []reconcile.Request) {
-	archiverNS, archiverName := obj.GetNamespace(), obj.GetName()
-	consumerSpec, err := getAllowedConsumerSpec(obj)
-	if err != nil {
-		klog.Warningf("failed to get databases field as consumer for archiver: %s/%s. Reason: %v", archiverNS, archiverName, err)
-		return
-	}
-
-	consumers, err := double_optin.ListConsumers(p.kc, metav1.ObjectMeta{Namespace: archiverNS, Name: archiverName}, p.gvk, consumerSpec)
-	if err != nil {
-		return nil
-	}
-
-	for _, db := range consumers.Items {
-		dbNS, dbName := db.GetNamespace(), db.GetName()
-		key := dbNS + "/" + dbName
-		if scutil.ShouldEnqueueObjectForShard(p.kc, p.shardConfig, db.GetLabels()) {
-			matched = append(matched, reconcile.Request{
-				NamespacedName: types.NamespacedName{Namespace: dbNS, Name: dbName},
-			})
-		} else if p.healthChecker != nil {
-			p.healthChecker.Stop(key)
-		}
-	}
-	return
-}
-
-func getAllowedConsumerSpec(obj client.Object) (*v1.AllowedConsumers, error) {
-	v := reflect.ValueOf(obj).Elem() // get struct value
-	spec := v.FieldByName("Spec")
-	if !spec.IsValid() {
-		return nil, fmt.Errorf("failed to get databases field from archiver")
-	}
-	databases := spec.FieldByName("Databases")
-	if !databases.IsValid() {
-		return nil, fmt.Errorf("failed to get databases field from archiver")
-	}
-	if databases.IsNil() {
-		return nil, fmt.Errorf("databases field is nil ")
-	}
-	return databases.Interface().(*v1.AllowedConsumers), nil
 }

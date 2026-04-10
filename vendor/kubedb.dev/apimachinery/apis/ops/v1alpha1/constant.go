@@ -425,9 +425,3 @@ const (
 const (
 	UpdateConfigSecret = "UpdateConfigSecret"
 )
-
-// Qdrant Constants
-const (
-	RebalanceShards = "RebalanceShards"
-	RemovePeers     = "RemovePeers"
-)

@@ -3435,7 +3435,7 @@ kmodules.xyz/prober/api/v1
 kmodules.xyz/resource-metadata/apis/node
 kmodules.xyz/resource-metadata/apis/node/v1alpha1
 kmodules.xyz/resource-metadata/crds
-# kubedb.dev/apimachinery v0.63.1-0.20260409082550-93a538c94a44
+# kubedb.dev/apimachinery v0.63.1-0.20260406100242-6d8616f56720
 ## explicit; go 1.25.0
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog
@@ -3451,7 +3451,6 @@ kubedb.dev/apimachinery/apis/migrator/v1alpha1
 kubedb.dev/apimachinery/apis/ops
 kubedb.dev/apimachinery/apis/ops/v1alpha1
 kubedb.dev/apimachinery/crds
-kubedb.dev/apimachinery/pkg/double_optin
 kubedb.dev/apimachinery/pkg/lib
 kubedb.dev/apimachinery/pkg/utils
 kubedb.dev/apimachinery/pkg/utils/raft

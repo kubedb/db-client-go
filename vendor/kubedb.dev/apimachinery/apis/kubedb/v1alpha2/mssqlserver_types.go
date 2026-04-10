@@ -153,7 +153,7 @@ type MSSQLServerSpec struct {
 	StorageType StorageType `json:"storageType,omitempty"`
 
 	// TLS contains tls configurations for client and server.
-	TLS *MSSQLServerTLSConfig `json:"tls"`
+	TLS *MSSQLServerTLSConfig `json:"tls,omitempty"`
 
 	// MSSQLServer cluster topology
 	// +optional
