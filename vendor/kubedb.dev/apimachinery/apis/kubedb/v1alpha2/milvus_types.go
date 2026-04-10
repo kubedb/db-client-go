@@ -42,6 +42,7 @@ type MilvusMode string
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=milvuses,singular=milvus,shortName=mv,categories={datastore,kubedb,appscode,all}
+
 // +kubebuilder:printcolumn:name="Version",type="string",JSONPath=".spec.version"
 // +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.phase"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
@@ -112,49 +113,7 @@ type MilvusSpec struct {
 	// Monitor is used monitor database instance
 	// +optional
 	Monitor *mona.AgentSpec `json:"monitor,omitempty"`
-
-	// TLS contains tls configurations
-	// +optional
-	TLS *MilvusTLSConfig `json:"tls,omitempty"`
 }
-
-type MilvusTLSConfig struct {
-	kmapi.TLSConfig `json:",inline"`
-
-	// External controls TLS for client-facing traffic (gRPC + REST).
-	// +optional
-	External *MilvusExternalProtocolTLSConfig `json:"external,omitempty"`
-
-	// Internal enables TLS for inter-component communication (one-way only)
-	// +optional
-	Internal *MilvusInternalProtocolTLSConfig `json:"internal,omitempty"`
-}
-
-type MilvusExternalProtocolTLSConfig struct {
-	// +kubebuilder:validation:Enum=Disabled;TLS;mTLS
-	Mode MilvusTLSMode `json:"mode,omitempty"`
-}
-
-type MilvusInternalProtocolTLSConfig struct {
-	// Enabled is used for Internal TLS only.
-	InternalTLSEnabled *bool `json:"internalTLSEnabled,omitempty"`
-}
-
-type MilvusTLSMode string
-
-const (
-	MilvusTLSModeDisabled MilvusTLSMode = "Disabled"
-	MilvusTLSModeTLS      MilvusTLSMode = "TLS"
-	MilvusTLSModeMTLS     MilvusTLSMode = "mTLS"
-)
-
-// +kubebuilder:validation:Enum=server;client
-type MilvusCertificateType string
-
-const (
-	MilvusCertificateTypeServer MilvusCertificateType = "server"
-	MilvusCertificateTypeClient MilvusCertificateType = "client"
-)
 
 type MilvusTopology struct {
 	// If set to -

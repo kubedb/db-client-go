@@ -14,17 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package qdrant
+package grpc
 
 import "github.com/qdrant/go-client/qdrant"
 
-type QdrantClient struct {
+type Client struct {
 	*qdrant.Client
 }
 
-func (qc *QdrantClient) Close() error {
+func (qc *Client) Close() error {
 	if qc.Client != nil {
-		return qc.Client.Close() // nolint:errcheck
+		return qc.Client.Close()
 	}
 	return nil
 }
