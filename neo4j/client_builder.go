@@ -22,7 +22,6 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"kubedb.dev/apimachinery/apis/kubedb"
@@ -41,7 +40,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type KubeDBClientBuilder struct {
+type credential struct {
+	username string
+	password string
+}
+
+type Neo4jClientBuilder struct {
 	kc      client.Client
 	db      *api.Neo4j
 	log     logr.Logger
@@ -50,36 +54,36 @@ type KubeDBClientBuilder struct {
 	ctx     context.Context
 }
 
-func NewKubeDBClientBuilder(kc client.Client, db *api.Neo4j) *KubeDBClientBuilder {
-	return &KubeDBClientBuilder{
+func NewNeo4jClientBuilder(kc client.Client, db *api.Neo4j) *Neo4jClientBuilder {
+	return &Neo4jClientBuilder{
 		kc: kc,
 		db: db,
 	}
 }
 
-func (o *KubeDBClientBuilder) WithPodName(podName string) *KubeDBClientBuilder {
+func (o *Neo4jClientBuilder) WithPodName(podName string) *Neo4jClientBuilder {
 	o.podName = podName
 	return o
 }
 
-func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
+func (o *Neo4jClientBuilder) WithContext(ctx context.Context) *Neo4jClientBuilder {
 	o.ctx = ctx
 	return o
 }
 
-func (o *KubeDBClientBuilder) WithLog(log logr.Logger) *KubeDBClientBuilder {
+func (o *Neo4jClientBuilder) WithLog(log logr.Logger) *Neo4jClientBuilder {
 	o.log = log
 	return o
 }
 
-func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
+func (o *Neo4jClientBuilder) GetNeo4jClient() (*Client, error) {
 	// Construct URL - use default service if podName not provided
 	o.url = o.buildConnectionURL()
 
 	klog.V(3).Infof("Attempting to connect to Neo4j at: %s", o.url)
 
-	var dbUser, dbPassword string
 	authSecret := &core.Secret{}
+	var cred credential
 
 	if !o.db.Spec.DisableSecurity {
 		err := o.kc.Get(o.ctx, types.NamespacedName{
@@ -94,21 +98,8 @@ func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 			klog.Error(err, "Failed to get auth-secret")
 			return nil, err
 		}
-
-		// Extract NEO4J_AUTH from Secret.Data
-		auth, ok := authSecret.Data["NEO4J_AUTH"]
-		if !ok {
-			return nil, fmt.Errorf("secret %s/%s does not contain key NEO4J_AUTH", o.db.Namespace, o.db.GetAuthSecretName())
-		}
-		authStr := strings.TrimSpace(string(auth))
-
-		// Expect "username/password", split safely
-		parts := strings.SplitN(authStr, "/", 2)
-		if len(parts) != 2 || parts[0] == "" {
-			return nil, fmt.Errorf("invalid NEO4J_AUTH format in secret %s/%s. Expected \"username/password\"", o.db.Namespace, o.db.GetAuthSecretName())
-		}
-		dbUser = parts[0]
-		dbPassword = parts[1]
+		cred.username = string(authSecret.Data[core.BasicAuthUsernameKey])
+		cred.password = string(authSecret.Data[core.BasicAuthPasswordKey])
 	} else {
 		klog.Info("Security is disabled for Neo4j, no credentials will be used.")
 	}
@@ -151,12 +142,13 @@ func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 	}
 
 	// Create driver and check for errors immediately
-	driver, err := neo4j.NewDriverWithContext(o.url, neo4j.BasicAuth(dbUser, dbPassword, ""), func(c *config.Config) {
-		c.SocketConnectTimeout = 60 * time.Second
-		c.ConnectionAcquisitionTimeout = 60 * time.Second
-		c.MaxTransactionRetryTime = 60 * time.Second
+	driver, err := neo4j.NewDriverWithContext(o.url, neo4j.BasicAuth(cred.username, cred.password, ""), func(c *config.Config) {
+		c.SocketConnectTimeout = 15 * time.Second
+		c.ConnectionAcquisitionTimeout = 30 * time.Second
+		c.MaxTransactionRetryTime = 30 * time.Second
 		c.MaxConnectionLifetime = 30 * time.Minute
 		c.MaxConnectionPoolSize = 20
+		c.SocketKeepalive = true
 		if o.db.Spec.TLS != nil {
 			c.TlsConfig = tlsConfig
 		}
@@ -189,35 +181,7 @@ func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 	}, nil
 }
 
-func (c *Client) ExecuteQuery(ctx context.Context, query string, params map[string]any, dbName string) (*neo4j.EagerResult, error) {
-	return neo4j.ExecuteQuery(ctx, c, query, params, neo4j.EagerResultTransformer,
-		neo4j.ExecuteQueryWithDatabase(dbName))
-}
-
-func (c *Client) ReloadTLS(ctx context.Context) error {
-	session := c.NewSession(ctx, neo4j.SessionConfig{
-		AccessMode: neo4j.AccessModeRead,
-	})
-	defer func() {
-		if err := session.Close(ctx); err != nil {
-			klog.Error(err, "failed to close neo4j session")
-		}
-	}()
-
-	timeoutCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
-
-	_, err := session.Run(timeoutCtx, `
-	CALL dbms.security.reloadTLS()
-	`, nil)
-	if err != nil {
-		return fmt.Errorf("failed to execute TLS reload procedure: %w", err)
-	}
-
-	return nil
-}
-
-func (o *KubeDBClientBuilder) buildConnectionURL() string {
+func (o *Neo4jClientBuilder) buildConnectionURL() string {
 	scheme := "neo4j"
 
 	if o.db.Spec.TLS != nil && o.db.Spec.TLS.Bolt.Mode != api.TLSModeDisabled {
