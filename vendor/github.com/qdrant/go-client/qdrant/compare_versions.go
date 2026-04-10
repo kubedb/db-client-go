@@ -25,7 +25,7 @@ func getServerVersion(clientConn *GrpcClient) string {
 	defer cancel()
 	healthCheckResult, err := clientConn.qdrant.HealthCheck(ctx, &HealthCheckRequest{})
 	if err != nil {
-		logger.Warn("Unable to get server version, use default", "err", err, "default", unknownVersion)
+		logger.WarnContext(ctx, "Unable to get server version, use default", "err", err, "default", unknownVersion)
 		return unknownVersion
 	}
 	serverVersion := healthCheckResult.GetVersion()

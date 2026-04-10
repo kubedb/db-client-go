@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package qdrant
+package grpc
 
 import (
 	"context"
@@ -31,25 +31,25 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type KubeDBClientBuilder struct {
+type GRPCClientBuilder struct {
 	kc  client.Client
 	db  *api.Qdrant
 	ctx context.Context
 }
 
-func NewKubeDBClientBuilder(kc client.Client, db *api.Qdrant) *KubeDBClientBuilder {
-	return &KubeDBClientBuilder{
+func NewGRPCClientBuilder(kc client.Client, db *api.Qdrant) *GRPCClientBuilder {
+	return &GRPCClientBuilder{
 		kc: kc,
 		db: db,
 	}
 }
 
-func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
+func (o *GRPCClientBuilder) WithContext(ctx context.Context) *GRPCClientBuilder {
 	o.ctx = ctx
 	return o
 }
 
-func (o *KubeDBClientBuilder) GetQdrantClient() (*qdrant.Client, error) {
+func (o *GRPCClientBuilder) GetClient() (*qdrant.Client, error) {
 	if o.ctx == nil {
 		o.ctx = context.Background()
 	}
@@ -88,14 +88,14 @@ func (o *KubeDBClientBuilder) GetQdrantClient() (*qdrant.Client, error) {
 		config.UseTLS = true
 		config.TLSConfig = &tls.Config{
 			RootCAs:    caPool,
-			ServerName: o.db.ServiceDNS(), // must match SAN
+			ServerName: o.db.ServiceDNS(),
 		}
 	}
 
-	qdrantClient, err := qdrant.NewClient(config)
+	client, err := qdrant.NewClient(config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Qdrant client: %w", err)
 	}
 
-	return qdrantClient, nil
+	return client, nil
 }
