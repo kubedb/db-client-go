@@ -4,7 +4,7 @@ metadata:
   creationTimestamp: null
   labels:
     app.kubernetes.io/name: kubedb
-  name: hanadbversions.catalog.kubedb.com
+  name: documentdbversions.catalog.kubedb.com
 spec:
   group: catalog.kubedb.com
   names:
@@ -12,12 +12,12 @@ spec:
     - catalog
     - kubedb
     - appscode
-    kind: HanaDBVersion
-    listKind: HanaDBVersionList
-    plural: hanadbversions
+    kind: DocumentDBVersion
+    listKind: DocumentDBVersionList
+    plural: documentdbversions
     shortNames:
-    - hdbversion
-    singular: hanadbversion
+    - dcversion
+    singular: documentdbversion
   scope: Cluster
   versions:
   - additionalPrinterColumns:
@@ -45,13 +45,6 @@ spec:
             type: object
           spec:
             properties:
-              coordinator:
-                properties:
-                  image:
-                    type: string
-                required:
-                - image
-                type: object
               db:
                 properties:
                   image:
@@ -61,18 +54,12 @@ spec:
                 type: object
               deprecated:
                 type: boolean
-              exporter:
-                properties:
-                  image:
-                    type: string
-                required:
-                - image
-                type: object
+              endOfLife:
+                type: boolean
+              postgresVersion:
+                type: string
               securityContext:
                 properties:
-                  runAsGroup:
-                    format: int64
-                    type: integer
                   runAsUser:
                     format: int64
                     type: integer
@@ -106,9 +93,7 @@ spec:
               version:
                 type: string
             required:
-            - coordinator
             - db
-            - exporter
             - version
             type: object
         type: object
