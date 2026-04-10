@@ -3435,7 +3435,7 @@ kmodules.xyz/prober/api/v1
 kmodules.xyz/resource-metadata/apis/node
 kmodules.xyz/resource-metadata/apis/node/v1alpha1
 kmodules.xyz/resource-metadata/crds
-# kubedb.dev/apimachinery v0.63.1-0.20260403071414-578056252e6d
+# kubedb.dev/apimachinery v0.63.1-0.20260406100242-6d8616f56720
 ## explicit; go 1.25.0
 kubedb.dev/apimachinery/apis
 kubedb.dev/apimachinery/apis/catalog
