@@ -61,7 +61,6 @@ type KubeDBClientBuilder struct {
 	url     string
 	podName string
 	ctx     context.Context
-	auth    credential
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *api.Neo4j) *KubeDBClientBuilder {
@@ -86,14 +85,6 @@ func (o *KubeDBClientBuilder) WithLog(log logr.Logger) *KubeDBClientBuilder {
 	return o
 }
 
-func (o *KubeDBClientBuilder) WithAuth(username, password string) *KubeDBClientBuilder {
-	o.auth = credential{
-		username: username,
-		password: password,
-	}
-	return o
-}
-
 func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 	// Construct URL - use default service if podName not provided
 	o.url = o.buildConnectionURL()
@@ -102,7 +93,9 @@ func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 
 	authSecret := &core.Secret{}
 
-	if !o.db.Spec.DisableSecurity && o.auth.username == "" && o.auth.password == "" {
+	var cred credential
+
+	if !o.db.Spec.DisableSecurity {
 		err := o.kc.Get(o.ctx, types.NamespacedName{
 			Namespace: o.db.Namespace,
 			Name:      o.db.GetAuthSecretName(),
@@ -115,8 +108,8 @@ func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 			klog.Error(err, "Failed to get auth-secret")
 			return nil, err
 		}
-		o.auth.username = string(authSecret.Data[core.BasicAuthUsernameKey])
-		o.auth.password = string(authSecret.Data[core.BasicAuthPasswordKey])
+		cred.username = string(authSecret.Data[core.BasicAuthUsernameKey])
+		cred.password = string(authSecret.Data[core.BasicAuthPasswordKey])
 	} else {
 		klog.Info("Security is disabled for Neo4j, no credentials will be used.")
 	}
@@ -159,7 +152,7 @@ func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 	}
 
 	// Create driver and check for errors immediately
-	driver, err := neo4j.NewDriverWithContext(o.url, neo4j.BasicAuth(o.auth.username, o.auth.password, ""), func(c *config.Config) {
+	driver, err := neo4j.NewDriverWithContext(o.url, neo4j.BasicAuth(cred.username, cred.password, ""), func(c *config.Config) {
 		c.SocketConnectTimeout = 15 * time.Second
 		c.ConnectionAcquisitionTimeout = 30 * time.Second
 		c.MaxTransactionRetryTime = 30 * time.Second
