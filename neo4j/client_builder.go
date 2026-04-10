@@ -92,7 +92,6 @@ func (o *KubeDBClientBuilder) GetNeo4jClient() (*Client, error) {
 	klog.V(3).Infof("Attempting to connect to Neo4j at: %s", o.url)
 
 	authSecret := &core.Secret{}
-
 	var cred credential
 
 	if !o.db.Spec.DisableSecurity {
@@ -313,26 +312,6 @@ func (c *Client) GrantRoleToUser(ctx context.Context, username, role string) err
 	return nil
 }
 
-func (c *Client) RenameUser(ctx context.Context, oldUsername, newUsername string) error {
-	session := c.NewSession(ctx, neo4j.SessionConfig{
-		AccessMode:   neo4j.AccessModeWrite,
-		DatabaseName: "system",
-	})
-	defer func() {
-		if err := session.Close(ctx); err != nil {
-			klog.Error(err, "failed to close neo4j session")
-		}
-	}()
-
-	query := fmt.Sprintf("RENAME USER `%s` to `%s`", oldUsername, newUsername)
-
-	_, err := session.Run(ctx, query, nil)
-	if err != nil {
-		return fmt.Errorf("failed to rename user from %s to %s: %w", oldUsername, newUsername, err)
-	}
-	return nil
-}
-
 func (c *Client) UpdateUserPassword(ctx context.Context, username, newPassword string) error {
 	session := c.NewSession(ctx, neo4j.SessionConfig{
 		AccessMode:   neo4j.AccessModeWrite,
@@ -357,7 +336,7 @@ func (c *Client) UpdateUserPassword(ctx context.Context, username, newPassword s
 	return nil
 }
 
-func (c *Client) SetConfigValue(ctx context.Context, key, value string) error {
+func (c *Client) SetConfigKeyValue(ctx context.Context, key, value string) error {
 	session := c.NewSession(ctx, neo4j.SessionConfig{
 		AccessMode:   neo4j.AccessModeWrite,
 		DatabaseName: "system",
@@ -565,7 +544,7 @@ func (c *Client) IsDryRunEmptyForDeallocation(ctx context.Context, serverName st
 	return len(records) == 0, nil
 }
 
-func (c *Client) CheckDatabaseHealth(ctx context.Context) (bool, error) {
+func (c *Client) DatabasesHealthy(ctx context.Context) (bool, error) {
 	session := c.NewSession(ctx, neo4j.SessionConfig{
 		AccessMode:   neo4j.AccessModeWrite,
 		DatabaseName: "system",
@@ -600,13 +579,13 @@ func (c *Client) CheckDatabaseHealth(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
-func (c *Client) IncrementalReallocation(ctx context.Context, batchSize int32) error {
+func (c *Client) ReallocateDatabasesBatch(ctx context.Context, batchSize int32) error {
 	// wait for cluster to stabilise after batch
-	online, err := c.CheckDatabaseHealth(ctx)
+	healthy, err := c.DatabasesHealthy(ctx)
 	if err != nil {
 		return err
 	}
-	if !online {
+	if !healthy {
 		return fmt.Errorf("waiting for databases to be healthy before triggering reallocation")
 	}
 
@@ -632,16 +611,16 @@ func (c *Client) IncrementalReallocation(ctx context.Context, batchSize int32) e
 	return nil
 }
 
-func (c *Client) IncrementalDeallocation(ctx context.Context, batchSize int32, serverName string) error {
+func (c *Client) DeallocateDatabasesBatch(ctx context.Context, batchSize int32, serverName string) error {
 	// wait for cluster to stabilise before triggering next batch
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
 	for {
-		online, err := c.CheckDatabaseHealth(waitCtx)
+		healthy, err := c.DatabasesHealthy(waitCtx)
 		if err != nil {
 			klog.Errorf("failed to check database health: %v", err)
-		} else if online {
+		} else if healthy {
 			break // healthy, proceed with next batch
 		} else {
 			klog.Info("waiting for databases to be healthy before triggering next batch...")
@@ -677,7 +656,7 @@ func (c *Client) IncrementalDeallocation(ctx context.Context, batchSize int32, s
 	return nil
 }
 
-func (c *Client) FullReallocation(ctx context.Context) error {
+func (c *Client) ReallocateDatabases(ctx context.Context) error {
 	isEmpty, err := c.IsDryRunEmpty(ctx)
 	if err != nil {
 		return fmt.Errorf("DRYRUN check failed: %w", err)
@@ -687,11 +666,11 @@ func (c *Client) FullReallocation(ctx context.Context) error {
 	}
 
 	// wait for cluster to stabilise after batch
-	online, err := c.CheckDatabaseHealth(ctx)
+	healthy, err := c.DatabasesHealthy(ctx)
 	if err != nil {
 		return err
 	}
-	if !online {
+	if !healthy {
 		return fmt.Errorf("waiting for databases to be healthy before triggering reallocation")
 	}
 
@@ -719,7 +698,7 @@ func (c *Client) FullReallocation(ctx context.Context) error {
 	return nil
 }
 
-func (c *Client) FullDeallocation(ctx context.Context, serverName string) error {
+func (c *Client) DeallocateDatabases(ctx context.Context, serverName string) error {
 	state, err := c.GetServerState(ctx, serverName)
 	if err != nil {
 		return fmt.Errorf("failed to check if server %s is deallocated: %w", serverName, err)
@@ -729,11 +708,11 @@ func (c *Client) FullDeallocation(ctx context.Context, serverName string) error 
 	}
 
 	// wait for cluster to stabilise after batch
-	online, err := c.CheckDatabaseHealth(ctx)
+	healthy, err := c.DatabasesHealthy(ctx)
 	if err != nil {
 		return err
 	}
-	if !online {
+	if !healthy {
 		return fmt.Errorf("waiting for databases to be healthy before triggering reallocation")
 	}
 
