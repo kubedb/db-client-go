@@ -42,6 +42,7 @@ type MessageSendError struct {
 
 // ClusterInfo represents the overall cluster information.
 type ClusterInfo struct {
+	Status                string                      `json:"status"`
 	PeerID                uint64                      `json:"peer_id"`
 	Peers                 map[string]PeerState        `json:"peers"`
 	ShardTransfers        []ShardTransfer             `json:"shard_transfers"`
