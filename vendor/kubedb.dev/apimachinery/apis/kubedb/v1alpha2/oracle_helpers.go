@@ -256,8 +256,7 @@ func (o *Oracle) ObserverPetSetName() string {
 }
 
 func (o *Oracle) ConfigSecretName() string {
-	uid := string(o.UID)
-	return metautil.NameWithSuffix(o.OffshootName(), uid[len(uid)-6:])
+	return metautil.NameWithSuffix(o.OffshootName(), "config")
 }
 
 func (o *Oracle) IsStandalone() bool {
