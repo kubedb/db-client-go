@@ -60,7 +60,7 @@ func (o *KubeDBClientBuilder) GetMilvusClient() (*milvusclient.Client, error) {
 
 	var grpcOpts []grpc.DialOption
 
-	if o.db.Spec.TLS != nil && o.db.Spec.TLS.External != nil && o.db.Spec.TLS.External.Mode != api.MilvusTLSModeDisabled {
+	if o.db.Spec.TLS != nil && o.db.Spec.TLS.External != nil && o.db.Spec.TLS.External.Mode != api.TLSModeDisabled {
 		secretName := o.db.GetCertSecretName(api.MilvusCertificateTypeServer)
 		var secret core.Secret
 		if err := o.kc.Get(o.ctx, types.NamespacedName{
@@ -87,7 +87,7 @@ func (o *KubeDBClientBuilder) GetMilvusClient() (*milvusclient.Client, error) {
 			MinVersion: tls.VersionTLS12,
 		}
 
-		if o.db.Spec.TLS.External.Mode == api.MilvusTLSModeMTLS {
+		if o.db.Spec.TLS.External.Mode == api.TLSModeMTLS {
 			clientSecretName := o.db.GetCertSecretName(api.MilvusCertificateTypeClient)
 			var clientSecret core.Secret
 			if err := o.kc.Get(o.ctx, types.NamespacedName{
