@@ -73,7 +73,7 @@ func (o *KubeDBClientBuilder) GetMilvusClient() (*milvusclient.Client, error) {
 		}
 		caData, ok := secret.Data["ca.crt"]
 		if !ok {
-			return nil, fmt.Errorf("ca.crt not found in secret")
+			return nil, fmt.Errorf("expected key %q not found in secret %q", "ca.crt", secretName)
 		}
 		caPool := x509.NewCertPool()
 		if !caPool.AppendCertsFromPEM(caData) {
@@ -134,7 +134,7 @@ func (o *KubeDBClientBuilder) GetMilvusClient() (*milvusclient.Client, error) {
 		config.Password = string(pass)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	ctx, cancel := context.WithTimeout(o.ctx, 15*time.Second)
 	defer cancel()
 
 	conn, err := grpc.NewClient(config.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
