@@ -24,8 +24,10 @@ import (
 	"github.com/milvus-io/milvus/client/v2/milvusclient"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog/v2"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -61,7 +63,7 @@ func (o *KubeDBClientBuilder) GetMilvusClient() (*milvusclient.Client, error) {
 	var grpcOpts []grpc.DialOption
 
 	if o.db.Spec.TLS != nil && o.db.Spec.TLS.External != nil && o.db.Spec.TLS.External.Mode != api.TLSModeDisabled {
-		secretName := o.db.GetCertSecretName(api.MilvusCertificateTypeServer)
+		secretName := o.db.GetCertSecretName(api.MilvusCertificateTypeClient)
 		var secret core.Secret
 		if err := o.kc.Get(o.ctx, types.NamespacedName{
 			Namespace: o.db.Namespace,
@@ -88,22 +90,13 @@ func (o *KubeDBClientBuilder) GetMilvusClient() (*milvusclient.Client, error) {
 		}
 
 		if o.db.Spec.TLS.External.Mode == api.TLSModeMTLS {
-			clientSecretName := o.db.GetCertSecretName(api.MilvusCertificateTypeClient)
-			var clientSecret core.Secret
-			if err := o.kc.Get(o.ctx, types.NamespacedName{
-				Namespace: o.db.Namespace,
-				Name:      clientSecretName,
-			}, &clientSecret); err != nil {
-				return nil, fmt.Errorf("failed to get client TLS secret %q: %w", clientSecretName, err)
-			}
-
-			clientCert, ok := clientSecret.Data["tls.crt"]
+			clientCert, ok := secret.Data["tls.crt"]
 			if !ok {
-				return nil, fmt.Errorf("tls.crt not found in secret %q", clientSecretName)
+				return nil, fmt.Errorf("tls.crt not found in secret %q", secretName)
 			}
-			clientKey, ok := clientSecret.Data["tls.key"]
+			clientKey, ok := secret.Data["tls.key"]
 			if !ok {
-				return nil, fmt.Errorf("tls.key not found in secret %q", clientSecretName)
+				return nil, fmt.Errorf("tls.key not found in secret %q", secretName)
 			}
 
 			cert, err := tls.X509KeyPair(clientCert, clientKey)
@@ -143,6 +136,14 @@ func (o *KubeDBClientBuilder) GetMilvusClient() (*milvusclient.Client, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
+
+	conn, err := grpc.NewClient(config.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		klog.Warningf("gRPC dial failed: %v", err)
+		return nil, err
+	}
+	defer conn.Close() // nolint:errcheck
+	conn.Close()       // nolint:errcheck
 
 	c, err := milvusclient.New(ctx, config)
 	if err != nil {
