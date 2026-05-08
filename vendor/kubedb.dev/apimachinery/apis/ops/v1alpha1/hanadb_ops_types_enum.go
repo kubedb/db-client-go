@@ -11,6 +11,10 @@ import (
 )
 
 const (
+	// HanaDBOpsRequestTypeRestart is a HanaDBOpsRequestType of type Restart.
+	HanaDBOpsRequestTypeRestart HanaDBOpsRequestType = "Restart"
+	// HanaDBOpsRequestTypeReconfigure is a HanaDBOpsRequestType of type Reconfigure.
+	HanaDBOpsRequestTypeReconfigure HanaDBOpsRequestType = "Reconfigure"
 	// HanaDBOpsRequestTypeReconfigureTLS is a HanaDBOpsRequestType of type ReconfigureTLS.
 	HanaDBOpsRequestTypeReconfigureTLS HanaDBOpsRequestType = "ReconfigureTLS"
 )
@@ -18,6 +22,8 @@ const (
 var ErrInvalidHanaDBOpsRequestType = fmt.Errorf("not a valid HanaDBOpsRequestType, try [%s]", strings.Join(_HanaDBOpsRequestTypeNames, ", "))
 
 var _HanaDBOpsRequestTypeNames = []string{
+	string(HanaDBOpsRequestTypeRestart),
+	string(HanaDBOpsRequestTypeReconfigure),
 	string(HanaDBOpsRequestTypeReconfigureTLS),
 }
 
@@ -31,6 +37,8 @@ func HanaDBOpsRequestTypeNames() []string {
 // HanaDBOpsRequestTypeValues returns a list of the values for HanaDBOpsRequestType
 func HanaDBOpsRequestTypeValues() []HanaDBOpsRequestType {
 	return []HanaDBOpsRequestType{
+		HanaDBOpsRequestTypeRestart,
+		HanaDBOpsRequestTypeReconfigure,
 		HanaDBOpsRequestTypeReconfigureTLS,
 	}
 }
@@ -48,6 +56,8 @@ func (x HanaDBOpsRequestType) IsValid() bool {
 }
 
 var _HanaDBOpsRequestTypeValue = map[string]HanaDBOpsRequestType{
+	"Restart":        HanaDBOpsRequestTypeRestart,
+	"Reconfigure":    HanaDBOpsRequestTypeReconfigure,
 	"ReconfigureTLS": HanaDBOpsRequestTypeReconfigureTLS,
 }
 

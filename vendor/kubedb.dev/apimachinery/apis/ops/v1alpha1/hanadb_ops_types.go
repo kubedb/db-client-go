@@ -63,16 +63,20 @@ type HanaDBTLSSpec struct {
 type HanaDBOpsRequestSpec struct {
 	DatabaseRef core.LocalObjectReference `json:"databaseRef"`
 	Type        HanaDBOpsRequestType      `json:"type"`
-	TLS         *HanaDBTLSSpec            `json:"tls,omitempty"`
-	Timeout     *metav1.Duration          `json:"timeout,omitempty"`
+	// Specifies information necessary for custom configuration of HanaDB
+	Configuration *ReconfigurationSpec `json:"configuration,omitempty"`
+	TLS           *HanaDBTLSSpec       `json:"tls,omitempty"`
+	// Specifies information necessary for restarting database
+	Restart *RestartSpec     `json:"restart,omitempty"`
+	Timeout *metav1.Duration `json:"timeout,omitempty"`
 	// +kubebuilder:default="IfReady"
 	Apply ApplyOption `json:"apply,omitempty"`
 	// +kubebuilder:default=1
 	MaxRetries int32 `json:"maxRetries,omitempty"`
 }
 
-// +kubebuilder:validation:Enum=ReconfigureTLS
-// ENUM(ReconfigureTLS)
+// +kubebuilder:validation:Enum=Restart;Reconfigure;ReconfigureTLS
+// ENUM(Restart, Reconfigure, ReconfigureTLS)
 type HanaDBOpsRequestType string
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

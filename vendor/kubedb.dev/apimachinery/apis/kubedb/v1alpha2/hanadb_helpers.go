@@ -645,7 +645,7 @@ func (h *HanaDB) SetTLSDefaults() {
 
 	h.Spec.TLS.Certificates = kmapi.SetMissingSpecForCertificate(h.Spec.TLS.Certificates, kmapi.CertificateSpec{
 		Alias:      string(HanaDBServerCert),
-		SecretName: h.GetCertSecretName(HanaDBServerCert),
+		SecretName: h.CertificateName(HanaDBServerCert),
 		Subject: &kmapi.X509Subject{
 			Organizations:       defaultServerOrg,
 			OrganizationalUnits: defaultServerOrgUnit,
@@ -667,10 +667,31 @@ func (h *HanaDB) SetTLSDefaults() {
 
 	h.Spec.TLS.Certificates = kmapi.SetMissingSpecForCertificate(h.Spec.TLS.Certificates, kmapi.CertificateSpec{
 		Alias:      string(HanaDBClientCert),
-		SecretName: h.GetCertSecretName(HanaDBClientCert),
+		SecretName: h.CertificateName(HanaDBClientCert),
 		Subject: &kmapi.X509Subject{
 			Organizations:       defaultClientOrg,
 			OrganizationalUnits: defaultClientOrgUnit,
+		},
+	})
+
+	defaultExporterOrg := []string{kubedb.KubeDBOrganization}
+	defaultExporterOrgUnit := []string{string(HanaDBMetricsExporterCert)}
+	_, cert = kmapi.GetCertificate(h.Spec.TLS.Certificates, string(HanaDBMetricsExporterCert))
+	if cert != nil && cert.Subject != nil {
+		if cert.Subject.Organizations != nil {
+			defaultExporterOrg = cert.Subject.Organizations
+		}
+		if cert.Subject.OrganizationalUnits != nil {
+			defaultExporterOrgUnit = cert.Subject.OrganizationalUnits
+		}
+	}
+
+	h.Spec.TLS.Certificates = kmapi.SetMissingSpecForCertificate(h.Spec.TLS.Certificates, kmapi.CertificateSpec{
+		Alias:      string(HanaDBMetricsExporterCert),
+		SecretName: h.CertificateName(HanaDBMetricsExporterCert),
+		Subject: &kmapi.X509Subject{
+			Organizations:       defaultExporterOrg,
+			OrganizationalUnits: defaultExporterOrgUnit,
 		},
 	})
 }

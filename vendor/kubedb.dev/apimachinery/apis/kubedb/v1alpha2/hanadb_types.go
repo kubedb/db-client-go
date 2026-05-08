@@ -58,12 +58,13 @@ const (
 	HanaDBModeSystemReplication HanaDBMode = "SystemReplication"
 )
 
-// +kubebuilder:validation:Enum=server;client
+// +kubebuilder:validation:Enum=server;client;metrics-exporter
 type HanaDBCertificateAlias string
 
 const (
-	HanaDBServerCert HanaDBCertificateAlias = "server"
-	HanaDBClientCert HanaDBCertificateAlias = "client"
+	HanaDBServerCert          HanaDBCertificateAlias = "server"
+	HanaDBClientCert          HanaDBCertificateAlias = "client"
+	HanaDBMetricsExporterCert HanaDBCertificateAlias = "metrics-exporter"
 )
 
 type HanaDBTLSConfig struct {
@@ -213,4 +214,22 @@ type HanaDBList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []HanaDB `json:"items"`
+}
+
+var _ Accessor = &HanaDB{}
+
+func (h *HanaDB) GetObjectMeta() metav1.ObjectMeta {
+	return h.ObjectMeta
+}
+
+func (h *HanaDB) GetConditions() []kmapi.Condition {
+	return h.Status.Conditions
+}
+
+func (h *HanaDB) SetCondition(cond kmapi.Condition) {
+	h.Status.Conditions = setCondition(h.Status.Conditions, cond)
+}
+
+func (h *HanaDB) RemoveCondition(typ string) {
+	h.Status.Conditions = removeCondition(h.Status.Conditions, typ)
 }

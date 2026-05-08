@@ -143,15 +143,7 @@ func (o *KubeDBClientBuilder) getTLSConfig(host string) (*tls.Config, error) {
 	cfg := &tls.Config{
 		MinVersion: tls.VersionTLS12,
 	}
-	if o.db.Spec.TLS.ServerName != "" {
-		cfg.ServerName = o.db.Spec.TLS.ServerName
-	} else if net.ParseIP(host) != nil {
-		cfg.ServerName = host
-	} else if o.podName != "" {
-		cfg.ServerName = fmt.Sprintf("%s.%s.%s.svc.cluster.local", o.podName, o.db.GoverningServiceName(), o.db.Namespace)
-	} else {
-		cfg.ServerName = host
-	}
+	cfg.ServerName = o.tlsServerName(host)
 	cfg.InsecureSkipVerify = o.db.Spec.TLS.InsecureSkipVerify //nolint:gosec
 
 	clientSecretName := o.db.GetCertSecretName(api.HanaDBClientCert)
@@ -191,6 +183,19 @@ func (o *KubeDBClientBuilder) getTLSConfig(host string) (*tls.Config, error) {
 	}
 
 	return cfg, nil
+}
+
+func (o *KubeDBClientBuilder) tlsServerName(host string) string {
+	if o.db.Spec.TLS.ServerName != "" {
+		return o.db.Spec.TLS.ServerName
+	}
+	if o.podName != "" {
+		return fmt.Sprintf("%s.%s.%s.svc.cluster.local", o.podName, o.db.GoverningServiceName(), o.db.Namespace)
+	}
+	if net.ParseIP(host) != nil {
+		return ""
+	}
+	return host
 }
 
 func (o *KubeDBClientBuilder) getHanaDBAuthCredentials() (string, string, error) {

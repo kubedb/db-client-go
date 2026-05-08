@@ -246,11 +246,13 @@ const (
 	MySQLDatabasePortName                  = "db"
 	MySQLRouterReadWritePortName           = "rw"
 	MySQLRouterReadOnlyPortName            = "ro"
+	MySQLRouterReadWriteSplitPortName      = "rwsplit"
 	MySQLPrimaryServicePortName            = "primary"
 	MySQLStandbyServicePortName            = "standby"
 	MySQLDatabasePort                      = 3306
 	MySQLRouterReadWritePort               = 6446
 	MySQLRouterReadOnlyPort                = 6447
+	MySQLRouterReadWriteSplitPort          = 6450
 
 	MySQLCoordinatorClientPort = 2379
 	MySQLCoordinatorPort       = 2380
@@ -271,6 +273,7 @@ const (
 	MySQLTLSConfigTrue       = "true"
 	MySQLTLSConfigFalse      = "false"
 	MySQLTLSConfigPreferred  = "preferred"
+	MySQLRouterSuffix        = "router"
 
 	MySQLContainerName            = "mysql"
 	MySQLRouterContainerName      = "mysql-router"
@@ -2348,8 +2351,8 @@ const (
 	// Mount paths
 	HanaDBDataDir         = "/hana/mounts"
 	HanaDBSecretMountPath = "/etc/hana-secrets"
-	HanaDBTLSMountPath    = "/hana/mounts/cert"
 	HanaDBTLSInputPath    = "/etc/hanadb-tls/server"
+	HanaDBExporterTLSPath = "/etc/hanadb_exporter/certs"
 	HanaDBConfigFileName  = "global.ini"
 	HanaDBConfigDir       = "/hana/mounts/system/config"
 	HanaDBConfigMountPath = "/etc/hanadb-config"
@@ -2357,12 +2360,9 @@ const (
 	// Volume names
 	HanaDBDataVolume           = "data"
 	HanaDBVolumePasswordSecret = "password-secret"
-	HanaDBVolumeTLS            = "tls"
 	HanaDBVolumeTLSInput       = "tls-input"
+	HanaDBVolumeExporterTLS    = "exporter-tls-volume"
 	HanaDBConfigVolumeName     = "hanadb-config"
-
-	HanaDBTLSSystemPKIFile = "sap_system_pki_instance.pse"
-	HanaDBTLSSystemPKIPin  = "system_pki_pin"
 
 	// User and Group IDs
 	HanaDBUserID  = 12000 // hxeadm UID
@@ -2429,6 +2429,7 @@ const (
 	KubeSliceNSMContainerName                  = "cmd-nsc-grpc"
 
 	// Archiver
+	OwnerDatabasesAnnotation                  = "kubedb.com/owner-databases"
 	DistributedArchiverSnapshotInfoAnnotation = "distributedsnapshotinfo"
 	DistributedArchiverCMKeySnapshots         = "snapshots"
 	DistributedArchiverCMKeyRestoreSession    = "restoresession"
