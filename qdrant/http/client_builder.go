@@ -97,11 +97,46 @@ func (o *HTTPClientBuilder) GetClient() (*Client, error) {
 			return nil, fmt.Errorf("failed to append CA cert from secret %s", secretName)
 		}
 
-		config.UseTLS = true
-		config.TLSConfig = &tls.Config{
+		tlsConfig := &tls.Config{
 			RootCAs:    caPool,
 			ServerName: o.db.ServiceDNS(),
 		}
+
+		if o.db.Spec.TLS.Client != nil && *o.db.Spec.TLS.Client {
+			clientCertSecretName := o.db.CertificateName(api.QdrantClientCert)
+
+			var clientCertSecret corev1.Secret
+			if err := o.kc.Get(
+				o.ctx,
+				types.NamespacedName{
+					Name:      clientCertSecretName,
+					Namespace: o.db.Namespace,
+				},
+				&clientCertSecret,
+			); err != nil {
+				return nil, fmt.Errorf("failed to get Qdrant client cert secret %s: %w", clientCertSecretName, err)
+			}
+
+			tlsCert, ok := clientCertSecret.Data["tls.crt"]
+			if !ok {
+				return nil, fmt.Errorf("tls.crt not found in secret %s", clientCertSecretName)
+			}
+
+			tlsKey, ok := clientCertSecret.Data["tls.key"]
+			if !ok {
+				return nil, fmt.Errorf("tls.key not found in secret %s", clientCertSecretName)
+			}
+
+			cert, err := tls.X509KeyPair(tlsCert, tlsKey)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse client certificate: %w", err)
+			}
+
+			tlsConfig.Certificates = []tls.Certificate{cert}
+		}
+
+		config.UseTLS = true
+		config.TLSConfig = tlsConfig
 	}
 
 	client, err := NewClient(config)
