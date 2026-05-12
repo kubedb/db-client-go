@@ -25,12 +25,12 @@ import (
 	"k8s.io/klog/v2"
 )
 
-type serverInfo struct {
-	name    string
-	address string
-	health  string
-	state   string
-	id      string
+type ServerInfo struct {
+	Name    string
+	Address string
+	Health  string
+	State   string
+	ID      string
 }
 
 func (c *Client) RenameServer(ctx context.Context) error {
@@ -50,18 +50,18 @@ func (c *Client) RenameServer(ctx context.Context) error {
 	}()
 
 	for _, server := range servers {
-		podName := strings.Split(server.address, ".")[0]
-		if podName != server.name && server.address != "" {
-			_, err := session.Run(ctx, "RENAME SERVER $current TO $desired", map[string]any{"current": server.name, "desired": podName})
+		podName := strings.Split(server.Address, ".")[0]
+		if podName != server.Name && server.Address != "" {
+			_, err := session.Run(ctx, "RENAME SERVER $current TO $desired", map[string]any{"current": server.Name, "desired": podName})
 			if err != nil {
-				return fmt.Errorf("failed to rename server from %s to %s: %w", server.name, podName, err)
+				return fmt.Errorf("failed to rename server from %s to %s: %w", server.Name, podName, err)
 			}
 		}
 	}
 	return nil
 }
 
-func (c *Client) GetServersInfo(ctx context.Context) ([]serverInfo, error) {
+func (c *Client) GetServersInfo(ctx context.Context) ([]ServerInfo, error) {
 	session := c.NewSession(ctx, neo4j.SessionConfig{
 		AccessMode:   neo4j.AccessModeRead,
 		DatabaseName: "system",
@@ -84,7 +84,7 @@ func (c *Client) GetServersInfo(ctx context.Context) ([]serverInfo, error) {
 		return nil, fmt.Errorf("failed to collect query results to get server info: %w", err)
 	}
 
-	var servers []serverInfo
+	var servers []ServerInfo
 	for _, record := range records {
 		name, _ := record.Get("name")
 		addressV, _ := record.Get("address")
@@ -99,12 +99,12 @@ func (c *Client) GetServersInfo(ctx context.Context) ([]serverInfo, error) {
 			}
 		}
 
-		servers = append(servers, serverInfo{
-			name:    name.(string),
-			address: address,
-			health:  health.(string),
-			state:   state.(string),
-			id:      id.(string),
+		servers = append(servers, ServerInfo{
+			Name:    name.(string),
+			Address: address,
+			Health:  health.(string),
+			State:   state.(string),
+			ID:      id.(string),
 		})
 	}
 
@@ -174,7 +174,7 @@ func (c *Client) NumberOfHealthyServers(ctx context.Context) (int32, error) {
 	}
 	var count int32 = 0
 	for _, server := range servers {
-		if server.health == "Available" {
+		if server.Health == "Available" {
 			count++
 		}
 	}
