@@ -325,13 +325,9 @@ func (c *Client) DropDatabase(ctx context.Context, dbName string) error {
 		}
 	}()
 
-	query := fmt.Sprintf("DROP DATABASE $db IF EXISTS")
+	query := fmt.Sprintf("DROP DATABASE `%s` IF EXISTS", dbName)
 
-	params := map[string]any{
-		"db": dbName,
-	}
-
-	result, err := session.Run(ctx, query, params)
+	result, err := session.Run(ctx, query, nil)
 	if err != nil {
 		return err
 	}
@@ -353,11 +349,8 @@ func (c *Client) StopDatabase(ctx context.Context, dbName string) error {
 		}
 	}()
 
-	query := fmt.Sprintf("STOP DATABASE $db")
-	params := map[string]any{
-		"db": dbName,
-	}
-	_, err := session.Run(ctx, query, params)
+	query := fmt.Sprintf("STOP DATABASE `%s`", dbName)
+	_, err := session.Run(ctx, query, nil)
 	if err != nil {
 		return err
 	}
@@ -375,9 +368,7 @@ func (c Client) GetdatabaseState(ctx context.Context, dbName string) (string, er
 		}
 	}()
 
-	query := fmt.Sprintf("SHOW DATABASE $db", map[string]any{
-		"db": dbName,
-	})
+	query := fmt.Sprintf("SHOW DATABASE `%s`", dbName)
 	result, err := session.Run(ctx, query, nil)
 	if err != nil {
 		return "", err
@@ -390,28 +381,19 @@ func (c Client) GetdatabaseState(ctx context.Context, dbName string) (string, er
 	if len(records) == 0 {
 		return "", fmt.Errorf("no database found with name %s", dbName)
 	}
-	state, _ := records[0].Get("currentStatus")
-	return state.(string), nil
+
+	stateValue, ok := records[0].Get("currentStatus")
+	if !ok || stateValue == nil {
+		return "", fmt.Errorf("database %s does not have currentStatus in SHOW DATABASE result", dbName)
+	}
+	state, ok := stateValue.(string)
+	if !ok {
+		return "", fmt.Errorf("database %s currentStatus has unexpected type %T", dbName, stateValue)
+	}
+	return state, nil
 }
 
 func (c *Client) WaitForDatabaseState(ctx context.Context, dbName string, state string) error {
-	session := c.NewSession(ctx, neo4j.SessionConfig{
-		AccessMode:   neo4j.AccessModeWrite,
-		DatabaseName: "system",
-	})
-	defer func() {
-		if err := session.Close(ctx); err != nil {
-			klog.Error(err, "failed to close neo4j session")
-		}
-	}()
-
-	_, err := session.Run(ctx, fmt.Sprintf("SHOW DATABASE $db", map[string]any{
-		"db": dbName,
-	}), nil)
-	if err != nil {
-		return err
-	}
-
 	for {
 		currentState, err := c.GetdatabaseState(ctx, dbName)
 		if err != nil {
