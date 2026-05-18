@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 
+	"kubedb.dev/apimachinery/apis/kubedb"
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 
 	vsecretapi "go.virtual-secrets.dev/apimachinery/apis/virtual/v1alpha1"
@@ -94,6 +95,9 @@ func (o *KubeDBClientBuilder) GetPostgresXormClient() (*XormClient, error) {
 }
 
 func (o *KubeDBClientBuilder) getURL() string {
+	if o.db.Spec.Distributed {
+		return fmt.Sprintf("%s.%s.%s.svc.%s", o.podName, o.db.GoverningServiceName(), o.db.Namespace, kubedb.KubeSliceDomainSuffix)
+	}
 	return fmt.Sprintf("%s.%s.%s.svc", o.podName, o.db.GoverningServiceName(), o.db.Namespace)
 }
 
