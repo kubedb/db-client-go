@@ -84,24 +84,59 @@ func (o *HTTPClientBuilder) GetClient() (*Client, error) {
 			},
 			&secret,
 		); err != nil {
-			return nil, fmt.Errorf("failed to get Qdrant CA secret %s: %w", secretName, err)
+			return nil, fmt.Errorf("failed to get Qdrant CA secret %s/%s: %w", o.db.Namespace, secretName, err)
 		}
 
-		caCert, ok := secret.Data["ca.crt"]
+		caCert, ok := secret.Data[kubedb.QdrantTLSCA]
 		if !ok {
-			return nil, fmt.Errorf("ca.crt not found in secret %s", secretName)
+			return nil, fmt.Errorf("CA certificate data %q not found in secret %s/%s", kubedb.QdrantTLSCA, o.db.Namespace, secretName)
 		}
 
 		caPool := x509.NewCertPool()
 		if !caPool.AppendCertsFromPEM(caCert) {
-			return nil, fmt.Errorf("failed to append CA cert from secret %s", secretName)
+			return nil, fmt.Errorf("failed to append CA certificate from secret %s/%s", o.db.Namespace, secretName)
 		}
 
-		config.UseTLS = true
-		config.TLSConfig = &tls.Config{
+		tlsConfig := &tls.Config{
 			RootCAs:    caPool,
 			ServerName: o.db.ServiceDNS(),
 		}
+
+		if o.db.Spec.TLS.Client != nil && *o.db.Spec.TLS.Client {
+			clientCertSecretName := o.db.CertificateName(api.QdrantClientCert)
+
+			var clientCertSecret corev1.Secret
+			if err := o.kc.Get(
+				o.ctx,
+				types.NamespacedName{
+					Name:      clientCertSecretName,
+					Namespace: o.db.Namespace,
+				},
+				&clientCertSecret,
+			); err != nil {
+				return nil, fmt.Errorf("failed to get Qdrant client cert secret %s/%s: %w", o.db.Namespace, clientCertSecretName, err)
+			}
+
+			tlsCert, ok := clientCertSecret.Data[kubedb.QdrantTLSCert]
+			if !ok {
+				return nil, fmt.Errorf("client certificate data %q not found in secret %s/%s", kubedb.QdrantTLSCert, o.db.Namespace, clientCertSecretName)
+			}
+
+			tlsKey, ok := clientCertSecret.Data[kubedb.QdrantTLSKey]
+			if !ok {
+				return nil, fmt.Errorf("client certificate key data %q not found in secret %s/%s", kubedb.QdrantTLSKey, o.db.Namespace, clientCertSecretName)
+			}
+
+			cert, err := tls.X509KeyPair(tlsCert, tlsKey)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse client certificate from secret %s/%s: %w", o.db.Namespace, clientCertSecretName, err)
+			}
+
+			tlsConfig.Certificates = []tls.Certificate{cert}
+		}
+
+		config.UseTLS = true
+		config.TLSConfig = tlsConfig
 	}
 
 	client, err := NewClient(config)
