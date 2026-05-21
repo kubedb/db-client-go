@@ -136,7 +136,7 @@ func (o *KubeDBClientBuilder) getConnector() (*hdbdriver.Connector, error) {
 }
 
 func (o *KubeDBClientBuilder) getTLSConfig(host string) (*tls.Config, error) {
-	if o.db.Spec.TLS == nil || o.db.Spec.TLS.ClientTLS == nil || !*o.db.Spec.TLS.ClientTLS {
+	if o.db.Spec.TLS == nil {
 		return nil, nil
 	}
 
@@ -144,7 +144,6 @@ func (o *KubeDBClientBuilder) getTLSConfig(host string) (*tls.Config, error) {
 		MinVersion: tls.VersionTLS12,
 	}
 	cfg.ServerName = o.tlsServerName(host)
-	cfg.InsecureSkipVerify = o.db.Spec.TLS.InsecureSkipVerify //nolint:gosec
 
 	clientSecretName := o.db.GetCertSecretName(api.HanaDBClientCert)
 	if clientSecretName == "" {
@@ -165,8 +164,8 @@ func (o *KubeDBClientBuilder) getTLSConfig(host string) (*tls.Config, error) {
 			return nil, fmt.Errorf("failed to parse %q from HanaDB TLS secret %s/%s", "ca.crt", o.db.Namespace, clientSecretName)
 		}
 		cfg.RootCAs = rootCAs
-	} else if !cfg.InsecureSkipVerify {
-		return nil, fmt.Errorf("HanaDB TLS secret %s/%s must contain %q unless insecureSkipVerify is enabled", o.db.Namespace, clientSecretName, "ca.crt")
+	} else {
+		return nil, fmt.Errorf("HanaDB TLS secret %s/%s must contain %q", o.db.Namespace, clientSecretName, "ca.crt")
 	}
 
 	certPEM, certOK := secret.Data[core.TLSCertKey]
@@ -186,9 +185,6 @@ func (o *KubeDBClientBuilder) getTLSConfig(host string) (*tls.Config, error) {
 }
 
 func (o *KubeDBClientBuilder) tlsServerName(host string) string {
-	if o.db.Spec.TLS.ServerName != "" {
-		return o.db.Spec.TLS.ServerName
-	}
 	if o.podName != "" {
 		return fmt.Sprintf("%s.%s.%s.svc.cluster.local", o.podName, o.db.GoverningServiceName(), o.db.Namespace)
 	}
