@@ -18,12 +18,15 @@ package hanadb
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"net/url"
+	"net"
+	"strconv"
 
-	_ "github.com/SAP/go-hdb/driver"
+	hdbdriver "github.com/SAP/go-hdb/driver"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 	"kubedb.dev/apimachinery/apis/kubedb"
@@ -71,14 +74,11 @@ func (o *KubeDBClientBuilder) GetHanaDBClient() (*SqlClient, error) {
 	if o.ctx == nil {
 		o.ctx = context.Background()
 	}
-	connectionString, err := o.getConnectionString()
+	connector, err := o.getConnector()
 	if err != nil {
 		return nil, err
 	}
-	db, err := sql.Open("hdb", connectionString)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to hanadb: %v", err)
-	}
+	db := sql.OpenDB(connector)
 
 	if err := db.PingContext(o.ctx); err != nil {
 		if cerr := db.Close(); cerr != nil {
@@ -92,14 +92,14 @@ func (o *KubeDBClientBuilder) GetHanaDBClient() (*SqlClient, error) {
 	}, nil
 }
 
-func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
+func (o *KubeDBClientBuilder) getConnector() (*hdbdriver.Connector, error) {
 	var user, pass string
 	var err error
 
 	// Authentication credentials from secret
 	user, pass, err = o.getHanaDBAuthCredentials()
 	if err != nil {
-		return "", fmt.Errorf("unable to get hanaDB auth credentials: %s/%s: %v", o.db.Namespace, o.db.Name, err)
+		return nil, fmt.Errorf("unable to get hanaDB auth credentials: %s/%s: %v", o.db.Namespace, o.db.Name, err)
 	}
 
 	var host string
@@ -119,18 +119,79 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	// Port is always 39017 for both SYSTEMDB and tenant databases
 	port := kubedb.HanaDBSystemDBSQLPort
 
-	// Build connection string with database parameter if specified
-	dbParam := ""
+	connector := hdbdriver.NewBasicAuthConnector(net.JoinHostPort(host, strconv.Itoa(port)), user, pass)
 	if o.databaseName != "" {
-		dbParam = fmt.Sprintf("?databaseName=%s", o.databaseName)
+		connector = connector.WithDatabase(o.databaseName)
 	}
 
-	// URL-encode username and password to handle special characters like #, @, etc.
-	encodedUser := url.QueryEscape(user)
-	encodedPass := url.QueryEscape(pass)
+	tlsConfig, err := o.getTLSConfig(host)
+	if err != nil {
+		return nil, err
+	}
+	if tlsConfig != nil {
+		connector.SetTLSConfig(tlsConfig)
+	}
 
-	connectionString := fmt.Sprintf("hdb://%s:%s@%s:%d%s", encodedUser, encodedPass, host, port, dbParam)
-	return connectionString, nil
+	return connector, nil
+}
+
+func (o *KubeDBClientBuilder) getTLSConfig(host string) (*tls.Config, error) {
+	if o.db.Spec.TLS == nil {
+		return nil, nil
+	}
+
+	cfg := &tls.Config{
+		MinVersion: tls.VersionTLS12,
+	}
+	cfg.ServerName = o.tlsServerName(host)
+
+	clientSecretName := o.db.GetCertSecretName(api.HanaDBClientCert)
+	if clientSecretName == "" {
+		return nil, fmt.Errorf("HanaDB client TLS is enabled but %q certificate alias is not configured", api.HanaDBClientCert)
+	}
+
+	var secret core.Secret
+	if err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: clientSecretName}, &secret); err != nil {
+		return nil, fmt.Errorf("failed to read HanaDB TLS secret %s/%s: %v", o.db.Namespace, clientSecretName, err)
+	}
+
+	if caPEM, ok := secret.Data["ca.crt"]; ok && len(caPEM) > 0 {
+		rootCAs, err := x509.SystemCertPool()
+		if err != nil || rootCAs == nil {
+			rootCAs = x509.NewCertPool()
+		}
+		if !rootCAs.AppendCertsFromPEM(caPEM) {
+			return nil, fmt.Errorf("failed to parse %q from HanaDB TLS secret %s/%s", "ca.crt", o.db.Namespace, clientSecretName)
+		}
+		cfg.RootCAs = rootCAs
+	} else {
+		return nil, fmt.Errorf("HanaDB TLS secret %s/%s must contain %q", o.db.Namespace, clientSecretName, "ca.crt")
+	}
+
+	certPEM, certOK := secret.Data[core.TLSCertKey]
+	keyPEM, keyOK := secret.Data[core.TLSPrivateKeyKey]
+	switch {
+	case certOK && keyOK:
+		cert, err := tls.X509KeyPair(certPEM, keyPEM)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load client certificate from HanaDB TLS secret %s/%s: %v", o.db.Namespace, clientSecretName, err)
+		}
+		cfg.Certificates = []tls.Certificate{cert}
+	case certOK != keyOK:
+		return nil, fmt.Errorf("HanaDB TLS secret %s/%s must contain both %q and %q when configuring client certificates", o.db.Namespace, clientSecretName, core.TLSCertKey, core.TLSPrivateKeyKey)
+	}
+
+	return cfg, nil
+}
+
+func (o *KubeDBClientBuilder) tlsServerName(host string) string {
+	if o.podName != "" {
+		return fmt.Sprintf("%s.%s.%s.svc.cluster.local", o.podName, o.db.GoverningServiceName(), o.db.Namespace)
+	}
+	if net.ParseIP(host) != nil {
+		return ""
+	}
+	return host
 }
 
 func (o *KubeDBClientBuilder) getHanaDBAuthCredentials() (string, string, error) {

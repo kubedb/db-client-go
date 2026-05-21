@@ -660,7 +660,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.HanaDBSpec":                                    schema_apimachinery_apis_kubedb_v1alpha2_HanaDBSpec(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.HanaDBStatus":                                  schema_apimachinery_apis_kubedb_v1alpha2_HanaDBStatus(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.HanaDBSystemReplicationSpec":                   schema_apimachinery_apis_kubedb_v1alpha2_HanaDBSystemReplicationSpec(ref),
-		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.HanaDBTLSConfig":                               schema_apimachinery_apis_kubedb_v1alpha2_HanaDBTLSConfig(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.HanaDBTopology":                                schema_apimachinery_apis_kubedb_v1alpha2_HanaDBTopology(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.Hazelcast":                                     schema_apimachinery_apis_kubedb_v1alpha2_Hazelcast(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.HazelcastApp":                                  schema_apimachinery_apis_kubedb_v1alpha2_HazelcastApp(ref),
@@ -807,6 +806,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.RedisSpec":                                     schema_apimachinery_apis_kubedb_v1alpha2_RedisSpec(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.RedisStatus":                                   schema_apimachinery_apis_kubedb_v1alpha2_RedisStatus(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.RemoteReplicaSpec":                             schema_apimachinery_apis_kubedb_v1alpha2_RemoteReplicaSpec(ref),
+		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.ReplicationConfig":                             schema_apimachinery_apis_kubedb_v1alpha2_ReplicationConfig(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.ScriptSourceSpec":                              schema_apimachinery_apis_kubedb_v1alpha2_ScriptSourceSpec(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SecretReference":                               schema_apimachinery_apis_kubedb_v1alpha2_SecretReference(ref),
 		"kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SemiSyncSpec":                                  schema_apimachinery_apis_kubedb_v1alpha2_SemiSyncSpec(ref),
@@ -37783,7 +37783,7 @@ func schema_apimachinery_apis_kubedb_v1alpha2_HanaDBSpec(ref common.ReferenceCal
 					"tls": {
 						SchemaProps: spec.SchemaProps{
 							Description: "TLS configures certificates issued from spec.tls.issuerRef for SAP HANA server-side TLS, KubeDB client connections, and metrics exporter TLS. When TLS is specified, issuerRef must be set.",
-							Ref:         ref("kubedb.dev/apimachinery/apis/kubedb/v1alpha2.HanaDBTLSConfig"),
+							Ref:         ref("kmodules.xyz/client-go/api/v1.TLSConfig"),
 						},
 					},
 					"monitor": {
@@ -37837,7 +37837,7 @@ func schema_apimachinery_apis_kubedb_v1alpha2_HanaDBSpec(ref common.ReferenceCal
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.PersistentVolumeClaimSpec", "kmodules.xyz/client-go/api/v1.HealthCheckSpec", "kmodules.xyz/monitoring-agent-api/api/v1.AgentSpec", "kmodules.xyz/offshoot-api/api/v2.PodTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.ArbiterSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.ConfigurationSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.HanaDBTLSConfig", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.HanaDBTopology", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.NamedServiceTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SecretReference"},
+			"k8s.io/api/core/v1.PersistentVolumeClaimSpec", "kmodules.xyz/client-go/api/v1.HealthCheckSpec", "kmodules.xyz/client-go/api/v1.TLSConfig", "kmodules.xyz/monitoring-agent-api/api/v1.AgentSpec", "kmodules.xyz/offshoot-api/api/v2.PodTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.ArbiterSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.ConfigurationSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.HanaDBTopology", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.NamedServiceTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SecretReference"},
 	}
 }
 
@@ -37908,61 +37908,6 @@ func schema_apimachinery_apis_kubedb_v1alpha2_HanaDBSystemReplicationSpec(ref co
 				},
 			},
 		},
-	}
-}
-
-func schema_apimachinery_apis_kubedb_v1alpha2_HanaDBTLSConfig(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"issuerRef": {
-						SchemaProps: spec.SchemaProps{
-							Description: "IssuerRef is a reference to a Certificate Issuer.",
-							Ref:         ref("k8s.io/api/core/v1.TypedLocalObjectReference"),
-						},
-					},
-					"certificates": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Certificate provides server and/or client certificate options used by application pods. These options are passed to a cert-manager Certificate object. xref: https://github.com/jetstack/cert-manager/blob/v0.16.0/pkg/apis/certmanager/v1beta1/types_certificate.go#L82-L162",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("kmodules.xyz/client-go/api/v1.CertificateSpec"),
-									},
-								},
-							},
-						},
-					},
-					"clientTLS": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ClientTLS determines whether KubeDB clients connect to the SAP HANA SQL interface over TLS.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"serverName": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ServerName is used to verify the hostname on the certificate returned by SAP HANA.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"insecureSkipVerify": {
-						SchemaProps: spec.SchemaProps{
-							Description: "InsecureSkipVerify controls whether KubeDB clients verify the SAP HANA server certificate chain and hostname.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/api/core/v1.TypedLocalObjectReference", "kmodules.xyz/client-go/api/v1.CertificateSpec"},
 	}
 }
 
@@ -46016,6 +45961,26 @@ func schema_apimachinery_apis_kubedb_v1alpha2_RemoteReplicaSpec(ref common.Refer
 	}
 }
 
+func schema_apimachinery_apis_kubedb_v1alpha2_ReplicationConfig(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ReplicationConfig defines replication settings for Weaviate.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"factor": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Factor is the number of replicas for each data object. Set to 1 for no replication (default), 2-3 for production HA.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func schema_apimachinery_apis_kubedb_v1alpha2_ScriptSourceSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -47479,6 +47444,12 @@ func schema_apimachinery_apis_kubedb_v1alpha2_WeaviateSpec(ref common.ReferenceC
 							Format:      "int32",
 						},
 					},
+					"replication": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Replication configuration for the Weaviate cluster. This controls the data replication factor per collection.",
+							Ref:         ref("kubedb.dev/apimachinery/apis/kubedb/v1alpha2.ReplicationConfig"),
+						},
+					},
 					"storageType": {
 						SchemaProps: spec.SchemaProps{
 							Description: "StorageType can be durable (default) or ephemeral",
@@ -47557,7 +47528,7 @@ func schema_apimachinery_apis_kubedb_v1alpha2_WeaviateSpec(ref common.ReferenceC
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.PersistentVolumeClaimSpec", "kmodules.xyz/client-go/api/v1.HealthCheckSpec", "kmodules.xyz/offshoot-api/api/v2.PodTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.InitSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.NamedServiceTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SecretReference", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.WeaviateConfiguration"},
+			"k8s.io/api/core/v1.PersistentVolumeClaimSpec", "kmodules.xyz/client-go/api/v1.HealthCheckSpec", "kmodules.xyz/offshoot-api/api/v2.PodTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.InitSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.NamedServiceTemplateSpec", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.ReplicationConfig", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.SecretReference", "kubedb.dev/apimachinery/apis/kubedb/v1alpha2.WeaviateConfiguration"},
 	}
 }
 
