@@ -448,3 +448,42 @@ func (c *Client) CreateDatabase(ctx context.Context, dbName string, primary, sec
 	}
 	return nil
 }
+
+func (c *Client) GetSystemDatabaseWriter(ctx context.Context) (string, error) {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		DatabaseName: "system",
+		AccessMode:   neo4j.AccessModeRead,
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	result, err := session.Run(ctx,
+		`SHOW DATABASES YIELD name, role, address, writer
+         WHERE name = 'system' AND writer = true
+         RETURN address`,
+		nil,
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to query system database writer: %w", err)
+	}
+	records, err := result.Collect(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to collect system database writer: %w", err)
+	}
+	for _, record := range records {
+		Writer, _ := record.Get("address")
+		address := ""
+		if Writer != nil {
+			if s, ok := Writer.(string); ok {
+				address = s
+			}
+		}
+		podName := strings.Split(address, ".")[0]
+		return podName, nil
+	}
+
+	return "", fmt.Errorf("no writer found for system database")
+}

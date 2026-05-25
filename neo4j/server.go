@@ -98,9 +98,13 @@ func (c *Client) GetServersInfo(ctx context.Context) ([]ServerInfo, error) {
 				address = s
 			}
 		}
+		serverName := name.(string)
+		if serverName == address {
+			serverName = strings.Split(address, ".")[0]
+		}
 
 		servers = append(servers, ServerInfo{
-			Name:    name.(string),
+			Name:    serverName,
 			Address: address,
 			Health:  health.(string),
 			State:   state.(string),
@@ -179,4 +183,17 @@ func (c *Client) NumberOfHealthyServers(ctx context.Context) (int32, error) {
 		}
 	}
 	return count, nil
+}
+
+func (c *Client) IsServerHealthy(ctx context.Context, serverName string) (bool, error) {
+	servers, err := c.GetServersInfo(ctx)
+	if err != nil {
+		return false, fmt.Errorf("failed to get server info: %w", err)
+	}
+	for _, server := range servers {
+		if server.Name == serverName && server.Health == "Available" {
+			return true, nil
+		}
+	}
+	return false, nil
 }
