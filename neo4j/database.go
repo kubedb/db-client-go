@@ -473,17 +473,17 @@ func (c *Client) GetSystemDatabaseWriter(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to collect system database writer: %w", err)
 	}
-	for _, record := range records {
-		Writer, _ := record.Get("address")
-		address := ""
-		if Writer != nil {
-			if s, ok := Writer.(string); ok {
-				address = s
-			}
-		}
-		podName := strings.Split(address, ".")[0]
-		return podName, nil
+
+	if len(records) == 0 {
+		return "", fmt.Errorf("no records found")
 	}
 
-	return "", fmt.Errorf("no writer found for system database")
+	writer, _ := records[0].Get("address")
+	address := ""
+	if writer != nil {
+		if s, ok := writer.(string); ok {
+			address = s
+		}
+	}
+	return strings.Split(address, ".")[0], nil
 }
