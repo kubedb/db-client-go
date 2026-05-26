@@ -25,6 +25,7 @@ import (
 
 	"kubedb.dev/apimachinery/apis/kubedb"
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	mgoptions "go.mongodb.org/mongo-driver/mongo/options"
@@ -229,10 +230,10 @@ func (o *KubeDBClientBuilder) getMongoDBRootCredentials() (string, string, error
 	if db.Spec.AuthSecret == nil {
 		return "", "", errors.New("no database secret")
 	}
-	var secret core.Secret
-	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: db.Namespace, Name: db.Spec.AuthSecret.Name}, &secret)
+	isVirtual := dbapi.IsVirtualAuthSecretReferred(db.Spec.AuthSecret)
+	data, err := secret_lib.GetData(o.ctx, o.kc, db.Namespace, db.Spec.AuthSecret.Name, isVirtual)
 	if err != nil {
 		return "", "", err
 	}
-	return string(secret.Data[core.BasicAuthUsernameKey]), string(secret.Data[core.BasicAuthPasswordKey]), nil
+	return string(data[core.BasicAuthUsernameKey]), string(data[core.BasicAuthPasswordKey]), nil
 }

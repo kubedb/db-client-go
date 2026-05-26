@@ -26,6 +26,7 @@ import (
 
 	"kubedb.dev/apimachinery/apis/kubedb"
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 
 	sql_driver "github.com/go-sql-driver/mysql"
 	core "k8s.io/api/core/v1"
@@ -124,16 +125,16 @@ func (o *KubeDBClientBuilder) getMariaDBBasicAuth() (string, string, error) {
 	if o.db.Spec.AuthSecret != nil {
 		secretName = o.db.GetAuthSecretName()
 	}
-	var secret core.Secret
-	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: secretName}, &secret)
+	isVirtual := dbapi.IsVirtualAuthSecretReferred(o.db.Spec.AuthSecret)
+	data, err := secret_lib.GetData(o.ctx, o.kc, o.db.Namespace, secretName, isVirtual)
 	if err != nil {
 		return "", "", err
 	}
-	user, ok := secret.Data[core.BasicAuthUsernameKey]
+	user, ok := data[core.BasicAuthUsernameKey]
 	if !ok {
 		return "", "", fmt.Errorf("DB root user is not set")
 	}
-	pass, ok := secret.Data[core.BasicAuthPasswordKey]
+	pass, ok := data[core.BasicAuthPasswordKey]
 	if !ok {
 		return "", "", fmt.Errorf("DB root password is not set")
 	}
