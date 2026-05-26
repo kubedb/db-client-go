@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 
 	kafkago "github.com/IBM/sarama"
 	core "k8s.io/api/core/v1"
@@ -77,11 +78,8 @@ func (o *KubeDBClientBuilder) GetConfig() (*kafkago.Config, error) {
 			return nil, errors.New("auth-secret is not set")
 		}
 
-		authSecret := &core.Secret{}
-		err := o.kc.Get(o.ctx, types.NamespacedName{
-			Namespace: o.db.Namespace,
-			Name:      o.db.Spec.AuthSecret.Name,
-		}, authSecret)
+		isVirtual := dbapi.IsVirtualAuthSecretReferred(o.db.Spec.AuthSecret)
+		authData, err := secret_lib.GetData(o.ctx, o.kc, o.db.Namespace, o.db.Spec.AuthSecret.Name, isVirtual)
 		if err != nil {
 			if kerr.IsNotFound(err) {
 				klog.Error(err, "Auth-secret not found")
@@ -92,8 +90,8 @@ func (o *KubeDBClientBuilder) GetConfig() (*kafkago.Config, error) {
 		}
 
 		clientConfig.Net.SASL.Enable = true
-		clientConfig.Net.SASL.User = string(authSecret.Data[core.BasicAuthUsernameKey])
-		clientConfig.Net.SASL.Password = string(authSecret.Data[core.BasicAuthPasswordKey])
+		clientConfig.Net.SASL.User = string(authData[core.BasicAuthUsernameKey])
+		clientConfig.Net.SASL.Password = string(authData[core.BasicAuthPasswordKey])
 
 		if o.db.Spec.EnableSSL {
 			certSecret := &core.Secret{}

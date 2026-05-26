@@ -25,6 +25,7 @@ import (
 
 	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 
 	"github.com/gocql/gocql"
 	core "k8s.io/api/core/v1"
@@ -76,11 +77,8 @@ func (o *KubeDBClientBuilder) GetCassandraClient() (*Client, error) {
 	}
 	if !o.db.Spec.DisableSecurity {
 
-		authSecret := &core.Secret{}
-		err := o.kc.Get(o.ctx, types.NamespacedName{
-			Namespace: o.db.Namespace,
-			Name:      o.db.GetAuthSecretName(),
-		}, authSecret)
+		isVirtual := api.IsVirtualAuthSecretReferred(o.db.Spec.AuthSecret)
+		data, err := secret_lib.GetData(o.ctx, o.kc, o.db.Namespace, o.db.GetAuthSecretName(), isVirtual)
 		if err != nil {
 			if kerr.IsNotFound(err) {
 				klog.Error(err, "AuthSecret not found")
@@ -88,8 +86,8 @@ func (o *KubeDBClientBuilder) GetCassandraClient() (*Client, error) {
 			}
 			return nil, err
 		}
-		userName := string(authSecret.Data[core.BasicAuthUsernameKey])
-		password := string(authSecret.Data[core.BasicAuthPasswordKey])
+		userName := string(data[core.BasicAuthUsernameKey])
+		password := string(data[core.BasicAuthPasswordKey])
 		cluster.Authenticator = gocql.PasswordAuthenticator{
 			Username: userName,
 			Password: password,

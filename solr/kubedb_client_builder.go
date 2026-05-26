@@ -28,6 +28,7 @@ import (
 
 	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 	apiutils "kubedb.dev/apimachinery/pkg/utils"
 
 	"github.com/Masterminds/semver/v3"
@@ -137,16 +138,15 @@ func (o *KubeDBClientBuilder) GetSolrClient() (*Client, error) {
 		}
 	}
 
-	var authSecret core.Secret
+	var authData map[string][]byte
 	if !o.db.Spec.DisableSecurity {
-		err := o.kc.Get(o.ctx, types.NamespacedName{
-			Name:      o.db.GetAuthSecretName(),
-			Namespace: o.db.Namespace,
-		}, &authSecret)
+		isVirtual := api.IsVirtualAuthSecretReferred(o.db.Spec.AuthSecret)
+		data, err := secret_lib.GetData(o.ctx, o.kc, o.db.Namespace, o.db.GetAuthSecretName(), isVirtual)
 		if err != nil {
 			config.log.Error(err, "failed to get auth secret to get solr client")
 			return nil, err
 		}
+		authData = data
 	}
 	version, err := semver.NewVersion(o.db.Spec.Version)
 	if err != nil {
@@ -160,7 +160,7 @@ func (o *KubeDBClientBuilder) GetSolrClient() (*Client, error) {
 		newClient.SetTimeout(time.Second * 30)
 		newClient.SetHeader("Accept", "application/json")
 		newClient.SetDisableWarn(true)
-		newClient.SetBasicAuth(string(authSecret.Data[core.BasicAuthUsernameKey]), string(authSecret.Data[core.BasicAuthPasswordKey]))
+		newClient.SetBasicAuth(string(authData[core.BasicAuthUsernameKey]), string(authData[core.BasicAuthPasswordKey]))
 		return &Client{
 			&SLClientV9{
 				Client: newClient,
@@ -173,7 +173,7 @@ func (o *KubeDBClientBuilder) GetSolrClient() (*Client, error) {
 		newClient.SetTimeout(time.Second * 30)
 		newClient.SetHeader("Accept", "application/json")
 		newClient.SetDisableWarn(true)
-		newClient.SetBasicAuth(string(authSecret.Data[core.BasicAuthUsernameKey]), string(authSecret.Data[core.BasicAuthPasswordKey]))
+		newClient.SetBasicAuth(string(authData[core.BasicAuthUsernameKey]), string(authData[core.BasicAuthPasswordKey]))
 		return &Client{
 			&SLClientV8{
 				Client: newClient,

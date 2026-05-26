@@ -28,6 +28,7 @@ import (
 
 	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 	apiutils "kubedb.dev/apimachinery/pkg/utils"
 
 	"github.com/go-logr/logr"
@@ -77,24 +78,24 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 }
 
 func (o *KubeDBClientBuilder) GetAuthCredentials() (string, string, error) {
-	var authSecret core.Secret
 	var username, password string
-	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.GetAuthSecretName()}, &authSecret)
+	isVirtual := api.IsVirtualAuthSecretReferred(o.db.Spec.AuthSecret)
+	data, err := secret_lib.GetData(o.ctx, o.kc, o.db.Namespace, o.db.GetAuthSecretName(), isVirtual)
 	if err != nil {
 		return "", "", errors.Errorf("Failed to get auth secret with %s", err)
 	}
 
-	if value, ok := authSecret.Data[core.BasicAuthUsernameKey]; ok {
+	if value, ok := data[core.BasicAuthUsernameKey]; ok {
 		username = string(value)
 	} else {
-		klog.Errorf("Failed for secret: %s/%s, username is missing", authSecret.Namespace, authSecret.Name)
+		klog.Errorf("Failed for secret: %s/%s, username is missing", o.db.Namespace, o.db.GetAuthSecretName())
 		return "", "", errors.New("username is missing")
 	}
 
-	if value, ok := authSecret.Data[core.BasicAuthPasswordKey]; ok {
+	if value, ok := data[core.BasicAuthPasswordKey]; ok {
 		password = string(value)
 	} else {
-		klog.Errorf("Failed for secret: %s/%s, password is missing", authSecret.Namespace, authSecret.Name)
+		klog.Errorf("Failed for secret: %s/%s, password is missing", o.db.Namespace, o.db.GetAuthSecretName())
 		return "", "", errors.New("password is missing")
 	}
 

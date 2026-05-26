@@ -27,6 +27,7 @@ import (
 	"kubedb.dev/apimachinery/apis/kubedb"
 	v1api "kubedb.dev/apimachinery/apis/kubedb/v1"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 	apiutils "kubedb.dev/apimachinery/pkg/utils"
 
 	"github.com/go-logr/logr"
@@ -82,14 +83,11 @@ func (o *Neo4jClientBuilder) GetNeo4jClient() (*Client, error) {
 
 	klog.V(3).Infof("Attempting to connect to Neo4j at: %s", o.url)
 
-	authSecret := &core.Secret{}
 	var cred credential
 
 	if !o.db.Spec.DisableSecurity {
-		err := o.kc.Get(o.ctx, types.NamespacedName{
-			Namespace: o.db.Namespace,
-			Name:      o.db.GetAuthSecretName(),
-		}, authSecret)
+		isVirtual := api.IsVirtualAuthSecretReferred(o.db.Spec.AuthSecret)
+		data, err := secret_lib.GetData(o.ctx, o.kc, o.db.Namespace, o.db.GetAuthSecretName(), isVirtual)
 		if err != nil {
 			if kerr.IsNotFound(err) {
 				klog.Error(err, "Auth-secret not found")
@@ -98,8 +96,8 @@ func (o *Neo4jClientBuilder) GetNeo4jClient() (*Client, error) {
 			klog.Error(err, "Failed to get auth-secret")
 			return nil, err
 		}
-		cred.username = string(authSecret.Data[core.BasicAuthUsernameKey])
-		cred.password = string(authSecret.Data[core.BasicAuthPasswordKey])
+		cred.username = string(data[core.BasicAuthUsernameKey])
+		cred.password = string(data[core.BasicAuthPasswordKey])
 	} else {
 		klog.Info("Security is disabled for Neo4j, no credentials will be used.")
 	}
