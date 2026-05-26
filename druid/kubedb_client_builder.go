@@ -26,6 +26,7 @@ import (
 
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 	apiutils "kubedb.dev/apimachinery/pkg/utils"
 
 	druidgo "github.com/grafadruid/go-druid"
@@ -116,11 +117,8 @@ func (o *KubeDBClientBuilder) GetDruidClient() (*Client, error) {
 }
 
 func (o *KubeDBClientBuilder) getClientAuthOpts() (*druidgo.ClientOption, error) {
-	authSecret := &core.Secret{}
-	err := o.kc.Get(o.ctx, types.NamespacedName{
-		Namespace: o.db.Namespace,
-		Name:      o.db.GetAuthSecretName(),
-	}, authSecret)
+	isVirtual := olddbapi.IsVirtualAuthSecretReferred(o.db.Spec.AuthSecret)
+	data, err := secret_lib.GetData(o.ctx, o.kc, o.db.Namespace, o.db.GetAuthSecretName(), isVirtual)
 	if err != nil {
 		if kerr.IsNotFound(err) {
 			klog.Error(err, "AuthSecret not found")
@@ -130,11 +128,11 @@ func (o *KubeDBClientBuilder) getClientAuthOpts() (*druidgo.ClientOption, error)
 	}
 
 	var password string
-	userName := string(authSecret.Data[core.BasicAuthUsernameKey])
+	userName := string(data[core.BasicAuthUsernameKey])
 	if o.password != "" {
 		password = o.password
 	} else {
-		password = string(authSecret.Data[core.BasicAuthPasswordKey])
+		password = string(data[core.BasicAuthPasswordKey])
 	}
 
 	druidAuthOpts := druidgo.WithBasicAuth(userName, password)

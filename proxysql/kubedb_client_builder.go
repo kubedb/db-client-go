@@ -23,6 +23,7 @@ import (
 
 	"kubedb.dev/apimachinery/apis/kubedb"
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 
 	core "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
@@ -119,16 +120,16 @@ func (o *KubeDBClientBuilder) getProxySQLRootCredentials() (string, string, erro
 	if db.Spec.AuthSecret != nil {
 		secretName = db.GetAuthSecretName()
 	}
-	var secret core.Secret
-	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: db.Namespace, Name: secretName}, &secret)
+	isVirtual := dbapi.IsVirtualAuthSecretReferred(db.Spec.AuthSecret)
+	data, err := secret_lib.GetData(o.ctx, o.kc, db.Namespace, secretName, isVirtual)
 	if err != nil {
 		return "", "", err
 	}
-	user, ok := secret.Data[core.BasicAuthUsernameKey]
+	user, ok := data[core.BasicAuthUsernameKey]
 	if !ok {
 		return "", "", fmt.Errorf("DB root user is not set")
 	}
-	pass, ok := secret.Data[core.BasicAuthPasswordKey]
+	pass, ok := data[core.BasicAuthPasswordKey]
 	if !ok {
 		return "", "", fmt.Errorf("DB root password is not set")
 	}
