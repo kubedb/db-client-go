@@ -24,11 +24,11 @@ import (
 	"time"
 
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -85,26 +85,23 @@ func (o *KubeDBClientBuilder) GetDB2Client() (*Client, error) {
 	var username, password string
 	// if security is enabled set database credentials in clientConfig
 	if o.db2.Spec.AuthSecret != nil && o.db2.Spec.AuthSecret.Name != "" {
-		secret := &core.Secret{}
-		err := o.kc.Get(o.ctx, types.NamespacedName{
-			Name:      o.db2.Spec.AuthSecret.Name,
-			Namespace: o.db2.GetNamespace(),
-		}, secret)
+		isVirtual := dbapi.IsVirtualAuthSecretReferred(o.db2.Spec.AuthSecret)
+		data, err := secret_lib.GetData(o.ctx, o.kc, o.db2.GetNamespace(), o.db2.Spec.AuthSecret.Name, isVirtual)
 		if err != nil {
 			return nil, err
 		}
 
-		if value, ok := secret.Data[core.BasicAuthUsernameKey]; ok {
+		if value, ok := data[core.BasicAuthUsernameKey]; ok {
 			username = string(value)
 		} else {
-			klog.Info(fmt.Sprintf("Failed for secret: %s/%s, username is missing", secret.Namespace, secret.Name))
+			klog.Info(fmt.Sprintf("Failed for secret: %s/%s, username is missing", o.db2.GetNamespace(), o.db2.Spec.AuthSecret.Name))
 			return nil, errors.New("username is missing")
 		}
 
-		if value, ok := secret.Data[core.BasicAuthPasswordKey]; ok {
+		if value, ok := data[core.BasicAuthPasswordKey]; ok {
 			password = string(value)
 		} else {
-			klog.Info(fmt.Sprintf("Failed for secret: %s/%s, password is missing", secret.Namespace, secret.Name))
+			klog.Info(fmt.Sprintf("Failed for secret: %s/%s, password is missing", o.db2.GetNamespace(), o.db2.Spec.AuthSecret.Name))
 			return nil, errors.New("password is missing")
 		}
 

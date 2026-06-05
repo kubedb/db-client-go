@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -115,18 +116,16 @@ func (o *KubeDBClientBuilder) GetMilvusClient() (*milvusclient.Client, error) {
 			return nil, fmt.Errorf("auth secret is not specified")
 		}
 		secretName := o.db.GetAuthSecretName()
-		var secret core.Secret
-		if err := o.kc.Get(o.ctx, types.NamespacedName{
-			Namespace: o.db.Namespace,
-			Name:      secretName,
-		}, &secret); err != nil {
+		isVirtual := api.IsVirtualAuthSecretReferred(o.db.Spec.AuthSecret)
+		data, err := secret_lib.GetData(o.ctx, o.kc, o.db.Namespace, secretName, isVirtual)
+		if err != nil {
 			return nil, fmt.Errorf("failed to get auth secret %q: %w", secretName, err)
 		}
-		user, ok := secret.Data[core.BasicAuthUsernameKey]
+		user, ok := data[core.BasicAuthUsernameKey]
 		if !ok {
 			return nil, fmt.Errorf("username is missing in secret %q", secretName)
 		}
-		pass, ok := secret.Data[core.BasicAuthPasswordKey]
+		pass, ok := data[core.BasicAuthPasswordKey]
 		if !ok {
 			return nil, fmt.Errorf("password is missing in secret %q", secretName)
 		}

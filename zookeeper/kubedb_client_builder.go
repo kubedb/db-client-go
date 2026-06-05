@@ -25,11 +25,11 @@ import (
 
 	"kubedb.dev/apimachinery/apis/kubedb"
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 
 	"github.com/Shopify/zk"
 	core "k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -112,11 +112,8 @@ func (o *KubeDBClientBuilder) GetZooKeeperClient() (*Client, error) {
 			return nil, errors.New("auth-secret is not set")
 		}
 
-		authSecret := core.Secret{}
-		err := o.kc.Get(o.ctx, types.NamespacedName{
-			Namespace: o.db.Namespace,
-			Name:      o.db.Spec.AuthSecret.Name,
-		}, &authSecret)
+		isVirtual := dbapi.IsVirtualAuthSecretReferred(o.db.Spec.AuthSecret)
+		authData, err := secret_lib.GetData(o.ctx, o.kc, o.db.Namespace, o.db.Spec.AuthSecret.Name, isVirtual)
 		if err != nil {
 			if kerr.IsNotFound(err) {
 				klog.Error(err, "Auth-secret not found")
@@ -127,8 +124,8 @@ func (o *KubeDBClientBuilder) GetZooKeeperClient() (*Client, error) {
 		}
 
 		// clientConfig.Net.SASL.Enable = true
-		username := string(authSecret.Data[core.BasicAuthUsernameKey])
-		password := string(authSecret.Data[core.BasicAuthPasswordKey])
+		username := string(authData[core.BasicAuthUsernameKey])
+		password := string(authData[core.BasicAuthPasswordKey])
 
 		// Correct the format for the username:password string
 		authString := fmt.Sprintf("%s:%s", username, password)

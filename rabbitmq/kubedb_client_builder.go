@@ -30,6 +30,7 @@ import (
 	"kubedb.dev/apimachinery/apis/kubedb"
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 	apiutils "kubedb.dev/apimachinery/pkg/utils"
 
 	rmqhttp "github.com/michaelklishin/rabbit-hole/v3"
@@ -119,13 +120,10 @@ func (o *KubeDBClientBuilder) GetRabbitMQClient() (*Client, error) {
 	if o.ctx == nil {
 		o.ctx = context.TODO()
 	}
-	authSecret := &core.Secret{}
 	var username, password string
 	if !o.db.Spec.DisableSecurity {
-		err := o.kc.Get(o.ctx, types.NamespacedName{
-			Namespace: o.db.Namespace,
-			Name:      o.db.GetAuthSecretName(),
-		}, authSecret)
+		isVirtual := olddbapi.IsVirtualAuthSecretReferred(o.db.Spec.AuthSecret)
+		data, err := secret_lib.GetData(o.ctx, o.kc, o.db.Namespace, o.db.GetAuthSecretName(), isVirtual)
 		if err != nil {
 			if kerr.IsNotFound(err) {
 				klog.Error(err, "Auth-secret not found")
@@ -134,7 +132,7 @@ func (o *KubeDBClientBuilder) GetRabbitMQClient() (*Client, error) {
 			klog.Error(err, "Failed to get auth-secret")
 			return nil, err
 		}
-		username, password = string(authSecret.Data[core.BasicAuthUsernameKey]), string(authSecret.Data[core.BasicAuthPasswordKey])
+		username, password = string(data[core.BasicAuthUsernameKey]), string(data[core.BasicAuthPasswordKey])
 	} else {
 		username, password = "guest", "guest"
 	}
