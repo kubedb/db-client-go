@@ -31,6 +31,7 @@ import (
 	core "k8s.io/api/core/v1"
 	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -195,16 +196,17 @@ func (o *KubeDBClientBuilder) tlsServerName(host string) string {
 }
 
 func (o *KubeDBClientBuilder) getHanaDBAuthCredentials() (string, string, error) {
-	var secret core.Secret
-	if err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.GetAuthSecretName()}, &secret); err != nil {
+	isVirtual := api.IsVirtualAuthSecretReferred(o.db.Spec.AuthSecret)
+	data, err := secret_lib.GetData(o.ctx, o.kc, o.db.Namespace, o.db.GetAuthSecretName(), isVirtual)
+	if err != nil {
 		return "", "", err
 	}
 
-	if username, password, ok := extractBasicAuth(secret.Data); ok {
+	if username, password, ok := extractBasicAuth(data); ok {
 		return username, password, nil
 	}
 
-	if username, password, err := extractPasswordJSON(secret.Data); err == nil {
+	if username, password, err := extractPasswordJSON(data); err == nil {
 		return username, password, nil
 	}
 

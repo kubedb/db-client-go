@@ -22,7 +22,7 @@ import (
 
 	"kubedb.dev/apimachinery/apis/kubedb"
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
-	"kubedb.dev/apimachinery/pkg/lib"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 
 	_ "github.com/lib/pq"
 	vsecretapi "go.virtual-secrets.dev/apimachinery/apis/virtual/v1alpha1"
@@ -154,32 +154,12 @@ func (o *KubeDBClientBuilder) GetBackendAuth() (string, string, error) {
 		return "", "", fmt.Errorf("backend postgres auth secret unspecified for pgBouncer %s/%s", o.pgbouncer.Namespace, o.pgbouncer.Name)
 	}
 
-	if appBinding.Spec.Secret.APIGroup != vsecretapi.GroupName {
-		var secret core.Secret
-		err = o.kc.Get(o.ctx, client.ObjectKey{Namespace: appBinding.Namespace, Name: appBinding.Spec.Secret.Name}, &secret)
-		if err != nil {
-			return "", "", err
-		}
-
-		if err = lib.ValidateAuthSecret(&secret); err != nil {
-			return "", "", err
-		}
-		return string(secret.Data[core.BasicAuthUsernameKey]), string(secret.Data[core.BasicAuthPasswordKey]), nil
-	} else {
-		vSecret := &vsecretapi.Secret{}
-		err = o.kc.Get(context.TODO(), types.NamespacedName{
-			Name:      appBinding.Spec.Secret.Name,
-			Namespace: appBinding.Namespace,
-		}, vSecret)
-		if err != nil {
-			return "", "", err
-		}
-
-		if err = lib.ValidateVirtualAuthSecret(vSecret); err != nil {
-			return "", "", err
-		}
-		return string(vSecret.Data[core.BasicAuthUsernameKey]), string(vSecret.Data[core.BasicAuthPasswordKey]), nil
+	isVirtual := appBinding.Spec.Secret.APIGroup == vsecretapi.GroupName
+	data, err := secret_lib.GetData(o.ctx, o.kc, appBinding.Namespace, appBinding.Spec.Secret.Name, isVirtual)
+	if err != nil {
+		return "", "", err
 	}
+	return string(data[core.BasicAuthUsernameKey]), string(data[core.BasicAuthPasswordKey]), nil
 }
 
 func (o *KubeDBClientBuilder) getTLSConfig(ctx context.Context) (*certholder.Paths, error) {

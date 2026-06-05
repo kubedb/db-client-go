@@ -626,6 +626,11 @@ func (h *HanaDB) SetTLSDefaults() {
 		return
 	}
 
+	if h.Spec.TLS.ClientTLS == nil {
+		defaultValue := true
+		h.Spec.TLS.ClientTLS = &defaultValue
+	}
+
 	defaultServerOrg := []string{kubedb.KubeDBOrganization}
 	defaultServerOrgUnit := []string{string(HanaDBServerCert)}
 	_, cert := kmapi.GetCertificate(h.Spec.TLS.Certificates, string(HanaDBServerCert))

@@ -26,6 +26,7 @@ import (
 
 	"kubedb.dev/apimachinery/apis/kubedb"
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 
 	"github.com/kubedb/gomemcache/memcache"
 	"github.com/pkg/errors"
@@ -138,15 +139,12 @@ func (o *KubeDBClientBuilder) SetAuth(mcClient *Client) error {
 }
 
 func (o *KubeDBClientBuilder) GetSecret() (*core.Secret, error) {
-	var authSecret core.Secret
-	err := o.kc.Get(context.TODO(), types.NamespacedName{
-		Name:      o.db.GetMemcachedAuthSecretName(),
-		Namespace: o.db.Namespace,
-	}, &authSecret)
+	isVirtual := dbapi.IsVirtualAuthSecretReferred(o.db.Spec.AuthSecret)
+	data, err := secret_lib.GetData(context.TODO(), o.kc, o.db.Namespace, o.db.GetMemcachedAuthSecretName(), isVirtual)
 	if err != nil {
 		return nil, err
 	}
-	return &authSecret, nil
+	return &core.Secret{Data: data}, nil
 }
 
 func (o *KubeDBClientBuilder) GetTLSSecret() (*core.Secret, error) {

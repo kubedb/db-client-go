@@ -28,6 +28,8 @@ import (
 
 	kapi "kubedb.dev/apimachinery/apis/kafka/v1alpha1"
 	"kubedb.dev/apimachinery/apis/kubedb"
+	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 
 	"github.com/go-resty/resty/v2"
 	core "k8s.io/api/core/v1"
@@ -124,26 +126,23 @@ func (o *KubeDBClientBuilder) GetConnectClusterClient() (*Client, error) {
 
 	// if security is enabled set database credentials in clientConfig
 	if !o.dbConnect.Spec.DisableSecurity {
-		secret := &core.Secret{}
-		err := o.kc.Get(o.ctx, types.NamespacedName{
-			Name:      o.dbConnect.Spec.AuthSecret.Name,
-			Namespace: o.dbConnect.GetNamespace(),
-		}, secret)
+		isVirtual := dbapi.IsVirtualAuthSecretReferred(o.dbConnect.Spec.AuthSecret)
+		data, err := secret_lib.GetData(o.ctx, o.kc, o.dbConnect.GetNamespace(), o.dbConnect.Spec.AuthSecret.Name, isVirtual)
 		if err != nil {
 			return nil, err
 		}
 
-		if value, ok := secret.Data[core.BasicAuthUsernameKey]; ok {
+		if value, ok := data[core.BasicAuthUsernameKey]; ok {
 			username = string(value)
 		} else {
-			klog.Info(fmt.Sprintf("Failed for secret: %s/%s, username is missing", secret.Namespace, secret.Name))
+			klog.Info(fmt.Sprintf("Failed for secret: %s/%s, username is missing", o.dbConnect.GetNamespace(), o.dbConnect.Spec.AuthSecret.Name))
 			return nil, errors.New("username is missing")
 		}
 
-		if value, ok := secret.Data[core.BasicAuthPasswordKey]; ok {
+		if value, ok := data[core.BasicAuthPasswordKey]; ok {
 			password = string(value)
 		} else {
-			klog.Info(fmt.Sprintf("Failed for secret: %s/%s, password is missing", secret.Namespace, secret.Name))
+			klog.Info(fmt.Sprintf("Failed for secret: %s/%s, password is missing", o.dbConnect.GetNamespace(), o.dbConnect.Spec.AuthSecret.Name))
 			return nil, errors.New("password is missing")
 		}
 

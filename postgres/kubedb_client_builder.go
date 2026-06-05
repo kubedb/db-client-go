@@ -24,8 +24,8 @@ import (
 
 	"kubedb.dev/apimachinery/apis/kubedb"
 	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 
-	vsecretapi "go.virtual-secrets.dev/apimachinery/apis/virtual/v1alpha1"
 	core "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 	"kmodules.xyz/client-go/tools/certholder"
@@ -106,25 +106,13 @@ func (o *KubeDBClientBuilder) getPostgresAuthCredentials() (string, string, erro
 		return "", "", errors.New("no database secret")
 	}
 
-	var username, password string
-
-	if dbapi.IsVirtualAuthSecretReferred(o.db.Spec.AuthSecret) {
-		var secret vsecretapi.Secret
-		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.AuthSecret.Name}, &secret)
-		if err != nil {
-			return "", "", err
-		}
-		username = string(secret.Data[core.BasicAuthUsernameKey])
-		password = string(secret.Data[core.BasicAuthPasswordKey])
-	} else {
-		var secret core.Secret
-		err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.Spec.AuthSecret.Name}, &secret)
-		if err != nil {
-			return "", "", err
-		}
-		username = string(secret.Data[core.BasicAuthUsernameKey])
-		password = string(secret.Data[core.BasicAuthPasswordKey])
+	isVirtual := dbapi.IsVirtualAuthSecretReferred(o.db.Spec.AuthSecret)
+	data, err := secret_lib.GetData(o.ctx, o.kc, o.db.Namespace, o.db.Spec.AuthSecret.Name, isVirtual)
+	if err != nil {
+		return "", "", err
 	}
+	username := string(data[core.BasicAuthUsernameKey])
+	password := string(data[core.BasicAuthPasswordKey])
 
 	return username, password, nil
 }

@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 
 	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 	apiutils "kubedb.dev/apimachinery/pkg/utils"
 
 	"github.com/pkg/errors"
@@ -180,13 +181,13 @@ func (o *OracleClientBuilder) getOracleAuthCredentials() (string, string, error)
 		return "", "", errors.New("no database secret provided")
 	}
 
-	var secret core.Secret
-	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: o.db.GetAuthSecretName()}, &secret)
+	isVirtual := olddbapi.IsVirtualAuthSecretReferred(o.db.Spec.AuthSecret)
+	data, err := secret_lib.GetData(o.ctx, o.kc, o.db.Namespace, o.db.GetAuthSecretName(), isVirtual)
 	if err != nil {
 		return "", "", err
 	}
-	username := string(secret.Data[core.BasicAuthUsernameKey])
-	password := string(secret.Data[core.BasicAuthPasswordKey])
+	username := string(data[core.BasicAuthUsernameKey])
+	password := string(data[core.BasicAuthPasswordKey])
 
 	if username == "" || password == "" {
 		return "", "", errors.New("username or password missing in secret")
