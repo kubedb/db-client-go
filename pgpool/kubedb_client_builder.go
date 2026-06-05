@@ -21,7 +21,7 @@ import (
 	"fmt"
 
 	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
-	"kubedb.dev/apimachinery/pkg/lib"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 
 	_ "github.com/lib/pq"
 	vsecretapi "go.virtual-secrets.dev/apimachinery/apis/virtual/v1alpha1"
@@ -125,27 +125,12 @@ func (o *KubeDBClientBuilder) getBackendAuth() (string, string, error) {
 		return "", "", fmt.Errorf("backend postgres auth secret unspecified for pgpool %s/%s", pp.Namespace, pp.Name)
 	}
 
-	if apb.Spec.Secret.APIGroup == vsecretapi.GroupName {
-		var secret vsecretapi.Secret
-		err = o.kc.Get(o.ctx, client.ObjectKey{Namespace: pp.Spec.PostgresRef.Namespace, Name: apb.Spec.Secret.Name}, &secret)
-		if err != nil {
-			return "", "", err
-		}
-		if err = lib.ValidateVirtualAuthSecret(&secret); err != nil {
-			return "", "", err
-		}
-		return string(secret.Data[core.BasicAuthUsernameKey]), string(secret.Data[core.BasicAuthPasswordKey]), nil
-	} else {
-		var secret core.Secret
-		err = o.kc.Get(o.ctx, client.ObjectKey{Namespace: pp.Spec.PostgresRef.Namespace, Name: apb.Spec.Secret.Name}, &secret)
-		if err != nil {
-			return "", "", err
-		}
-		if err = lib.ValidateAuthSecret(&secret); err != nil {
-			return "", "", err
-		}
-		return string(secret.Data[core.BasicAuthUsernameKey]), string(secret.Data[core.BasicAuthPasswordKey]), nil
+	isVirtual := apb.Spec.Secret.APIGroup == vsecretapi.GroupName
+	data, err := secret_lib.GetData(o.ctx, o.kc, pp.Spec.PostgresRef.Namespace, apb.Spec.Secret.Name, isVirtual)
+	if err != nil {
+		return "", "", err
 	}
+	return string(data[core.BasicAuthUsernameKey]), string(data[core.BasicAuthPasswordKey]), nil
 }
 
 func (o *KubeDBClientBuilder) getConnectionString() (string, error) {

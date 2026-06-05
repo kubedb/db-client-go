@@ -27,6 +27,7 @@ import (
 
 	"kubedb.dev/apimachinery/apis/kubedb"
 	api "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 	apiutils "kubedb.dev/apimachinery/pkg/utils"
 
 	ignite "github.com/amsokol/ignite-go-client/binary/v1"
@@ -171,19 +172,15 @@ func (o *KubeDBClientBuilder) GetIgniteSqlClient() (*SqlClient, error) {
 }
 
 func (o *KubeDBClientBuilder) GetUsernamePassword() (string, string, error) {
-	authSecret := &core.Secret{}
-
-	err := o.kc.Get(o.ctx, types.NamespacedName{
-		Namespace: o.db.Namespace,
-		Name:      o.db.GetAuthSecretName(),
-	}, authSecret)
+	isVirtual := api.IsVirtualAuthSecretReferred(o.db.Spec.AuthSecret)
+	data, err := secret_lib.GetData(o.ctx, o.kc, o.db.Namespace, o.db.GetAuthSecretName(), isVirtual)
 	if err != nil {
 		o.log.Error(err, "Failed to get auth-secret")
 		return "", "", errors.New("auth-secret is not found")
 	}
 
-	username := string(authSecret.Data[core.BasicAuthUsernameKey])
-	password := string(authSecret.Data[core.BasicAuthPasswordKey])
+	username := string(data[core.BasicAuthUsernameKey])
+	password := string(data[core.BasicAuthPasswordKey])
 	return username, password, nil
 }
 

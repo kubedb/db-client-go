@@ -23,6 +23,7 @@ import (
 
 	"kubedb.dev/apimachinery/apis/kubedb"
 	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	secret_lib "kubedb.dev/apimachinery/pkg/secret"
 
 	_ "github.com/ClickHouse/clickhouse-go/v2"
 	core "k8s.io/api/core/v1"
@@ -108,16 +109,16 @@ func (o *KubeDBClientBuilder) getClickHouseRootCredentials() (string, string, er
 	} else {
 		return kubedb.ClickHouseDefaultUser, "", nil
 	}
-	var secret core.Secret
-	err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: db.Namespace, Name: secretName}, &secret)
+	isVirtual := olddbapi.IsVirtualAuthSecretReferred(db.Spec.AuthSecret)
+	data, err := secret_lib.GetData(o.ctx, o.kc, db.Namespace, secretName, isVirtual)
 	if err != nil {
 		return "", "", err
 	}
-	user, ok := secret.Data[core.BasicAuthUsernameKey]
+	user, ok := data[core.BasicAuthUsernameKey]
 	if !ok {
 		return "", "", fmt.Errorf("DB root user is not set")
 	}
-	pass, ok := secret.Data[core.BasicAuthPasswordKey]
+	pass, ok := data[core.BasicAuthPasswordKey]
 	if !ok {
 		return "", "", fmt.Errorf("DB root password is not set")
 	}
