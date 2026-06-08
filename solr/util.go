@@ -44,6 +44,15 @@ func (sc *Client) DecodeResponse(response *Response) (map[string]any, error) {
 		}
 	}(response.body)
 
+	if response.Code < 200 || response.Code >= 300 {
+		bodyBytes, _ := io.ReadAll(io.LimitReader(response.body, 1024))
+		bodyPreview := string(bodyBytes)
+		if bodyPreview == "" {
+			bodyPreview = "[empty body]"
+		}
+		return nil, fmt.Errorf("unexpected status code %d: %s", response.Code, bodyPreview)
+	}
+
 	responseBody := make(map[string]any)
 	if err := json.NewDecoder(response.body).Decode(&responseBody); err != nil {
 		return nil, fmt.Errorf("failed to deserialize the response: %v", err)
