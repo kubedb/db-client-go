@@ -19,6 +19,7 @@ package neo4j
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -287,4 +288,202 @@ func (c *Client) DeallocateDatabases(ctx context.Context, serverName string) err
 	klog.Infof("Full deallocation triggered successfully for server %s: ", serverName)
 
 	return nil
+}
+
+func (c *Client) CheckDatabaseExists(ctx context.Context, dbName string) (bool, error) {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	result, err := session.Run(ctx, "SHOW DATABASES YIELD name WHERE name = $db RETURN name LIMIT 1", map[string]any{"db": dbName})
+	if err != nil {
+		return false, err
+	}
+
+	records, err := result.Collect(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	return len(records) > 0, nil
+}
+
+func (c *Client) DropDatabase(ctx context.Context, dbName string) error {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := fmt.Sprintf("DROP DATABASE `%s` IF EXISTS", dbName)
+
+	result, err := session.Run(ctx, query, nil)
+	if err != nil {
+		return err
+	}
+	_, err = result.Consume(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Client) StopDatabase(ctx context.Context, dbName string) error {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := fmt.Sprintf("STOP DATABASE `%s`", dbName)
+	_, err := session.Run(ctx, query, nil)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c Client) GetdatabaseState(ctx context.Context, dbName string) (string, error) {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := fmt.Sprintf("SHOW DATABASE `%s`", dbName)
+	result, err := session.Run(ctx, query, nil)
+	if err != nil {
+		return "", err
+	}
+	records, err := result.Collect(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	if len(records) == 0 {
+		return "", fmt.Errorf("no database found with name %s", dbName)
+	}
+
+	stateValue, ok := records[0].Get("currentStatus")
+	if !ok || stateValue == nil {
+		return "", fmt.Errorf("database %s does not have currentStatus in SHOW DATABASE result", dbName)
+	}
+	state, ok := stateValue.(string)
+	if !ok {
+		return "", fmt.Errorf("database %s currentStatus has unexpected type %T", dbName, stateValue)
+	}
+	return state, nil
+}
+
+func (c *Client) WaitForDatabaseState(ctx context.Context, dbName string, state string) error {
+	for {
+		currentState, err := c.GetdatabaseState(ctx, dbName)
+		if err != nil {
+			return err
+		}
+
+		if currentState == state {
+			return nil
+		}
+		klog.Infof("Waiting for database %s to reach state %s. Current state: %s", dbName, state, currentState)
+
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("timeout waiting for database %s to reach state %s", dbName, state)
+		case <-time.After(5 * time.Second):
+		}
+
+	}
+}
+
+func (c *Client) CreateDatabase(ctx context.Context, dbName string, primary, secondary int64, options map[string]string, ifNotExists bool) error {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeWrite,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	query := fmt.Sprintf("CREATE DATABASE `%s`", dbName)
+	if ifNotExists {
+		query = fmt.Sprintf("CREATE DATABASE `%s` IF NOT EXISTS", dbName)
+	}
+
+	if primary > 0 || secondary > 0 {
+		ql := fmt.Sprintf("TOPOLOGY %d PRIMARY %d SECONDARY", primary, secondary)
+		query += " " + ql
+	}
+	if len(options) > 0 {
+		var optionParts []string
+		for key, value := range options {
+			optionParts = append(optionParts, fmt.Sprintf("%s: '%s'", key, value))
+		}
+		query += " OPTIONS {" + strings.Join(optionParts, ", ") + "}"
+	}
+
+	_, err := session.Run(ctx, query, nil)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Client) GetSystemDatabaseWriter(ctx context.Context) (string, error) {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		DatabaseName: "system",
+		AccessMode:   neo4j.AccessModeRead,
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	result, err := session.Run(ctx,
+		`SHOW DATABASES YIELD name, role, address, writer
+         WHERE name = 'system' AND writer = true
+         RETURN address`,
+		nil,
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to query system database writer: %w", err)
+	}
+	records, err := result.Collect(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to collect system database writer: %w", err)
+	}
+
+	if len(records) == 0 {
+		return "", fmt.Errorf("no records found")
+	}
+
+	writer, _ := records[0].Get("address")
+	address := ""
+	if writer != nil {
+		if s, ok := writer.(string); ok {
+			address = s
+		}
+	}
+	return strings.Split(address, ".")[0], nil
 }

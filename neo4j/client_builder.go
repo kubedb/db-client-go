@@ -172,7 +172,7 @@ func (o *Neo4jClientBuilder) GetNeo4jClient() (*Client, error) {
 		Name:      o.db.OffshootName(),
 	})
 
-	log.V(2).Info("Connection established successfully to Neo4j at: %s", o.url)
+	log.V(5).Info("Connection established successfully to Neo4j at: %s", o.url)
 
 	return &Client{
 		DriverWithContext: driver,
@@ -187,6 +187,10 @@ func (o *Neo4jClientBuilder) buildConnectionURL() string {
 	}
 
 	if o.podName != "" {
+		scheme = "bolt"
+		if o.db.Spec.TLS != nil && o.db.Spec.TLS.Bolt.Mode != api.TLSModeDisabled {
+			scheme = "bolt+s"
+		}
 		return fmt.Sprintf("%s://%s.%s.svc.%s:%d", scheme, o.podName, o.db.Namespace, apiutils.FindDomain(), kubedb.Neo4jBoltPort)
 	}
 
