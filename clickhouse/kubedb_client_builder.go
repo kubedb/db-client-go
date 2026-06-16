@@ -114,6 +114,9 @@ func (o *KubeDBClientBuilder) getClickHouseRootCredentials() (string, string, er
 	if err != nil {
 		return "", "", err
 	}
+	fmt.Println("--------------------------------------")
+	klog.Infoln("data: ", data)
+	fmt.Println("----------------------------------------")
 	user, ok := data[core.BasicAuthUsernameKey]
 	if !ok {
 		return "", "", fmt.Errorf("DB root user is not set")
