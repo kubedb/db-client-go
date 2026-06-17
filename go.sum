@@ -1110,8 +1110,6 @@ kmodules.xyz/monitoring-agent-api v0.34.1 h1:0ANZgff50xF9D9cFng1NBVmSeLwiYPsZKiF
 kmodules.xyz/monitoring-agent-api v0.34.1/go.mod h1:XFDfMHDZQeNEPdTDeDr4M0dT4UCWs+4IYzgHw7JDlms=
 kmodules.xyz/offshoot-api v0.34.0 h1:HnOOp8FrCjTWjtNApRDo6Ahe79tOlLrJmyye4xxO4Kk=
 kmodules.xyz/offshoot-api v0.34.0/go.mod h1:F+B59yYw4CZJ4uD4xu6C+mMLzIXUtuH7E+SbDICl9jE=
-kubedb.dev/apimachinery v0.65.0-rc.1.0.20260605052849-7c98b972c50e h1:OjVep3YiK6zxwI1VZrh1H4+lwe8Jtk3hqUyf7uv1GgU=
-kubedb.dev/apimachinery v0.65.0-rc.1.0.20260605052849-7c98b972c50e/go.mod h1:SI/R0ly6c3+K7AxFMfiY7zzPTu1HhI4aEhfaupVYltw=
 kubeops.dev/operator-shard-manager v0.0.6-0.20260418091213-65daf7da824d h1:/nZYflp2w1x+wQmxDtHR0Sbzl39fcuaJ66oqgVXBBwQ=
 kubeops.dev/operator-shard-manager v0.0.6-0.20260418091213-65daf7da824d/go.mod h1:NE6GzlhwLRiwiUUpqi4Uf+J7e/gniITM0uJnE5r1mzY=
 kubeops.dev/petset v0.0.17-0.20260418091244-7f666912d240 h1:6FyI0dCC/1aaJqdCqEtyRjownOCH2PP2KWpU1i0mgv4=

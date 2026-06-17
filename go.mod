@@ -274,3 +274,5 @@ replace sigs.k8s.io/controller-runtime => github.com/kmodules/controller-runtime
 replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.6
 
 replace k8s.io/apiserver => github.com/kmodules/apiserver v0.34.4-0.20251227112449-07fa35efc6fc
+
+replace kubedb.dev/apimachinery => ../apimachinery
