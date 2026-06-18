@@ -62,6 +62,13 @@ func (w *Weaviate) AppBindingMeta() appcat.AppBindingMeta {
 
 func (w *Weaviate) GetPersistentSecrets() []string {
 	var secrets []string
+	if !w.Spec.DisableSecurity {
+		secrets = append(secrets, w.GetAuthSecretName())
+	}
+	if w.Spec.TLS != nil {
+		secrets = append(secrets, w.GetCertSecretName(WeaviateServerCert))
+		secrets = append(secrets, w.GetCertSecretName(WeaviateClientCert))
+	}
 	if !IsVirtualAuthSecretReferred(w.Spec.AuthSecret) && w.Spec.AuthSecret != nil && w.Spec.AuthSecret.Name != "" {
 		secrets = append(secrets, w.GetAuthSecretName())
 	}
