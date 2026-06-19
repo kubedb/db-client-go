@@ -44,7 +44,7 @@ require (
 	k8s.io/klog/v2 v2.130.1
 	kmodules.xyz/client-go v0.34.3
 	kmodules.xyz/custom-resources v0.34.0
-	kubedb.dev/apimachinery v0.65.0-rc.2.0.20260619060717-d72310c7366a
+	kubedb.dev/apimachinery v0.65.0
 	sigs.k8s.io/controller-runtime v0.22.4
 	xorm.io/xorm v1.3.11
 )
@@ -257,7 +257,7 @@ require (
 	kubeops.dev/operator-shard-manager v0.0.6-0.20260418091213-65daf7da824d // indirect
 	kubeops.dev/petset v0.0.17-0.20260418091244-7f666912d240 // indirect
 	kubeops.dev/sidekick v0.0.15-0.20260418091208-a1cb9f4a3553 // indirect
-	kubestash.dev/apimachinery v0.28.0-rc.2 // indirect
+	kubestash.dev/apimachinery v0.28.0 // indirect
 	open-cluster-management.io/api v1.2.0 // indirect
 	sigs.k8s.io/gateway-api v1.4.0 // indirect
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
