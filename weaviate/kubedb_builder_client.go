@@ -22,6 +22,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"net/http"
+	"time"
 
 	weaviate "github.com/weaviate/weaviate-go-client/v5/weaviate"
 	"github.com/weaviate/weaviate-go-client/v5/weaviate/auth"
@@ -33,6 +34,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const defaultRequestTimeout = 60 * time.Second
+
 type KubeDBClientBuilder struct {
 	kc         client.Client
 	db         *api.Weaviate
@@ -40,6 +43,7 @@ type KubeDBClientBuilder struct {
 	podName    string
 	ctx        context.Context
 	authConfig auth.Config
+	timeout    time.Duration
 }
 
 func (o *KubeDBClientBuilder) WithAPIKey(apiKey string) *KubeDBClientBuilder {
@@ -92,6 +96,11 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 	return o
 }
 
+func (o *KubeDBClientBuilder) WithTimeout(d time.Duration) *KubeDBClientBuilder {
+	o.timeout = d
+	return o
+}
+
 func (o *KubeDBClientBuilder) GetWeaviateClient() (*weaviate.Client, error) {
 	if o.ctx == nil {
 		o.ctx = context.Background()
@@ -111,8 +120,9 @@ func (o *KubeDBClientBuilder) GetWeaviateClient() (*weaviate.Client, error) {
 	}
 
 	wvconfig := &weaviate.Config{
-		Host:   addr,
-		Scheme: o.db.GetConnectionScheme(),
+		Host:    addr,
+		Scheme:  o.db.GetConnectionScheme(),
+		Timeout: o.requestTimeout(),
 	}
 
 	apiKey, err := o.getAPIKey()
@@ -134,6 +144,13 @@ func (o *KubeDBClientBuilder) GetWeaviateClient() (*weaviate.Client, error) {
 		return nil, fmt.Errorf("failed to create Weaviate client: %w", err)
 	}
 	return weaviateClient, nil
+}
+
+func (o *KubeDBClientBuilder) requestTimeout() time.Duration {
+	if o.timeout > 0 {
+		return o.timeout
+	}
+	return defaultRequestTimeout
 }
 
 func (o *KubeDBClientBuilder) GetServiceAddress() string {
@@ -216,7 +233,10 @@ func (o *KubeDBClientBuilder) getHTTPClient(apiKey string) (*http.Client, error)
 			apiKey: apiKey,
 		}
 	}
-	return &http.Client{Transport: rt}, nil
+	return &http.Client{
+		Transport: rt,
+		Timeout:   o.requestTimeout(),
+	}, nil
 }
 
 type apiKeyRoundTripper struct {
