@@ -44,6 +44,21 @@ github.com/SAP/go-hdb/driver/unicode/cesu8
 # github.com/Shopify/zk v1.0.12
 ## explicit; go 1.22
 github.com/Shopify/zk
+# github.com/aerospike/aerospike-client-go/v6 v6.16.1
+## explicit; go 1.17
+github.com/aerospike/aerospike-client-go/v6
+github.com/aerospike/aerospike-client-go/v6/internal/atomic
+github.com/aerospike/aerospike-client-go/v6/internal/lua
+github.com/aerospike/aerospike-client-go/v6/internal/lua/resources
+github.com/aerospike/aerospike-client-go/v6/logger
+github.com/aerospike/aerospike-client-go/v6/pkg/bcrypt
+github.com/aerospike/aerospike-client-go/v6/pkg/ripemd160
+github.com/aerospike/aerospike-client-go/v6/proto/auth
+github.com/aerospike/aerospike-client-go/v6/proto/kvs
+github.com/aerospike/aerospike-client-go/v6/types
+github.com/aerospike/aerospike-client-go/v6/types/particle_type
+github.com/aerospike/aerospike-client-go/v6/types/rand
+github.com/aerospike/aerospike-client-go/v6/utils/buffer
 # github.com/amsokol/ignite-go-client v0.12.2
 ## explicit
 github.com/amsokol/ignite-go-client/binary/errors
@@ -2429,6 +2444,12 @@ github.com/yudai/gojsondiff/formatter
 # github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82
 ## explicit
 github.com/yudai/golcs
+# github.com/yuin/gopher-lua v1.1.1
+## explicit; go 1.17
+github.com/yuin/gopher-lua
+github.com/yuin/gopher-lua/ast
+github.com/yuin/gopher-lua/parse
+github.com/yuin/gopher-lua/pm
 # github.com/yusufpapurcu/wmi v1.2.4
 ## explicit; go 1.16
 github.com/yusufpapurcu/wmi
@@ -2726,6 +2747,7 @@ golang.org/x/oauth2/internal
 # golang.org/x/sync v0.20.0
 ## explicit; go 1.25.0
 golang.org/x/sync/errgroup
+golang.org/x/sync/semaphore
 golang.org/x/sync/singleflight
 # golang.org/x/sys v0.45.0
 ## explicit; go 1.25.0
