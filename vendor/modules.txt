@@ -44,21 +44,26 @@ github.com/SAP/go-hdb/driver/unicode/cesu8
 # github.com/Shopify/zk v1.0.12
 ## explicit; go 1.22
 github.com/Shopify/zk
-# github.com/aerospike/aerospike-client-go/v6 v6.16.1
-## explicit; go 1.17
-github.com/aerospike/aerospike-client-go/v6
-github.com/aerospike/aerospike-client-go/v6/internal/atomic
-github.com/aerospike/aerospike-client-go/v6/internal/lua
-github.com/aerospike/aerospike-client-go/v6/internal/lua/resources
-github.com/aerospike/aerospike-client-go/v6/logger
-github.com/aerospike/aerospike-client-go/v6/pkg/bcrypt
-github.com/aerospike/aerospike-client-go/v6/pkg/ripemd160
-github.com/aerospike/aerospike-client-go/v6/proto/auth
-github.com/aerospike/aerospike-client-go/v6/proto/kvs
-github.com/aerospike/aerospike-client-go/v6/types
-github.com/aerospike/aerospike-client-go/v6/types/particle_type
-github.com/aerospike/aerospike-client-go/v6/types/rand
-github.com/aerospike/aerospike-client-go/v6/utils/buffer
+# github.com/aerospike/aerospike-client-go/v8 v8.7.0
+## explicit; go 1.23.0
+github.com/aerospike/aerospike-client-go/v8
+github.com/aerospike/aerospike-client-go/v8/config
+github.com/aerospike/aerospike-client-go/v8/config/provider
+github.com/aerospike/aerospike-client-go/v8/config/registry
+github.com/aerospike/aerospike-client-go/v8/internal/atomic
+github.com/aerospike/aerospike-client-go/v8/internal/atomic/map
+github.com/aerospike/aerospike-client-go/v8/internal/lua
+github.com/aerospike/aerospike-client-go/v8/internal/lua/resources
+github.com/aerospike/aerospike-client-go/v8/internal/seq
+github.com/aerospike/aerospike-client-go/v8/internal/version
+github.com/aerospike/aerospike-client-go/v8/logger
+github.com/aerospike/aerospike-client-go/v8/pkg/bcrypt
+github.com/aerospike/aerospike-client-go/v8/pkg/ripemd160
+github.com/aerospike/aerospike-client-go/v8/types
+github.com/aerospike/aerospike-client-go/v8/types/histogram
+github.com/aerospike/aerospike-client-go/v8/types/particle_type
+github.com/aerospike/aerospike-client-go/v8/types/pool
+github.com/aerospike/aerospike-client-go/v8/utils/buffer
 # github.com/amsokol/ignite-go-client v0.12.2
 ## explicit
 github.com/amsokol/ignite-go-client/binary/errors
@@ -2151,8 +2156,8 @@ github.com/neo4j/neo4j-go-driver/v5/neo4j/notifications
 # github.com/oklog/ulid v1.3.1
 ## explicit
 github.com/oklog/ulid
-# github.com/onsi/gomega v1.36.2
-## explicit; go 1.22.0
+# github.com/onsi/gomega v1.39.0
+## explicit; go 1.23.0
 github.com/onsi/gomega
 github.com/onsi/gomega/format
 github.com/onsi/gomega/internal
@@ -2373,6 +2378,9 @@ github.com/uber/jaeger-client-go/thrift-gen/agent
 github.com/uber/jaeger-client-go/thrift-gen/jaeger
 github.com/uber/jaeger-client-go/thrift-gen/zipkincore
 github.com/uber/jaeger-client-go/utils
+# github.com/wadey/gocovmerge v0.0.0-20160331181800-b5bfa59ec0ad
+## explicit
+github.com/wadey/gocovmerge
 # github.com/weaviate/weaviate v1.30.20
 ## explicit; go 1.24
 github.com/weaviate/weaviate/client/authz
@@ -2444,8 +2452,8 @@ github.com/yudai/gojsondiff/formatter
 # github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82
 ## explicit
 github.com/yudai/golcs
-# github.com/yuin/gopher-lua v1.1.1
-## explicit; go 1.17
+# github.com/yuin/gopher-lua v1.1.2
+## explicit; go 1.23
 github.com/yuin/gopher-lua
 github.com/yuin/gopher-lua/ast
 github.com/yuin/gopher-lua/parse
@@ -2787,6 +2795,9 @@ golang.org/x/text/unicode/norm
 # golang.org/x/time v0.14.0
 ## explicit; go 1.24.0
 golang.org/x/time/rate
+# golang.org/x/tools v0.44.0
+## explicit; go 1.25.0
+golang.org/x/tools/cover
 # gomodules.xyz/jsonpatch/v2 v2.5.0
 ## explicit; go 1.20
 gomodules.xyz/jsonpatch/v2

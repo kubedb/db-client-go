@@ -16,7 +16,7 @@ limitations under the License.
 
 package aerospike
 
-import as "github.com/aerospike/aerospike-client-go/v6"
+import as "github.com/aerospike/aerospike-client-go/v8"
 
 type Client struct {
 	*as.Client
