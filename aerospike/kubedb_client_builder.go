@@ -112,7 +112,7 @@ func (o *KubeDBClientBuilder) getClientCredentials(ctx context.Context) (string,
 }
 
 func (o *KubeDBClientBuilder) getServiceURL() string {
-	return fmt.Sprintf("%s.%s.svc", o.db.ServiceName(), o.db.Namespace)
+	return fmt.Sprintf("%s.%s.svc", o.db.GoverningServiceName(), o.db.Namespace)
 }
 
 func (o *KubeDBClientBuilder) getPodURL() string {
