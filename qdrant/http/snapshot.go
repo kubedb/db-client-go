@@ -235,19 +235,29 @@ func (c *Client) DeleteCollectionSnapshot(ctx context.Context, collectionName st
 	return &response, nil
 }
 
-// RecoverCollectionSnapshot uploads and restores a collection from a snapshot file
+// RecoverCollectionSnapshot uploads and restores a collection from a snapshot file on disk.
 func (c *Client) RecoverCollectionSnapshot(
 	ctx context.Context,
 	collectionName string,
 	snapshotPath string,
 ) (*RecoverSnapshotResponse, error) {
-	urlPath := fmt.Sprintf("/collections/%s/snapshots/upload", collectionName)
-
 	file, err := os.Open(snapshotPath)
 	if err != nil {
 		return nil, fmt.Errorf("opening snapshot file: %w", err)
 	}
-	defer func() { _ = file.Close() }()
+	defer file.Close()
+	return c.RecoverCollectionSnapshotFromReader(ctx, collectionName, filepath.Base(snapshotPath), file)
+}
+
+// RecoverCollectionSnapshotFromReader uploads and restores a collection from a snapshot
+// provided as an io.Reader. The snapshotName is used as the filename in the multipart form.
+func (c *Client) RecoverCollectionSnapshotFromReader(
+	ctx context.Context,
+	collectionName string,
+	snapshotName string,
+	reader io.Reader,
+) (*RecoverSnapshotResponse, error) {
+	urlPath := fmt.Sprintf("/collections/%s/snapshots/upload", collectionName)
 
 	pr, pw := io.Pipe()
 
@@ -261,15 +271,15 @@ func (c *Client) RecoverCollectionSnapshot(
 			_ = pw.Close()
 		}()
 
-		part, err := writer.CreateFormFile("snapshot", filepath.Base(snapshotPath))
+		part, err := writer.CreateFormFile("snapshot", snapshotName)
 		if err != nil {
 			errChan <- fmt.Errorf("creating form file: %w", err)
 			return
 		}
 
-		_, err = io.Copy(part, file)
+		_, err = io.Copy(part, reader)
 		if err != nil {
-			errChan <- fmt.Errorf("copying file data: %w", err)
+			errChan <- fmt.Errorf("copying snapshot data: %w", err)
 			return
 		}
 
