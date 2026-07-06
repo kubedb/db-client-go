@@ -245,7 +245,7 @@ func (c *Client) RecoverCollectionSnapshot(
 	if err != nil {
 		return nil, fmt.Errorf("opening snapshot file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	return c.RecoverCollectionSnapshotFromReader(ctx, collectionName, filepath.Base(snapshotPath), file)
 }
 
