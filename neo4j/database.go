@@ -449,6 +449,37 @@ func (c *Client) CreateDatabase(ctx context.Context, dbName string, primary, sec
 	return nil
 }
 
+func (c *Client) ListUserDatabases(ctx context.Context) ([]string, error) {
+	session := c.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeRead,
+		DatabaseName: "system",
+	})
+	defer func() {
+		if err := session.Close(ctx); err != nil {
+			klog.Error(err, "failed to close neo4j session")
+		}
+	}()
+
+	result, err := session.Run(ctx, "SHOW DATABASES YIELD name WHERE name <> 'system' RETURN DISTINCT name", nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list user databases: %w", err)
+	}
+
+	records, err := result.Collect(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to collect user databases: %w", err)
+	}
+
+	databases := make([]string, 0, len(records))
+	for _, record := range records {
+		name, _ := record.Get("name")
+		if dbName, ok := name.(string); ok {
+			databases = append(databases, dbName)
+		}
+	}
+	return databases, nil
+}
+
 func (c *Client) GetSystemDatabaseWriter(ctx context.Context) (string, error) {
 	session := c.NewSession(ctx, neo4j.SessionConfig{
 		DatabaseName: "system",
