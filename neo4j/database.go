@@ -491,7 +491,8 @@ func (c *Client) GetSystemDatabaseWriter(ctx context.Context) (string, error) {
 		}
 	}()
 
-	result, err := session.Run(ctx,
+	result, err := session.Run(
+		ctx,
 		`SHOW DATABASES YIELD name, role, address, writer
          WHERE name = 'system' AND writer = true
          RETURN address`,
