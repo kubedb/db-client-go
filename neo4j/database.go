@@ -435,7 +435,7 @@ func (c *Client) CreateDatabase(ctx context.Context, dbName string, primary, sec
 		query += " " + ql
 	}
 	if len(options) > 0 {
-		var optionParts []string
+		optionParts := make([]string, 0, len(options))
 		for key, value := range options {
 			optionParts = append(optionParts, fmt.Sprintf("%s: '%s'", key, value))
 		}
@@ -491,7 +491,8 @@ func (c *Client) GetSystemDatabaseWriter(ctx context.Context) (string, error) {
 		}
 	}()
 
-	result, err := session.Run(ctx,
+	result, err := session.Run(
+		ctx,
 		`SHOW DATABASES YIELD name, role, address, writer
          WHERE name = 'system' AND writer = true
          RETURN address`,

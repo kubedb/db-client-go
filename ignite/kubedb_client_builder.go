@@ -138,7 +138,8 @@ func (o *KubeDBClientBuilder) GetIgniteDataSource() string {
 	dataSource := fmt.Sprintf(
 		"tcp://%s:%d/PUBLIC?version=1.1.0"+
 			"&timeout=%d",
-		o.Address(), kubedb.IgniteThinPort, o.timeout)
+		o.Address(), kubedb.IgniteThinPort, o.timeout,
+	)
 	return dataSource
 }
 
