@@ -435,7 +435,7 @@ func (c *Client) CreateDatabase(ctx context.Context, dbName string, primary, sec
 		query += " " + ql
 	}
 	if len(options) > 0 {
-		var optionParts []string
+		optionParts := make([]string, 0, len(options))
 		for key, value := range options {
 			optionParts = append(optionParts, fmt.Sprintf("%s: '%s'", key, value))
 		}

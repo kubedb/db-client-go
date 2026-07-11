@@ -464,7 +464,7 @@ func (sc *Client) Down(nodeList []string, x int, mp map[string][]CoreList) error
 	ls1 := nodeList[:n-x]
 	fmt.Println("ls1 ", ls1)
 	fmt.Println("ls2 ", ls2)
-	ar := make([]UpdateList, 0)
+	ar := make([]UpdateList, 0, len(ls2))
 	for _, node := range ls2 {
 		for _, core := range mp[node] {
 			id := -1
