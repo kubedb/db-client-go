@@ -168,7 +168,7 @@ func (sc *SLClientV9) DeleteCollection(name string) (*Response, error) {
 	return deleteResponse, nil
 }
 
-func (sc *SLClientV9) BackupCollection(ctx context.Context, collection string, backupName string, location string, repository string) (*Response, error) {
+func (sc *SLClientV9) BackupCollection(ctx context.Context, collection string, backupName string, location string, repository string, incremental bool) (*Response, error) {
 	sc.Config.log.V(5).Info(fmt.Sprintf("BACKUP COLLECTION: %s", collection))
 	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
 	req.SetHeader("Content-Type", "application/json")
@@ -179,6 +179,9 @@ func (sc *SLClientV9) BackupCollection(ctx context.Context, collection string, b
 		Location:   location,
 		Repository: repository,
 		Async:      fmt.Sprintf("%s-backup", collection),
+	}
+	if !incremental {
+		backupParams["incremental"] = "false"
 	}
 	req.SetQueryParams(backupParams)
 
@@ -194,6 +197,33 @@ func (sc *SLClientV9) BackupCollection(ctx context.Context, collection string, b
 		body:   res.RawBody(),
 	}
 	return backupResponse, nil
+}
+
+func (sc *SLClientV9) ListBackup(ctx context.Context, backupName string, collection string, location string, repository string) (*Response, error) {
+	sc.Config.log.V(5).Info(fmt.Sprintf("LIST BACKUP: %s for collection %s", backupName, collection))
+	req := sc.Client.R().SetDoNotParseResponse(true).SetContext(ctx)
+	req.SetHeader("Content-Type", "application/json")
+	listParams := map[string]string{
+		Action:     ActionListBackup,
+		Name:       backupName,
+		Collection: collection,
+		Location:   location,
+		Repository: repository,
+	}
+	req.SetQueryParams(listParams)
+
+	res, err := req.Get("/solr/admin/collections")
+	if err != nil {
+		sc.Config.log.Error(err, "Failed to send http request to list backups")
+		return nil, err
+	}
+
+	listResponse := &Response{
+		Code:   res.StatusCode(),
+		header: res.Header(),
+		body:   res.RawBody(),
+	}
+	return listResponse, nil
 }
 
 func (sc *SLClientV9) RestoreCollection(ctx context.Context, collection string, backupName string, location string, repository string, backupId int) (*Response, error) {

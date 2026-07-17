@@ -31,6 +31,7 @@ const (
 	ActionDelete        = "DELETE"
 	ActionCreate        = "CREATE"
 	ActionDeleteBackup  = "DELETEBACKUP"
+	ActionListBackup    = "LISTBACKUP"
 	AddRole             = "ADDROLE"
 	RemoveRole          = "REMOVEROLE"
 	Name                = "name"
@@ -58,8 +59,9 @@ type SLClient interface {
 	CreateCollection() (*Response, error)
 	WriteCollection() (*Response, error)
 	ReadCollection() (*Response, error)
-	BackupCollection(ctx context.Context, collection string, backupName string, location string, repository string) (*Response, error)
+	BackupCollection(ctx context.Context, collection string, backupName string, location string, repository string, incremental bool) (*Response, error)
 	RestoreCollection(ctx context.Context, collection string, backupName string, location string, repository string, backupId int) (*Response, error)
+	ListBackup(ctx context.Context, backupName string, collection string, location string, repository string) (*Response, error)
 	FlushStatus(asyncId string) (*Response, error)
 	RequestStatus(asyncId string) (*Response, error)
 	DeleteBackup(ctx context.Context, backupName string, collection string, location string, repository string, backupId int, snap string) (*Response, error)
