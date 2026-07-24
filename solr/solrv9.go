@@ -178,7 +178,7 @@ func (sc *SLClientV9) BackupCollection(ctx context.Context, collection string, b
 		Collection: collection,
 		Location:   location,
 		Repository: repository,
-		Async:      fmt.Sprintf("%s-backup", collection),
+		Async:      fmt.Sprintf("%s-backup-%s-%s", collection, repository, backupName),
 	}
 	req.SetQueryParams(backupParams)
 
@@ -207,7 +207,7 @@ func (sc *SLClientV9) RestoreCollection(ctx context.Context, collection string, 
 		Collection: collection,
 		Repository: repository,
 		BackupId:   strconv.Itoa(backupId),
-		Async:      fmt.Sprintf("%s-restore", collection),
+		Async:      fmt.Sprintf("%s-restore-%s-%s", collection, repository, backupName),
 	}
 	req.SetQueryParams(restoreParams)
 
