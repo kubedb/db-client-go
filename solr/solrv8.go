@@ -470,3 +470,20 @@ func (sc *SLClientV8) GetMetrics() (*Response, error) {
 	}
 	return writeResponse, nil
 }
+
+func (sc *SLClientV8) QueryCollection(collection string) (*Response, error) {
+	sc.Config.log.V(5).Info(fmt.Sprintf("QUERYING COLLECTION: %s", collection))
+	req := sc.Client.R().SetDoNotParseResponse(true)
+	req.SetHeader("Content-Type", "application/json")
+	req.SetQueryParams(map[string]string{"q": "*:*", "rows": "0"})
+	res, err := req.Get(fmt.Sprintf("/solr/%s/select", collection))
+	if err != nil {
+		sc.Config.log.Error(err, "Failed to send http request to query a collection")
+		return nil, err
+	}
+	return &Response{
+		Code:   res.StatusCode(),
+		header: res.Header(),
+		body:   res.RawBody(),
+	}, nil
+}
