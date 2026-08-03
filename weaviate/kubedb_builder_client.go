@@ -18,7 +18,11 @@ package weaviate
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"net/http"
+	"time"
 
 	weaviate "github.com/weaviate/weaviate-go-client/v5/weaviate"
 	"github.com/weaviate/weaviate-go-client/v5/weaviate/auth"
@@ -30,6 +34,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const defaultRequestTimeout = 60 * time.Second
+
 type KubeDBClientBuilder struct {
 	kc         client.Client
 	db         *api.Weaviate
@@ -37,6 +43,7 @@ type KubeDBClientBuilder struct {
 	podName    string
 	ctx        context.Context
 	authConfig auth.Config
+	timeout    time.Duration
 }
 
 func (o *KubeDBClientBuilder) WithAPIKey(apiKey string) *KubeDBClientBuilder {
@@ -89,6 +96,11 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 	return o
 }
 
+func (o *KubeDBClientBuilder) WithTimeout(d time.Duration) *KubeDBClientBuilder {
+	o.timeout = d
+	return o
+}
+
 func (o *KubeDBClientBuilder) GetWeaviateClient() (*weaviate.Client, error) {
 	if o.ctx == nil {
 		o.ctx = context.Background()
@@ -100,29 +112,33 @@ func (o *KubeDBClientBuilder) GetWeaviateClient() (*weaviate.Client, error) {
 
 	addr := o.url
 	if addr == "" {
-		addr = fmt.Sprintf("%s:%d", o.GetServiceAddress(), kubedb.WeaviateHTTPPort)
+		port := kubedb.WeaviateHTTPPort
+		if o.db.Spec.TLS != nil {
+			port = kubedb.WeaviateHTTPSPort
+		}
+		addr = fmt.Sprintf("%s:%d", o.GetServiceAddress(), port)
 	}
 
-	secret := &v1.Secret{}
-	if err := o.kc.Get(o.ctx, client.ObjectKey{
-		Namespace: o.db.Namespace,
-		Name:      o.db.Spec.AuthSecret.Name,
-	}, secret); err != nil {
-		return nil, fmt.Errorf("failed to get weaviate auth secret: %w", err)
-	}
-
-	val, ok := secret.Data[kubedb.WeaviateAPIKey]
-	if !ok || len(val) == 0 {
-		return nil, fmt.Errorf("weaviate auth secret key %s is missing or empty", kubedb.WeaviateAPIKey)
-	}
-	cfg := auth.ApiKey{Value: string(val)}
 	wvconfig := &weaviate.Config{
-		Host:       addr,
-		Scheme:     o.db.GetConnectionScheme(),
-		AuthConfig: cfg,
+		Host:    addr,
+		Scheme:  o.db.GetConnectionScheme(),
+		Timeout: o.requestTimeout(),
 	}
 
-	// Create client
+	apiKey, err := o.getAPIKey()
+	if err != nil {
+		return nil, err
+	}
+	if o.db.Spec.TLS != nil {
+		httpClient, err := o.getHTTPClient(apiKey)
+		if err != nil {
+			return nil, err
+		}
+		wvconfig.ConnectionClient = httpClient
+	} else if apiKey != "" {
+		wvconfig.AuthConfig = auth.ApiKey{Value: apiKey}
+	}
+
 	weaviateClient, err := weaviate.NewClient(*wvconfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Weaviate client: %w", err)
@@ -130,9 +146,106 @@ func (o *KubeDBClientBuilder) GetWeaviateClient() (*weaviate.Client, error) {
 	return weaviateClient, nil
 }
 
+func (o *KubeDBClientBuilder) requestTimeout() time.Duration {
+	if o.timeout > 0 {
+		return o.timeout
+	}
+	return defaultRequestTimeout
+}
+
 func (o *KubeDBClientBuilder) GetServiceAddress() string {
 	if o.url != "" {
 		return o.url
 	}
-	return fmt.Sprintf("%s.%s.svc.cluster.local", o.db.ServiceName(), o.db.GetNamespace())
+	return o.db.ServiceFQDN()
+}
+
+func (o *KubeDBClientBuilder) getAPIKey() (string, error) {
+	if o.db.Spec.DisableSecurity {
+		return "", nil
+	}
+	if o.authConfig != nil {
+		if cfg, ok := o.authConfig.(auth.ApiKey); ok {
+			return cfg.Value, nil
+		}
+	}
+	secret := &v1.Secret{}
+	if err := o.kc.Get(o.ctx, client.ObjectKey{
+		Namespace: o.db.Namespace,
+		Name:      o.db.GetAuthSecretName(),
+	}, secret); err != nil {
+		return "", fmt.Errorf("failed to get weaviate auth secret: %w", err)
+	}
+	val, ok := secret.Data[kubedb.WeaviateAPIKey]
+	if !ok || len(val) == 0 {
+		return "", fmt.Errorf("weaviate auth secret key %s is missing or empty", kubedb.WeaviateAPIKey)
+	}
+	return string(val), nil
+}
+
+func (o *KubeDBClientBuilder) getHTTPClient(apiKey string) (*http.Client, error) {
+	secret := &v1.Secret{}
+	if err := o.kc.Get(o.ctx, client.ObjectKey{
+		Namespace: o.db.Namespace,
+		Name:      o.db.GetCertSecretName(api.WeaviateServerCert),
+	}, secret); err != nil {
+		return nil, fmt.Errorf("failed to get weaviate server certificate secret: %w", err)
+	}
+	ca, ok := secret.Data[kubedb.WeaviateTLSCACert]
+	if !ok || len(ca) == 0 {
+		return nil, fmt.Errorf("weaviate server certificate secret key %s is missing or empty", kubedb.WeaviateTLSCACert)
+	}
+	certPool := x509.NewCertPool()
+	if !certPool.AppendCertsFromPEM(ca) {
+		return nil, fmt.Errorf("failed to append weaviate CA certificate")
+	}
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.TLSClientConfig = &tls.Config{
+		RootCAs:    certPool,
+		ServerName: o.db.ServiceFQDN(),
+	}
+	if o.db.TLSClientAuthEnabled() {
+		clientSecret := &v1.Secret{}
+		if err := o.kc.Get(o.ctx, client.ObjectKey{
+			Namespace: o.db.Namespace,
+			Name:      o.db.GetCertSecretName(api.WeaviateClientCert),
+		}, clientSecret); err != nil {
+			return nil, fmt.Errorf("failed to get weaviate client certificate secret: %w", err)
+		}
+		clientCert, ok := clientSecret.Data[kubedb.WeaviateTLSCert]
+		if !ok || len(clientCert) == 0 {
+			return nil, fmt.Errorf("weaviate client certificate secret key %s is missing or empty", kubedb.WeaviateTLSCert)
+		}
+		clientKey, ok := clientSecret.Data[kubedb.WeaviateTLSKey]
+		if !ok || len(clientKey) == 0 {
+			return nil, fmt.Errorf("weaviate client certificate secret key %s is missing or empty", kubedb.WeaviateTLSKey)
+		}
+		cert, err := tls.X509KeyPair(clientCert, clientKey)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load weaviate client certificate: %w", err)
+		}
+		transport.TLSClientConfig.Certificates = []tls.Certificate{cert}
+	}
+	var rt http.RoundTripper = transport
+	if apiKey != "" {
+		rt = apiKeyRoundTripper{
+			next:   rt,
+			apiKey: apiKey,
+		}
+	}
+	return &http.Client{
+		Transport: rt,
+		Timeout:   o.requestTimeout(),
+	}, nil
+}
+
+type apiKeyRoundTripper struct {
+	next   http.RoundTripper
+	apiKey string
+}
+
+func (r apiKeyRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	clone := req.Clone(req.Context())
+	clone.Header.Set("Authorization", "Bearer "+r.apiKey)
+	return r.next.RoundTrip(clone)
 }

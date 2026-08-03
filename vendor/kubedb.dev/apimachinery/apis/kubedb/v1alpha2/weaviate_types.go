@@ -20,6 +20,7 @@ import (
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kmapi "kmodules.xyz/client-go/api/v1"
+	mona "kmodules.xyz/monitoring-agent-api/api/v1"
 	ofstv2 "kmodules.xyz/offshoot-api/api/v2"
 )
 
@@ -38,7 +39,7 @@ const (
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:path=weaviates,singular=weaviate,shortName=wv,categories={vector-db,kubedb,appscode,all}
+// +kubebuilder:resource:path=weaviates,singular=weaviate,shortName=wv,categories={datastore,vectordb,kubedb,appscode,all}
 // +kubebuilder:printcolumn:name="Type",type="string",JSONPath=".apiVersion"
 // +kubebuilder:printcolumn:name="Version",type="string",JSONPath=".spec.version"
 // +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.phase"
@@ -90,6 +91,10 @@ type WeaviateSpec struct {
 	// +optional
 	Configuration *WeaviateConfiguration `json:"configuration,omitempty"`
 
+	// TLS contains tls configurations for client and server.
+	// +optional
+	TLS *WeaviateTLSConfig `json:"tls,omitempty"`
+
 	// PodTemplate is an optional configuration for pods used to expose database
 	// +optional
 	PodTemplate ofstv2.PodTemplateSpec `json:"podTemplate,omitempty"`
@@ -106,6 +111,10 @@ type WeaviateSpec struct {
 	// +optional
 	// +kubebuilder:default={periodSeconds: 10, timeoutSeconds: 10, failureThreshold: 3}
 	HealthChecker kmapi.HealthCheckSpec `json:"healthChecker"`
+
+	// Monitor is used to monitor database instance
+	// +optional
+	Monitor *mona.AgentSpec `json:"monitor,omitempty"`
 }
 
 // WeaviateStatus defines the observed state of Weaviate.
@@ -139,6 +148,24 @@ type ReplicationConfig struct {
 	// +kubebuilder:maximum=5
 	Factor int32 `json:"factor,omitempty"`
 }
+
+type WeaviateTLSConfig struct {
+	kmapi.TLSConfig `json:",inline"`
+
+	// ClientAuth controls whether the REST HTTPS listener requires clients to present a valid certificate.
+	// If unset, client certificate authentication is enabled for backward compatibility.
+	// +optional
+	ClientAuth *bool `json:"clientAuth,omitempty"`
+}
+
+// +kubebuilder:validation:Enum=server;client
+type WeaviateCertificateAlias string
+
+const (
+	WeaviateServerCert WeaviateCertificateAlias = "server"
+	WeaviateClientCert WeaviateCertificateAlias = "client"
+)
+
 type WeaviateConfiguration struct {
 	ConfigurationSpec `json:",inline,omitempty"`
 

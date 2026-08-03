@@ -102,6 +102,10 @@ type Neo4jSpec struct {
 	// TLS contains tls configurations
 	// +optional
 	TLS *Neo4jTLSConfig `json:"tls,omitempty"`
+
+	// Init is used to initialize the database from a script or git repo.
+	// +optional
+	Init *InitSpec `json:"init,omitempty"`
 }
 
 type Neo4jTLSConfig struct {
@@ -112,6 +116,8 @@ type Neo4jTLSConfig struct {
 	HTTP *ProtocolTLSConfig `json:"http,omitempty"`
 	// +optional
 	Cluster *ProtocolTLSConfig `json:"cluster,omitempty"`
+	// +optional
+	Backup *ProtocolTLSConfig `json:"backup,omitempty"`
 	// Keystore encryption secret
 	// +optional
 	KeystoreCredSecret *SecretReference `json:"keystoreCredSecret,omitempty"`

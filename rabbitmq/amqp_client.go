@@ -68,7 +68,8 @@ func (ch *Channel) PublishMessageOnce(ctx context.Context, queueName string, mes
 		amqp.Publishing{
 			ContentType: "text/plain",
 			Body:        []byte(message),
-		})
+		},
+	)
 	if err != nil {
 		klog.Error(err, "Failed to publish message")
 		return err
