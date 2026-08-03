@@ -265,7 +265,7 @@ func (o *KubeDBClientBuilder) GetHTTPconnURL() string {
 		}
 	}(protocolScheme)
 	if o.podName != "" {
-		return fmt.Sprintf("%s://%s.%s.%s.svc:%d", protocolScheme, o.podName, o.db.GoverningServiceName(), o.db.Namespace, connectionPort)
+		return fmt.Sprintf("%s://%s.%s.%s.svc.%s:%d", protocolScheme, o.podName, o.db.GoverningServiceName(), o.db.Namespace, apiutils.FindDomain(), connectionPort)
 	}
 	return fmt.Sprintf("%s://%s.%s.svc.%s:%d", protocolScheme, o.db.DashboardServiceName(), o.db.Namespace, apiutils.FindDomain(), connectionPort)
 }
