@@ -81,7 +81,7 @@ func (o *Neo4jClientBuilder) GetNeo4jClient() (*Client, error) {
 	// Construct URL - use default service if podName not provided
 	o.url = o.buildConnectionURL()
 
-	klog.V(3).Infof("Attempting to connect to Neo4j at: %s", o.url)
+	klog.V(4).Infof("Attempting to connect to Neo4j at: %s", o.url)
 
 	var cred credential
 
