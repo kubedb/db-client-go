@@ -58,6 +58,7 @@ type SLClient interface {
 	CreateCollection() (*Response, error)
 	WriteCollection() (*Response, error)
 	ReadCollection() (*Response, error)
+	QueryCollection(collection string) (*Response, error)
 	BackupCollection(ctx context.Context, collection string, backupName string, location string, repository string) (*Response, error)
 	RestoreCollection(ctx context.Context, collection string, backupName string, location string, repository string, backupId int) (*Response, error)
 	FlushStatus(asyncId string) (*Response, error)

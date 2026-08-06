@@ -178,7 +178,7 @@ func (sc *SLClientV9) BackupCollection(ctx context.Context, collection string, b
 		Collection: collection,
 		Location:   location,
 		Repository: repository,
-		Async:      fmt.Sprintf("%s-backup", collection),
+		Async:      fmt.Sprintf("%s-backup-%s-%s", collection, repository, backupName),
 	}
 	req.SetQueryParams(backupParams)
 
@@ -207,7 +207,7 @@ func (sc *SLClientV9) RestoreCollection(ctx context.Context, collection string, 
 		Collection: collection,
 		Repository: repository,
 		BackupId:   strconv.Itoa(backupId),
-		Async:      fmt.Sprintf("%s-restore", collection),
+		Async:      fmt.Sprintf("%s-restore-%s-%s", collection, repository, backupName),
 	}
 	req.SetQueryParams(restoreParams)
 
@@ -469,4 +469,21 @@ func (sc *SLClientV9) GetMetrics() (*Response, error) {
 		body:   res.RawBody(),
 	}
 	return writeResponse, nil
+}
+
+func (sc *SLClientV9) QueryCollection(collection string) (*Response, error) {
+	sc.Config.log.V(5).Info(fmt.Sprintf("QUERYING COLLECTION: %s", collection))
+	req := sc.Client.R().SetDoNotParseResponse(true)
+	req.SetHeader("Content-Type", "application/json")
+	req.SetQueryParams(map[string]string{"q": "*:*", "rows": "0"})
+	res, err := req.Get(fmt.Sprintf("/solr/%s/select", collection))
+	if err != nil {
+		sc.Config.log.Error(err, "Failed to send http request to query a collection")
+		return nil, err
+	}
+	return &Response{
+		Code:   res.StatusCode(),
+		header: res.Header(),
+		body:   res.RawBody(),
+	}, nil
 }
