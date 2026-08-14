@@ -37,7 +37,7 @@ require (
 	github.com/sijms/go-ora/v2 v2.8.24
 	github.com/weaviate/weaviate-go-client/v5 v5.2.1
 	go.mongodb.org/mongo-driver v1.14.0
-	go.virtual-secrets.dev/apimachinery v0.1.0
+	go.virtual-secrets.dev/apimachinery v0.2.0
 	gomodules.xyz/pointer v0.1.0
 	google.golang.org/grpc v1.82.1
 	k8s.io/api v0.34.3
@@ -45,7 +45,7 @@ require (
 	k8s.io/klog/v2 v2.130.1
 	kmodules.xyz/client-go v0.34.3
 	kmodules.xyz/custom-resources v0.34.0
-	kubedb.dev/apimachinery v0.66.0-rc.0
+	kubedb.dev/apimachinery v0.67.0-rc.0
 	sigs.k8s.io/controller-runtime v0.22.4
 	xorm.io/xorm v1.3.11
 )
