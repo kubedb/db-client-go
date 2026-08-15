@@ -18,6 +18,7 @@ package etcd
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"time"
 
@@ -67,6 +68,11 @@ func (c *Client) Close() error {
 // that callers can reason about a partially healthy cluster.
 func (c *Client) Status(ctx context.Context) (map[string]*clientv3.StatusResponse, error) {
 	endpoints := c.Endpoints()
+	if len(endpoints) == 0 {
+		// Callers report the returned error verbatim; returning (empty, nil)
+		// here would hand them a nil error together with no statuses at all.
+		return nil, errors.New("the etcd client has no endpoints configured")
+	}
 	statuses := make(map[string]*clientv3.StatusResponse, len(endpoints))
 
 	var errs []error
@@ -136,8 +142,13 @@ func (c *Client) MoveLeader(ctx context.Context, transfereeID uint64) (*clientv3
 // ---------------------------------------------------------------------------
 
 // MemberList lists the current members of the cluster.
-func (c *Client) MemberList(ctx context.Context) (*clientv3.MemberListResponse, error) {
-	resp, err := c.Client.MemberList(ctx)
+//
+// The RPC is linearizable by default, so it needs a quorum to answer. Pass
+// clientv3.WithSerializable() to have the member that is dialed answer from its
+// local store instead -- that is the only way to read the membership of a
+// cluster that has already lost its quorum.
+func (c *Client) MemberList(ctx context.Context, opts ...clientv3.OpOption) (*clientv3.MemberListResponse, error) {
+	resp, err := c.Client.MemberList(ctx, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list etcd members")
 	}
@@ -178,9 +189,10 @@ func (c *Client) MemberRemove(ctx context.Context, memberID uint64) (*clientv3.M
 // ---------------------------------------------------------------------------
 
 // IsQuorumHealthy probes every endpoint concurrently, each through its own
-// short lived single endpoint client, and reports whether a quorum
-// (len(endpoints)/2 + 1) of the members answered. The returned map holds the
-// error of every member that failed to answer, keyed by endpoint.
+// short lived single endpoint client, and reports whether a Raft quorum
+// (voters/2 + 1, i.e. a strict majority of the voting members) is answering.
+// The returned map holds the error of every member that failed the probe, keyed
+// by endpoint.
 func (c *Client) IsQuorumHealthy(ctx context.Context) (bool, map[string]error) {
 	endpoints := c.Endpoints()
 	if len(endpoints) == 0 {
@@ -188,41 +200,68 @@ func (c *Client) IsQuorumHealthy(ctx context.Context) (bool, map[string]error) {
 	}
 
 	var (
-		mu     sync.Mutex
-		wg     sync.WaitGroup
-		failed = map[string]error{}
+		mu       sync.Mutex
+		wg       sync.WaitGroup
+		failed   = map[string]error{}
+		learners int
 	)
 	for _, ep := range endpoints {
 		wg.Add(1)
 		go func(endpoint string) {
 			defer wg.Done()
-			if err := c.memberHealth(ctx, endpoint); err != nil {
-				mu.Lock()
+			isLearner, err := c.memberHealth(ctx, endpoint)
+
+			mu.Lock()
+			defer mu.Unlock()
+			if err != nil {
 				failed[endpoint] = err
-				mu.Unlock()
+				return
+			}
+			if isLearner {
+				learners++
 			}
 		}(ep)
 	}
 	wg.Wait()
 
-	quorum := len(endpoints)/2 + 1
-	healthy := len(endpoints) - len(failed)
+	// A learner is a non voting member: it neither raises the size of the
+	// quorum nor helps to reach it, so it drops out of both sides of the
+	// arithmetic. Counting it in would understate the quorum whenever the
+	// number of voters is even -- 4 voters plus 1 learner would ask for 3 of 5
+	// answers instead of 3 of 4, and two answering voters plus the learner
+	// would pass. A member that did not answer can not be classified, so it
+	// keeps counting as a voter, which is what the pre-learner behaviour was.
+	voters := len(endpoints) - learners
 	if len(failed) == 0 {
 		failed = nil
 	}
+	if voters <= 0 {
+		return false, failed
+	}
+	quorum := voters/2 + 1
+	healthy := voters - len(failed)
 	return healthy >= quorum, failed
 }
 
-// memberHealth dials a single member and asks for its status. A member that
-// answers Status is serving the client API and knows its Raft leader.
-func (c *Client) memberHealth(ctx context.Context, endpoint string) error {
+// memberHealth dials a single member, asks for its status and reports whether
+// that member is a learner.
+//
+// Answering the Status RPC is necessary but not sufficient: etcd serves it out
+// of the member's local state, so a member that has lost contact with the rest
+// of the cluster still answers, it just reports leader 0 (raft.None) and adds
+// "etcdserver: no leader" to StatusResponse.Errors. Without the leader check a
+// cluster whose pods are all up but which can no longer elect a leader (a
+// partition between the members, say) would be reported as having a healthy
+// quorum even though it can not serve a single write -- and the quorum loss
+// recovery would refuse to run on exactly the cluster it exists for.
+func (c *Client) memberHealth(ctx context.Context, endpoint string) (bool, error) {
 	cfg := c.cfg
 	cfg.Endpoints = []string{endpoint}
 	cfg.DialTimeout = HealthCheckTimeout
 
 	cl, err := clientv3.New(cfg)
 	if err != nil {
-		return errors.Wrapf(err, "failed to dial etcd member %s", endpoint)
+		return false, errors.Wrapf(err, "failed to dial etcd member %s", endpoint)
 	}
 	defer func() {
 		_ = cl.Close()
@@ -231,10 +270,23 @@ func (c *Client) memberHealth(ctx context.Context, endpoint string) error {
 	callCtx, cancel := context.WithTimeout(ctx, HealthCheckTimeout)
 	defer cancel()
 
-	if _, err = cl.Status(callCtx, endpoint); err != nil {
-		return errors.Wrapf(err, "failed to get status of etcd member %s", endpoint)
+	resp, err := cl.Status(callCtx, endpoint)
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to get status of etcd member %s", endpoint)
 	}
-	return nil
+	if resp.IsLearner {
+		// A learner never votes, so its Raft state is irrelevant to the quorum;
+		// it is only reported back so that it can be left out of the count.
+		return true, nil
+	}
+	if resp.Leader == 0 {
+		reason := "it does not know a raft leader"
+		if len(resp.Errors) > 0 {
+			reason = strings.Join(resp.Errors, "; ")
+		}
+		return false, errors.Errorf("etcd member %s is not part of a working quorum: %s", endpoint, reason)
+	}
+	return false, nil
 }
 
 // ---------------------------------------------------------------------------
