@@ -20,6 +20,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
 
 	"kubedb.dev/apimachinery/apis/kubedb"
 	olddbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
@@ -138,6 +139,8 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 	if o.port == nil {
 		o.port = o.getPort()
 	}
-	connector := fmt.Sprintf("clickhouse://%s:%d?username=%s&password=%s", o.url, *o.port, user, pass)
-	return connector, nil
+	query := url.Values{}
+	query.Set("username", user)
+	query.Set("password", pass)
+	return fmt.Sprintf("clickhouse://%s:%d?%s", o.url, *o.port, query.Encode()), nil
 }
