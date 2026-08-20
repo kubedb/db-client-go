@@ -75,7 +75,7 @@ func verifySystemConnectivity(ctx context.Context, newSession func(neo4j.Session
 		err = errors.Join(err, session.Close(ctx))
 	}()
 
-	result, err := session.Run(ctx, "RETURN 1", nil)
+	result, err := session.Run(ctx, "SHOW DATABASES YIELD name RETURN name LIMIT 1", nil)
 	if err != nil {
 		return err
 	}
