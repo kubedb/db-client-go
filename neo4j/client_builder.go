@@ -46,6 +46,43 @@ type credential struct {
 	password string
 }
 
+type connectivityResult interface {
+	Consume(context.Context) (neo4j.ResultSummary, error)
+}
+
+type connectivitySession interface {
+	Run(context.Context, string, map[string]any, ...func(*neo4j.TransactionConfig)) (connectivityResult, error)
+	Close(context.Context) error
+}
+
+type neo4jConnectivitySession struct {
+	neo4j.SessionWithContext
+}
+
+func (s neo4jConnectivitySession) Run(ctx context.Context, query string, params map[string]any, configurers ...func(*neo4j.TransactionConfig)) (connectivityResult, error) {
+	return s.SessionWithContext.Run(ctx, query, params, configurers...)
+}
+
+func verifySystemConnectivity(ctx context.Context, newSession func(neo4j.SessionConfig) (connectivitySession, error)) (err error) {
+	session, err := newSession(neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeRead,
+		DatabaseName: "system",
+	})
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = errors.Join(err, session.Close(ctx))
+	}()
+
+	result, err := session.Run(ctx, "SHOW DATABASES YIELD name RETURN name LIMIT 1", nil)
+	if err != nil {
+		return err
+	}
+	_, err = result.Consume(ctx)
+	return err
+}
+
 type Neo4jClientBuilder struct {
 	kc      client.Client
 	db      *api.Neo4j
@@ -159,8 +196,12 @@ func (o *Neo4jClientBuilder) GetNeo4jClient() (*Client, error) {
 		return nil, err
 	}
 
-	// Now verify connectivity on the successfully created driver
-	if err = driver.VerifyConnectivity(o.ctx); err != nil {
+	// Verify connectivity explicitly against the system database. The driver's
+	// VerifyConnectivity method targets the user's home database, which may be
+	// temporarily unavailable while that database is being restored.
+	if err = verifySystemConnectivity(o.ctx, func(config neo4j.SessionConfig) (connectivitySession, error) {
+		return neo4jConnectivitySession{SessionWithContext: driver.NewSession(o.ctx, config)}, nil
+	}); err != nil {
 		klog.Error(err, "Failed to connect to Neo4j")
 		// Close driver on verification failure
 		_ = driver.Close(o.ctx)
