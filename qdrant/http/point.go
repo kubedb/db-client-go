@@ -92,3 +92,37 @@ func (c *Client) Get(ctx context.Context, collectionName string, req *GetPointsR
 
 	return &response, nil
 }
+
+// DeletePoints deletes points from a collection by their IDs.
+func (c *Client) DeletePoints(ctx context.Context, collectionName string, req *DeletePointsRequest) (*DeletePointsResponse, error) {
+	path := fmt.Sprintf("/collections/%s/points/delete", collectionName)
+
+	bodyBytes, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("marshaling request body: %w", err)
+	}
+
+	httpReq, err := c.NewRequest(ctx, http.MethodPost, path, bytes.NewReader(bodyBytes))
+	if err != nil {
+		return nil, fmt.Errorf("creating request: %w", err)
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("executing request: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("unexpected status code %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	var response DeletePointsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("decoding response: %w", err)
+	}
+
+	return &response, nil
+}

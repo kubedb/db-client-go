@@ -41,6 +41,18 @@ type UpsertPointsResponse struct {
 	Result Result  `json:"result"`
 }
 
+// DeletePointsRequest represents a request to delete points by their IDs.
+type DeletePointsRequest struct {
+	Points []PointId `json:"points"`
+}
+
+// DeletePointsResponse represents the response from a delete-points operation.
+type DeletePointsResponse struct {
+	Time   float64 `json:"time"`
+	Status string  `json:"status"`
+	Result Result  `json:"result"`
+}
+
 // GetPointsRequest represents a request to retrieve points by their IDs.
 type GetPointsRequest struct {
 	Ids []PointId `json:"ids"`
