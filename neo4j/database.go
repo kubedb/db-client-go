@@ -18,11 +18,13 @@ package neo4j
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog/v2"
 )
 
@@ -402,59 +404,54 @@ func (c Client) GetdatabaseState(ctx context.Context, dbName string) (string, er
 func (c *Client) WaitForDatabaseState(ctx context.Context, dbName string, state string) error {
 	var lastState string
 	var lastErr error
-	for {
+
+	err := wait.PollUntilContextCancel(ctx, 5*time.Second, true, func(ctx context.Context) (bool, error) {
 		currentState, err := c.GetDatabaseState(ctx, dbName)
-		if err == nil {
-			lastState = currentState
-			if currentState == state {
-				return nil
-			}
-			klog.Infof("Waiting for database %s to reach state %s. Current state: %s", dbName, state, currentState)
-		} else {
-			if ctx.Err() != nil {
-				return databaseStateTimeoutError(dbName, state, lastState, lastErr, ctx.Err())
-			}
+		if err != nil {
 			if !neo4j.IsRetryable(err) {
-				return fmt.Errorf("failed waiting for database %s to reach state %s: %w", dbName, state, err)
+				return false, fmt.Errorf("failed waiting for database %s to reach state %s: %w", dbName, state, err)
 			}
 			lastErr = err
 			klog.Warningf("Transient error checking database %s state; retrying: %v", dbName, err)
+			return false, nil
 		}
-
-		timer := time.NewTimer(5 * time.Second)
-		select {
-		case <-ctx.Done():
-			timer.Stop()
-			return databaseStateTimeoutError(dbName, state, lastState, lastErr, ctx.Err())
-		case <-timer.C:
+		lastState = currentState
+		if currentState == state {
+			return true, nil
 		}
+		klog.Infof("Waiting for database %s to reach state %s. Current state: %s", dbName, state, currentState)
+		return false, nil
+	})
+	if err != nil {
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return databaseStateTimeoutError(dbName, state, lastState, lastErr, err)
+		}
+		return err // already-wrapped non-retryable error
 	}
+	return nil
 }
 
 func (c *Client) WaitForDatabaseDropped(ctx context.Context, dbName string) error {
 	var lastErr error
-	for {
+
+	err := wait.PollUntilContextCancel(ctx, 5*time.Second, true, func(ctx context.Context) (bool, error) {
 		exists, err := c.CheckDatabaseExists(ctx, dbName)
-		if err == nil && !exists {
-			return nil
-		}
 		if err != nil {
-			if ctx.Err() != nil {
-				return fmt.Errorf("timeout waiting for database %s to be fully dropped (last transient error: %v): %w", dbName, lastErr, ctx.Err())
-			}
 			if !neo4j.IsRetryable(err) {
-				return fmt.Errorf("failed checking if database %s is fully dropped: %w", dbName, err)
+				return false, fmt.Errorf("failed checking if database %s is fully dropped: %w", dbName, err)
 			}
 			lastErr = err
+			return false, nil
 		}
-		timer := time.NewTimer(5 * time.Second)
-		select {
-		case <-ctx.Done():
-			timer.Stop()
-			return fmt.Errorf("timeout waiting for database %s to be fully dropped (last transient error: %v): %w", dbName, lastErr, ctx.Err())
-		case <-timer.C:
+		return !exists, nil
+	})
+	if err != nil {
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return fmt.Errorf("timeout waiting for database %s to be fully dropped (last transient error: %v): %w", dbName, lastErr, err)
 		}
+		return err
 	}
+	return nil
 }
 
 func databaseStateTimeoutError(dbName, desiredState, lastState string, lastErr, cause error) error {
