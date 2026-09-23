@@ -33,11 +33,12 @@ import (
 )
 
 type KubeDBClientBuilder struct {
-	kc      client.Client
-	db      *api.Etcd
-	url     string
-	podName string
-	ctx     context.Context
+	kc       client.Client
+	db       *api.Etcd
+	url      string
+	podName  string
+	ctx      context.Context
+	anonAuth bool
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *api.Etcd) *KubeDBClientBuilder {
@@ -66,6 +67,16 @@ func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuil
 	return o
 }
 
+// WithoutAuthentication skips the credential lookup so the client never sends
+// the Authenticate RPC. A learner does not serve Authenticate at all
+// (rpctypes.ErrGRPCNotSupportedForLearner), so any learner-directed dial must
+// be anonymous; the Maintenance/Status API this is used with is served
+// unauthenticated even when etcd RBAC is enabled.
+func (o *KubeDBClientBuilder) WithoutAuthentication() *KubeDBClientBuilder {
+	o.anonAuth = true
+	return o
+}
+
 // GetEtcdClient dials the etcd cluster and returns the wrapped clientv3 client.
 // The caller owns the returned client and must Close() it.
 func (o *KubeDBClientBuilder) GetEtcdClient() (*Client, error) {
@@ -87,14 +98,16 @@ func (o *KubeDBClientBuilder) GetEtcdClient() (*Client, error) {
 	}
 	cfg.TLS = tlsConfig
 
-	username, password, err := o.getAuthCredentials()
-	if err != nil {
-		return nil, err
+	if !o.anonAuth {
+		username, password, err := o.getAuthCredentials()
+		if err != nil {
+			return nil, err
+		}
+		// An empty username makes clientv3 skip the Authenticate RPC entirely.
+		// That is the anonymous path used before `auth enable` has run.
+		cfg.Username = username
+		cfg.Password = password
 	}
-	// An empty username makes clientv3 skip the Authenticate RPC entirely. That
-	// is the anonymous path used before `auth enable` has run.
-	cfg.Username = username
-	cfg.Password = password
 
 	cl, err := clientv3.New(cfg)
 	if err != nil {
