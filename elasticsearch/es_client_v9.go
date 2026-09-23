@@ -902,3 +902,62 @@ func (es *ESClientV9) DisableUpgradeModeML() error {
 
 	return nil
 }
+
+// GetLicense returns the license currently installed on the cluster.
+func (es *ESClientV9) GetLicense() (map[string]any, error) {
+	req := esapi.LicenseGetRequest{
+		Pretty: true,
+	}
+	res, err := req.Do(context.Background(), es.client)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close() // nolint:errcheck
+
+	if res.IsError() {
+		return nil, fmt.Errorf("failed to get license, received status code: %d", res.StatusCode)
+	}
+
+	response := make(map[string]any)
+	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
+		return nil, errors.Wrap(err, "failed to parse the response body")
+	}
+	return response, nil
+}
+
+// ActivateLicense installs a signed license on the cluster.
+func (es *ESClientV9) ActivateLicense(license []byte) error {
+	req := esapi.LicensePostRequest{
+		Body:        bytes.NewReader(license),
+		Acknowledge: pointer.BoolP(true),
+		Pretty:      true,
+	}
+	res, err := req.Do(context.Background(), es.client)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close() // nolint:errcheck
+
+	if res.IsError() {
+		return fmt.Errorf("failed to activate license, received status code: %d", res.StatusCode)
+	}
+	return nil
+}
+
+// StartTrial activates Elastic's built-in one-time 30-day trial license.
+func (es *ESClientV9) StartTrial() error {
+	req := esapi.LicensePostStartTrialRequest{
+		Acknowledge: pointer.BoolP(true),
+		Pretty:      true,
+	}
+	res, err := req.Do(context.Background(), es.client)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close() // nolint:errcheck
+
+	if res.IsError() {
+		return fmt.Errorf("failed to start trial license, received status code: %d", res.StatusCode)
+	}
+	return nil
+}
