@@ -943,6 +943,18 @@ func (es *ESClientV7) ActivateLicense(license []byte) error {
 	if res.IsError() {
 		return fmt.Errorf("failed to activate license, received status code: %d", res.StatusCode)
 	}
+
+	var response struct {
+		Acknowledged  bool   `json:"acknowledged"`
+		LicenseStatus string `json:"license_status"`
+	}
+	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
+		return errors.Wrap(err, "failed to parse license activation response")
+	}
+	if !response.Acknowledged || (response.LicenseStatus != "active" && response.LicenseStatus != "valid") {
+		return fmt.Errorf("failed to activate license: acknowledged=%t, license_status=%q",
+			response.Acknowledged, response.LicenseStatus)
+	}
 	return nil
 }
 
@@ -960,6 +972,17 @@ func (es *ESClientV7) StartTrial() error {
 
 	if res.IsError() {
 		return fmt.Errorf("failed to start trial license, received status code: %d", res.StatusCode)
+	}
+
+	var response struct {
+		TrialWasStarted bool   `json:"trial_was_started"`
+		ErrorMessage    string `json:"error_message"`
+	}
+	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
+		return errors.Wrap(err, "failed to parse start-trial response")
+	}
+	if !response.TrialWasStarted {
+		return fmt.Errorf("failed to start trial license: %s", response.ErrorMessage)
 	}
 	return nil
 }
