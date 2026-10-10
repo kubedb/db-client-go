@@ -19,7 +19,7 @@ REPO     := $(notdir $(shell pwd))
 BIN      := db-client-go
 
 # https://github.com/appscodelabs/gengo-builder
-CODE_GENERATOR_IMAGE ?= ghcr.io/appscode/gengo:release-1.29
+CODE_GENERATOR_IMAGE ?= ghcr.io/appscode/gengo:release-1.34
 
 # This version-strategy uses git tags to set the version string
 git_branch       := $(shell git rev-parse --abbrev-ref HEAD)
@@ -55,10 +55,10 @@ BIN_PLATFORMS    := $(DOCKER_PLATFORMS)
 OS   := $(if $(GOOS),$(GOOS),$(shell go env GOOS))
 ARCH := $(if $(GOARCH),$(GOARCH),$(shell go env GOARCH))
 
-BASEIMAGE_PROD   ?= gcr.io/distroless/static-debian12
-BASEIMAGE_DBG    ?= debian:12
+BASEIMAGE_PROD   ?= gcr.io/distroless/static-debian13
+BASEIMAGE_DBG    ?= debian:13
 
-GO_VERSION       ?= 1.25
+GO_VERSION       ?= 1.27
 BUILD_IMAGE      ?= ghcr.io/appscode/golang-dev:$(GO_VERSION)
 
 OUTBIN = bin/$(OS)_$(ARCH)/$(BIN)
