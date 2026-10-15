@@ -77,7 +77,13 @@ func (c *Client) Status(ctx context.Context) (map[string]*clientv3.StatusRespons
 
 	var errs []error
 	for _, ep := range endpoints {
-		resp, err := c.Client.Status(ctx, ep)
+		// Bound each probe individually (same budget memberHealth uses): the
+		// fan-out is sequential, and one unreachable member blocking until the
+		// caller's whole context expires would starve both the remaining
+		// probes and whatever the caller wants to do with the context next.
+		epCtx, cancel := context.WithTimeout(ctx, HealthCheckTimeout)
+		resp, err := c.Client.Status(epCtx, ep)
+		cancel()
 		if err != nil {
 			errs = append(errs, errors.Wrapf(err, "failed to get status of etcd member %s", ep))
 			continue
@@ -258,6 +264,13 @@ func (c *Client) memberHealth(ctx context.Context, endpoint string) (bool, error
 	cfg := c.cfg
 	cfg.Endpoints = []string{endpoint}
 	cfg.DialTimeout = HealthCheckTimeout
+	// Keep the configured credentials: with etcd RBAC enabled the Status RPC is
+	// NOT served anonymously ("etcdserver: user name is empty" on 3.6.4), and
+	// with RBAC disabled clientv3 swallows ErrAuthNotEnabled. Voters therefore
+	// answer in both auth states. A learner endpoint still cannot be probed
+	// directly (it serves no Authenticate RPC), so callers must scope the
+	// endpoint set to voting members first — the health checker already does,
+	// via votingMemberEndpoints.
 
 	cl, err := clientv3.New(cfg)
 	if err != nil {
