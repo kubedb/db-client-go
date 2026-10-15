@@ -27,6 +27,7 @@ import (
 
 	"github.com/pkg/errors"
 	clientv3 "go.etcd.io/etcd/client/v3"
+	"google.golang.org/grpc"
 	core "k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -90,6 +91,11 @@ func (o *KubeDBClientBuilder) GetEtcdClient() (*Client, error) {
 	cfg := clientv3.Config{
 		Endpoints:   o.getEndpoints(),
 		DialTimeout: DefaultDialTimeout,
+		// clientv3 v3.6.4 hands grpc its endpoints before the round_robin service
+		// config, so every dial first starts a pick_first subchannel and tears it
+		// down mid-connect ("lookup ...: operation was canceled" on each client).
+		// Starting on round_robin leaves grpc nothing to switch.
+		DialOptions: []grpc.DialOption{grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy":"round_robin"}`)},
 	}
 
 	tlsConfig, err := o.getTLSConfig()
