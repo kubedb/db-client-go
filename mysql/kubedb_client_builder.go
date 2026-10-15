@@ -34,12 +34,26 @@ import (
 	"xorm.io/xorm"
 )
 
+const (
+	defaultMySQLPort = 3306
+	// reservedConnectTimeout bounds the attempt on the reserved port, so a
+	// server without it configured falls back to the regular port quickly.
+	reservedConnectTimeout = "5s"
+)
+
 type KubeDBClientBuilder struct {
 	kc      client.Client
 	db      *dbapi.MySQL
 	url     string
 	podName string
 	ctx     context.Context
+	// reservedPort is MySQL's administrative interface port (`admin_port`).
+	// Connections on it are not counted against max_connections and need the
+	// SERVICE_CONNECTION_ADMIN privilege, which root has. When set, it is
+	// tried before the regular port. The interface listens on the pod IP, so
+	// it is only reachable through a pod address (WithPod or a pod DNS name
+	// in WithURL), not through a Service that does not expose it.
+	reservedPort int
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *dbapi.MySQL) *KubeDBClientBuilder {
@@ -59,6 +73,14 @@ func (o *KubeDBClientBuilder) WithPod(podName string) *KubeDBClientBuilder {
 	return o
 }
 
+// WithReservedPort makes the builder prefer MySQL's administrative interface
+// on the given port, and fall back to the regular port when it is not
+// available (older servers, or pods that do not have it configured yet).
+func (o *KubeDBClientBuilder) WithReservedPort(port int) *KubeDBClientBuilder {
+	o.reservedPort = port
+	return o
+}
+
 func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
 	o.ctx = ctx
 	return o
@@ -68,8 +90,18 @@ func (o *KubeDBClientBuilder) GetMySQLClient() (*Client, error) {
 	if o.ctx == nil {
 		o.ctx = context.Background()
 	}
+	if o.reservedPort > 0 {
+		c, err := o.getMySQLClient(o.reservedPort, reservedConnectTimeout)
+		if err == nil {
+			return c, nil
+		}
+		klog.V(4).Infof("reserved port %d unavailable, using port %d: %v", o.reservedPort, defaultMySQLPort, err)
+	}
+	return o.getMySQLClient(defaultMySQLPort, "")
+}
 
-	connector, err := o.getConnectionString()
+func (o *KubeDBClientBuilder) getMySQLClient(port int, timeout string) (*Client, error) {
+	connector, err := o.getConnectionString(port, timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +128,18 @@ func (o *KubeDBClientBuilder) GetMySQLXormClient() (*XormClient, error) {
 	if o.ctx == nil {
 		o.ctx = context.Background()
 	}
-	connector, err := o.getConnectionString()
+	if o.reservedPort > 0 {
+		c, err := o.getMySQLXormClient(o.reservedPort, reservedConnectTimeout)
+		if err == nil {
+			return c, nil
+		}
+		klog.V(4).Infof("reserved port %d unavailable, using port %d: %v", o.reservedPort, defaultMySQLPort, err)
+	}
+	return o.getMySQLXormClient(defaultMySQLPort, "")
+}
+
+func (o *KubeDBClientBuilder) getMySQLXormClient(port int, timeout string) (*XormClient, error) {
+	connector, err := o.getConnectionString(port, timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -106,6 +149,10 @@ func (o *KubeDBClientBuilder) GetMySQLXormClient() (*XormClient, error) {
 	}
 	_, err = engine.Query("SELECT 1")
 	if err != nil {
+		// do not leak the connection pool of a client that never worked
+		if closeErr := engine.Close(); closeErr != nil {
+			klog.Errorf("Failed to close client. error: %v", closeErr)
+		}
 		return nil, err
 	}
 
@@ -141,7 +188,7 @@ func (o *KubeDBClientBuilder) getMySQLRootCredentials() (string, string, error) 
 	return string(user), string(pass), nil
 }
 
-func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
+func (o *KubeDBClientBuilder) getConnectionString(port int, timeout string) (string, error) {
 	user, pass, err := o.getMySQLRootCredentials()
 	if err != nil {
 		return "", err
@@ -199,6 +246,13 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		}
 	}
 
-	connector := fmt.Sprintf("%v:%v@tcp(%s:%d)/%s?%s", user, pass, o.url, 3306, "mysql", tlsConfig)
+	params := tlsConfig
+	if timeout != "" {
+		if params != "" {
+			params += "&"
+		}
+		params += "timeout=" + timeout
+	}
+	connector := fmt.Sprintf("%v:%v@tcp(%s:%d)/%s?%s", user, pass, o.url, port, "mysql", params)
 	return connector, nil
 }

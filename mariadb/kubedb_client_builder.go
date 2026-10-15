@@ -37,6 +37,11 @@ import (
 
 const (
 	rootCAKey = "ca.crt"
+
+	defaultMariaDBPort = 3306
+	// reservedConnectTimeout bounds the attempt on the reserved port, so a
+	// server without it configured falls back to the regular port quickly.
+	reservedConnectTimeout = "5s"
 )
 
 type KubeDBClientBuilder struct {
@@ -45,6 +50,10 @@ type KubeDBClientBuilder struct {
 	url     string
 	podName string
 	ctx     context.Context
+	// reservedPort, when set together with WithPod, is tried before the
+	// regular port. It is MariaDB's `extra_port` listener, which is not
+	// counted against max_connections.
+	reservedPort int
 }
 
 func NewKubeDBClientBuilder(kc client.Client, db *dbapi.MariaDB) *KubeDBClientBuilder {
@@ -64,17 +73,41 @@ func (o *KubeDBClientBuilder) WithPod(podName string) *KubeDBClientBuilder {
 	return o
 }
 
+// WithReservedPort makes the builder prefer MariaDB's reserved listener
+// (server variable `extra_port`) on the pod selected with WithPod, and fall
+// back to the regular port when it is not available. Connections on the
+// reserved port are not counted against max_connections, so callers such as
+// health checks keep working while regular clients are rejected.
+func (o *KubeDBClientBuilder) WithReservedPort(port int) *KubeDBClientBuilder {
+	o.reservedPort = port
+	return o
+}
+
 func (o *KubeDBClientBuilder) WithContext(ctx context.Context) *KubeDBClientBuilder {
 	o.ctx = ctx
 	return o
+}
+
+func (o *KubeDBClientBuilder) useReservedPort() bool {
+	return o.reservedPort > 0 && o.podName != ""
 }
 
 func (o *KubeDBClientBuilder) GetMariaDBClient() (*Client, error) {
 	if o.ctx == nil {
 		o.ctx = context.Background()
 	}
+	if o.useReservedPort() {
+		c, err := o.getMariaDBClient(o.reservedPort, reservedConnectTimeout)
+		if err == nil {
+			return c, nil
+		}
+		klog.V(4).Infof("reserved port %d unavailable on pod %s, using port %d: %v", o.reservedPort, o.podName, defaultMariaDBPort, err)
+	}
+	return o.getMariaDBClient(defaultMariaDBPort, "")
+}
 
-	connector, err := o.getConnectionString()
+func (o *KubeDBClientBuilder) getMariaDBClient(port int, timeout string) (*Client, error) {
+	connector, err := o.getConnectionString(port, timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -101,8 +134,18 @@ func (o *KubeDBClientBuilder) GetMariaDBXormClient() (*XormClient, error) {
 	if o.ctx == nil {
 		o.ctx = context.Background()
 	}
+	if o.useReservedPort() {
+		c, err := o.getMariaDBXormClient(o.reservedPort, reservedConnectTimeout)
+		if err == nil {
+			return c, nil
+		}
+		klog.V(4).Infof("reserved port %d unavailable on pod %s, using port %d: %v", o.reservedPort, o.podName, defaultMariaDBPort, err)
+	}
+	return o.getMariaDBXormClient(defaultMariaDBPort, "")
+}
 
-	connector, err := o.getConnectionString()
+func (o *KubeDBClientBuilder) getMariaDBXormClient(port int, timeout string) (*XormClient, error) {
+	connector, err := o.getConnectionString(port, timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -112,6 +155,10 @@ func (o *KubeDBClientBuilder) GetMariaDBXormClient() (*XormClient, error) {
 	}
 	_, err = engine.Query("SELECT 1")
 	if err != nil {
+		// do not leak the connection pool of a client that never worked
+		if closeErr := engine.Close(); closeErr != nil {
+			klog.Errorf("Failed to close client. error: %v", closeErr)
+		}
 		return nil, err
 	}
 	engine.SetDefaultContext(o.ctx)
@@ -164,7 +211,7 @@ func (o *KubeDBClientBuilder) getURL() string {
 	}
 }
 
-func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
+func (o *KubeDBClientBuilder) getConnectionString(port int, timeout string) (string, error) {
 	var user, pass string
 	var err error
 	if o.db == nil {
@@ -233,7 +280,14 @@ func (o *KubeDBClientBuilder) getConnectionString() (string, error) {
 		}
 		tlsConfig = fmt.Sprintf("tls=%s", kubedb.MariaDBTLSConfigCustom)
 	}
-	connector := fmt.Sprintf("%v:%v@tcp(%s:%d)/%s?%s", user, pass, o.url, 3306, "mysql", tlsConfig)
+	params := tlsConfig
+	if timeout != "" {
+		if params != "" {
+			params += "&"
+		}
+		params += "timeout=" + timeout
+	}
+	connector := fmt.Sprintf("%v:%v@tcp(%s:%d)/%s?%s", user, pass, o.url, port, "mysql", params)
 	return connector, nil
 }
 
