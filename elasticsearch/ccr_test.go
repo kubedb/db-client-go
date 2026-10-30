@@ -132,8 +132,9 @@ func TestSetWriteBlockOffSendsNull(t *testing.T) {
 }
 
 func TestListUserIndicesSkipsDotIndices(t *testing.T) {
-	f := &multiPerformer{responses: []string{
-		`{"orders":{"settings":{"index.uuid":"u1","index.xpack.ccr.following_index":"true"}},".kibana":{"settings":{"index.uuid":"u2"}},"logs":{"settings":{"index.uuid":"u3","index.blocks.write":"true"}}}`,
+	f := &multiPerformer{capture: true, responses: []string{
+		// Shape of GET /*/_settings?flat_settings=true&filter_path=*.settings on Elasticsearch 8.19.
+		`{"orders":{"settings":{"index.creation_date":"1793274763669","index.number_of_replicas":"1","index.number_of_shards":"3","index.provided_name":"orders","index.uuid":"u1","index.version.created":"8537000","index.xpack.ccr.following_index":"true"}},".kibana":{"settings":{"index.uuid":"u2"}},"logs":{"settings":{"index.number_of_shards":"1","index.uuid":"u3","index.blocks.write":"true"}}}`,
 		`[{"index":"orders","status":"open"},{"index":"logs","status":"close"}]`,
 	}}
 	got, err := NewCCRClient(f).ListUserIndices(context.TODO())
@@ -143,14 +144,23 @@ func TestListUserIndicesSkipsDotIndices(t *testing.T) {
 	if len(got) != 2 || got[0].Name != "logs" || !got[0].WriteBlocked || !got[0].Closed || got[1].Name != "orders" || !got[1].Follower {
 		t.Fatalf("unexpected indices %+v", got)
 	}
+	// filter_path must not address dotted flat-settings keys: Elasticsearch then returns {}.
+	if !strings.Contains(f.queries[0], "filter_path=%2A.settings&") && !strings.HasSuffix(f.queries[0], "filter_path=%2A.settings") {
+		t.Fatalf("settings query must filter to *.settings only, got %s", f.queries[0])
+	}
 }
 
 type multiPerformer struct {
 	responses []string
 	n         int
+	capture   bool
+	queries   []string
 }
 
-func (m *multiPerformer) Perform(*http.Request) (*http.Response, error) {
+func (m *multiPerformer) Perform(req *http.Request) (*http.Response, error) {
+	if m.capture {
+		m.queries = append(m.queries, req.URL.RawQuery)
+	}
 	b := m.responses[m.n]
 	m.n++
 	return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(b))}, nil

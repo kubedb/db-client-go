@@ -452,7 +452,9 @@ func (c *ccrClient) ListUserIndices(ctx context.Context) ([]IndexInfo, error) {
 		"flat_settings":      {"true"},
 		"expand_wildcards":   {"open,closed"},
 		"ignore_unavailable": {"true"},
-		"filter_path":        {"*.settings.index.uuid,*.settings.index.xpack.ccr.following_index,*.settings.index.blocks.write,*.settings.index.verified_before_close"},
+		// With flat_settings the keys are dotted ("index.uuid"), which filter_path cannot
+		// address, so filter only down to the settings object.
+		"filter_path": {"*.settings"},
 	}
 	out := map[string]struct {
 		Settings map[string]string `json:"settings"`
