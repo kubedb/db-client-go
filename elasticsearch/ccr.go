@@ -27,21 +27,23 @@ import (
 	"net/url"
 	"sort"
 	"strings"
+	"sync"
 )
 
-// CCRCapable is implemented by the Elastic Stack clients (7.x, 8.x, 9.x) that support
-// Elastic cross-cluster replication (CCR). Callers type-assert an ESClient to it:
+// CCRCapable is implemented by the clients that support cross-cluster replication: the
+// Elastic Stack clients (7.x, 8.x, 9.x) through Elastic CCR, and the OpenSearch clients (2.x,
+// 3.x) through the cross-cluster-replication plugin. Callers type-assert an ESClient to it:
 //
 //	if c, ok := client.ESClient.(CCRCapable); ok { ccr := c.CCR() }
-//
-// OpenSearch replicates through a different plugin API and does not implement it.
 type CCRCapable interface {
 	CCR() CCRClient
 }
 
 // CCRClient is the REST surface used to set up, observe and promote cross-cluster
-// replication between two Elasticsearch clusters. Every call is issued against the cluster
-// the client was built for.
+// replication between two Elasticsearch or two OpenSearch clusters. Every call is issued
+// against the cluster the client was built for. NewCCRClient speaks Elastic CCR and
+// NewOpenSearchReplicationClient the OpenSearch replication plugin; the generic index and
+// cluster calls are shared.
 type CCRClient interface {
 	// ClusterUUID returns the cluster UUID reported by GET /.
 	ClusterUUID(ctx context.Context) (string, error)
@@ -77,6 +79,11 @@ type CCRClient interface {
 	// retention lease on the leader. That case is reported as LeaseRemovalFailed with a nil
 	// error; callers should still confirm the conversion through FollowInfo.
 	Unfollow(ctx context.Context, index string) (UnfollowResult, error)
+	// Promote turns follower indices into regular writable indices. Elasticsearch needs the
+	// followers paused first (PauseFollow); it closes, unfollows and reopens them. OpenSearch
+	// stops replication, which converts the index in place. Indices whose retention lease could
+	// not be removed on an unreachable leader are returned in leaseRemovalFailed.
+	Promote(ctx context.Context, indices []string) (leaseRemovalFailed []string, err error)
 	// FollowInfo returns the follower indices of this cluster with their status.
 	FollowInfo(ctx context.Context) ([]FollowerInfo, error)
 	// FollowStats returns per-shard follow statistics for every follower index.
@@ -200,13 +207,26 @@ type Performer interface {
 	Perform(*http.Request) (*http.Response, error)
 }
 
-// NewCCRClient returns a CCRClient over a go-elasticsearch transport.
+// NewCCRClient returns a CCRClient for Elastic CCR over a go-elasticsearch transport.
 func NewCCRClient(t Performer) CCRClient {
-	return &ccrClient{t: t}
+	return newElasticCCR(t)
+}
+
+func newElasticCCR(t Performer) *ccrClient {
+	return &ccrClient{
+		t:          t,
+		isFollower: func(settings map[string]string) bool { return settings["index.xpack.ccr.following_index"] == "true" },
+		isSystem:   func(string) bool { return false },
+	}
 }
 
 type ccrClient struct {
 	t Performer
+	// isFollower tells a follower index from its flat settings.
+	isFollower func(settings map[string]string) bool
+	// isSystem reports indices that are neither dot-prefixed nor hidden but belong to the
+	// engine or its plugins, so they are never followed, fenced or reseeded.
+	isSystem func(name string) bool
 }
 
 var _ CCRClient = &ccrClient{}
@@ -382,6 +402,60 @@ func (c *ccrClient) Unfollow(ctx context.Context, index string) (UnfollowResult,
 	return UnfollowResult{}, err
 }
 
+// promoteParallelism bounds concurrent unfollow or stop calls during a promotion.
+const promoteParallelism = 4
+
+// Promote closes the paused followers, unfollows them in parallel and reopens them.
+func (c *ccrClient) Promote(ctx context.Context, indices []string) ([]string, error) {
+	if len(indices) == 0 {
+		return nil, nil
+	}
+	if err := c.CloseIndices(ctx, indices); err != nil {
+		return nil, fmt.Errorf("close followers: %w", err)
+	}
+	leaseFailed, err := forEachIndex(ctx, indices, func(ctx context.Context, ix string) (bool, error) {
+		res, err := c.Unfollow(ctx, ix)
+		return res.LeaseRemovalFailed, err
+	})
+	if err != nil {
+		return leaseFailed, fmt.Errorf("unfollow: %w", err)
+	}
+	if err := c.OpenIndices(ctx, indices); err != nil {
+		return leaseFailed, fmt.Errorf("open promoted indices: %w", err)
+	}
+	return leaseFailed, nil
+}
+
+// forEachIndex runs fn for every index with bounded parallelism. It returns the indices for
+// which fn reported true, sorted, and the first error.
+func forEachIndex(ctx context.Context, indices []string, fn func(context.Context, string) (bool, error)) ([]string, error) {
+	var mu sync.Mutex
+	var flagged []string
+	var firstErr error
+	sem := make(chan struct{}, promoteParallelism)
+	var wg sync.WaitGroup
+	for _, ix := range indices {
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(ix string) {
+			defer wg.Done()
+			defer func() { <-sem }()
+			flag, err := fn(ctx, ix)
+			mu.Lock()
+			defer mu.Unlock()
+			switch {
+			case err != nil && firstErr == nil:
+				firstErr = fmt.Errorf("%s: %w", ix, err)
+			case err == nil && flag:
+				flagged = append(flagged, ix)
+			}
+		}(ix)
+	}
+	wg.Wait()
+	sort.Strings(flagged)
+	return flagged, firstErr
+}
+
 func (c *ccrClient) FollowInfo(ctx context.Context) ([]FollowerInfo, error) {
 	var out struct {
 		FollowerIndices []FollowerInfo `json:"follower_indices"`
@@ -476,13 +550,13 @@ func (c *ccrClient) ListUserIndices(ctx context.Context) ([]IndexInfo, error) {
 	}
 	res := make([]IndexInfo, 0, len(out))
 	for name, v := range out {
-		if strings.HasPrefix(name, ".") {
+		if strings.HasPrefix(name, ".") || c.isSystem(name) {
 			continue
 		}
 		res = append(res, IndexInfo{
 			Name:         name,
 			UUID:         v.Settings["index.uuid"],
-			Follower:     v.Settings["index.xpack.ccr.following_index"] == "true",
+			Follower:     c.isFollower(v.Settings),
 			WriteBlocked: v.Settings["index.blocks.write"] == "true",
 			Closed:       closed[name],
 		})

@@ -25,8 +25,22 @@ func (es *ESClientV8) CCR() CCRClient { return NewCCRClient(es.client) }
 // CCR returns the cross-cluster replication client for this cluster.
 func (es *ESClientV9) CCR() CCRClient { return NewCCRClient(es.client) }
 
+// CCR returns the replication client for this cluster, without use_roles (security plugin
+// disabled). Use NewOpenSearchReplicationClient to set the replication roles.
+func (os *OSClientV2) CCR() CCRClient {
+	return NewOpenSearchReplicationClient(os.client, OpenSearchReplicationOptions{})
+}
+
+// CCR returns the replication client for this cluster, without use_roles (security plugin
+// disabled). Use NewOpenSearchReplicationClient to set the replication roles.
+func (os *OSClientV3) CCR() CCRClient {
+	return NewOpenSearchReplicationClient(os.client.Client, OpenSearchReplicationOptions{})
+}
+
 var (
 	_ CCRCapable = &ESClientV7{}
 	_ CCRCapable = &ESClientV8{}
 	_ CCRCapable = &ESClientV9{}
+	_ CCRCapable = &OSClientV2{}
+	_ CCRCapable = &OSClientV3{}
 )
