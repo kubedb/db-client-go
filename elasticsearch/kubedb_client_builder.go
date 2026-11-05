@@ -640,13 +640,15 @@ func (o *KubeDBClientBuilder) getDefaultTLSConfig() (*tls.Config, error) {
 	return defaultTLSConfig, nil
 }
 
-// dcdrParentLabel marks a per-DC child of a distributed DC-DR Elasticsearch. Its pods run on
-// the DC's spoke cluster, so the operator on the hub reaches it over the KubeSlice overlay.
-const dcdrParentLabel = "dr.kubedb.com/parent"
+// dcdrEnabledAnnotation marks a distributed DC-DR Elasticsearch. Its clusters run on the DC
+// spoke clusters, one per DC, and its <db> Service selects the active DC's, so the operator
+// on the hub reaches it over the KubeSlice overlay.
+const dcdrEnabledAnnotation = "dr.kubedb.com/enabled"
 
+// ServiceURL is the REST endpoint of the database's Service.
 func (o *KubeDBClientBuilder) ServiceURL() string {
 	domain := "svc"
-	if o.db.GetLabels()[dcdrParentLabel] != "" {
+	if o.db.GetAnnotations()[dcdrEnabledAnnotation] == "true" {
 		domain = "svc." + kubedb.KubeSliceDomainSuffix
 	}
 	return fmt.Sprintf("%v://%s.%s.%s:%d", o.db.GetConnectionScheme(), o.db.ServiceName(), o.db.GetNamespace(), domain, kubedb.ElasticsearchRestPort)
