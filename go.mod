@@ -21,6 +21,7 @@ require (
 	github.com/gocql/gocql v1.6.0
 	github.com/grafadruid/go-druid v0.0.6
 	github.com/hazelcast/hazelcast-go-client v1.4.2
+	github.com/jackc/pgx/v5 v5.11.0
 	github.com/kubedb/gomemcache v0.0.0-20240930104810-7694d68c3e21
 	github.com/lib/pq v1.10.9
 	github.com/michaelklishin/rabbit-hole/v3 v3.1.0
@@ -46,7 +47,7 @@ require (
 	k8s.io/klog/v2 v2.130.1
 	kmodules.xyz/client-go v0.34.7-0.20260916091548-45e2a0e7782d
 	kmodules.xyz/custom-resources v0.34.0
-	kubedb.dev/apimachinery v0.68.0
+	kubedb.dev/apimachinery v0.68.1-0.20261025102649-362cd632b194
 	sigs.k8s.io/controller-runtime v0.22.4
 	xorm.io/xorm v1.3.11
 )
@@ -138,6 +139,9 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.8 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jcmturner/aescts/v2 v2.0.0 // indirect
 	github.com/jcmturner/dnsutils/v2 v2.0.0 // indirect
 	github.com/jcmturner/gofork v1.7.6 // indirect
