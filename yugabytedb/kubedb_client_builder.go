@@ -199,7 +199,7 @@ func (o *KubeDBClientBuilder) GetTLSConfig() (*tls.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	name := o.db.GetCertSecretName(dbapi.YugabyteDBCertificateTypeClient)
+	name := o.db.GetCertSecretName(dbapi.YugabyteDBClientCert)
 	var secret core.Secret
 	if err := o.kc.Get(o.ctx, client.ObjectKey{Namespace: o.db.Namespace, Name: name}, &secret); err != nil {
 		return nil, fmt.Errorf("failed to read the client certificate Secret %s/%s: %w", o.db.Namespace, name, err)
