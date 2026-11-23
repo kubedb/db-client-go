@@ -86,11 +86,15 @@ func (o *KubeDBClientBuilder) GetPostgresXormClient() (*XormClient, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate postgres client using connection string: %v", err)
 	}
+	// set the context before the first query so the caller's deadline bounds it too:
+	// connect_timeout only covers connection setup, and a path that drops after
+	// connecting would otherwise leave this query waiting on the OS TCP timeout
+	engine.SetDefaultContext(o.ctx)
 	_, err = engine.Query("SELECT 1")
 	if err != nil {
+		_ = engine.Close()
 		return nil, fmt.Errorf("failed to run query: %v", err)
 	}
-	engine.SetDefaultContext(o.ctx)
 	return &XormClient{engine}, nil
 }
 
