@@ -38,6 +38,9 @@ const (
 	// FenceStateParameter holds the saved vhost permissions of a fenced data center. It mirrors
 	// apimachinery's RabbitMQDCDRPermissionsParameter.
 	FenceStateParameter = "kubedb-dcdr-permissions"
+	// LinkUser is the internal user of the cross-DC link; the fence never revokes it. It mirrors
+	// apimachinery's RabbitMQDCDRLinkUser.
+	LinkUser = "kubedb-dcdr-link"
 )
 
 // ManagementDefaultTimeout bounds one management API request. A data center that black-holes
