@@ -640,6 +640,16 @@ func (o *KubeDBClientBuilder) getDefaultTLSConfig() (*tls.Config, error) {
 	return defaultTLSConfig, nil
 }
 
+// dcdrEnabledAnnotation marks a distributed DC-DR Elasticsearch. Its clusters run on the DC
+// spoke clusters, one per DC, and its <db> Service selects the active DC's, so the operator
+// on the hub reaches it over the KubeSlice overlay.
+const dcdrEnabledAnnotation = "dr.kubedb.com/enabled"
+
+// ServiceURL is the REST endpoint of the database's Service.
 func (o *KubeDBClientBuilder) ServiceURL() string {
-	return fmt.Sprintf("%v://%s.%s.svc:%d", o.db.GetConnectionScheme(), o.db.ServiceName(), o.db.GetNamespace(), kubedb.ElasticsearchRestPort)
+	domain := "svc"
+	if o.db.GetAnnotations()[dcdrEnabledAnnotation] == "true" {
+		domain = "svc." + kubedb.KubeSliceDomainSuffix
+	}
+	return fmt.Sprintf("%v://%s.%s.%s:%d", o.db.GetConnectionScheme(), o.db.ServiceName(), o.db.GetNamespace(), domain, kubedb.ElasticsearchRestPort)
 }
