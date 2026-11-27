@@ -165,8 +165,10 @@ func (o *KubeDBClientBuilder) GetYCQLClient() (*YCQLClient, error) {
 	cluster.ConnectTimeout = o.timeout
 	cluster.Timeout = o.timeout
 	cluster.NumConns = 1
+	// With the initial host lookup and the topology events off, the session only ever talks to host.
+	// No host filter: gocql.WhiteListHostFilter resolves the name at once and panics when that fails,
+	// which a pod being rolled can make happen.
 	cluster.DisableInitialHostLookup = true
-	cluster.HostFilter = gocql.WhiteListHostFilter(host)
 	cluster.Events.DisableTopologyEvents = true
 	cluster.Events.DisableNodeStatusEvents = true
 	cluster.Events.DisableSchemaEvents = true
@@ -259,13 +261,16 @@ func (o *KubeDBClientBuilder) ysqlConfig() (*pgx.ConnConfig, error) {
 		Scheme:   "postgres",
 		Host:     net.JoinHostPort(host, strconv.Itoa(o.portOr(kubedb.YugabyteDBYSQLPort))),
 		Path:     "/" + database,
-		RawQuery: "sslmode=disable&connect_timeout=" + strconv.Itoa(int(o.timeout/time.Second)),
+		RawQuery: "sslmode=disable",
 	}
 	cfg, err := pgx.ParseConfig(u.String())
 	if err != nil {
 		return nil, err
 	}
 	cfg.User, cfg.Password = user, password
+	// Set here, not as connect_timeout in the URL: that takes whole seconds, so a timeout under one
+	// second would become 0, which means no timeout.
+	cfg.ConnectTimeout = o.timeout
 	if tlsCfg != nil {
 		cfg.TLSConfig = tlsCfg
 		// Never fall back to plain text.

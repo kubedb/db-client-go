@@ -31,6 +31,9 @@ func TestAlterRolePassword(t *testing.T) {
 	if got, want := AlterRolePasswordCQL("yugabyte", "it's"), `ALTER ROLE "yugabyte" WITH PASSWORD = 'it''s'`; got != want {
 		t.Errorf("CQL: got %s, want %s", got, want)
 	}
+	if got, want := AlterRolePasswordCQL(`a"b\c`, "x"), `ALTER ROLE "a""b\c" WITH PASSWORD = 'x'`; got != want {
+		t.Errorf("CQL quoting: got %s, want %s", got, want)
+	}
 }
 
 func TestHost(t *testing.T) {

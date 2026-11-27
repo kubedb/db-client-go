@@ -123,7 +123,13 @@ func AlterRolePasswordSQL(role, password string) string {
 
 // AlterRolePasswordCQL is the YCQL statement that sets the password of a role.
 func AlterRolePasswordCQL(role, password string) string {
-	return fmt.Sprintf("ALTER ROLE %q WITH PASSWORD = %s", role, QuoteLiteral(password))
+	return fmt.Sprintf("ALTER ROLE %s WITH PASSWORD = %s", QuoteIdentifierCQL(role), QuoteLiteral(password))
+}
+
+// QuoteIdentifierCQL quotes s as a YCQL identifier: CQL escapes a double quote by doubling it, not
+// with a backslash as Go's %q does.
+func QuoteIdentifierCQL(s string) string {
+	return `"` + strings.ReplaceAll(s, `"`, `""`) + `"`
 }
 
 // QuoteLiteral quotes s as a string literal. Both YSQL (standard_conforming_strings is on) and YCQL
